@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — ALL STAR LOC</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --red:#C41E3A;--red-dark:#9B1830;--dark:#0F0F0F;--dark2:#161616;--dark3:#1E1E1E;
+  --border:rgba(255,255,255,0.07);--text:rgba(255,255,255,0.9);--text2:rgba(255,255,255,0.5);
+  --text3:rgba(255,255,255,0.25);--green:#22C55E;--yellow:#F59E0B;--blue:#3B82F6;
+  --purple:#8B5CF6;--font:'Outfit',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--dark);color:var(--text);display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{
+  width:240px;flex-shrink:0;background:var(--dark2);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;
+}
+.sb-logo{
+  padding:20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;
+}
+.sb-logo-icon{
+  width:36px;height:36px;background:var(--red);border-radius:9px;
+  display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;
+}
+.sb-logo-name{font-size:15px;font-weight:800;color:white;}
+.sb-logo-tag{font-size:10px;color:var(--text3);letter-spacing:1px;}
+
+.sb-nav{flex:1;padding:12px 8px;overflow-y:auto;}
+.sb-section{margin-bottom:20px;}
+.sb-section-label{font-size:10px;color:var(--text3);font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:0 10px;margin-bottom:6px;}
+.sb-item{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;
+  cursor:pointer;transition:all 0.2s;color:var(--text2);font-size:13px;font-weight:500;
+  text-decoration:none;
+}
+.sb-item:hover{background:rgba(255,255,255,0.05);color:var(--text);}
+.sb-item.active{background:rgba(196,30,58,0.15);color:var(--red);}
+.sb-item-icon{font-size:16px;width:20px;text-align:center;}
+.sb-badge{margin-left:auto;background:var(--red);color:white;font-size:10px;font-weight:700;padding:2px 7px;border-radius:50px;}
+
+.sb-bottom{padding:12px;border-top:1px solid var(--border);}
+.sb-user{display:flex;align-items:center;gap:10px;padding:10px;border-radius:9px;}
+.sb-avatar{width:32px;height:32px;background:var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;}
+.sb-user-info{flex:1;}
+.sb-user-name{font-size:13px;font-weight:600;color:var(--text);}
+.sb-user-role{font-size:11px;color:var(--text3);}
+
+/* MAIN */
+.main{margin-left:240px;flex:1;display:flex;flex-direction:column;min-height:100vh;}
+.topbar{
+  padding:0 28px;height:64px;border-bottom:1px solid var(--border);background:var(--dark2);
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;
+  position:sticky;top:0;z-index:50;
+}
+.topbar-title{font-size:17px;font-weight:700;}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.topbar-btn{
+  padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;
+  border:none;cursor:pointer;font-family:var(--font);
+  display:flex;align-items:center;gap:7px;
+}
+.topbar-btn.primary{background:var(--red);color:white;}
+.topbar-btn.secondary{background:rgba(255,255,255,0.06);color:var(--text);border:1px solid var(--border);}
+.topbar-btn:hover{opacity:0.85;}
+.notif-btn{
+  width:36px;height:36px;background:rgba(255,255,255,0.06);border:1px solid var(--border);
+  border-radius:9px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:16px;position:relative;
+}
+.notif-dot{position:absolute;top:6px;right:6px;width:8px;height:8px;background:var(--red);border-radius:50%;}
+
+.content{padding:28px;flex:1;}
+
+/* PAGES */
+.page{display:none;}
+.page.active{display:block;}
+
+/* STATS CARDS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.stat-card{
+  background:var(--dark3);border:1px solid var(--border);border-radius:14px;
+  padding:20px;transition:all 0.2s;
+}
+.stat-card:hover{border-color:rgba(255,255,255,0.12);}
+.stat-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;}
+.stat-icon{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;}
+.stat-change{font-size:12px;font-weight:600;padding:3px 8px;border-radius:50px;}
+.stat-change.up{background:rgba(34,197,94,0.1);color:var(--green);}
+.stat-change.down{background:rgba(239,68,68,0.1);color:#EF4444;}
+.stat-val{font-size:26px;font-weight:800;color:white;line-height:1;}
+.stat-label{font-size:13px;color:var(--text2);margin-top:4px;}
+
+/* TABLES */
+.table-card{background:var(--dark3);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:24px;}
+.table-header{
+  padding:18px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.table-title{font-size:14px;font-weight:700;}
+.table-actions{display:flex;gap:8px;}
+.btn-sm{padding:7px 14px;border-radius:7px;font-size:12px;font-weight:600;border:none;cursor:pointer;font-family:var(--font);}
+.btn-sm.primary{background:var(--red);color:white;}
+.btn-sm.ghost{background:rgba(255,255,255,0.06);color:var(--text);border:1px solid var(--border);}
+table{width:100%;border-collapse:collapse;}
+th{padding:11px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid var(--border);}
+td{padding:14px 16px;font-size:13px;color:var(--text);border-bottom:1px solid rgba(255,255,255,0.04);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:rgba(255,255,255,0.02);}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:50px;font-size:11px;font-weight:700;}
+.badge-green{background:rgba(34,197,94,0.1);color:var(--green);}
+.badge-red{background:rgba(196,30,58,0.1);color:#FF6B7A;}
+.badge-yellow{background:rgba(245,158,11,0.1);color:var(--yellow);}
+.badge-blue{background:rgba(59,130,246,0.1);color:var(--blue);}
+.badge-gray{background:rgba(255,255,255,0.06);color:var(--text2);}
+.badge-purple{background:rgba(139,92,246,0.1);color:var(--purple);}
+
+/* CALENDAR */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cal-header-days{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px;}
+.cal-day-name{text-align:center;font-size:11px;color:var(--text3);font-weight:700;padding:4px;text-transform:uppercase;}
+.cal-day{
+  aspect-ratio:1;border-radius:8px;background:rgba(255,255,255,0.03);
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  padding:4px;cursor:pointer;transition:all 0.2s;border:1px solid transparent;
+  min-height:70px;
+}
+.cal-day:hover{border-color:rgba(255,255,255,0.1);}
+.cal-day.today{border-color:var(--red);}
+.cal-day-num{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:3px;}
+.cal-day.today .cal-day-num{color:var(--red);font-weight:800;}
+.cal-event{width:100%;text-align:center;font-size:9px;font-weight:700;padding:2px 4px;border-radius:4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cal-event.reserved{background:rgba(59,130,246,0.2);color:var(--blue);}
+.cal-event.maintenance{background:rgba(245,158,11,0.2);color:var(--yellow);}
+.cal-event.offroad{background:rgba(239,68,68,0.15);color:#EF4444;}
+
+/* FLEET GRID */
+.fleet-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.fleet-card{background:var(--dark3);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:all 0.2s;}
+.fleet-card:hover{border-color:rgba(255,255,255,0.12);}
+.fleet-img{height:140px;background:rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center;font-size:40px;position:relative;}
+.fleet-img img{width:100%;height:100%;object-fit:cover;}
+.fleet-status{position:absolute;top:10px;right:10px;}
+.fleet-body{padding:14px;}
+.fleet-name{font-size:14px;font-weight:700;margin-bottom:4px;}
+.fleet-price{font-size:13px;color:var(--red);font-weight:700;margin-bottom:10px;}
+.fleet-specs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.fleet-spec{font-size:11px;color:var(--text2);background:rgba(255,255,255,0.05);padding:3px 8px;border-radius:6px;}
+.fleet-actions{display:flex;gap:6px;}
+.fleet-btn{flex:1;padding:8px;border:1px solid var(--border);background:transparent;color:var(--text2);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all 0.2s;}
+.fleet-btn:hover{background:rgba(255,255,255,0.06);color:var(--text);}
+.fleet-btn.danger:hover{background:rgba(239,68,68,0.1);color:#EF4444;border-color:rgba(239,68,68,0.3);}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity 0.3s;backdrop-filter:blur(8px);}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--dark2);border:1px solid var(--border);border-radius:18px;width:100%;max-width:540px;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-size:16px;font-weight:700;}
+.modal-close{width:32px;height:32px;background:rgba(255,255,255,0.06);border:none;border-radius:8px;color:var(--text);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;}
+.modal-body{padding:24px;overflow-y:auto;flex:1;}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;}
+
+/* FORM */
+.form-group{margin-bottom:16px;}
+.form-label{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:6px;}
+.form-input,.form-select,.form-textarea{
+  width:100%;padding:11px 14px;background:rgba(255,255,255,0.05);
+  border:1px solid var(--border);border-radius:9px;font-size:13px;
+  font-family:var(--font);color:var(--text);outline:none;transition:all 0.2s;
+}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--red);background:rgba(196,30,58,0.05);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-select option{background:var(--dark2);color:var(--text);}
+
+/* SEARCH BAR */
+.search-bar{
+  display:flex;align-items:center;gap:8px;padding:10px 14px;
+  background:rgba(255,255,255,0.05);border:1px solid var(--border);
+  border-radius:10px;color:var(--text2);font-size:13px;
+}
+.search-bar input{background:none;border:none;outline:none;color:var(--text);font-family:var(--font);font-size:13px;flex:1;}
+
+/* CHART BARS */
+.chart-bars{display:flex;align-items:flex-end;gap:6px;height:80px;padding:0 4px;}
+.chart-bar{flex:1;background:rgba(196,30,58,0.2);border-radius:5px 5px 0 0;position:relative;transition:all 0.3s;cursor:pointer;}
+.chart-bar:hover{background:rgba(196,30,58,0.4);}
+.chart-bar-label{position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--text3);white-space:nowrap;}
+
+/* TABS */
+.tabs{display:flex;gap:4px;background:rgba(255,255,255,0.04);border-radius:10px;padding:4px;margin-bottom:20px;}
+.tab-btn{flex:1;padding:8px 16px;border-radius:7px;border:none;background:transparent;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all 0.2s;}
+.tab-btn.active{background:var(--dark3);color:var(--text);border:1px solid var(--border);}
+
+/* RESERVATION DETAIL */
+.res-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+.res-detail-item{background:rgba(255,255,255,0.04);border-radius:10px;padding:14px;}
+.res-detail-label{font-size:11px;color:var(--text3);margin-bottom:4px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;}
+.res-detail-val{font-size:14px;font-weight:600;color:var(--text);}
+
+/* RESPONSIVE */
+@media(max-width:1024px){
+  .stats-grid{grid-template-columns:repeat(2,1fr);}
+  .fleet-grid{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);}
+  .main{margin-left:0;}
+  .fleet-grid{grid-template-columns:1fr;}
+  .res-detail-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-icon"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg></div>
+    <div>
+      <div class="sb-logo-name">ALL STAR LOC</div>
+      <div class="sb-logo-tag">ADMINISTRATION</div>
+    </div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-section">
+      <div class="sb-section-label">Principal</div>
+      <a class="sb-item active" onclick="showPage('dashboard', this)">
+        <span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg></span> Tableau de bord
+      </a>
+      <a class="sb-item" onclick="showPage('reservations', this)">
+        <span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg></span> Réservations
+        <span class="sb-badge" id="badge-res">0</span>
+      </a>
+      <a class="sb-item" onclick="showPage('calendar', this)">
+        <span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg></span> Calendrier
+      </a>
+    </div>
+    <div class="sb-section">
+      <div class="sb-section-label">Flotte</div>
+      <a class="sb-item" onclick="showPage('fleet', this)">
+        <span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="m21 8-2 2-1.5-3.7A2 2 0 0 0 15.646 5H8.4a2 2 0 0 0-1.903 1.257L5 10 3 8"/><path d="M7 14h.01"/><path d="M17 14h.01"/><rect width="18" height="8" x="3" y="10" rx="2"/><path d="M5 18v2"/><path d="M19 18v2"/></svg></span> Mes Véhicules
+      </a>
+      <a class="sb-item" onclick="showPage('availability', this)">
+        <span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg></span> Disponibilités
+      </a>
+    </div>
+    <div class="sb-section">
+      <div class="sb-section-label">Gestion</div>
+      <a class="sb-item" onclick="showPage('customers', this)">
+        <span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> Clients
+      </a>
+      <a class="sb-item" onclick="showPage('payments', this)">
+        <span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg></span> Paiements
+      </a>
+      <a class="sb-item" onclick="showPage('promos', this)">
+        <span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></svg></span> Promotions
+      </a>
+      <a class="sb-item" onclick="showPage('options', this)">
+        <span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></span> Options & Assurances
+      </a>
+    </div>
+    <div class="sb-section">
+      <div class="sb-section-label">Site</div>
+      <a class="sb-item" onclick="showPage('seo', this)">
+        <span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span> SEO & Analytics
+      </a>
+      <a class="sb-item" href="../index.html" target="_blank">
+        <span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></span> Voir le site
+      </a>
+    </div>
+  </nav>
+  <div class="sb-bottom">
+    <div class="sb-user">
+      <div class="sb-avatar">AS</div>
+      <div class="sb-user-info">
+        <div class="sb-user-name">Admin</div>
+        <div class="sb-user-role">Administrateur</div>
+      </div>
+      <span style="cursor:pointer;color:var(--text3);">⏻</span>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="topbar-title">Tableau de bord</div>
+    <div class="topbar-right">
+      <div class="notif-btn"><span><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span><div class="notif-dot"></div></div>
+      <button class="topbar-btn secondary"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg> Exporter</button>
+      <button class="topbar-btn primary" onclick="openModal('new-reservation')">+ Nouvelle réservation</button>
+    </div>
+  </div>
+  <div class="content">
+
+    <!-- ===== DASHBOARD ===== -->
+    <div id="page-dashboard" class="page active">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-header">
+            <div class="stat-icon" style="background:rgba(196,30,58,0.1);color:#C41E3A;"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg></div>
+          </div>
+          <div class="stat-val" id="stat-total-res">0</div>
+          <div class="stat-label">Réservations ce mois</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <div class="stat-icon" style="background:rgba(34,197,94,0.1);color:#22c55e;"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg></div>
+          </div>
+          <div class="stat-val" id="stat-revenue">0 <span style="font-size:14px;color:var(--text2);">MAD</span></div>
+          <div class="stat-label">Revenus ce mois</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <div class="stat-icon" style="background:rgba(59,130,246,0.1);color:#3b82f6;"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg></div>
+          </div>
+          <div class="stat-val" id="stat-vehicles">0/0</div>
+          <div class="stat-label">Véhicules actifs</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-header">
+            <div class="stat-icon" style="background:rgba(245,158,11,0.1);">⏳</div>
+          </div>
+          <div class="stat-val" id="stat-pending">0</div>
+          <div class="stat-label">En attente de confirmation</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:24px;">
+        <div class="table-card">
+          <div class="table-header">
+            <div class="table-title"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg> Réservations cette semaine</div>
+            <div id="weekly-chart" style="display:flex;align-items:flex-end;gap:6px;height:100px;"></div>
+          </div>
+          <table>
+            <thead><tr>
+              <th>Réf.</th><th>Client</th><th>Véhicule</th><th>Dates</th><th>Montant</th><th>Statut</th><th>Actions</th>
+            </tr></thead>
+            <tbody id="dashboard-reservations"></tbody>
+          </table>
+        </div>
+        <div class="table-card">
+          <div class="table-header"><div class="table-title"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg> État Flotte</div></div>
+          <div style="padding:16px;">
+            <div id="fleet-status-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== RESERVATIONS ===== -->
+    <div id="page-reservations" class="page">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+        <div class="search-bar" style="flex:1;"><span style="display:flex;align-items:center;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span><input placeholder="Rechercher par nom, ref, voiture..."></div>
+        <select class="form-select" style="width:160px;" onchange="filterReservations(this.value)">
+          <option value="all">Tous les statuts</option>
+          <option value="pending">En attente</option>
+          <option value="confirmed">Confirmées</option>
+          <option value="active">En cours</option>
+          <option value="completed">Terminées</option>
+          <option value="cancelled">Annulées</option>
+        </select>
+      </div>
+      <div class="table-card">
+        <div class="table-header">
+          <div class="table-title">Toutes les réservations</div>
+          <div class="table-actions">
+            <button class="btn-sm ghost"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg> Exporter CSV</button>
+            <button class="btn-sm primary" onclick="openModal('new-reservation')">+ Nouvelle</button>
+          </div>
+        </div>
+        <table>
+          <thead><tr>
+            <th>Réf.</th><th>Client</th><th>Véhicule</th><th>Prise en charge</th><th>Retour</th><th>Jours</th><th>Total</th><th>Source</th><th>Statut</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="all-reservations"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== CALENDAR ===== -->
+    <div id="page-calendar" class="page">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <button class="topbar-btn secondary" onclick="prevMonth()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg> Précédent</button>
+          <div style="font-size:16px;font-weight:700;" id="cal-month-label">Juin 2026</div>
+          <button class="topbar-btn secondary" onclick="nextMonth()">Suivant <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <span style="font-size:12px;color:var(--text2);"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#3b82f6;flex-shrink:0;"></span> Réservé</span>
+          <span style="font-size:12px;color:var(--text2);"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f59e0b;flex-shrink:0;"></span> Maintenance</span>
+          <span style="font-size:12px;color:var(--text2);"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ef4444;flex-shrink:0;"></span> Hors service</span>
+          <select class="form-select" style="width:180px;" id="cal-car-filter" onchange="renderCalendar()">
+            <option value="all">Tous les véhicules</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-card" style="padding:16px;">
+        <div class="cal-header-days">
+          <div class="cal-day-name">Lun</div><div class="cal-day-name">Mar</div>
+          <div class="cal-day-name">Mer</div><div class="cal-day-name">Jeu</div>
+          <div class="cal-day-name">Ven</div><div class="cal-day-name">Sam</div>
+          <div class="cal-day-name">Dim</div>
+        </div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+    </div>
+
+    <!-- ===== FLEET ===== -->
+    <div id="page-fleet" class="page">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div style="font-size:14px;color:var(--text2);">11 véhicules dans votre flotte</div>
+        <button class="topbar-btn primary" onclick="openModal('add-car')">+ Ajouter un véhicule</button>
+      </div>
+      <div class="fleet-grid" id="fleet-grid"></div>
+    </div>
+
+    <!-- ===== AVAILABILITY ===== -->
+    <div id="page-availability" class="page">
+      <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);">
+        <div class="stat-card"><div class="stat-header"><div class="stat-icon" style="background:rgba(34,197,94,0.1);"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#22c55e;flex-shrink:0;"></span></div></div><div class="stat-val" id="avail-count">0</div><div class="stat-label">Disponibles</div></div>
+        <div class="stat-card"><div class="stat-header"><div class="stat-icon" style="background:rgba(59,130,246,0.1);"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#3b82f6;flex-shrink:0;"></span></div></div><div class="stat-val" id="reserved-count">0</div><div class="stat-label">Réservés</div></div>
+        <div class="stat-card"><div class="stat-header"><div class="stat-icon" style="background:rgba(245,158,11,0.1);"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#f59e0b;flex-shrink:0;"></span></div></div><div class="stat-val" id="maint-count">0</div><div class="stat-label">En maintenance</div></div>
+        <div class="stat-card"><div class="stat-header"><div class="stat-icon" style="background:rgba(239,68,68,0.1);"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#ef4444;flex-shrink:0;"></span></div></div><div class="stat-val" id="offroad-count">0</div><div class="stat-label">Hors service</div></div>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><div class="table-title">Statut en temps réel</div></div>
+        <table>
+          <thead><tr><th>Véhicule</th><th>Immatriculation</th><th>Statut</th><th>Prochaine dispo</th><th>Localisation</th><th>Actions</th></tr></thead>
+          <tbody id="availability-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== CUSTOMERS ===== -->
+    <div id="page-customers" class="page">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+        <div class="search-bar" style="flex:1;"><span style="display:flex;align-items:center;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span><input placeholder="Rechercher un client..."></div>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><div class="table-title">Base clients</div><button class="btn-sm ghost"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg> Exporter</button></div>
+        <table>
+          <thead><tr><th>Client</th><th>Email</th><th>Téléphone</th><th>Nationalité</th><th>Réservations</th><th>Total dépensé</th><th>Dernière résa</th></tr></thead>
+          <tbody id="customers-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== PAYMENTS ===== -->
+    <div id="page-payments" class="page">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-header"><div class="stat-icon" style="background:rgba(34,197,94,0.1);color:#22c55e;"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg></div></div><div class="stat-val">9 840 <span style="font-size:12px;color:var(--text2);">MAD</span></div><div class="stat-label">Payé ce mois</div></div>
+        <div class="stat-card"><div class="stat-header"><div class="stat-icon" style="background:rgba(245,158,11,0.1);">⏳</div></div><div class="stat-val">2 560 <span style="font-size:12px;color:var(--text2);">MAD</span></div><div class="stat-label">En attente</div></div>
+        <div class="stat-card"><div class="stat-header"><div class="stat-icon" style="background:rgba(239,68,68,0.1);color:#ef4444;"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5 5.5 5.5 0 0 1-5.5 5.5H11"/></svg></div></div><div class="stat-val">0</div><div class="stat-label">Remboursements</div></div>
+        <div class="stat-card"><div class="stat-header"><div class="stat-icon" style="background:rgba(59,130,246,0.1);color:#3b82f6;"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg></div></div><div class="stat-val">73%</div><div class="stat-label">Taux paiement complet</div></div>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><div class="table-title">Historique paiements</div></div>
+        <table>
+          <thead><tr><th>Réf.</th><th>Client</th><th>Type</th><th>Montant</th><th>Mode</th><th>Date</th><th>Statut</th></tr></thead>
+          <tbody id="payments-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== PROMOS ===== -->
+    <div id="page-promos" class="page">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:20px;">
+        <button class="topbar-btn primary" onclick="openModal('add-promo')">+ Créer une promo</button>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><div class="table-title">Codes Promotionnels</div></div>
+        <table>
+          <thead><tr><th>Code</th><th>Réduction</th><th>Type</th><th>Utilisations</th><th>Expire le</th><th>Statut</th><th>Actions</th></tr></thead>
+          <tbody>
+            <tr><td><strong>STAR10</strong></td><td>10%</td><td>Pourcentage</td><td>12 / ∞</td><td>31/12/2026</td><td><span class="badge badge-green">● Actif</span></td><td><button class="btn-sm ghost">Modifier</button></td></tr>
+            <tr><td><strong>STAR15</strong></td><td>15%</td><td>Pourcentage</td><td>5 / 20</td><td>30/09/2026</td><td><span class="badge badge-green">● Actif</span></td><td><button class="btn-sm ghost">Modifier</button></td></tr>
+            <tr><td><strong>WELCOME5</strong></td><td>5%</td><td>Pourcentage</td><td>8 / ∞</td><td>∞</td><td><span class="badge badge-green">● Actif</span></td><td><button class="btn-sm ghost">Modifier</button></td></tr>
+            <tr><td><strong>ETE2025</strong></td><td>20%</td><td>Pourcentage</td><td>43 / 50</td><td>31/08/2025</td><td><span class="badge badge-gray">● Expiré</span></td><td><button class="btn-sm ghost">Modifier</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== OPTIONS ===== -->
+    <div id="page-options" class="page">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('options-tab','assurances')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg> Assurances</button>
+        <button class="tab-btn" onclick="switchTab('options-tab','extras')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg> Options Extra</button>
+      </div>
+      <div id="options-tab-assurances">
+        <div class="table-card">
+          <div class="table-header"><div class="table-title">Niveaux de protection</div><button class="btn-sm primary" onclick="openModal('add-protection')">+ Ajouter</button></div>
+          <table>
+            <thead><tr><th>Nom</th><th>Prix/jour</th><th>Description</th><th>Franchise</th><th>Statut</th><th>Actions</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Protection Basique</strong></td><td>Gratuit</td><td>Assurance RC, franchise standard</td><td>3 000 MAD</td><td><span class="badge badge-green">● Actif</span></td><td><button class="btn-sm ghost">Modifier</button></td></tr>
+              <tr><td><strong>Protection Premium</strong></td><td>50 MAD/j</td><td>Tous risques, franchise réduite</td><td>1 000 MAD</td><td><span class="badge badge-green">● Actif</span></td><td><button class="btn-sm ghost">Modifier</button></td></tr>
+              <tr><td><strong>Protection Tout Risque</strong></td><td>100 MAD/j</td><td>Zéro franchise, couverture totale</td><td>0 MAD</td><td><span class="badge badge-green">● Actif</span></td><td><button class="btn-sm ghost">Modifier</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div id="options-tab-extras" style="display:none;">
+        <div class="table-card">
+          <div class="table-header"><div class="table-title">Options supplémentaires</div><button class="btn-sm primary">+ Ajouter</button></div>
+          <table>
+            <thead><tr><th>Option</th><th>Icône</th><th>Prix/jour</th><th>Description</th><th>Statut</th><th>Actions</th></tr></thead>
+            <tbody>
+              <tr><td>Conducteur supplémentaire</td><td><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></td><td>50 MAD</td><td>Ajouter un 2e conducteur</td><td><span class="badge badge-green">● Actif</span></td><td><button class="btn-sm ghost">Modifier</button></td></tr>
+              <tr><td>Siège Bébé</td><td><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M9 12h.01"/><path d="M15 12h.01"/><path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5"/><path d="M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 2.5c-.8 0-1.5-.4-1.5-1"/></svg></td><td>50 MAD</td><td>Homologué 9-18 kg</td><td><span class="badge badge-green">● Actif</span></td><td><button class="btn-sm ghost">Modifier</button></td></tr>
+              <tr><td>GPS Portable</td><td><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" x2="9" y1="3" y2="18"/><line x1="15" x2="15" y1="6" y2="21"/></svg></td><td>50 MAD</td><td>GPS avec cartes Maroc offline</td><td><span class="badge badge-green">● Actif</span></td><td><button class="btn-sm ghost">Modifier</button></td></tr>
+              <tr><td>Wifi Portable</td><td><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M5 13a10 10 0 0 1 14 0"/><path d="M8.5 16.5a5 5 0 0 1 7 0"/><path d="M2 8.82a15 15 0 0 1 20 0"/><line x1="12" x2="12.01" y1="20" y2="20"/></svg></td><td>50 MAD</td><td>4G illimitée au Maroc</td><td><span class="badge badge-green">● Actif</span></td><td><button class="btn-sm ghost">Modifier</button></td></tr>
+              <tr><td>Option Plein Carburant</td><td><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><line x1="3" x2="15" y1="22" y2="22"/><line x1="4" x2="14" y1="9" y2="9"/><path d="M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18"/><path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2 2 2 0 0 0 2-2V9.83a2 2 0 0 0-.59-1.42L18 5"/></svg></td><td>50 MAD</td><td>Retour avec plein vide autorisé</td><td><span class="badge badge-green">● Actif</span></td><td><button class="btn-sm ghost">Modifier</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SEO ===== -->
+    <div id="page-seo" class="page">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-header"><div class="stat-icon" style="background:rgba(59,130,246,0.1);color:#3b82f6;"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></div></div><div class="stat-val">1 240</div><div class="stat-label">Visites ce mois</div></div>
+        <div class="stat-card"><div class="stat-header"><div class="stat-icon" style="background:rgba(34,197,94,0.1);color:#22c55e;"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div></div><div class="stat-val">8.4%</div><div class="stat-label">Taux de conversion</div></div>
+        <div class="stat-card"><div class="stat-header"><div class="stat-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div></div><div class="stat-val">94</div><div class="stat-label">PageSpeed Score</div></div>
+        <div class="stat-card"><div class="stat-header"><div class="stat-icon" style="background:rgba(139,92,246,0.1);color:#8b5cf6;"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div></div><div class="stat-val">#3</div><div class="stat-label">Position Google "location voiture Marrakech"</div></div>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><div class="table-title"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg> Mots-clés SEO</div></div>
+        <table>
+          <thead><tr><th>Mot-clé</th><th>Position</th><th>Volume</th><th>Clics</th><th>Tendance</th></tr></thead>
+          <tbody>
+            <tr><td>location voiture marrakech</td><td>#3</td><td>2 400/mois</td><td>89</td><td><span style="color:var(--green);"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span></td></tr>
+            <tr><td>louer voiture marrakech</td><td>#5</td><td>1 800/mois</td><td>62</td><td><span style="color:var(--green);"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span></td></tr>
+            <tr><td>location voiture aeroport marrakech</td><td>#4</td><td>1 200/mois</td><td>44</td><td><span style="color:var(--green);"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span></td></tr>
+            <tr><td>rent a car marrakech</td><td>#7</td><td>900/mois</td><td>28</td><td><span style="color:var(--yellow);"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M5 12h14"/></svg></span></td></tr>
+            <tr><td>dacia duster location marrakech</td><td>#2</td><td>600/mois</td><td>35</td><td><span style="color:var(--green);"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal-content">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Nouvelle réservation</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-footer" id="modal-footer">
+      <button class="topbar-btn secondary" onclick="closeModal()">Annuler</button>
+      <button class="topbar-btn primary" id="modal-save" onclick="saveModal()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<script src="../data.js"></script>
+<script>
+// ==================== DATA (source unique partagée avec le site client) ====================
+let FLEET = ASLDB.getFleet();
+let RESERVATIONS = ASLDB.getReservations();
+
+function reloadData() {
+  FLEET = ASLDB.getFleet();
+  RESERVATIONS = ASLDB.getReservations();
+}
+
+const STATUS_LABELS = {
+  pending: { label:'En attente', class:'badge-yellow' },
+  confirmed: { label:'Confirmée', class:'badge-blue' },
+  active: { label:'En cours', class:'badge-green' },
+  completed: { label:'Terminée', class:'badge-gray' },
+  cancelled: { label:'Annulée', class:'badge-red' },
+};
+
+const AVAIL_LABELS = {
+  available: { label:'Disponible', class:'badge-green', emoji:`<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;flex-shrink:0;"></span>` },
+  reserved: { label:'Réservé', class:'badge-blue', emoji:`<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3b82f6;flex-shrink:0;"></span>` },
+  maintenance: { label:'Maintenance', class:'badge-yellow', emoji:`<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;flex-shrink:0;"></span>` },
+  offroad: { label:'Hors service', class:'badge-red', emoji:`<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444;flex-shrink:0;"></span>` },
+};
+
+// ==================== NAVIGATION ====================
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+  if(el) el.classList.add('active');
+  const titles = {
+    dashboard:'Tableau de bord', reservations:'Réservations', calendar:'Calendrier',
+    fleet:'Gestion Flotte', availability:'Disponibilités', customers:'Clients',
+    payments:'Paiements', promos:'Promotions', options:'Options & Assurances', seo:'SEO & Analytics'
+  };
+  document.getElementById('topbar-title').textContent = titles[id] || id;
+  // Recharge les données partagées avant chaque affichage
+  reloadData();
+  // Render specific pages
+  if(id==='reservations') renderAllReservations();
+  if(id==='calendar') renderCalendar();
+  if(id==='fleet') renderFleetPage();
+  if(id==='availability') renderAvailability();
+  if(id==='customers') renderCustomers();
+  if(id==='payments') renderPayments();
+  if(id==='dashboard') renderDashboard();
+}
+
+function switchTab(group, tab) {
+  const tabs = document.querySelectorAll(`[id^="${group}-"]`);
+  tabs.forEach(t => { t.style.display = t.id.endsWith(tab) ? 'block' : 'none'; });
+  document.querySelectorAll('.tab-btn').forEach((b,i) => {
+    const tabNames = {assurances:0, extras:1};
+    b.classList.toggle('active', tabNames[tab] === i);
+  });
+}
+
+// ==================== DASHBOARD ====================
+function renderDashboard() {
+  const now = new Date();
+  const monthPrefix = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const active = RESERVATIONS.filter(r=>r.status!=='cancelled');
+  const monthRes = active.filter(r => (r.createdAt||r.startDate||'').startsWith(monthPrefix));
+  const pending = RESERVATIONS.filter(r=>r.status==='pending');
+
+  // Stats réelles
+  document.getElementById('stat-total-res').textContent = monthRes.length;
+  document.getElementById('stat-pending').textContent = pending.length;
+  document.getElementById('badge-res').textContent = pending.length;
+  const revenue = monthRes.reduce((s,r)=>s+(r.amount||0),0);
+  document.getElementById('stat-revenue').innerHTML = `${revenue.toLocaleString('fr-FR')} <span style="font-size:14px;color:var(--text2);">MAD</span>`;
+  const activeVehicles = FLEET.filter(c=>c.status==='available'||c.status==='reserved').length;
+  document.getElementById('stat-vehicles').textContent = `${activeVehicles}/${FLEET.length}`;
+
+  // Graphique hebdomadaire réel (réservations créées par jour, semaine en cours)
+  const monday = new Date(now);
+  const dow = (now.getDay()+6)%7; // lundi = 0
+  monday.setDate(now.getDate()-dow);
+  monday.setHours(0,0,0,0);
+  const weekCounts = [0,0,0,0,0,0,0];
+  active.forEach(r => {
+    const d = new Date(r.createdAt || r.startDate);
+    const diff = Math.floor((d - monday)/(1000*60*60*24));
+    if (diff>=0 && diff<7) weekCounts[diff]++;
+  });
+  const max = Math.max(1, ...weekCounts);
+  const dayLabels = ['L','M','M','J','V','S','D'];
+  document.getElementById('weekly-chart').innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+      <div style="display:flex;align-items:flex-end;gap:5px;height:70px;">
+        ${weekCounts.map((c,i)=>`<div style="width:28px;height:${c?Math.max(8,Math.round(c/max*70)):4}px;background:${c?(i===dow?'var(--red)':'rgba(196,30,58,0.35)'):'rgba(0,0,0,0.06)'};border-radius:4px 4px 0 0;" title="${['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'][i]}: ${c}"></div>`).join('')}
+      </div>
+      <div style="display:flex;gap:5px;">
+        ${dayLabels.map(l=>`<div style="width:28px;text-align:center;font-size:9px;color:var(--text3);">${l}</div>`).join('')}
+      </div>
+    </div>`;
+
+  // Dernières réservations (les plus récentes en premier)
+  const tbody = document.getElementById('dashboard-reservations');
+  if (!RESERVATIONS.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text3);">Aucune réservation pour le moment.<br>Les réservations faites sur le site client apparaîtront ici automatiquement.</td></tr>`;
+  } else {
+    tbody.innerHTML = RESERVATIONS.slice(0,5).map(r => `
+    <tr>
+      <td><strong>${r.id}</strong></td>
+      <td>${r.client}</td>
+      <td>${r.car}</td>
+      <td>${r.startDate} → ${r.endDate}</td>
+      <td><strong>${r.amount} MAD</strong></td>
+      <td><span class="badge ${STATUS_LABELS[r.status].class}">● ${STATUS_LABELS[r.status].label}</span></td>
+      <td>
+        ${r.status==='pending'?`<button class="btn-sm primary" onclick="confirmRes('${r.id}')"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M20 6 9 17l-5-5"/></svg> Confirmer</button>`:''}
+        <button class="btn-sm ghost" onclick="viewRes('${r.id}')">Voir</button>
+      </td>
+    </tr>
+  `).join('');
+  }
+
+  const fsl = document.getElementById('fleet-status-list');
+  const counts = {};
+  FLEET.forEach(c=>{ counts[c.status]=(counts[c.status]||0)+1; });
+  fsl.innerHTML = Object.entries(AVAIL_LABELS).map(([k,v]) => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span>${v.emoji}</span>
+        <span style="font-size:13px;color:var(--text2);">${v.label}</span>
+      </div>
+      <span style="font-size:16px;font-weight:700;">${counts[k]||0}</span>
+    </div>
+  `).join('');
+}
+
+// ==================== RESERVATIONS ====================
+function renderAllReservations(filter='all') {
+  const list = filter==='all' ? RESERVATIONS : RESERVATIONS.filter(r=>r.status===filter);
+  const tbody = document.getElementById('all-reservations');
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--text3);">Aucune réservation${filter!=='all'?' avec ce statut':''}.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(r => `
+    <tr>
+      <td><strong>${r.id}</strong></td>
+      <td>
+        <div style="font-weight:600;">${r.client}</div>
+        <div style="font-size:11px;color:var(--text3);">${r.nationality}</div>
+      </td>
+      <td>${r.car}</td>
+      <td><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg> ${r.pickup}<br><span style="font-size:11px;color:var(--text3);">${r.startDate} ${r.startTime||'10:00'}</span></td>
+      <td><span style="font-size:12px;color:var(--text2);">${r.endDate}</span></td>
+      <td>${r.days}j</td>
+      <td><strong>${r.amount} MAD</strong></td>
+      <td><span class="badge ${r.source==='online'?'badge-blue':r.source==='whatsapp'?'badge-green':'badge-gray'}">${r.source==='online'?`<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>`:r.source==='whatsapp'?`<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>`:`<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`} ${r.source}</span></td>
+      <td><span class="badge ${STATUS_LABELS[r.status].class}">● ${STATUS_LABELS[r.status].label}</span></td>
+      <td style="white-space:nowrap;">
+        ${r.status==='pending'?`<button class="btn-sm primary" onclick="confirmRes('${r.id}')"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M20 6 9 17l-5-5"/></svg></button> `:''}
+        <button class="btn-sm ghost" onclick="viewRes('${r.id}')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        <button class="btn-sm ghost" onclick="cancelRes('${r.id}')" style="color:var(--text3);"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function filterReservations(status) { renderAllReservations(status); }
+
+function confirmRes(id) {
+  ASLDB.updateReservation(id, { status: 'confirmed' });
+  reloadData();
+  renderAllReservations(); renderDashboard();
+}
+
+function cancelRes(id) {
+  if(confirm('Annuler cette réservation ?')) {
+    ASLDB.updateReservation(id, { status: 'cancelled' });
+    reloadData();
+    renderAllReservations(); renderDashboard();
+  }
+}
+
+function viewRes(id) {
+  const r = RESERVATIONS.find(x=>x.id===id);
+  if(!r) return;
+  openModal('view-reservation');
+  document.getElementById('modal-title').textContent = `Réservation ${r.id}`;
+  document.getElementById('modal-body').innerHTML = `
+    <div class="res-detail-grid">
+      <div class="res-detail-item"><div class="res-detail-label">Client</div><div class="res-detail-val">${r.client}</div></div>
+      <div class="res-detail-item"><div class="res-detail-label">Téléphone</div><div class="res-detail-val">${r.phone}</div></div>
+      <div class="res-detail-item"><div class="res-detail-label">Email</div><div class="res-detail-val">${r.email}</div></div>
+      <div class="res-detail-item"><div class="res-detail-label">Nationalité</div><div class="res-detail-val">${r.nationality}</div></div>
+      <div class="res-detail-item"><div class="res-detail-label">Véhicule</div><div class="res-detail-val">${r.car}</div></div>
+      <div class="res-detail-item"><div class="res-detail-label">Durée</div><div class="res-detail-val">${r.days} jours</div></div>
+      <div class="res-detail-item"><div class="res-detail-label">Prise en charge</div><div class="res-detail-val">${r.pickup}<br><small>${r.startDate}</small></div></div>
+      <div class="res-detail-item"><div class="res-detail-label">Retour</div><div class="res-detail-val">${r.endDate}</div></div>
+      <div class="res-detail-item"><div class="res-detail-label">Montant Total</div><div class="res-detail-val" style="color:var(--red);font-size:20px;">${r.amount} MAD</div></div>
+      <div class="res-detail-item"><div class="res-detail-label">Paiement</div><div class="res-detail-val">${r.payment==='full'?'Complet':r.payment==='advance'?'Acompte 40%':'Sur place'}</div></div>
+      <div class="res-detail-item"><div class="res-detail-label">Source</div><div class="res-detail-val">${r.source}</div></div>
+      <div class="res-detail-item"><div class="res-detail-label">Statut</div><div class="res-detail-val"><span class="badge ${STATUS_LABELS[r.status].class}">${STATUS_LABELS[r.status].label}</span></div></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px;">
+      <a href="https://wa.me/${r.phone.replace(/[^0-9]/g,'')}" target="_blank" class="topbar-btn primary" style="flex:1;text-align:center;text-decoration:none;"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg> WhatsApp</a>
+      <a href="tel:${r.phone}" class="topbar-btn secondary" style="flex:1;text-align:center;text-decoration:none;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg> Appeler</a>
+    </div>
+  `;
+  document.getElementById('modal-footer').style.display = r.status==='pending' ? 'flex' : 'none';
+  if(r.status==='pending') {
+    document.getElementById('modal-save').textContent = 'Confirmer la réservation';
+    document.getElementById('modal-save').onclick = () => { confirmRes(id); closeModal(); };
+  }
+}
+
+// ==================== CALENDAR ====================
+let calYear = 2026, calMonth = 5; // June 2026 (0-indexed)
+
+function prevMonth() { calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); }
+function nextMonth() { calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); }
+
+function renderCalendar() {
+  const months = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  document.getElementById('cal-month-label').textContent = `${months[calMonth]} ${calYear}`;
+
+  // Populate car filter
+  const sel = document.getElementById('cal-car-filter');
+  if(sel.options.length <= 1) {
+    FLEET.forEach(c => {
+      const o = document.createElement('option');
+      o.value = c.id; o.textContent = c.name;
+      sel.appendChild(o);
+    });
+  }
+
+  const firstDay = new Date(calYear, calMonth, 1).getDay();
+  const start = firstDay === 0 ? 6 : firstDay - 1; // Monday first
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  const today = new Date();
+
+  const grid = document.getElementById('cal-grid');
+  let html = '';
+
+  // Empty cells
+  for(let i=0; i<start; i++) {
+    html += `<div class="cal-day" style="opacity:0.2;"></div>`;
+  }
+
+  for(let d=1; d<=daysInMonth; d++) {
+    const isToday = today.getFullYear()===calYear && today.getMonth()===calMonth && today.getDate()===d;
+    const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    // Find reservations for this day
+    const dayRes = RESERVATIONS.filter(r => dateStr >= r.startDate && dateStr <= r.endDate);
+    const events = dayRes.map(r => `<div class="cal-event reserved" title="${r.client}: ${r.car}">${r.car.split(' ')[0]}</div>`).join('');
+    html += `
+      <div class="cal-day${isToday?' today':''}" onclick="calDayClick(${d})">
+        <div class="cal-day-num">${d}</div>
+        ${events}
+      </div>
+    `;
+  }
+  grid.innerHTML = html;
+}
+
+function calDayClick(d) {
+  const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  const dayRes = RESERVATIONS.filter(r => dateStr >= r.startDate && dateStr <= r.endDate);
+  if(dayRes.length) {
+    alert(`${dayRes.length} réservation(s) le ${d}:\n${dayRes.map(r=>`• ${r.client} - ${r.car}`).join('\n')}`);
+  }
+}
+
+// ==================== FLEET PAGE ====================
+function renderFleetPage() {
+  const grid = document.getElementById('fleet-grid');
+  grid.innerHTML = FLEET.map(c => {
+    const avail = AVAIL_LABELS[c.status];
+    return `
+      <div class="fleet-card">
+        <div class="fleet-img">
+          <img src="${c.img}" alt="${c.name}">
+          <div class="fleet-status"><span class="badge ${avail.class}">${avail.emoji} ${avail.label}</span></div>
+        </div>
+        <div class="fleet-body">
+          <div class="fleet-name">${c.name}</div>
+          <div class="fleet-price">${c.priceMAD} MAD / jour <span style="font-size:11px;color:var(--text3);font-weight:400;">(${c.priceEUR} € sur le site)</span></div>
+          <div class="fleet-specs">
+            <span class="fleet-spec"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg> ${c.transmission}</span>
+            <span class="fleet-spec"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><line x1="3" x2="15" y1="22" y2="22"/><line x1="4" x2="14" y1="9" y2="9"/><path d="M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18"/><path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2 2 2 0 0 0 2-2V9.83a2 2 0 0 0-.59-1.42L18 5"/></svg> ${c.fuel}</span>
+            <span class="fleet-spec"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ${c.seats} places</span>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:10px;"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/></svg> ${c.plate}</div>
+          <div class="fleet-actions">
+            <button class="fleet-btn" onclick="editCar(${c.id})"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Modifier</button>
+            <button class="fleet-btn" onclick="deleteCar(${c.id})" style="color:#ef4444;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg> Supprimer</button>
+            <select class="fleet-btn" onchange="changeStatus(${c.id}, this.value)" style="font-size:11px;">
+              <option value="">Changer statut</option>
+              <option value="available">Disponible</option>
+              <option value="reserved">Réservé</option>
+              <option value="maintenance">Maintenance</option>
+              <option value="offroad">Hors service</option>
+            </select>
+          </div>
+          <div style="font-size:11px;margin-top:8px;color:${(c.status==='available'||c.status==='reserved')?'var(--green, #22C55E)':'#ef4444'};">
+            ${(c.status==='available'||c.status==='reserved')?`<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg> Visible sur le site client`:`<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg> Masqué sur le site client`}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function changeStatus(id, status) {
+  if(!status) return;
+  ASLDB.updateVehicle(id, { status });
+  reloadData();
+  renderFleetPage(); renderAvailability(); renderDashboard();
+}
+
+function deleteCar(id) {
+  const car = FLEET.find(c=>c.id===id);
+  if(!car) return;
+  if(!confirm(`Supprimer définitivement "${car.name}" (${car.plate}) ?\nIl disparaîtra aussi du site client.`)) return;
+  ASLDB.deleteVehicle(id);
+  reloadData();
+  renderFleetPage(); renderAvailability(); renderDashboard();
+}
+
+function editCar(id) {
+  const car = FLEET.find(c=>c.id===id);
+  if(!car) return;
+  openModal('edit-car');
+  document.getElementById('modal-title').textContent = `Modifier: ${car.name}`;
+  document.getElementById('modal-body').innerHTML = `
+    <div class="form-group"><label class="form-label">Nom</label><input class="form-input" value="${car.name}" id="edit-name"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Prix / jour (MAD)</label><input class="form-input" type="number" value="${car.priceMAD}" id="edit-price-mad"></div>
+      <div class="form-group"><label class="form-label">Prix site client (€)</label><input class="form-input" type="number" value="${car.priceEUR}" id="edit-price-eur"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Immatriculation</label><input class="form-input" value="${car.plate}" id="edit-plate"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Transmission</label>
+        <select class="form-select" id="edit-trans"><option ${car.transmission==='Automatique'||car.transmission==='Auto'?'selected':''}>Automatique</option><option ${car.transmission==='Manuelle'?'selected':''}>Manuelle</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Carburant</label>
+        <select class="form-select" id="edit-fuel"><option ${car.fuel==='Diesel'?'selected':''}>Diesel</option><option ${car.fuel==='Essence'?'selected':''}>Essence</option></select>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">Catégorie (filtre du site client)</label>
+      <select class="form-select" id="edit-cat">
+        <option value="citadine" ${car.category==='citadine'?'selected':''}>Citadine</option>
+        <option value="economique" ${car.category==='economique'?'selected':''}>Économique</option>
+        <option value="familiale" ${car.category==='familiale'?'selected':''}>Familiale</option>
+        <option value="suv" ${car.category==='suv'?'selected':''}>SUV</option>
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">Photo du véhicule</label>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <button type="button" class="btn-sm primary" id="edit-upload-btn"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg> Téléverser une image</button>
+        <input type="file" id="edit-file" accept="image/*" style="display:none;">
+        <span id="edit-upload-status" style="font-size:12px;color:var(--text3);"></span>
+      </div>
+      <img id="edit-preview" alt="Aperçu du véhicule" style="display:none;margin-top:10px;width:100%;max-width:280px;height:130px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,0.12);">
+    </div>
+    <div class="form-group"><label class="form-label">URL Photo (option secondaire)</label><input class="form-input" placeholder="https://..." value="${car.img||''}" id="edit-img"></div>
+    <div class="form-group"><label class="form-label">Statut</label>
+      <select class="form-select" id="edit-status">
+        <option value="available" ${car.status==='available'?'selected':''}>Disponible</option>
+        <option value="reserved" ${car.status==='reserved'?'selected':''}>Réservé</option>
+        <option value="maintenance" ${car.status==='maintenance'?'selected':''}>Maintenance</option>
+        <option value="offroad" ${car.status==='offroad'?'selected':''}>Hors service</option>
+      </select>
+    </div>
+  `;
+  // Aide : MAD saisi → suggestion automatique du prix en €
+  document.getElementById('edit-price-mad').addEventListener('input', e => {
+    document.getElementById('edit-price-eur').value = Math.round(parseInt(e.target.value||0) / ASLDB.RATE_MAD);
+  });
+  wireImageUpload('edit');
+  document.getElementById('modal-save').onclick = () => {
+    ASLDB.updateVehicle(id, {
+      name: document.getElementById('edit-name').value,
+      priceMAD: parseInt(document.getElementById('edit-price-mad').value) || car.priceMAD,
+      priceEUR: parseInt(document.getElementById('edit-price-eur').value) || car.priceEUR,
+      plate: document.getElementById('edit-plate').value,
+      transmission: document.getElementById('edit-trans').value,
+      fuel: document.getElementById('edit-fuel').value,
+      category: document.getElementById('edit-cat').value,
+      img: document.getElementById('edit-img').value || car.img,
+      status: document.getElementById('edit-status').value,
+    });
+    reloadData();
+    renderFleetPage(); renderAvailability(); renderDashboard();
+    closeModal();
+  };
+}
+
+
+// ==================== TÉLÉVERSEMENT D'IMAGES (véhicules) ====================
+// Méthode principale : upload direct (compressé navigateur, stocké côté serveur).
+// Le champ URL reste utilisable en option secondaire.
+function wireImageUpload(prefix) {
+  const btn = document.getElementById(prefix + '-upload-btn');
+  const file = document.getElementById(prefix + '-file');
+  const status = document.getElementById(prefix + '-upload-status');
+  const preview = document.getElementById(prefix + '-preview');
+  const urlInput = document.getElementById(prefix + '-img');
+  if (!btn || !file || !urlInput) return;
+  function showPreview(src) {
+    if (!preview) return;
+    if (src) { preview.src = src; preview.style.display = 'block'; }
+    else { preview.removeAttribute('src'); preview.style.display = 'none'; }
+  }
+  showPreview(urlInput.value.trim());
+  urlInput.addEventListener('input', () => showPreview(urlInput.value.trim()));
+  btn.onclick = () => file.click();
+  file.onchange = async (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    btn.disabled = true;
+    status.style.color = 'var(--text3)';
+    status.textContent = 'Compression et envoi en cours…';
+    try {
+      const url = await ASLDB.uploadImage(f);
+      urlInput.value = url;
+      showPreview(url);
+      status.style.color = 'var(--green)';
+      status.textContent = 'Image téléversée — elle sera visible sur le site client.';
+    } catch (err) {
+      status.style.color = '#ef4444';
+      status.textContent = err && err.message ? err.message : "Échec du téléversement — réessayez ou utilisez le champ URL.";
+    } finally {
+      btn.disabled = false;
+      file.value = '';
+    }
+  };
+}
+
+// ==================== AVAILABILITY ====================
+function renderAvailability() {
+  const counts = {};
+  FLEET.forEach(c=>{ counts[c.status]=(counts[c.status]||0)+1; });
+  document.getElementById('avail-count').textContent = counts.available||0;
+  document.getElementById('reserved-count').textContent = counts.reserved||0;
+  document.getElementById('maint-count').textContent = counts.maintenance||0;
+  document.getElementById('offroad-count').textContent = counts.offroad||0;
+
+  const tbody = document.getElementById('availability-table');
+  tbody.innerHTML = FLEET.map(c => {
+    const avail = AVAIL_LABELS[c.status];
+    const nextRes = RESERVATIONS.filter(r=>r.carId===c.id && r.status!=='cancelled' && r.endDate >= new Date().toISOString().split('T')[0]).sort((a,b)=>a.startDate.localeCompare(b.startDate))[0];
+    return `
+      <tr>
+        <td><strong>${c.name}</strong></td>
+        <td style="color:var(--text2);font-size:12px;">${c.plate}</td>
+        <td><span class="badge ${avail.class}">${avail.emoji} ${avail.label}</span></td>
+        <td style="font-size:12px;color:var(--text2);">${nextRes ? (c.status==='reserved'?`Libre dès ${nextRes.endDate}`: nextRes.startDate) : 'Aucune réservation'}</td>
+        <td style="font-size:12px;color:var(--text2);">Marrakech</td>
+        <td>
+          <select class="form-select" style="width:150px;padding:6px 10px;font-size:12px;" onchange="changeStatus(${c.id}, this.value)">
+            <option value="">Changer</option>
+            <option value="available">Disponible</option>
+            <option value="reserved">Réservé</option>
+            <option value="maintenance">Maintenance</option>
+            <option value="offroad">Hors service</option>
+          </select>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// ==================== CUSTOMERS ====================
+function renderCustomers() {
+  const customers = {};
+  RESERVATIONS.forEach(r => {
+    if(!customers[r.email]) customers[r.email] = { name:r.client, email:r.email, phone:r.phone, nationality:r.nationality, count:0, total:0, last:'' };
+    customers[r.email].count++;
+    customers[r.email].total += r.amount;
+    if(r.startDate > customers[r.email].last) customers[r.email].last = r.startDate;
+  });
+  const tbody = document.getElementById('customers-table');
+  tbody.innerHTML = Object.values(customers).map(c => `
+    <tr>
+      <td><strong>${c.name}</strong></td>
+      <td style="color:var(--text2);font-size:12px;">${c.email}</td>
+      <td style="font-size:12px;">${c.phone}</td>
+      <td><span class="badge badge-gray">${c.nationality||'N/A'}</span></td>
+      <td style="text-align:center;"><strong>${c.count}</strong></td>
+      <td><strong style="color:var(--green);">${c.total} MAD</strong></td>
+      <td style="font-size:12px;color:var(--text2);">${c.last}</td>
+    </tr>
+  `).join('');
+}
+
+// ==================== PAYMENTS ====================
+function renderPayments() {
+  const tbody = document.getElementById('payments-table');
+  tbody.innerHTML = RESERVATIONS.map(r => `
+    <tr>
+      <td><strong>${r.id}</strong></td>
+      <td>${r.client}</td>
+      <td>${r.payment==='full'?'Complet':r.payment==='advance'?'Acompte':'Sur place'}</td>
+      <td><strong>${r.payment==='advance'?Math.round(r.amount*0.4):r.payment==='full'?r.amount:0} MAD</strong></td>
+      <td><span class="badge badge-gray">${r.source==='online'?`<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg> CB`:`<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg> Espèces`}</span></td>
+      <td style="font-size:12px;color:var(--text2);">${r.startDate}</td>
+      <td><span class="badge ${r.status==='completed'||r.status==='active'||r.status==='confirmed'?'badge-green':'badge-yellow'}">● ${r.status==='completed'||r.status==='active'?'Payé':r.status==='pending'?'En attente':'Annulé'}</span></td>
+    </tr>
+  `).join('');
+}
+
+// ==================== MODALS ====================
+function openModal(type) {
+  document.getElementById('modal-overlay').classList.add('open');
+  const titles = {
+    'new-reservation':'Nouvelle réservation manuelle',
+    'add-car':'Ajouter un véhicule',
+    'add-promo':'Créer un code promo',
+    'add-protection':'Ajouter une protection',
+  };
+  document.getElementById('modal-title').textContent = titles[type] || type;
+  document.getElementById('modal-footer').style.display = 'flex';
+
+  if(type==='new-reservation') {
+    document.getElementById('modal-body').innerHTML = `
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Prénom</label><input class="form-input" placeholder="Prénom" id="nr-firstname"></div>
+        <div class="form-group"><label class="form-label">Nom</label><input class="form-input" placeholder="Nom" id="nr-lastname"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Téléphone / WhatsApp</label><input class="form-input" placeholder="+212 6..." id="nr-phone"></div>
+      <div class="form-group"><label class="form-label">Véhicule</label>
+        <select class="form-select" id="nr-car">${FLEET.map(c=>`<option value="${c.id}">${c.name} — ${c.priceMAD} MAD/j</option>`).join('')}</select>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Date départ</label><input type="date" class="form-input" id="nr-start"></div>
+        <div class="form-group"><label class="form-label">Date retour</label><input type="date" class="form-input" id="nr-end"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Lieu de prise en charge</label>
+        <select class="form-select" id="nr-pickup">
+          <option>Aéroport Marrakech (RAK)</option><option>Centre-Ville</option><option>Gare</option><option>Hôtel</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Source</label>
+        <select class="form-select" id="nr-source"><option value="phone">Téléphone</option><option value="whatsapp">WhatsApp</option><option value="online">En ligne</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Notes</label><textarea class="form-input form-textarea" rows="2" placeholder="Notes internes..." id="nr-notes"></textarea></div>
+    `;
+    document.getElementById('modal-save').onclick = () => {
+      const fn = document.getElementById('nr-firstname')?.value;
+      const ln = document.getElementById('nr-lastname')?.value;
+      const carId = parseInt(document.getElementById('nr-car')?.value);
+      const car = FLEET.find(c=>c.id===carId);
+      const start = document.getElementById('nr-start')?.value;
+      const end = document.getElementById('nr-end')?.value;
+      if(!fn||!start||!end){ alert('Complétez les champs obligatoires'); return; }
+      const days = Math.max(1, Math.round((new Date(end)-new Date(start))/(1000*60*60*24)));
+      const newRes = ASLDB.addReservation({
+        client: `${fn} ${ln||''}`.trim(),
+        email: '', phone: document.getElementById('nr-phone')?.value||'',
+        car: car?.name||'', carId,
+        days, amount: (car?.priceMAD||0)*days,
+        startDate: start, endDate: end,
+        pickup: document.getElementById('nr-pickup')?.value||'',
+        source: document.getElementById('nr-source')?.value||'phone',
+        status: 'confirmed', payment: 'onsite', nationality: 'N/A',
+        notes: document.getElementById('nr-notes')?.value||'',
+      });
+      reloadData();
+      renderAllReservations(); renderDashboard();
+      closeModal();
+      alert(`Réservation ${newRes.id} créée et enregistrée !`);
+    };
+  }
+
+  if(type==='add-car') {
+    document.getElementById('modal-body').innerHTML = `
+      <div class="form-group"><label class="form-label">Nom du véhicule</label><input class="form-input" placeholder="Ex: Dacia Logan" id="ac-name"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Prix / jour (MAD)</label><input class="form-input" type="number" placeholder="300" id="ac-price-mad"></div>
+        <div class="form-group"><label class="form-label">Prix site client (€)</label><input class="form-input" type="number" placeholder="30" id="ac-price-eur"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Immatriculation</label><input class="form-input" placeholder="ABC-123-MK" id="ac-plate"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Transmission</label>
+          <select class="form-select" id="ac-trans"><option>Automatique</option><option>Manuelle</option></select>
+        </div>
+        <div class="form-group"><label class="form-label">Carburant</label>
+          <select class="form-select" id="ac-fuel"><option>Diesel</option><option>Essence</option></select>
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Catégorie (filtre du site client)</label>
+        <select class="form-select" id="ac-cat">
+          <option value="citadine">Citadine</option>
+          <option value="economique">Économique</option>
+          <option value="familiale">Familiale</option>
+          <option value="suv">SUV</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Photo du véhicule</label>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <button type="button" class="btn-sm primary" id="ac-upload-btn"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg> Téléverser une image</button>
+        <input type="file" id="ac-file" accept="image/*" style="display:none;">
+        <span id="ac-upload-status" style="font-size:12px;color:var(--text3);"></span>
+      </div>
+      <img id="ac-preview" alt="Aperçu du véhicule" style="display:none;margin-top:10px;width:100%;max-width:280px;height:130px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,0.12);">
+    </div>
+    <div class="form-group"><label class="form-label">URL Photo (option secondaire)</label><input class="form-input" placeholder="https://..." id="ac-img"></div>
+    `;
+    document.getElementById('ac-price-mad').addEventListener('input', e => {
+      document.getElementById('ac-price-eur').value = Math.round(parseInt(e.target.value||0) / ASLDB.RATE_MAD);
+    });
+    wireImageUpload('ac');
+    document.getElementById('modal-save').onclick = () => {
+      const name = document.getElementById('ac-name')?.value;
+      if(!name){ alert('Entrez le nom du véhicule'); return; }
+      const priceMAD = parseInt(document.getElementById('ac-price-mad')?.value) || 300;
+      const priceEUR = parseInt(document.getElementById('ac-price-eur')?.value) || Math.round(priceMAD / ASLDB.RATE_MAD);
+      const cat = document.getElementById('ac-cat')?.value || 'economique';
+      const catLabels = { citadine:'Citadine', economique:'Économique', familiale:'Familiale', suv:'SUV' };
+      ASLDB.addVehicle({
+        name,
+        plate: document.getElementById('ac-plate')?.value || '',
+        priceMAD, priceEUR,
+        category: cat,
+        badge: catLabels[cat],
+        status: 'available',
+        fuel: document.getElementById('ac-fuel')?.value,
+        transmission: document.getElementById('ac-trans')?.value,
+        seats: 5,
+        featured: false,
+        services: ['Clim','Radio'],
+        img: document.getElementById('ac-img')?.value || 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=600&q=80'
+      });
+      reloadData();
+      renderFleetPage(); renderAvailability(); renderDashboard();
+      closeModal();
+      alert(`Véhicule "${name}" ajouté ! Il est maintenant visible sur le site client.`);
+    };
+  }
+
+  if(type==='add-promo') {
+    document.getElementById('modal-body').innerHTML = `
+      <div class="form-group"><label class="form-label">Code promo</label><input class="form-input" placeholder="PROMO20" id="p-code" style="text-transform:uppercase;"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Réduction (%)</label><input class="form-input" type="number" placeholder="10" id="p-disc" min="1" max="100"></div>
+        <div class="form-group"><label class="form-label">Utilisations max</label><input class="form-input" type="number" placeholder="∞" id="p-uses"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Date d'expiration</label><input type="date" class="form-input" id="p-exp"></div>
+    `;
+  }
+}
+
+function closeModal(e) {
+  if(e && e.target !== document.getElementById('modal-overlay')) return;
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+function saveModal() { /* handled per modal */ }
+
+// ==================== INIT ====================
+document.addEventListener('DOMContentLoaded', () => {
+  renderDashboard();
+  renderCalendar();
+  renderAvailability();
+
+  // Synchronisation : une réservation faite sur le site client (autre onglet)
+  // apparaît ici automatiquement, sans recharger la page
+  ASLDB.onChange(() => {
+    reloadData();
+    const activePage = document.querySelector('.page.active');
+    if (!activePage) return;
+    const id = activePage.id.replace('page-','');
+    if(id==='dashboard') renderDashboard();
+    if(id==='reservations') renderAllReservations();
+    if(id==='calendar') renderCalendar();
+    if(id==='fleet') renderFleetPage();
+    if(id==='availability') renderAvailability();
+    if(id==='customers') renderCustomers();
+    if(id==='payments') renderPayments();
+    // Badge toujours à jour
+    document.getElementById('badge-res').textContent = RESERVATIONS.filter(r=>r.status==='pending').length;
+  });
+});
+</script>
+</body>
+</html>
