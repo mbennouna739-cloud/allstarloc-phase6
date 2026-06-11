@@ -1,0 +1,68 @@
+ALL STAR LOC — PHASE 6 : SYNCHRONISATION MULTI-APPAREILS + UPLOAD D'IMAGES
+============================================================================
+
+CE QUI CHANGE
+- Les véhicules et réservations sont désormais stockés sur un SERVEUR CENTRAL
+  (votre hébergement Cloudflare : Pages Functions + base KV).
+  → identiques sur PC, téléphone, tablette, tout navigateur, tout visiteur,
+    l'URL *.pages.dev et le futur domaine allstarloc.ma.
+  → conservés après fermeture du navigateur.
+- L'administration dispose d'un bouton « Téléverser une image » (méthode
+  principale) dans Ajouter un véhicule et Modifier. L'image est compressée
+  dans le navigateur (max 1280 px), stockée côté serveur, servie en
+  /api/img/nom-du-vehicule-xxxxxx.jpg avec cache CDN 1 an. Aperçu automatique.
+  Le champ « URL Photo » reste disponible en option secondaire.
+- Le localStorage ne sert plus que de cache + mode hors-ligne : une
+  réservation prise pendant une coupure est renvoyée automatiquement.
+- Un badge discret en bas à gauche de l'ADMINISTRATION indique l'état :
+  vert « Synchronisé (serveur) » / orange « Hors ligne » / gris « Mode local ».
+
+MISE EN SERVICE SUR CLOUDFLARE (5 minutes, une seule fois)
+1. Déployez ce ZIP sur votre projet Cloudflare Pages comme d'habitude
+   (le dossier /functions est détecté automatiquement : il devient l'API /api).
+2. Tableau de bord Cloudflare → Storage & Databases → KV
+   → Create namespace → nom libre, ex. ASL-DATA.
+3. Workers & Pages → votre projet Pages → Settings → Bindings → Add
+   → KV namespace → Variable name : ASL_DB  → Namespace : ASL-DATA.
+   Faites-le pour Production ET Preview. Puis « Retry deployment »
+   (ou redéployez) pour activer le binding.
+4. Vérification : ouvrez https://votre-site.pages.dev/api/health
+   → vous devez voir « kv: lié (ASL_DB) ».
+5. Ouvrez l'administration : badge vert + la flotte initiale est envoyée
+   au serveur automatiquement. C'est en service.
+
+SÉCURITÉ (fortement recommandé en production)
+6. Pages → Settings → Variables and Secrets → Add :
+   ADMIN_KEY = un mot de passe long (ex. 30 caractères aléatoires).
+7. Ouvrez data.js (racine du site) et reportez la MÊME valeur dans
+   const ADMIN_KEY = '...'; puis redéployez.
+   Effet : seules vos pages peuvent modifier la flotte, mettre à jour des
+   réservations et téléverser des images. Les clients peuvent toujours
+   RÉSERVER (volontairement public). Sans cette étape, l'API d'écriture
+   est ouverte (acceptable pour tester, pas pour la production).
+   Note : la clé étant lisible dans data.js par un visiteur déterminé,
+   c'est une protection raisonnable, pas un coffre-fort — une vraie
+   authentification admin pourra être ajoutée dans une phase future.
+
+DOMAINE OFFICIEL
+- Quand allstarloc.ma sera rattaché au même projet Pages (Custom domains),
+  tout fonctionne à l'identique sans aucune modification : même API,
+  mêmes données, mêmes images.
+
+FONCTIONNEMENT TECHNIQUE (résumé)
+- data.js (v2) : même API ASLDB qu'avant (aucun changement dans le code du
+  site ni de l'admin) ; écritures locales instantanées + envoi serveur ;
+  vérification des nouveautés toutes les 8 s, au retour sur l'onglet et au
+  retour du réseau ; files d'attente hors-ligne persistantes.
+- functions/api/[[route]].js : GET /state, PUT /fleet, POST /reservations
+  (add public / update admin), POST /upload, GET /img/<id>, GET /health.
+- Réservations : en cas d'identifiants identiques générés par deux appareils,
+  le serveur ré-attribue un identifiant — aucune réservation n'est perdue.
+- data_v1_backup_local.js : copie de l'ancienne couche (référence, non chargée).
+
+LIMITES CONNUES
+- En local (fichier ouvert directement, sans serveur) : mode local automatique,
+  pas de synchro ni d'upload (utiliser le champ URL) — comportement identique
+  aux phases précédentes.
+- Le quota gratuit Cloudflare KV (1 Go, 100 000 lectures/jour, le cache CDN
+  absorbe l'essentiel des lectures d'images) est très confortable pour ce site.

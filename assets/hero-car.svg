@@ -1,0 +1,142 @@
+<svg viewBox="0 0 900 440" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Voiture de location ALL STAR LOC">
+  <defs>
+    <!-- Carrosserie gris métallisé / blanc nacré -->
+    <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F8F9FB"/>
+      <stop offset="45%" stop-color="#DDE1E7"/>
+      <stop offset="75%" stop-color="#B9BfC9"/>
+      <stop offset="100%" stop-color="#9AA1AC"/>
+    </linearGradient>
+    <linearGradient id="bodyLow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#AEB4BE"/>
+      <stop offset="100%" stop-color="#7E8590"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2A2F38"/>
+      <stop offset="55%" stop-color="#3C434F"/>
+      <stop offset="100%" stop-color="#1C2027"/>
+    </linearGradient>
+    <linearGradient id="glassShine" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="wheelRim" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#E8EAEE"/>
+      <stop offset="55%" stop-color="#B7BCC4"/>
+      <stop offset="100%" stop-color="#6E747E"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#C41E3A" stop-opacity="0.30"/>
+      <stop offset="60%" stop-color="#C41E3A" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#C41E3A" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="headlight" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#CFE4F5"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Halos rouges subtils -->
+  <ellipse cx="470" cy="240" rx="430" ry="200" fill="url(#glow)"/>
+  <ellipse cx="700" cy="170" rx="180" ry="140" fill="url(#glow)" opacity="0.6"/>
+
+  <!-- Ombre au sol -->
+  <ellipse cx="455" cy="392" rx="360" ry="26" fill="#0A0A0A" opacity="0.16"/>
+
+  <!-- ===== Carrosserie (berline compacte moderne, profil 3/4 avant gauche) ===== -->
+  <g>
+    <!-- Volume principal -->
+    <path d="M120 330
+             C112 300 116 272 132 260
+             C150 246 196 238 236 234
+             C268 200 306 168 358 152
+             C414 135 496 132 560 142
+             C616 151 660 174 692 206
+             C734 214 772 226 794 242
+             C812 255 820 274 818 296
+             C816 318 806 330 788 334
+             L760 338
+             C754 296 718 264 672 264
+             C626 264 590 296 584 338
+             L320 338
+             C314 296 278 264 232 264
+             C186 264 150 296 144 338
+             L138 338
+             C128 338 122 336 120 330 Z"
+          fill="url(#body)" stroke="#8B919C" stroke-width="2"/>
+
+    <!-- Bas de caisse -->
+    <path d="M144 338 L584 338 L584 352 C584 358 578 362 570 362 L330 362 C322 362 318 358 318 352 L318 338 Z" fill="url(#bodyLow)" opacity="0.55"/>
+    <path d="M584 338 L760 338 L758 352 C757 358 751 362 744 362 L600 362 C592 362 586 356 585 348 Z" fill="url(#bodyLow)" opacity="0.55"/>
+
+    <!-- Vitrage -->
+    <path d="M250 232
+             C282 200 318 172 364 158
+             C410 144 482 142 546 150
+             C588 156 622 172 650 196
+             L640 228
+             C636 234 630 236 622 236
+             L286 238
+             C268 238 254 236 250 232 Z"
+          fill="url(#glass)"/>
+    <!-- Montant central -->
+    <path d="M448 150 L460 236 L444 236 L432 152 Z" fill="#C9CDD5"/>
+    <!-- Reflet vitre -->
+    <path d="M268 226 C298 196 332 172 374 160 L398 158 L300 234 L280 234 Z" fill="url(#glassShine)"/>
+
+    <!-- Ligne de caractère -->
+    <path d="M150 282 C260 268 560 262 700 276" stroke="#FFFFFF" stroke-opacity="0.5" stroke-width="3" fill="none"/>
+    <path d="M150 290 C260 276 560 270 702 284" stroke="#6E747E" stroke-opacity="0.35" stroke-width="2" fill="none"/>
+
+    <!-- Poignées -->
+    <rect x="350" y="252" width="44" height="7" rx="3.5" fill="#7E8590"/>
+    <rect x="500" y="252" width="44" height="7" rx="3.5" fill="#7E8590"/>
+
+    <!-- Rétroviseur -->
+    <path d="M256 232 C246 224 240 222 232 224 C226 226 226 234 232 238 C238 242 250 240 256 236 Z" fill="#B9BFC9" stroke="#8B919C" stroke-width="1.5"/>
+
+    <!-- Face avant -->
+    <path d="M692 206 C734 214 772 226 794 242 C806 251 814 262 817 276 L780 276 C766 276 756 270 750 260 L720 222 Z" fill="#D6DAE1" opacity="0.7"/>
+    <!-- Phare avant (signature LED) -->
+    <path d="M760 250 C778 252 794 258 804 266 C808 270 806 276 800 277 L766 278 C758 278 753 272 754 264 Z" fill="url(#headlight)" stroke="#9DB7CC" stroke-width="1.5"/>
+    <path d="M758 262 L800 270" stroke="#C41E3A" stroke-width="3" stroke-linecap="round"/>
+    <!-- Feu arrière -->
+    <path d="M124 268 C120 280 119 296 122 310 L138 308 C134 294 134 280 138 268 Z" fill="#C41E3A"/>
+    <path d="M126 274 C123 284 123 296 125 304" stroke="#FF8696" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+    <!-- Calandre basse -->
+    <path d="M812 290 C816 296 816 306 812 314 C808 322 800 326 790 326 L774 326 L776 290 Z" fill="#1A1A1A"/>
+
+    <!-- Plaque ALL STAR LOC -->
+    <g>
+      <rect x="724" y="364" width="100" height="25" rx="5" fill="#FFFFFF" stroke="#1A1A1A" stroke-width="2"/>
+      <text x="774" y="381" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="12" font-weight="700" letter-spacing="0.4" fill="#1A1A1A">ALL STAR LOC</text>
+    </g>
+  </g>
+
+  <!-- ===== Roues ===== -->
+  <g>
+    <circle cx="232" cy="330" r="62" fill="#15171B"/>
+    <circle cx="232" cy="330" r="40" fill="url(#wheelRim)"/>
+    <g fill="#3A3F47">
+      <path d="M232 296 L238 322 L226 322 Z"/>
+      <path d="M266 330 L240 336 L240 324 Z"/>
+      <path d="M232 364 L226 338 L238 338 Z"/>
+      <path d="M198 330 L224 324 L224 336 Z"/>
+      <path d="M256 306 L237 325 L229 317 Z" transform="rotate(0)"/>
+    </g>
+    <circle cx="232" cy="330" r="9" fill="#1A1A1A"/>
+    <circle cx="232" cy="330" r="4" fill="#C41E3A"/>
+
+    <circle cx="672" cy="330" r="62" fill="#15171B"/>
+    <circle cx="672" cy="330" r="40" fill="url(#wheelRim)"/>
+    <g fill="#3A3F47">
+      <path d="M672 296 L678 322 L666 322 Z"/>
+      <path d="M706 330 L680 336 L680 324 Z"/>
+      <path d="M672 364 L666 338 L678 338 Z"/>
+      <path d="M638 330 L664 324 L664 336 Z"/>
+    </g>
+    <circle cx="672" cy="330" r="9" fill="#1A1A1A"/>
+    <circle cx="672" cy="330" r="4" fill="#C41E3A"/>
+  </g>
+</svg>

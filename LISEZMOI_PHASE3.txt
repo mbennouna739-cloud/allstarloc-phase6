@@ -1,0 +1,59 @@
+ALL STAR LOC — PHASE 3 : HERO PREMIUM + BOOKING STYLE HERTZ/AVIS
+=================================================================
+
+1. LOGO / HEADER
+----------------
+- Logo ASL officiel intégré (assets/logo-asl-header.png, fond rendu
+  transparent et recadré à partir de votre fichier)
+- Header noir compact : Accueil · Nos Véhicules · À propos · Contact
+- Logo seul, sans slogan ; 32px desktop, 26px mobile (automatique)
+- Logo appliqué aussi sur les 10 pages internes
+
+2. HERO
+-------
+- Fond clair premium (blanc → gris très léger), halos rouges subtils
+- Texte SEO à gauche, voiture à droite, booking en pleine largeur dessous
+- 4 icônes professionnelles en trait fin (SVG, aucun emoji) :
+  livraison aéroport, 24h/7j, service premium, assistance personnalisée
+
+3. IMAGE VOITURE — IMPORTANT, À LIRE
+------------------------------------
+Je ne peux pas générer de photographie ultra-réaliste, et reproduire une
+Renault Clio avec son logo poserait un problème de marque déposée.
+J'ai donc créé une ILLUSTRATION VECTORIELLE premium d'une compacte
+moderne gris métallisé, plaque "ALL STAR LOC", fond propre, halo rouge :
+  → assets/hero-car.svg
+
+POUR METTRE UNE VRAIE PHOTO PLUS TARD (recommandé) :
+  1. Générez l'image avec un outil IA (Midjourney, DALL-E, Ideogram...)
+     Prompt suggéré : "Renault Clio 2026 gris métallisé, vue 3/4 avant,
+     studio fond blanc, plaque ALL STAR LOC, photoréaliste" — ou
+     photographiez un de vos véhicules sur fond neutre.
+  2. Enregistrez le fichier dans assets/ (ex: assets/hero-car.png)
+  3. Dans index.html, remplacez UNE seule ligne :
+     src="assets/hero-car.svg"  →  src="assets/hero-car.png"
+
+4. FORMULAIRE BOOKING PREMIUM
+-----------------------------
+- Lieu de prise en charge / lieu de retour / date+heure départ /
+  date+heure retour / bouton "Trouver une voiture"
+- CALENDRIER SUR MESURE (sans librairie externe) :
+  · le CHAMP ENTIER ouvre le calendrier (pas seulement l'icône)
+  · dates passées bloquées (barrées) + mois passés inaccessibles
+  · sélection de plage façon Airbnb : départ → retour enchaînés
+  · plage mise en évidence en rouge, aujourd'hui encerclé
+  · retour avant départ impossible
+  · durée calculée automatiquement ("Durée : X jours")
+  · mobile : feuille tactile fixée en bas, cellules de 44px
+- Heures par pas de 30 min (07:00 → 22:00)
+
+5. NON-RÉGRESSION (testé automatiquement)
+-----------------------------------------
+  Phase 1 : 13/13 — connexion admin ↔ client et persistance intactes
+  Phase 2 :  9/9  — pages et liens intacts
+  Phase 3 : 17/17 — tout le nouveau hero/booking validé
+  WhatsApp, tunnel de réservation et réservations → admin : OK
+
+COMMENT TESTER
+--------------
+  python -m http.server 8000  puis  http://localhost:8000/

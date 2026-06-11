@@ -1,0 +1,14 @@
+# Fichiers techniques exclus des assets statiques publiés
+# (le serveur /api reste fonctionnel : il est compilé depuis worker/ + functions/)
+wrangler.jsonc
+worker/
+functions/
+data_v1_backup_local.js
+LISEZMOI_PHASE1.txt
+LISEZMOI_PHASE2.txt
+LISEZMOI_PHASE3.txt
+LISEZMOI_PHASE5.txt
+LISEZMOI_PHASE6.txt
+LISEZMOI_PHASE6B_DEPLOIEMENT.txt
+node_modules/
+.git/
