@@ -583,8 +583,20 @@
     };
   }
 
+  /* Fermeture du menu mobile : au scroll, et au clic sur un lien/langue/devise */
+  window.addEventListener('scroll', function () {
+    var m = document.getElementById('mobile-menu');
+    if (m && m.classList.contains('open')) m.classList.remove('open');
+  }, { passive: true });
+
   document.addEventListener('DOMContentLoaded', function () {
     applyI18n();
     updateCurrencyUI();
+    var mm = document.getElementById('mobile-menu');
+    if (mm) {
+      mm.querySelectorAll('a, [data-setlang], [data-setcur]').forEach(function (el) {
+        el.addEventListener('click', function () { setTimeout(function(){ mm.classList.remove('open'); }, 50); });
+      });
+    }
   });
 })();

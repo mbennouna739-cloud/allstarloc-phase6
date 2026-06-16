@@ -1053,6 +1053,45 @@ body.scrolled .fade-in { animation: none !important; opacity: 1 !important; tran
 .ins-card-explain{display:flex;gap:8px;align-items:flex-start;padding:11px 13px;background:var(--gray,#f3f4f6);border-radius:10px;font-size:12px;color:#444;line-height:1.55;margin-top:12px;}
 .ins-card.selected .ins-card-explain{background:rgba(196,30,58,.06);color:#7a1020;}
 </style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "AutoRental",
+  "name": "ALL STAR LOC",
+  "description": "Agence de location de voiture à Marrakech : citadines, berlines et SUV récents, assurance incluse, kilométrage illimité et livraison gratuite à l'aéroport Ménara.",
+  "url": "https://allstarloc.ma/",
+  "logo": "https://allstarloc.ma/assets/favicons/android-chrome-512x512.png",
+  "image": "https://allstarloc.ma/assets/favicons/android-chrome-512x512.png",
+  "telephone": "+212675312453",
+  "priceRange": "MAD",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "29 Rue Yougoslavie, Guéliz",
+    "addressLocality": "Marrakech",
+    "addressCountry": "MA"
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": 31.6295,
+    "longitude": -7.9811
+  },
+  "openingHoursSpecification": {
+    "@type": "OpeningHoursSpecification",
+    "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
+    "opens": "00:00",
+    "closes": "23:59"
+  },
+  "areaServed": { "@type": "City", "name": "Marrakech" },
+  "sameAs": [
+    "https://wa.me/212675312453"
+  ],
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.8",
+    "reviewCount": "500"
+  }
+}
+</script>
 </head>
 <body>
 
@@ -2629,6 +2668,22 @@ window.onLangApplied = function() {
 function toggleMobileMenu() {
   document.getElementById('mobile-menu').classList.toggle('open');
 }
+function closeMobileMenu() {
+  var m = document.getElementById('mobile-menu');
+  if (m) m.classList.remove('open');
+}
+// Fermer le menu mobile au scroll de la page
+window.addEventListener('scroll', function(){
+  var m = document.getElementById('mobile-menu');
+  if (m && m.classList.contains('open')) m.classList.remove('open');
+}, { passive: true });
+// Fermer le menu mobile quand on choisit une langue ou une devise (boutons),
+// en plus des liens de navigation.
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('#mobile-menu [data-setlang], #mobile-menu [data-setcur]').forEach(btn => {
+    btn.addEventListener('click', () => { setTimeout(closeMobileMenu, 50); });
+  });
+});
 // Fermeture automatique du menu mobile dès qu'un lien est choisi (navigation immédiate)
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('#mobile-menu a').forEach(a => {
