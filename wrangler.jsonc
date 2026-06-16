@@ -32,7 +32,7 @@
   "kv_namespaces": [
     {
       "binding": "ASL_DB",
-      "id": "0a4a589bf47c4ffab9f42acacc21a672"
+      "id": "REMPLACEZ_PAR_L_ID_DE_VOTRE_NAMESPACE_KV"
     }
   ]
 }

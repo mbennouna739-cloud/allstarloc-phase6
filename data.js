@@ -29,7 +29,11 @@
        ici pour autoriser les écritures de l'administration.
      POLL_MS : fréquence de vérification des nouveautés serveur (ms).      */
   const REMOTE_URL = '/api';
-  const ADMIN_KEY  = '';
+  // La clé admin n'est PLUS codée en dur : elle est récupérée depuis la session
+  // déposée lors de la connexion (login serveur). Repli sur '' si absente.
+  const ADMIN_KEY = (function(){
+    try { return localStorage.getItem('asl_admin_key') || ''; } catch(e) { return ''; }
+  })();
   const POLL_MS    = 8000;
   /* ================================================= */
 
@@ -196,24 +200,25 @@
   }
 
   /* ----- Cycle complet : push des écritures puis pull des nouveautés -----
-     Si une synchro est déjà en cours, on retourne sa promesse et on en
-     replanifie une juste après (aucune écriture ne reste en attente). */
+     File de cycles chaînés : si une synchro est en cours, l'appel planifie
+     UN cycle supplémentaire juste après et retourne une promesse qui se
+     résout à la fin de CE cycle — toute écriture mise en file avant l'appel
+     est donc garantie envoyée quand la promesse se résout. */
   let authError = false; // clé admin refusée par le serveur
-  let currentSync = null;
-  let rerunAfter = false;
+  let syncChain = Promise.resolve(false);
+  let cyclePlanned = false;
   function syncNow() {
     if (!remoteEnabled) return Promise.resolve(online);
-    if (currentSync) { rerunAfter = true; return currentSync; }
-    currentSync = doSync().then(function (v) {
-      currentSync = null;
-      if (rerunAfter) { rerunAfter = false; syncNow(); }
-      return v;
-    }, function () {
-      currentSync = null;
-      if (rerunAfter) { rerunAfter = false; syncNow(); }
+    if (cyclePlanned) return syncChain;
+    cyclePlanned = true;
+    syncChain = syncChain.then(function () {
+      cyclePlanned = false;
+      return doSync();
+    }).catch(function () {
+      cyclePlanned = false;
       return online;
     });
-    return currentSync;
+    return syncChain;
   }
   async function doSync() {
     let pushFailed = false;

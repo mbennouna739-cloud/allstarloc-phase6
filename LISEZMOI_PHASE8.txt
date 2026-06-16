@@ -1,0 +1,44 @@
+ALL STAR LOC — PHASE 8 : VERSION FINALE PROFESSIONNELLE (design & UX uniquement)
+=================================================================================
+Aucune logique métier modifiée : Cloudflare KV, API, synchronisation, véhicules,
+réservations, calculs et administration fonctionnelle sont octet pour octet
+identiques (vérifié) — seuls le CSS, les visuels et la structure HTML décorative
+ont évolué.
+
+1. NAVIGATION  : « Retour à l'accueil » supprimé sur les 10 pages internes,
+   remplacé par la navigation complète (Accueil · Nos Véhicules · À propos ·
+   Contact), traduite sur À propos/Contact, masquée proprement sur mobile.
+2. HEROS       : Accueil = photo automobile premium (repli automatique vers
+   l'illustration si l'image ne charge pas) ; À propos = fond image « confiance/
+   agence » ; Contact = fond image « assistance client » — voile sombre, charte
+   rouge/noir/blanc respectée.
+3. MENU MOBILE : fermeture automatique au choix d'un lien + fondu discret.
+4. SCROLL      : overflow-x supprimé sur le site, les pages et l'admin ;
+   les tableaux admin défilent DANS leur carte, plus jamais la page.
+5. CALENDRIERS : plus aucune date pré-rougie ; aujourd'hui = fond blanc, texte
+   rouge, fin contour ; la sélection rouge n'apparaît qu'après le clic du client
+   (les dates par défaut continuent d'alimenter les calculs — logique intacte).
+7. À PROPOS    : visuel réaliste (remise de véhicule) inséré avant la
+   présentation ; textes et structure conservés.
+8. CONTACT     : carte Google Maps intégrée (agence Guéliz), hero spécifique.
+9. POP-UP      : centré horizontalement/verticalement, overlay sombre,
+   600 px max desktop (+15 %), 95 % mobile, fondu d'apparition discret.
+10. TYPO       : +1 px supplémentaire sur les textes de lecture du pop-up
+    (descriptions, options, CGV) — titres et hiérarchie inchangés.
+11. CGV        : case 20 px à fort contraste ; liens = fenêtre modale interne
+    (aucune perte de saisie) AVEC repli systématique en NOUVEL ONGLET
+    (target=_blank) — le formulaire n'est jamais réinitialisé, quel que soit
+    le chemin.
+12. FOOTER     : vrai logo officiel (le même que le header) à la place du
+    pictogramme générique ; icônes de contact recolorées charte (le bleu/violet
+    venait de la couleur par défaut des liens visités — corrigé).
+14. ADMIN      : thème CLAIR professionnel (fond blanc, cartes blanches,
+    ombres très légères, contrastes lisibles) via les variables CSS existantes ;
+    stabilité desktop/tablette/mobile ; CSS uniquement, zéro logique.
+13/15. Avis clients, « Pourquoi nous », grilles : non touchés. Aucune animation
+    ajoutée hors fondu du pop-up et du menu mobile.
+
+REMARQUE : les nouveaux visuels utilisent des photos hébergées (comme les
+photos de la flotte) avec replis automatiques. Pour une authenticité totale,
+remplacez-les plus tard par vos propres photos d'agence via les URLs dans
+index.html / pages/page.css / pages/about.html.

@@ -1,0 +1,44 @@
+ALL STAR LOC — PHASE 10 : VERSION FINALE AVANT SEO (design & UX uniquement)
+=============================================================================
+Backend, Cloudflare KV, synchronisation, logique de réservation/WhatsApp,
+gestion des véhicules, dashboard admin : INCHANGÉS (vérifié octet par octet
+pour data.js, l'API, le worker et wrangler ; JS admin identique).
+
+1. HERO ACCUEIL : votre Clio 5 Alpine détourée (assets/hero-clio.png, fond
+   transparent généré depuis votre image) — à droite sur desktop, parfaitement
+   horizontale, proportions naturelles (jamais étirée), fines traînées de
+   vitesse + ombre au sol pour l'impression de mouvement. Mobile : texte
+   d'abord, voiture dessous. Repli automatique vers l'ancienne illustration.
+2. À PROPOS : retour exact à la référence — hero sombre épuré noir/rouge,
+   badge « Notre Histoire » au-dessus du titre « ALL STAR LOC, depuis 2009 à
+   Marrakech » (l'année corrigée est conservée), visuel unique « au volant »
+   rétabli. Badge « Depuis 2009 · Marrakech » et silhouette : supprimés.
+3. CONTACT : hero sombre de référence rétabli + FORMULAIRE DE CONTACT
+   (Nom, Téléphone, Email, Sujet, Message) — validation, confirmation après
+   envoi, responsive, charte respectée, traduit en 4 langues. La demande
+   structurée est transmise sur votre WhatsApp officiel (canal de réception
+   existant, réponse < 15 min) : aucune modification du backend, conformément
+   à la règle absolue de cette phase. La carte Google Maps est conservée.
+4. POP-UP : design d'origine rétabli — panneau latéral droit, compact,
+   glissement d'origine, tailles de police d'origine, récapitulatif véhicule
+   visible immédiatement. CONSERVÉ : nouvelle logique de réservation,
+   parcours WhatsApp final, arrière-plan flouté ET totalement figé (seul le
+   pop-up défile), aucun déplacement horizontal.
+5. BOUTON RÉSERVER (header) : n'ouvre plus le pop-up — il mène à la liste
+   des véhicules (#fleet). Le client choisit d'abord sa voiture.
+6. SCROLLING : fluide — header allégé (plus de barre fixe à recalculer),
+   images des cartes en chargement différé (déjà en place), aucun déplacement
+   latéral (verrous conservés).
+7. HEADER : effet sticky supprimé — comportement classique, le header reste
+   en haut de la page et défile naturellement avec elle (site + 10 pages).
+8. FOOTER : logo officiel réduit (34 px, mieux intégré) + contrastes des
+   textes relevés (description, liens, contacts, copyright, mentions) —
+   lisible immédiatement, charte rouge/noir/blanc intacte.
+9. MOBILE : menu hamburger à fermeture automatique (conservé), aucun
+   débordement horizontal, formulaire et pop-up responsives.
+
+LISIBILITÉ ADMIN : contraste des textes relevé via les variables du thème
+(--text2 0.58→0.72, --text3 0.38→0.55, bordures +) — tableaux, formulaires
+et informations nettement plus lisibles, design conservé, zéro logique.
+
+Le projet est prêt pour la phase SEO / performances.

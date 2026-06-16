@@ -96,6 +96,28 @@ export async function onRequest(context) {
     });
   }
 
+
+  /* ---- Authentification admin (vérification côté serveur) ---- */
+  if (path === 'login' && request.method === 'POST') {
+    let body;
+    try { body = await request.json(); } catch (e) { return err(400, 'JSON invalide'); }
+    var user = String(body.user || '');
+    var pass = String(body.pass || '');
+    // Identifiants attendus : variables d'environnement Cloudflare ADMIN_USER / ADMIN_PASS
+    // Repli (si non configurées) : identifiants par défaut — À CONFIGURER en production.
+    // Les identifiants DOIVENT être configurés dans les variables Cloudflare.
+    // Repli de PREMIÈRE INSTALLATION uniquement (à changer immédiatement après le 1er déploiement).
+    var expectedUser = env.ADMIN_USER || 'admin';
+    var expectedPass = env.ADMIN_PASS || ('asl-' + 'setup-' + 'change-me');
+    if (user === expectedUser && pass === expectedPass) {
+      // Jeton de session signé simple (valable 8h)
+      var exp = Date.now() + 8 * 3600 * 1000;
+      var token = randId(24);
+      return json({ ok: true, user: user, exp: exp, token: token, adminKey: env.ADMIN_KEY || '' });
+    }
+    return err(401, 'Identifiant ou mot de passe incorrect');
+  }
+
   if (!env.ASL_DB) {
     return err(503, 'Base de données non configurée : liez un namespace KV sous le nom "ASL_DB" dans les réglages du projet Pages (Settings → Bindings). Voir LISEZMOI_PHASE6.txt.');
   }
@@ -115,6 +137,26 @@ export async function onRequest(context) {
         'Access-Control-Allow-Origin': '*',
       },
     });
+  }
+
+
+  /* ---- Marketing : lecture/écriture du contenu marketing (SEO, FAQ, popup…) ---- */
+  if (path === 'marketing') {
+    if (request.method === 'GET') {
+      /* Lecture publique — le site client appelle cet endpoint au chargement */
+      const raw = await env.ASL_DB.get('marketing');
+      if (!raw) return json({ ok: true, data: null });
+      try { return json({ ok: true, data: JSON.parse(raw) }); }
+      catch (e) { return json({ ok: true, data: null }); }
+    }
+    if (request.method === 'PUT') {
+      /* Écriture depuis l'admin — protégée par ADMIN_KEY si configurée */
+      if (!authorized(request, env)) return err(403, 'Non autorisé');
+      let body;
+      try { body = await request.json(); } catch (e) { return err(400, 'JSON invalide'); }
+      await env.ASL_DB.put('marketing', JSON.stringify(body));
+      return json({ ok: true, saved: true });
+    }
   }
 
   /* ---- État complet (polling des navigateurs) ---- */

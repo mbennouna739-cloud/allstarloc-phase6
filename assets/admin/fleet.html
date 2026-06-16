@@ -1,0 +1,1895 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<script src="auth-guard.js"></script>
+<meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAADyklEQVR4nNVWzWtjVRS/577PpK8dS5x8VIQg1kW7GUQxSA249C+wG6kG3LgUunDbreCmzMKqiKUJxeCU1pq240DttjhNBwoKacKkDZlYycd7M4kvL7n3uHjNe2mapPWjgmfxuO++c3+/c+7v3nMeICK5SaM3iv7fEsiynEgkdF3nnHPOERERnbHz7J65/KrreiKRkGXZZcCOLS8v479k3VDgiGyapqIoiEjp3983zjkAmKbp8XjsGZcAEQFg4FJEgkgAsOM5xLkbyg2Wcz5kAQEglBIAAKCUAriR9ffvmOiMBkVkh8PrDag/Q0muEWxZltfrHR0dHUTQDXXVdiMCIdhqld7/SJ+KND//5ouvvpyempqdnTVN05ZxOMAVBMgYAWg82FO+2+TlmjimPXfrVq1SSaVS29vbAMAY6xeVy+puJee89/zYATJWfPMd8kddirzuf/uthMB2798/ePTIsqz9/X1VVcml7e0vct/wgdLGj7vBh4djn3zcVhTi9Y6MeEVJmp+fPzo6GpKEYy5Br8iIIAhomtWFT8sAzDCsexsk6A8EAmtra5VKhVK6sLBQr9cFQRimhHPlGGPdt5G3Woj49N73FfBlPaHfyHju+ZewUq3peigYJIR4vV5CyOrqKiK2Wq0LazuVBhEHEHCOnLNG4/RONE99uZEXzuSA9dndB3s/7e3uLi4uyrKsaRqldHp62jCM7vJ1LQI7fOPbtTL4jj2hjBIoUR/7+TB/ki/k8+l0GgBEUbQVXllZ6UmiG6ofAefIedt4ejr1xmPqO1YCJ2T88Z0oWtZWKvXD5qZlWZFIhBAiyzKldHJyslqt9tRgB7aPyOdnf2Nr5JdjVGRKqQdg7MP3iCQdptMPDw4kSYrFYoQQSqksy5lMZn19feBx6s3ADl/XC6+8dir6c5I/K90+kf3mrxnOebFQKBQKiJjNZlVVFTsWDofL5TLn3AYZqkGrjYjG1/Ea8WXlQFa8XSLjxXc/4MgRMRaLzc3N2f52EqIo2u1laWnJUeIKkVtnv+dffjXvCeW8E7nRF8/U0LONLftTNBqdmZmxxzs7O4qiaJqmqqqqquFwuFQqXdagT6lg9TqWK0gpIBIChBAh6AdJIojFJ08QcWJiAgDa7XaxWLSX29Xb5/NpmkYuVp1rN5y/Yt1Qbj/gnAuCcP754tXHTv+ym5ITXU+PctpcN8GNZ+Deg2azea77P4NGxGaz6cy4BMlkcngrv47ZCMlkspcTESVJisfjhmEwxhhj/CrrcWGMtdttXdfj8bgkSX2O6Q3Z///n908aGRXA7Gfj9gAAAABJRU5ErkJggg==">
+  <link rel="apple-touch-icon" href="data:image/png;base64,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">
+  <meta name="theme-color" content="#ffffff">
+<title>ALL STAR LOC — Suivi Flotte</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --red:#C41E3A; --red-l:rgba(196,30,58,.08); --red-b:rgba(196,30,58,.22);
+  --bg:#F2F3F6; --card:#fff; --border:rgba(18,22,30,.11);
+  --text:#0E1014; --t2:rgba(14,16,20,.62); --t3:rgba(14,16,20,.38);
+  --green:#16A34A; --yellow:#D97706; --blue:#2563EB; --orange:#EA580C;
+  --font:'Outfit',sans-serif; --font2:'DM Sans',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{overflow-x:hidden;max-width:100%;overscroll-behavior-x:none;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;}
+a{text-decoration:none;color:inherit;}
+
+/* ---- LAYOUT ---- */
+.layout{display:flex;height:100vh;overflow:hidden;}
+.sidebar{width:220px;background:var(--card);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;
+  transition:width .2s cubic-bezier(.4,0,.2,1);}
+.sidebar.collapsed{width:0;overflow:hidden;border-right:none;}
+.sb-toggle{position:absolute;top:50%;left:0;transform:translateY(-50%);
+  width:20px;height:40px;background:var(--red);color:#fff;border:none;cursor:pointer;
+  border-radius:0 6px 6px 0;z-index:10;display:flex;align-items:center;justify-content:center;
+  font-size:12px;transition:left .2s;}
+.sidebar-wrap{position:relative;display:flex;flex-shrink:0;}
+.sidebar-wrap .sb-toggle{left:220px;}
+.sidebar-wrap .sidebar.collapsed ~ .sb-toggle,
+.sidebar-wrap:has(.sidebar.collapsed) .sb-toggle{left:0;}
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);
+  padding:14px 24px;display:flex;align-items:center;gap:16px;flex-shrink:0;}
+.content{padding:24px;flex:1;}
+
+/* ---- SIDEBAR ---- */
+.sb-logo{padding:10px 12px 8px;display:flex;flex-direction:column;align-items:flex-start;gap:3px;border-bottom:1px solid var(--border);}
+.sb-logo img{width:110px;height:auto;display:block;max-width:100%;}
+.sb-logo-sub{font-size:10px;color:var(--t3);font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+.sb-sect{padding:14px 10px 4px;font-size:10px;color:var(--t3);font-weight:700;letter-spacing:2px;text-transform:uppercase;}
+.sb-item{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:9px;margin:1px 6px;
+  font-size:13.5px;font-weight:500;cursor:pointer;transition:all .15s;color:var(--t2);}
+.sb-item:hover{background:var(--bg);color:var(--text);}
+.sb-item.active{background:var(--red-l);color:var(--red);font-weight:700;}
+.sb-item svg{flex-shrink:0;opacity:.7;}
+.sb-item.active svg{opacity:1;}
+.sb-badge{margin-left:auto;background:var(--red);color:#fff;border-radius:50px;
+  font-size:10px;font-weight:800;padding:2px 7px;min-width:20px;text-align:center;}
+
+/* ---- TOPBAR ---- */
+.tb-title{font-size:17px;font-weight:800;flex:1;}
+.btn{display:inline-flex;align-items:center;gap:7px;border:none;border-radius:9px;
+  padding:9px 16px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;}
+.btn-red{background:var(--red);color:#fff;}
+.btn-red:hover{background:#a91830;}
+.btn-ghost{background:var(--bg);color:var(--text);}
+.btn-ghost:hover{background:rgba(18,22,30,.12);}
+.btn-sm{padding:6px 12px;font-size:12px;}
+.btn-green{background:var(--green);color:#fff;}
+.btn-green:hover{background:#15803d;}
+.btn-blue{background:var(--blue);color:#fff;}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:#ccc;flex-shrink:0;}
+.sync-dot.ok{background:var(--green);}
+.sync-dot.err{background:var(--red);}
+
+/* ---- PAGES ---- */
+.page{display:none;}
+.page.active{display:block;}
+
+/* ---- KPI BAR ---- */
+.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:22px;}
+.kpi{background:var(--card);border-radius:14px;padding:16px 18px;border:1px solid var(--border);}
+.kpi-val{font-size:26px;font-weight:900;line-height:1;}
+.kpi-lbl{font-size:11.5px;color:var(--t2);margin-top:4px;}
+.kpi.alert .kpi-val{color:var(--red);}
+.kpi.warn .kpi-val{color:var(--yellow);}
+.kpi.ok .kpi-val{color:var(--green);}
+
+/* ---- FLEET TABLE ---- */
+.fleet-table-wrap{background:var(--card);border-radius:16px;border:1px solid var(--border);}
+.fleet-table-head{display:flex;align-items:center;padding:14px 18px;gap:12px;border-bottom:1px solid var(--border);}
+.fleet-table-head h2{font-size:15px;font-weight:800;flex:1;}
+.tbl{width:100%;border-collapse:collapse;}
+.tbl{table-layout:auto;width:100%;}
+.tbl th{padding:8px 10px;text-align:left;font-size:10.5px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.4px;color:var(--t3);border-bottom:2px solid var(--border);white-space:nowrap;}
+.tbl td{padding:8px 10px;border-bottom:1px solid rgba(18,22,30,.05);font-size:12.5px;vertical-align:middle;}
+/* Tableau pleine largeur quand sidebar collapsed */
+.fleet-table-wrap{overflow:visible;}
+/* Mobile : tableau → cartes */
+@media(max-width:700px){
+  #fleet-tbl thead{display:none;}
+  #fleet-tbl tr{display:block;background:#fff;border-radius:12px;margin-bottom:10px;
+    border:1px solid var(--border);padding:12px 14px;}
+  #fleet-tbl td{display:flex;justify-content:space-between;align-items:center;
+    padding:5px 0;border-bottom:1px solid rgba(18,22,30,.04);font-size:13px;}
+  #fleet-tbl td:last-child{border-bottom:none;}
+  #fleet-tbl td::before{content:attr(data-lbl);font-weight:700;font-size:11px;
+    color:var(--t3);text-transform:uppercase;letter-spacing:.4px;flex-shrink:0;margin-right:8px;}
+  #fleet-tbl td:empty{display:none;}
+}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:rgba(18,22,30,.018);cursor:pointer;}
+.car-thumb{width:52px;height:36px;object-fit:cover;border-radius:7px;background:var(--bg);}
+.car-thumb-ph{width:52px;height:36px;border-radius:7px;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;color:var(--t3);}
+
+/* ---- BADGES STATUT ---- */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:50px;
+  font-size:11.5px;font-weight:700;white-space:nowrap;}
+.badge::before{content:'';width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.b-dispo  {background:#166534; color:#fff;} .b-dispo::before{background:#fff;}
+.b-louee  {background:#1e40af; color:#fff;} .b-louee::before{background:#fff;}
+.b-retour {background:#c2410c; color:#fff;} .b-retour::before{background:#fff;}
+.b-retard {background:#b91c1c; color:#fff;} .b-retard::before{background:#fff;}
+.b-maint  {background:#57534e; color:#fff;} .b-maint::before{background:#fff;}
+.b-reserv {background:#6d28d9; color:#fff;} .b-reserv::before{background:#fff;}
+.b-part   {background:#0369a1; color:#fff;} .b-part::before{background:#fff;}
+.b-pending{background:#b45309; color:#fff;} .b-pending::before{background:#fff;}
+
+/* ---- ALERTS ---- */
+.alerts-wrap{background:var(--card);border-radius:16px;border:1px solid var(--border);padding:18px 20px;margin-bottom:18px;}
+.alert-item{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+.alert-item:last-child{border-bottom:none;}
+.alert-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.alert-icon.r{background:rgba(196,30,58,.1);color:var(--red);}
+.alert-icon.y{background:rgba(217,119,6,.1);color:var(--yellow);}
+.alert-title{font-size:13.5px;font-weight:700;flex:1;}
+.alert-sub{font-size:12px;color:var(--t2);}
+.alert-days{font-size:12px;font-weight:700;white-space:nowrap;}
+.alert-days.overdue{color:var(--red);}
+.alert-days.soon{color:var(--yellow);}
+
+/* ---- VEHICLE CARD (fiche) ---- */
+.vcard{background:var(--card);border-radius:16px;border:1px solid var(--border);overflow:hidden;margin-bottom:16px;}
+.vcard-header{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;}
+.vcard-img{width:80px;height:54px;object-fit:cover;border-radius:10px;background:var(--bg);flex-shrink:0;}
+.vcard-title{font-size:18px;font-weight:900;}
+.vcard-sub{font-size:13px;color:var(--t2);margin-top:2px;}
+.vcard-body{padding:18px 20px;}
+.vcard-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.vcard-field{padding:10px 14px;background:var(--bg);border-radius:10px;}
+.vcard-field label{font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:3px;}
+.vcard-field span{font-size:14px;font-weight:600;}
+.section-h{font-size:14px;font-weight:800;margin:18px 0 10px;display:flex;align-items:center;gap:7px;}
+
+/* ---- ENTRETIEN ---- */
+.maint-form{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.form-g label{display:block;font-size:12px;font-weight:700;color:var(--t2);margin-bottom:5px;}
+.form-input,.form-select,.form-textarea{width:100%;border:1.5px solid var(--border);border-radius:9px;
+  padding:9px 12px;font-size:13.5px;font-family:var(--font);color:var(--text);background:#fff;
+  outline:none;transition:border-color .18s;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--red);}
+.form-textarea{min-height:70px;resize:vertical;}
+
+/* ---- PARTNERS ---- */
+.partner-card{background:var(--card);border-radius:14px;border:1px solid var(--border);
+  padding:16px 18px;display:flex;align-items:flex-start;gap:14px;cursor:pointer;transition:all .15s;margin-bottom:10px;}
+.partner-card:hover{border-color:var(--red-b);}
+.partner-avatar{width:44px;height:44px;border-radius:50%;background:var(--red-l);color:var(--red);
+  display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;flex-shrink:0;}
+
+/* ---- PAYMENTS ---- */
+.pay-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);}
+.pay-row:last-child{border-bottom:none;}
+.pay-bar{flex:1;height:6px;background:var(--bg);border-radius:3px;overflow:hidden;}
+.pay-bar-fill{height:100%;background:var(--green);border-radius:3px;transition:width .4s;}
+.pay-bar-fill.partial{background:var(--yellow);}
+.pay-bar-fill.none{background:var(--red);}
+.pay-amount{font-size:13px;font-weight:700;white-space:nowrap;}
+.pay-due{color:var(--red);}
+
+/* ---- TABS ---- */
+.tabs{display:flex;gap:4px;margin-bottom:16px;background:var(--bg);border-radius:11px;padding:4px;width:fit-content;}
+.tab{padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--t2);transition:all .15s;}
+.tab.active{background:#fff;color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.08);}
+
+/* ---- SEARCH BAR ---- */
+.search-bar{display:flex;align-items:center;gap:8px;background:var(--bg);border:1.5px solid var(--border);
+  border-radius:10px;padding:8px 14px;width:260px;}
+.search-bar input{border:none;background:transparent;font-size:13.5px;font-family:var(--font);outline:none;flex:1;}
+
+/* ---- MODAL ---- */
+.modal-backdrop{position:fixed;inset:0;background:rgba(10,12,18,.45);z-index:100;
+  display:none;align-items:center;justify-content:center;}
+.modal-backdrop.open{display:flex;}
+.modal{background:#fff;border-radius:18px;width:min(740px,95vw);max-height:90vh;
+  display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.18);}
+.modal-head{padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+.modal-head h3{font-size:16px;font-weight:800;flex:1;}
+.modal-body{padding:20px 22px;overflow-y:auto;flex:1;}
+.modal-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;}
+
+/* ---- NOTIFICATIONS ---- */
+.toast{position:fixed;bottom:20px;right:20px;background:#0e1014;color:#fff;padding:12px 20px;
+  border-radius:12px;font-size:13.5px;font-weight:600;opacity:0;transform:translateY(8px);
+  transition:all .28s;pointer-events:none;z-index:999;}
+.toast.show{opacity:1;transform:none;}
+.toast.g{background:var(--green);}
+.toast.r{background:var(--red);}
+
+/* ---- RESPONSIVE ---- */
+@media(max-width:900px){.sidebar{width:54px;} .sb-item span,.sb-sect,.sb-logo-sub,.sb-badge{display:none;} .kpi-row{grid-template-columns:repeat(3,1fr);} .vcard-grid{grid-template-columns:1fr 1fr;}}
+@media(max-width:600px){
+  .kpi-row{grid-template-columns:1fr 1fr;}
+  .vcard-grid{grid-template-columns:1fr;}
+  .maint-form{grid-template-columns:1fr;}
+  .tbl th:nth-child(n+5),.tbl td:nth-child(n+5){display:none;} /* cacher colonnes surplus mobile */
+  .topbar{flex-wrap:wrap;gap:8px;padding:10px 14px;}
+  .search-bar{width:100%;order:3;}
+  .content{padding:14px;}
+  .fleet-table-wrap .fleet-table-head{flex-wrap:wrap;gap:8px;}
+}
+/* Navigation mobile : barre d'onglets en bas */
+.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);
+  z-index:90;padding:6px 0 env(safe-area-inset-bottom,6px);}
+.mob-nav a,.mob-nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;
+  font-size:10px;font-weight:700;color:var(--t2);background:none;border:none;cursor:pointer;padding:4px 2px;}
+.mob-nav a.active,.mob-nav button.active{color:var(--red);}
+.mob-nav svg{flex-shrink:0;}
+@media(max-width:700px){
+  .sidebar{display:none;}
+  .mob-nav{display:flex;}
+  .main{padding-bottom:60px;}
+  .kpi-row{grid-template-columns:repeat(3,1fr);font-size:11px;}
+  .kpi-val{font-size:20px;}
+  .layout{flex-direction:column;}
+  .topbar .tb-title{font-size:14px;}
+}
+
+/* Logo sidebar — ajustement taille */
+.sb-logo { flex-direction: column !important; align-items: flex-start !important; gap: 3px !important; padding: 10px 12px 8px !important; }
+.sb-logo img { width: 110px !important; height: auto !important; display: block !important; max-width: 100% !important; }
+.sb-logo-tag, .sb-logo > div { display: none !important; }
+
+/* === Sidebar collapse (flèche plein écran) === */
+.sidebar { transition: width .25s ease, transform .25s ease; position: relative; }
+.sidebar.collapsed { width: 0 !important; min-width: 0 !important; overflow: hidden !important; border-right: none !important; }
+.sidebar.collapsed > * { opacity: 0; pointer-events: none; }
+.sb-toggle {
+  position: fixed; top: 14px; left: 14px; z-index: 1200;
+  width: 36px; height: 36px; border-radius: 9px;
+  background: var(--red, #C41E3A); color: #fff; border: none; cursor: pointer;
+  display: none; align-items: center; justify-content: center;
+  box-shadow: 0 4px 14px rgba(0,0,0,.25); transition: left .25s ease;
+}
+.sb-toggle svg { width: 18px; height: 18px; }
+.sb-collapse-btn {
+  position: absolute; top: 12px; right: 10px; z-index: 50;
+  width: 28px; height: 28px; border-radius: 8px; border: none; cursor: pointer;
+  background: rgba(127,127,127,.12); color: var(--text, #fff);
+  display: flex; align-items: center; justify-content: center; transition: background .15s;
+}
+.sb-collapse-btn:hover { background: rgba(196,30,58,.18); color: #C41E3A; }
+body.sb-is-collapsed .sb-toggle { display: flex; }
+
+/* === Bouton Déconnexion sidebar === */
+.sb-logout{margin:5px 8px;padding:11px 13px;display:flex;align-items:center;gap:9px;
+  font-size:13px;font-weight:800;color:#fff;background:#C41E3A;
+  cursor:pointer;border-radius:9px;text-decoration:none;transition:background .15s;
+  box-shadow:0 3px 12px rgba(196,30,58,.3);}
+.sb-logout:hover{background:#a01530;}
+
+/* === Collapse layout flex : recentrage contenu === */
+.main { transition: all .25s ease; }
+body.sb-is-collapsed .content { max-width: 100%; }
+.content table, .table-card table { width: 100%; }
+.content, .table-card { max-width: 100%; overflow-x: auto; }
+
+/* === Sidebar toujours fixe, ne scrolle jamais avec le contenu === */
+.sidebar { height: 100vh; position: sticky; top: 0; overflow-y: auto; overflow-x: hidden; }
+.sidebar::-webkit-scrollbar { width: 6px; }
+.sidebar::-webkit-scrollbar-thumb { background: rgba(127,127,127,.3); border-radius: 3px; }
+
+/* === Bouton Retour sous-section === */
+
+
+
+/* Bouton Retour discret */
+.sb-retour{margin:6px;padding:9px 12px;display:flex;align-items:center;gap:9px;
+  font-size:13px;font-weight:600;color:var(--t2,#888);background:transparent;
+  cursor:pointer;border-radius:8px;text-decoration:none;transition:background .15s,color .15s;border:1px solid var(--border,rgba(255,255,255,.08));}
+.sb-retour:hover{background:rgba(127,127,127,.08);color:var(--text,#fff);}
+.sb-retour svg{opacity:.7;}
+
+/* === RESPONSIVE ADMIN MOBILE (renforcé) === */
+@media (max-width: 768px) {
+  .sidebar, #the-sidebar { position: fixed !important; top:0; left:0; bottom:0; z-index:1100;
+    transform: translateX(-100%); transition: transform .25s ease; width: 250px !important; }
+  .sidebar.mobile-open, #the-sidebar.mobile-open { transform: translateX(0) !important; box-shadow: 0 0 40px rgba(0,0,0,.4); }
+  .main { margin-left: 0 !important; }
+  .sb-toggle { display: flex !important; }
+  .topbar { padding-left: 60px !important; }
+  .sb-mobile-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:1050; }
+  .sb-mobile-backdrop.show { display:block; }
+  .content { padding: 16px 12px !important; }
+  table { min-width: 520px; }
+  .content table, .table-card { display:block; width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  [class*="grid"] { grid-template-columns: 1fr !important; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<!-- ==================== SIDEBAR ==================== -->
+<div class="sidebar-wrap">
+<aside class="sidebar" id="the-sidebar">
+  <div class="sb-logo">
+  <button class="sb-collapse-btn" onclick="toggleSidebar()" title="Masquer le menu">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+  </button>
+    <img src="data:image/png;base64,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" alt="ALL STAR LOC" style="display:block;">
+    <div class="sb-logo-sub" style="color:#C41E3A;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;">Suivi Flotte</div>
+  </div>
+
+  <div class="sb-sect">Vue principale</div>
+  <div class="sb-item active" onclick="nav('suivi',this)">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/></svg>
+    <span>Tableau de bord</span>
+  </div>
+  <div class="sb-item" onclick="nav('flotte',this)">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m21 8-2 2-1.5-3.7A2 2 0 0 0 15.646 5H8.4a2 2 0 0 0-1.903 1.257L5 10 3 8"/><path d="M7 14h.01"/><path d="M17 14h.01"/><rect width="18" height="8" x="3" y="10" rx="2"/><path d="M5 18v2"/><path d="M19 18v2"/></svg>
+    <span>Ma Flotte</span>
+  </div>
+  <div class="sb-item" onclick="nav('alertes',this)">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+    <span>Alertes</span><span class="sb-badge" id="sb-alert-count">0</span>
+  </div>
+
+  <div class="sb-sect">Gestion</div>
+  <a class="sb-item" href="marketing.html" style="margin:2px 5px;background:rgba(124,58,237,.09);color:#7c3aed;font-weight:700;">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    <span style="color:#7c3aed;">Marketing Digital</span>
+  </a>
+  <div class="sb-sect">Liens</div>
+  <a class="sb-retour" href="index.html" title="Retour à l'administration principale">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    <span>Retour à l'administration</span>
+  </a>
+  <a class="sb-item" href="automation.html">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+    <span>Contrats PDF</span>
+  </a>
+</aside>
+<button class="sb-toggle" id="sb-toggle-btn" onclick="toggleSidebar()" title="Masquer/Afficher le menu">◀</button>
+</div>
+
+<!-- ==================== MAIN ==================== -->
+<div class="main">
+  <div class="topbar">
+    <div class="tb-title" id="page-title">Tableau de bord Flotte</div>
+    <div class="search-bar">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input id="global-search" placeholder="Rechercher véhicule, client, plaque…" oninput="globalSearch(this.value)">
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="syncNow()">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span id="sync-label">Synchroniser</span>
+    </button>
+    <button class="btn btn-red btn-sm" onclick="openQuickRes()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+      Nouvelle location
+    </button>
+  </div>
+
+  <!-- ===================== PAGE : TABLEAU DE BORD ===================== -->
+  <div class="content page active" id="page-suivi">
+    <!-- KPIs -->
+    <div class="kpi-row" id="kpi-row"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 340px;gap:18px;align-items:start;">
+      <!-- Tableau flotte -->
+      <div class="fleet-table-wrap">
+        <div class="fleet-table-head">
+          <h2>État de la flotte en temps réel</h2>
+          <select class="form-select" style="width:160px;padding:7px 10px;font-size:13px;" id="filter-status" onchange="renderFleetTable()">
+            <option value="">Tous les statuts</option>
+            <option value="louee">Louées</option>
+            <option value="retour">Retour aujourd'hui</option>
+            <option value="retard">En retard</option>
+            <option value="dispo">Disponibles</option>
+            <option value="maint">Maintenance</option>
+            <option value="reservee">Réservées</option>
+            <option value="partenaire">Partenaire</option>
+          </select>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="tbl" id="fleet-tbl">
+            <thead>
+              <tr>
+                <th style="min-width:130px">Véhicule</th>
+                <th style="min-width:80px">Plaque</th>
+                <th style="min-width:110px">Statut</th>
+                <th style="min-width:120px">Client</th>
+                <th style="min-width:80px">Téléphone</th>
+                <th style="min-width:80px">Départ</th>
+                <th style="min-width:90px">Retour prévu</th>
+                <th style="min-width:90px">Montant</th>
+                <th style="min-width:150px">Prolongation</th>
+                <th style="min-width:90px">Supplément</th>
+                <th style="min-width:100px">Retour après</th>
+                <th style="min-width:120px">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="fleet-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Alertes -->
+      <div>
+        <div class="alerts-wrap">
+          <div style="font-size:14px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+            Alertes & échéances
+          </div>
+          <div id="alert-list"><div style="color:var(--t3);font-size:13px;padding:10px 0;">Aucune alerte.</div></div>
+        </div>
+
+        <!-- Retards -->
+        <div class="alerts-wrap" id="retards-wrap" style="display:none;">
+          <div style="font-size:14px;font-weight:800;margin-bottom:12px;color:var(--red);">
+            ⚠ Retours en retard
+          </div>
+          <div id="retards-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== PAGE : MA FLOTTE ===================== -->
+  <div class="content page" id="page-flotte">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <h2 style="font-size:18px;font-weight:900;flex:1;">Ma Flotte</h2>
+      <button class="btn btn-ghost btn-sm" onclick="showAddMaintVehicle()">+ Véhicule entretien</button>
+    </div>
+    <div id="fleet-cards"></div>
+  </div>
+
+  <!-- ===================== PAGE : ALERTES ===================== -->
+  <div class="content page" id="page-alertes">
+    <h2 style="font-size:18px;font-weight:900;margin-bottom:20px;">Alertes & Échéances</h2>
+    <div id="full-alert-list"></div>
+  </div>
+
+  <!-- ===================== PAGE : CLIENTS ===================== -->
+  <div class="content page" id="page-clients">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <h2 style="font-size:18px;font-weight:900;flex:1;">Clients</h2>
+    </div>
+    <div id="clients-list"></div>
+  </div>
+
+  <!-- ===================== PAGE : PARTENAIRES ===================== -->
+  <div class="content page" id="page-partenaires">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <h2 style="font-size:18px;font-weight:900;flex:1;">Partenaires</h2>
+      <button class="btn btn-red btn-sm" onclick="openAddPartner()">+ Ajouter un partenaire</button>
+    </div>
+    <div id="partners-list"></div>
+  </div>
+
+  <!-- ===================== PAGE : PAIEMENTS ===================== -->
+  <div class="content page" id="page-paiements">
+    <h2 style="font-size:18px;font-weight:900;margin-bottom:20px;">Paiements & Impayés</h2>
+    <div class="kpi-row" style="grid-template-columns:repeat(3,1fr);" id="pay-kpi"></div>
+    <div class="fleet-table-wrap" style="margin-top:16px;">
+      <div class="fleet-table-head"><h2>Détail des paiements</h2></div>
+      <div style="overflow-x:auto;">
+        <table class="tbl">
+          <thead><tr><th>Réf.</th><th>Client</th><th>Véhicule</th><th>Période</th><th>Total</th><th>Payé</th><th>Reste dû</th><th>Progression</th></tr></thead>
+          <tbody id="pay-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== PAGE : ENTRETIENS ===================== -->
+  <div class="content page" id="page-entretien">
+    <h2 style="font-size:18px;font-weight:900;margin-bottom:20px;">Entretiens & Maintenance</h2>
+    <div id="maint-list"></div>
+  </div>
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<!-- ===================== PAGE : HISTORIQUE GLOBAL ===================== -->
+<div class="content page" id="page-historique">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+    <h2 style="font-size:18px;font-weight:900;flex:1;">Historique global</h2>
+    <div class="search-bar" style="width:320px;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input id="hist-search" placeholder="Client, plaque, contrat, modèle, montant…" oninput="renderHistorique()">
+    </div>
+  </div>
+  <!-- Filtres rapides -->
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+    <button class="btn btn-ghost btn-sm hist-filter active" data-f="all"    onclick="setHistFilter('all',this)">Tout</button>
+    <button class="btn btn-ghost btn-sm hist-filter"        data-f="today"  onclick="setHistFilter('today',this)">Aujourd'hui</button>
+    <button class="btn btn-ghost btn-sm hist-filter"        data-f="week"   onclick="setHistFilter('week',this)">Cette semaine</button>
+    <button class="btn btn-ghost btn-sm hist-filter"        data-f="month"  onclick="setHistFilter('month',this)">Ce mois</button>
+    <button class="btn btn-ghost btn-sm hist-filter"        data-f="year"   onclick="setHistFilter('year',this)">Cette année</button>
+    <div style="display:flex;align-items:center;gap:6px;margin-left:auto;">
+      <input type="date" class="form-input" id="hist-from" style="width:140px;padding:7px 10px;font-size:13px;" onchange="renderHistorique()">
+      <span style="color:var(--t2);font-size:13px;">→</span>
+      <input type="date" class="form-input" id="hist-to"   style="width:140px;padding:7px 10px;font-size:13px;" onchange="renderHistorique()">
+    </div>
+  </div>
+  <div class="fleet-table-wrap">
+    <div style="overflow-x:auto;">
+      <table class="tbl">
+        <thead><tr>
+          <th>Réf.</th><th>Client</th><th>Téléphone</th>
+          <th>Véhicule</th><th>Plaque</th>
+          <th>Départ</th><th>Retour</th><th>Jours</th>
+          <th>Montant</th><th>Payé</th><th>Reste</th>
+          <th>Statut</th><th>Source</th>
+        </tr></thead>
+        <tbody id="hist-tbody"></tbody>
+      </table>
+    </div>
+    <div id="hist-summary" style="padding:12px 16px;border-top:1px solid var(--border);font-size:13px;color:var(--t2);"></div>
+  </div>
+</div>
+
+<!-- ==================== MODAL ==================== -->
+<div class="modal-backdrop" id="modal-bd" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modal-title">—</h3>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()" style="padding:6px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-foot" id="modal-foot"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- data.js must be loaded first (shared with main admin) -->
+<script src="../data.js"></script>
+<script>
+// ================================================================
+// DONNÉES — même source que admin/index.html (ASLDB via data.js)
+// ================================================================
+let FLEET = [], RES = [], MAINT = {}, PARTNERS = {};
+
+const MAINT_KEY    = 'asl_maint_v1';
+const PARTNERS_KEY = 'asl_partners_v1';
+
+function loadAll() {
+  FLEET = ASLDB.getFleet();
+  RES   = ASLDB.getReservations();
+  MAINT = JSON.parse(localStorage.getItem(MAINT_KEY) || '{}');
+  PARTNERS = JSON.parse(localStorage.getItem(PARTNERS_KEY) || '{}');
+}
+function saveMaint()    { localStorage.setItem(MAINT_KEY, JSON.stringify(MAINT)); }
+function savePartners() { localStorage.setItem(PARTNERS_KEY, JSON.stringify(PARTNERS)); }
+
+// ================================================================
+// NAVIGATION
+// ================================================================
+const PAGE_TITLES = {
+  suivi:'Tableau de bord Flotte', flotte:'Ma Flotte', alertes:'Alertes & Échéances',
+  clients:'Clients', partenaires:'Partenaires', paiements:'Paiements & Impayés', entretien:'Entretiens',
+};
+let currentPage = 'suivi';
+
+function nav(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (el) el.classList.add('active');
+  document.getElementById('page-title').textContent = PAGE_TITLES[id] || '';
+  currentPage = id;
+  renderPage(id);
+}
+
+function renderPage(id) {
+  if (id === 'suivi')       { renderKPIs(); renderFleetTable(); renderAlerts(); renderRetards(); }
+  if (id === 'flotte')      renderFleetCards();
+  if (id === 'alertes')     renderFullAlerts();
+  if (id === 'clients')     renderClients();
+  if (id === 'partenaires') renderPartners();
+  if (id === 'paiements')   renderPayments();
+  if (id === 'entretien')   renderMaintPage();
+  if (id === 'historique')   renderHistorique();
+}
+
+// ================================================================
+// UTILITAIRES
+// ================================================================
+const today = () => new Date().toISOString().slice(0,10);
+const diffDays = (a, b) => Math.round((new Date(b) - new Date(a)) / 86400000);
+const fmtDate = d => d ? new Date(d+'T00:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+const fmtMoney = n => (n||0).toLocaleString('fr-FR') + ' MAD';
+
+function vehicleStatus(car) {
+  // Déterminer le statut réel à partir des réservations
+  const t = today();
+  const active = RES.find(r => r.status === 'confirmed' && r.car === car.name
+    && r.startDate <= t && r.endDate >= t);
+  if (active) {
+    const retard = active.endDate < t;
+    const retourAujourd = active.endDate === t;
+    if (retard)      return { code:'retard',    label:'En retard',        cls:'b-retard',  res: active };
+    if (retourAujourd) return { code:'retour',  label:"Retour aujourd'hui", cls:'b-retour', res: active };
+    return           { code:'louee',    label:'Louée',            cls:'b-louee',   res: active };
+  }
+  // Réservation à venir (dans les 7 prochains jours)
+  const next = RES.find(r => r.status === 'confirmed' && r.car === car.name && r.startDate > t);
+  if (next && diffDays(t, next.startDate) <= 7)
+    return { code:'reservee', label:'Réservée', cls:'b-reserv', res: next };
+  // Statut manuel du véhicule
+  if (car.status === 'maintenance') return { code:'maint', label:'Maintenance', cls:'b-maint', res:null };
+  if (car.status === 'partenaire')  return { code:'partenaire', label:'Partenaire', cls:'b-part', res:null };
+  return { code:'dispo', label:'Disponible', cls:'b-dispo', res: null };
+}
+
+function thumb(car) {
+  if (car.img && car.img.startsWith('http'))
+    return `<img class="car-thumb" src="${car.img}" alt="${car.name}" onerror="this.style.display='none'">`;
+  return `<div class="car-thumb-ph"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21 8-2 2-1.5-3.7A2 2 0 0 0 15.646 5H8.4a2 2 0 0 0-1.903 1.257L5 10 3 8"/><rect width="18" height="8" x="3" y="10" rx="2"/></svg></div>`;
+}
+
+// ================================================================
+// KPIs
+// ================================================================
+function renderKPIs() {
+  const t = today();
+  let dispo=0, louee=0, retour=0, retard=0, maint=0, reservee=0;
+  FLEET.forEach(c => {
+    const s = vehicleStatus(c).code;
+    if (s==='dispo') dispo++;
+    else if (s==='louee') louee++;
+    else if (s==='retour') retour++;
+    else if (s==='retard') retard++;
+    else if (s==='maint') maint++;
+    else if (s==='reservee') reservee++;
+  });
+  const impaye = RES.filter(r => r.status!=='cancelled' && (r.paid||0) < (r.amount||0)).length;
+  document.getElementById('kpi-row').innerHTML = [
+    { v:dispo,    l:'Disponibles',        cls:'ok' },
+    { v:louee,    l:'Louées',             cls:'' },
+    { v:retour,   l:"Retour aujourd'hui", cls:'warn' },
+    { v:retard,   l:'En retard',          cls:'alert' },
+    { v:maint,    l:'Maintenance',        cls:'warn' },
+    { v:impaye,   l:'Impayés',            cls: impaye ? 'alert' : '' },
+  ].map(k => `<div class="kpi ${k.cls}"><div class="kpi-val">${k.v}</div><div class="kpi-lbl">${k.l}</div></div>`).join('');
+}
+
+// ================================================================
+// TABLEAU FLOTTE (page principale)
+// ================================================================
+function renderFleetTable() {
+  const filter = document.getElementById('filter-status')?.value || '';
+  const search = (document.getElementById('global-search')?.value || '').toLowerCase();
+  const tbody  = document.getElementById('fleet-tbody');
+  if (!tbody) return;
+
+  let cars = FLEET;
+  if (filter) cars = cars.filter(c => vehicleStatus(c).code === filter);
+  if (search) cars = cars.filter(c =>
+    (c.name||'').toLowerCase().includes(search)  ||
+    (c.plate||'').toLowerCase().includes(search) ||
+    (vehicleStatus(c).res?.client||'').toLowerCase().includes(search));
+
+  if (!cars.length) {
+    tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:30px;color:var(--t3);">Aucun véhicule.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = cars.map(car => {
+    const s = vehicleStatus(car);
+    const r = s.res;   // réservation active (ou prochaine)
+    const resId = r ? r.id : null;
+    const ppu   = r ? Math.round((r.amount||0) / Math.max(1, r.days||1)) : 0;
+
+    // pendingRes : réservation prolongée avec supplément impayé
+    // cherche dans TOUTES les réservations, sans condition de date ni de statut véhicule
+    // → persiste même si la voiture est encore louée, en retard, ou déjà rendue
+    const pendingRes = RES.find(x =>
+      x.car === car.name &&
+      x.status === 'confirmed' &&
+      x.extDays > 0 &&
+      (x.amount || 0) > (x.paid || 0)
+    );
+    const hasPendingExt = !!pendingRes;
+    // showExtWidget : widget de saisie UNIQUEMENT si la voiture est active
+    // ET qu'il n'y a pas de supplément en attente
+    const showExtWidget = !hasPendingExt && r && ['louee','retard','retour'].includes(s.code);
+    const showExt = showExtWidget;
+    const extCols = hasPendingExt ? `
+      <td data-lbl="Prolongation" style="white-space:nowrap;">
+        <span style="background:rgba(37,99,235,.1);color:#1e40af;border-radius:6px;
+          padding:3px 8px;font-size:12px;font-weight:700;">+${pendingRes.extDays}j</span>
+      </td>
+      <td data-lbl="Supplément" style="font-weight:700;white-space:nowrap;">
+        <span style="color:var(--red);">${(pendingRes.extSuppl||0).toLocaleString('fr-FR')} MAD</span>
+        <div style="font-size:11px;color:var(--t3);">
+          à encaisser · payé : ${(pendingRes.paid||0).toLocaleString('fr-FR')} MAD
+        </div>
+      </td>
+      <td data-lbl="Retour après" style="font-weight:700;">
+        ${fmtDateShort(pendingRes.endDate)}
+        <div style="font-size:11px;color:var(--t3);">depuis ${fmtDateShort(pendingRes.extOrigEndDate||pendingRes.endDate)}</div>
+      </td>
+      <td data-lbl="Actions">
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+          <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openVehicleCard(${car.id})">Fiche</button>
+          <button class="btn btn-sm" style="background:var(--green);color:#fff;"
+            onclick="event.stopPropagation();markPaid('${pendingRes.id}')">Payer suppl.</button>
+        </div>
+      </td>` : showExt ? `
+      <td data-lbl="Prolongation" onclick="event.stopPropagation()" style="white-space:nowrap;">
+        <div style="display:flex;align-items:center;gap:4px;">
+          <select id="ext-sel-${resId}"
+            style="border:1px solid var(--border);border-radius:7px;padding:5px 6px;font-size:12px;font-family:var(--font);cursor:pointer;"
+            onchange="calcProlongation('${resId}',${car.id},this.value)">
+            <option value="">—</option>
+            <option value="1">+1 j</option>
+            <option value="2">+2 j</option>
+            <option value="3">+3 j</option>
+            <option value="7">+7 j</option>
+            <option value="custom">Personnalisé…</option>
+          </select>
+          <input type="number" id="ext-custom-${resId}" min="1" max="90"
+            style="width:54px;border:1px solid var(--border);border-radius:7px;padding:5px 6px;font-size:12px;font-family:var(--font);display:none;"
+            placeholder="j" onchange="calcProlongation('${resId}',${car.id},this.value)">
+        </div>
+      </td>
+      <td data-lbl="Supplément" id="supp-${resId}" style="font-weight:700;color:var(--blue);white-space:nowrap;">—</td>
+      <td data-lbl="Retour après" id="retpro-${resId}" style="font-weight:700;white-space:nowrap;">—</td>
+      <td data-lbl="Actions" onclick="event.stopPropagation()">
+        <div style="display:flex;gap:4px;flex-wrap:wrap;">
+          <button class="btn btn-ghost btn-sm" onclick="openVehicleCard(${car.id})">Fiche</button>
+          <button class="btn btn-sm" id="ext-btn-${resId}"
+            style="background:var(--green);color:#fff;display:none;"
+            onclick="applyProlongation('${resId}',${car.id})">✓ Valider</button>
+        </div>
+      </td>` : `
+      <td data-lbl="Prolongation">—</td><td data-lbl="Supplément">—</td><td data-lbl="Retour après">—</td>
+      <td data-lbl="Actions"><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openVehicleCard(${car.id})">Fiche</button></td>`;
+
+    return `<tr>
+      <td data-lbl="Véhicule">
+        <div style="display:flex;align-items:center;gap:8px;">
+          ${thumb(car)}
+          <span style="font-weight:700;font-size:13px;">${car.name}</span>
+        </div>
+      </td>
+      <td data-lbl="Plaque" style="font-family:monospace;font-size:12px;color:var(--t2);">${car.plate||'—'}</td>
+      <td data-lbl="Statut"><span class="badge ${s.cls}" style="font-size:11px;">${s.label}</span></td>
+      <td data-lbl="Client">${r ? `<div style="font-weight:600;font-size:13px;">${r.client}</div>` : '<span style="color:var(--t3)">—</span>'}</td>
+      <td data-lbl="Téléphone">${r ? `<a href="tel:${r.phone||''}" onclick="event.stopPropagation()" style="color:var(--blue);font-size:12px;white-space:nowrap;">${r.phone||'—'}</a>` : '—'}</td>
+      <td data-lbl="Départ" style="font-size:12px;">${r ? fmtDateShort(r.startDate) : '—'}</td>
+      <td data-lbl="Retour prévu" style="font-size:12px;">${r
+        ? `<span style="font-weight:700;${s.code==='retard'?'color:var(--red)':s.code==='retour'?'color:var(--orange)':''}">${fmtDateShort(r.endDate)}</span>`
+        : '—'}</td>
+      <td data-lbl="Montant" style="font-size:13px;">${r ? `<strong>${fmtMoney(r.amount)}</strong>` : '—'}</td>
+      ${extCols}
+    </tr>`;
+  }).join('');
+}
+
+// ================================================================
+// FICHE VÉHICULE COMPLÈTE
+// ================================================================
+function openVehicleCard(carId) {
+  const car = FLEET.find(c => c.id == carId);
+  if (!car) return;
+  const s   = vehicleStatus(car);
+  const m   = MAINT[carId] || {};
+  const carRes = RES.filter(r => r.car === car.name).sort((a,b) => b.startDate.localeCompare(a.startDate));
+  const active = carRes.find(r => r.status==='confirmed' && r.startDate <= today() && r.endDate >= today());
+
+  openModal(`${car.name} — ${car.plate||''}`, `
+  <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;">
+    ${thumb(car)}
+    <div>
+      <div style="font-size:20px;font-weight:900;">${car.name}</div>
+      <div style="font-size:13px;color:var(--t2);">Plaque: ${car.plate||'—'} · Cat: ${car.category||'—'} · Stock: ${car.stock||1}</div>
+      <span class="badge ${s.cls}" style="margin-top:6px;">${s.label}</span>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs" id="vc-tabs">
+    <div class="tab active" onclick="vcTab('info',this)">Infos</div>
+    <div class="tab" onclick="vcTab('location',this)">Location actuelle</div>
+    <div class="tab" onclick="vcTab('history',this)">Historique</div>
+    <div class="tab" onclick="vcTab('entretien',this)">Entretien</div>
+  </div>
+
+  <!-- Info -->
+  <div id="vc-info" class="vc-pane">
+    <div class="vcard-grid">
+      ${vfield('Prix/jour', fmtMoney(car.priceMAD || Math.round((car.priceEUR||0)*10.8)))}
+      ${vfield('Caution', car.depositShow && car.deposit ? fmtMoney(car.deposit) : '—')}
+      ${vfield('Carburant', car.fuel||'—')}
+      ${vfield('Transmission', car.transmission||'—')}
+      ${vfield('Places', car.seats||'—')}
+      ${vfield('Portes', car.doors||'—')}
+      ${vfield('Coffre', car.trunk||'—')}
+      ${vfield('Consommation', car.consumption||'—')}
+    </div>
+    <div style="margin-top:12px;">
+      <select class="form-select" style="width:200px;font-size:13px;" onchange="updateCarStatus(${car.id},this.value)">
+        <option value="available" ${car.status==='available'?'selected':''}>Disponible</option>
+        <option value="maintenance" ${car.status==='maintenance'?'selected':''}>Maintenance</option>
+        <option value="partenaire" ${car.status==='partenaire'?'selected':''}>Louée partenaire</option>
+        <option value="reserved" ${car.status==='reserved'?'selected':''}>Réservée</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Location actuelle -->
+  <div id="vc-location" class="vc-pane" style="display:none;">
+    ${active ? `
+    <div class="vcard-grid">
+      ${vfield('Client', active.client)}
+      ${vfield('Téléphone', active.phone||'—')}
+      ${vfield('Départ', fmtDate(active.startDate))}
+      ${vfield('Retour', fmtDate(active.endDate))}
+      ${vfield('Montant', fmtMoney(active.amount))}
+      ${vfield('Payé', fmtMoney(active.paid||0))}
+      ${vfield('Reste dû', fmtMoney((active.amount||0)-(active.paid||0)))}
+      ${vfield('Paiement', active.payment||'—')}
+      ${active.paymentStatus ? vfield('Statut paiement', `<span style="font-weight:700;color:${active.paymentStatus==='Soldé'?'var(--green)':'var(--red)'}">${active.paymentStatus}</span>`) : ''}
+    </div>
+    <div class="btn" style="gap:8px;margin-top:12px;flex-wrap:wrap;">
+      <a class="btn btn-ghost btn-sm" href="https://wa.me/${(active.phone||'').replace(/[^0-9]/g,'')}" target="_blank">WhatsApp</a>
+      <button class="btn btn-ghost btn-sm" onclick="markPaid('${active.id}')">Payer</button>
+      <button class="btn btn-ghost btn-sm" onclick="openExtension('${active.id}')">Prolonger</button>
+    </div>` : `<p style="color:var(--t3);padding:20px 0;">Aucune location en cours.</p>`}
+  </div>
+
+  <!-- Historique -->
+  <div id="vc-history" class="vc-pane" style="display:none;">
+    ${carRes.length ? `<table class="tbl"><thead><tr><th>Réf.</th><th>Client</th><th>Dates</th><th>Montant</th><th>Statut</th></tr></thead><tbody>
+    ${carRes.slice(0,20).map(r=>`<tr>
+      <td><strong>${r.id}</strong></td>
+      <td>${r.client}</td>
+      <td>${fmtDate(r.startDate)} → ${fmtDate(r.endDate)}</td>
+      <td>${fmtMoney(r.amount)}</td>
+      <td><span class="badge ${r.status==='confirmed'?'b-louee':r.status==='cancelled'?'b-maint':'b-pending'}">${r.status}</span></td>
+    </tr>`).join('')}
+    </tbody></table>` : `<p style="color:var(--t3);padding:20px 0;">Aucune location enregistrée.</p>`}
+  </div>
+
+  <!-- Entretien -->
+  <div id="vc-entretien" class="vc-pane" style="display:none;">
+    <div class="maint-form">
+      <div class="form-g"><label>Kilométrage actuel</label><input class="form-input" id="m-km" value="${m.km||''}" placeholder="ex: 45000 km"></div>
+      <div class="form-g"><label>Dernière vidange</label><input class="form-input" type="date" id="m-vidange-last" value="${m.vidange_last||''}"></div>
+      <div class="form-g"><label>Prochaine vidange</label><input class="form-input" type="date" id="m-vidange-next" value="${m.vidange_next||''}"></div>
+      <div class="form-g"><label>Dernière visite technique</label><input class="form-input" type="date" id="m-vt-last" value="${m.vt_last||''}"></div>
+      <div class="form-g"><label>Prochaine visite technique</label><input class="form-input" type="date" id="m-vt-next" value="${m.vt_next||''}"></div>
+      <div class="form-g"><label>Assurance — échéance</label><input class="form-input" type="date" id="m-assur" value="${m.assur||''}"></div>
+    </div>
+    <div class="form-g" style="margin-top:10px;"><label>Observations</label><textarea class="form-textarea" id="m-obs">${m.obs||''}</textarea></div>
+    <button class="btn btn-green btn-sm" style="margin-top:12px;" onclick="saveMaintCard(${car.id})">Enregistrer l'entretien</button>
+  </div>
+  `,
+  [
+    { label:'Contrat PDF', action:`generateContractForCar(${car.id})`, cls:'btn-ghost' },
+    { label:'Fermer', action:'closeModal()', cls:'btn-ghost' },
+  ]);
+}
+
+function vfield(l, v) {
+  return `<div class="vcard-field"><label>${l}</label><span>${v||'—'}</span></div>`;
+}
+function vcTab(id, el) {
+  document.querySelectorAll('.vc-pane').forEach(p => p.style.display='none');
+  document.getElementById('vc-'+id).style.display = 'block';
+  document.querySelectorAll('#vc-tabs .tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function updateCarStatus(carId, status) {
+  ASLDB.updateVehicle(carId, { status });
+  FLEET = ASLDB.getFleet();
+  toast('Statut mis à jour.', 'g');
+}
+
+function saveMaintCard(carId) {
+  MAINT[carId] = {
+    km: document.getElementById('m-km').value,
+    vidange_last: document.getElementById('m-vidange-last').value,
+    vidange_next: document.getElementById('m-vidange-next').value,
+    vt_last: document.getElementById('m-vt-last').value,
+    vt_next: document.getElementById('m-vt-next').value,
+    assur: document.getElementById('m-assur').value,
+    obs: document.getElementById('m-obs').value,
+    updated: today(),
+  };
+  saveMaint();
+  toast('Entretien enregistré.', 'g');
+  renderAlerts();
+}
+
+function markPaid(resId) {
+  // Redirige vers la modale de paiement — ne solde JAMAIS automatiquement
+  openPaymentModal(resId);
+}
+
+function openPaymentModal(resId) {
+  const r = RES.find(x => x.id === resId);
+  if (!r) { toast('Réservation introuvable.', 'r'); return; }
+
+  const total    = r.amount    || 0;
+  const alreadyP = r.paid      || 0;
+  const reste    = total - alreadyP;
+  const hist     = r.paymentHistory || [];
+
+  // Historique des versements
+  const histRows = hist.length
+    ? hist.map(h => `<tr>
+        <td style="font-size:12px;color:var(--t2);">${h.date ? new Date(h.date).toLocaleString('fr-FR',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—'}</td>
+        <td style="text-align:right;font-weight:700;">${h.amount.toLocaleString('fr-FR')} MAD</td>
+        <td style="text-align:right;font-size:12px;color:var(--t2);">${h.remaining.toLocaleString('fr-FR')} MAD restant</td>
+        <td style="font-size:12px;">${h.status}</td>
+      </tr>`).join('')
+    : `<tr><td colspan="4" style="color:var(--t3);font-size:12px;padding:8px 0;">Aucun versement enregistré.</td></tr>`;
+
+  openModal(`Enregistrer un paiement — ${r.id}`, `
+    <!-- Récapitulatif -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px;">
+      <div style="background:var(--bg);border-radius:10px;padding:12px 14px;">
+        <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:4px;">Total location</div>
+        <div style="font-size:18px;font-weight:900;">${total.toLocaleString('fr-FR')} MAD</div>
+      </div>
+      <div style="background:rgba(22,163,74,.08);border-radius:10px;padding:12px 14px;">
+        <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:4px;">Déjà reçu</div>
+        <div style="font-size:18px;font-weight:900;color:var(--green);">${alreadyP.toLocaleString('fr-FR')} MAD</div>
+      </div>
+      <div style="background:${reste > 0 ? 'rgba(196,30,58,.07)' : 'rgba(22,163,74,.08)'};border-radius:10px;padding:12px 14px;">
+        <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:4px;">Reste à payer</div>
+        <div style="font-size:18px;font-weight:900;color:${reste > 0 ? 'var(--red)' : 'var(--green)'};">${reste.toLocaleString('fr-FR')} MAD</div>
+      </div>
+    </div>
+
+    ${reste <= 0
+      ? `<div style="background:rgba(22,163,74,.10);border:1px solid rgba(22,163,74,.25);border-radius:10px;padding:14px;text-align:center;font-weight:700;color:var(--green);margin-bottom:16px;">
+          ✓ Cette location est entièrement soldée.
+        </div>`
+      : `<!-- Saisie du versement -->
+        <div style="background:#fff;border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;">
+          <div style="font-size:13px;font-weight:700;margin-bottom:12px;">Montant reçu maintenant</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+            <input type="number" id="pay-amount-input" min="1" max="${reste}"
+              style="flex:1;border:1.5px solid var(--border);border-radius:9px;padding:11px 14px;
+              font-size:18px;font-weight:700;font-family:var(--font);outline:none;"
+              placeholder="0" oninput="updatePayPreview(${total},${alreadyP})"
+              onfocus="this.select()">
+            <span style="font-size:15px;font-weight:700;color:var(--t2);">MAD</span>
+          </div>
+          <!-- Boutons rapides -->
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-sm" style="background:var(--green);color:#fff;"
+              onclick="document.getElementById('pay-amount-input').value=${reste};updatePayPreview(${total},${alreadyP})">
+              Paiement total (${reste.toLocaleString('fr-FR')} MAD)
+            </button>
+            ${[25,50,75].map(pct => {
+              const partial = Math.round(reste * pct / 100);
+              return partial > 0 ? `<button class="btn btn-ghost btn-sm"
+                onclick="document.getElementById('pay-amount-input').value=${partial};updatePayPreview(${total},${alreadyP})">
+                ${pct}% (${partial.toLocaleString('fr-FR')} MAD)
+              </button>` : '';
+            }).join('')}
+          </div>
+        </div>
+        <!-- Aperçu après versement -->
+        <div id="pay-preview" style="display:none;background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.2);
+          border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:13.5px;">
+        </div>`}
+
+    <!-- Historique des versements -->
+    <div style="margin-top:4px;">
+      <div style="font-size:12px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:8px;">Historique des versements</div>
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr>
+          <th style="font-size:11px;color:var(--t3);padding:4px 0;text-align:left;">Date / Heure</th>
+          <th style="font-size:11px;color:var(--t3);padding:4px 0;text-align:right;">Montant</th>
+          <th style="font-size:11px;color:var(--t3);padding:4px 0;text-align:right;">Restant</th>
+          <th style="font-size:11px;color:var(--t3);padding:4px 0;text-align:left;padding-left:8px;">Statut</th>
+        </tr></thead>
+        <tbody>${histRows}</tbody>
+      </table>
+    </div>
+  `,
+  reste > 0
+    ? [
+        { label: 'Valider le versement', action: `confirmPayment('${resId}',${total},${alreadyP})`, cls: 'btn-red' },
+        { label: 'Annuler', action: 'closeModal()', cls: 'btn-ghost' },
+      ]
+    : [{ label: 'Fermer', action: 'closeModal()', cls: 'btn-ghost' }]
+  );
+
+  // Focus sur le champ montant
+  setTimeout(() => document.getElementById('pay-amount-input')?.focus(), 80);
+}
+
+function updatePayPreview(total, alreadyPaid) {
+  const input  = document.getElementById('pay-amount-input');
+  const box    = document.getElementById('pay-preview');
+  if (!input || !box) return;
+  const nowPay = parseFloat(input.value) || 0;
+  if (nowPay <= 0) { box.style.display = 'none'; return; }
+  const newPaid    = alreadyPaid + nowPay;
+  const newReste   = total - newPaid;
+  const statut     = newReste <= 0 ? 'Soldé' : 'Partiellement payé';
+  const colorR     = newReste <= 0 ? 'var(--green)' : 'var(--red)';
+  box.style.display = 'block';
+  box.innerHTML = `
+    Après ce versement :<br>
+    Total reçu : <strong>${Math.min(newPaid, total).toLocaleString('fr-FR')} MAD</strong> ·
+    Reste : <strong style="color:${colorR};">${Math.max(0, newReste).toLocaleString('fr-FR')} MAD</strong> ·
+    Statut : <strong>${statut}</strong>`;
+}
+
+function confirmPayment(resId, total, alreadyPaid) {
+  const input  = document.getElementById('pay-amount-input');
+  const nowPay = parseFloat(input?.value) || 0;
+  if (nowPay <= 0) { toast('Entrez un montant valide.', 'r'); return; }
+  const reste = total - alreadyPaid;
+  if (nowPay > reste + 0.01) { toast('Le montant dépasse le reste dû.', 'r'); return; }
+
+  const newPaid  = Math.min(total, alreadyPaid + nowPay);
+  const newReste = total - newPaid;
+  const statut   = newReste <= 0 ? 'Soldé' : 'Partiellement payé';
+  const now      = new Date().toISOString();
+
+  // Récupérer l'historique existant et ajouter l'entrée
+  const r = RES.find(x => x.id === resId);
+  const hist = r?.paymentHistory || [];
+  hist.push({
+    date:      now,
+    amount:    nowPay,
+    remaining: Math.round(newReste),
+    status:    statut,
+  });
+
+  ASLDB.updateReservation(resId, {
+    paid:            Math.round(newPaid),
+    paymentHistory:  hist,
+    paymentStatus:   statut,
+    lastPaymentAt:   now,
+    // Si soldé, signaler que le supplément de prolongation est réglé
+    ...(newReste <= 0 ? { extPendingSuppl: 0 } : {}),
+  });
+
+  RES = ASLDB.getReservations();
+  closeModal();
+  renderFleetTable();
+  renderKPIs();
+  if (typeof renderPayments === 'function') renderPayments();
+  toast(`✓ ${nowPay.toLocaleString('fr-FR')} MAD enregistrés. Reste : ${Math.max(0,Math.round(newReste)).toLocaleString('fr-FR')} MAD. Statut : ${statut}.`, 'g');
+}
+
+function openExtension(resId) {
+  const r = RES.find(x=>x.id===resId);
+  if (!r) return;
+  const nd = prompt(`Nouvelle date de retour (actuelle: ${r.endDate}):`, r.endDate);
+  if (!nd || nd <= r.endDate) return;
+  const days = Math.max(1, Math.round((new Date(nd)-new Date(r.startDate))/86400000));
+  const ppu  = Math.round(r.amount / r.days) || 0;
+  if (confirm(`Prolongation du ${r.endDate} au ${nd} — supplément : ${(days - r.days)*ppu} MAD\nNouveau total : ${days*ppu} MAD\nConfirmer ?`)) {
+    ASLDB.updateReservation(resId, { endDate: nd, days, amount: days*ppu, extendedAt: new Date().toISOString() });
+    RES = ASLDB.getReservations();
+    toast('Prolongation enregistrée.', 'g');
+    closeModal();
+  }
+}
+
+// ================================================================
+// ALERTES MAINTENANCE
+// ================================================================
+function buildAlerts() {
+  const t = today();
+  const alerts = [];
+  Object.entries(MAINT).forEach(([carId, m]) => {
+    const car = FLEET.find(c => c.id == carId);
+    if (!car) return;
+    const checks = [
+      { label:'Vidange', date: m.vidange_next },
+      { label:'Visite technique', date: m.vt_next },
+      { label:'Assurance', date: m.assur },
+    ];
+    checks.forEach(ch => {
+      if (!ch.date) return;
+      const d = diffDays(t, ch.date);
+      if (d <= 30) alerts.push({ car: car.name, label: ch.label, date: ch.date, days: d, carId });
+    });
+  });
+  return alerts.sort((a,b) => a.days - b.days);
+}
+
+function renderAlerts() {
+  const alerts = buildAlerts();
+  document.getElementById('sb-alert-count').textContent = alerts.length;
+  const box = document.getElementById('alert-list');
+  if (!box) return;
+  if (!alerts.length) { box.innerHTML = `<div style="color:var(--t3);font-size:13px;padding:6px 0;">Aucune alerte dans les 30 jours.</div>`; return; }
+  box.innerHTML = alerts.slice(0,6).map(a => {
+    const urgent = a.days < 0;
+    const warn   = a.days <= 7;
+    return `<div class="alert-item" onclick="openVehicleCard(${a.carId})" style="cursor:pointer;">
+      <div class="alert-icon ${urgent||warn?'r':'y'}">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+      </div>
+      <div style="flex:1;">
+        <div class="alert-title">${a.car} — ${a.label}</div>
+        <div class="alert-sub">${fmtDate(a.date)}</div>
+      </div>
+      <div class="alert-days ${urgent?'overdue':warn?'soon':''}">
+        ${urgent ? `${Math.abs(a.days)}j de retard` : a.days === 0 ? 'Aujourd\'hui' : `${a.days}j`}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderRetards() {
+  const t = today();
+  const retards = RES.filter(r => r.status==='confirmed' && r.endDate < t);
+  const wrap = document.getElementById('retards-wrap');
+  if (!wrap) return;
+  if (!retards.length) { wrap.style.display='none'; return; }
+  wrap.style.display = 'block';
+  document.getElementById('retards-list').innerHTML = retards.map(r => `
+    <div class="alert-item">
+      <div class="alert-icon r"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg></div>
+      <div style="flex:1;"><div class="alert-title">${r.client} — ${r.car}</div>
+      <div class="alert-sub">Retour prévu le ${fmtDate(r.endDate)}</div></div>
+      <div class="alert-days overdue">${diffDays(r.endDate, t)}j de retard</div>
+    </div>`).join('');
+}
+
+function renderFullAlerts() {
+  const alerts = buildAlerts();
+  const box = document.getElementById('full-alert-list');
+  if (!alerts.length) { box.innerHTML = `<p style="color:var(--t3);">Aucune alerte dans les 30 prochains jours. Renseignez les dates d'entretien depuis les fiches véhicules.</p>`; return; }
+  box.innerHTML = alerts.map(a => {
+    const urgent = a.days < 0, warn = a.days <= 7;
+    return `<div class="alerts-wrap" style="padding:14px 18px;margin-bottom:10px;border-left:4px solid ${urgent?'var(--red)':warn?'var(--yellow)':'#ccc'};">
+      <div style="font-weight:700;font-size:15px;">${a.car} — ${a.label}</div>
+      <div style="font-size:13px;color:var(--t2);margin-top:4px;">Échéance : ${fmtDate(a.date)} · 
+        <span style="color:${urgent?'var(--red)':warn?'var(--yellow)':'var(--t2)'}">
+          ${urgent ? `${Math.abs(a.days)} jour(s) de retard` : a.days===0 ? "Aujourd'hui" : `Dans ${a.days} jour(s)`}
+        </span>
+      </div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:8px;" onclick="openVehicleCard(${a.carId})">Ouvrir la fiche →</button>
+    </div>`;
+  }).join('');
+}
+
+// ================================================================
+// FLOTTE CARDS (page Flotte)
+// ================================================================
+function renderFleetCards() {
+  const box = document.getElementById('fleet-cards');
+  if (!FLEET.length) { box.innerHTML = `<p style="color:var(--t3);">Aucun véhicule. Ajoutez-en depuis l'<a href="index.html" style="color:var(--red);">admin principal</a>.</p>`; return; }
+  box.innerHTML = FLEET.map(car => {
+    const s = vehicleStatus(car);
+    const m = MAINT[car.id] || {};
+    const nextAlert = ['vidange_next','vt_next','assur'].map(k => m[k]).filter(Boolean)
+      .map(d => diffDays(today(), d)).filter(d => d <= 30).sort()[0];
+    return `<div class="vcard" style="margin-bottom:12px;cursor:pointer;" onclick="openVehicleCard(${car.id})">
+      <div class="vcard-header" style="padding:14px 18px;">
+        ${thumb(car)}
+        <div style="flex:1;">
+          <div class="vcard-title" style="font-size:16px;">${car.name}</div>
+          <div class="vcard-sub">${car.plate||'—'} · ${car.category||''} · Stock: ${car.stock||1}</div>
+        </div>
+        <span class="badge ${s.cls}">${s.label}</span>
+        ${nextAlert !== undefined ? `<span class="badge ${nextAlert<0?'b-retard':'b-pending'}" style="margin-left:6px;">⚙ ${nextAlert<0?'Retard':nextAlert+'j'}</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ================================================================
+// CLIENTS
+// ================================================================
+function renderClients() {
+  const box = document.getElementById('clients-list');
+  const clients = {};
+  RES.forEach(r => {
+    const k = r.phone || r.email || r.client;
+    if (!clients[k]) clients[k] = { name:r.client, phone:r.phone, email:r.email||'', count:0, total:0, lastCar:'', lastDate:'' };
+    clients[k].count++;
+    clients[k].total += (r.amount||0);
+    if (r.startDate > clients[k].lastDate) { clients[k].lastDate = r.startDate; clients[k].lastCar = r.car; }
+  });
+  const list = Object.values(clients).sort((a,b) => b.total - a.total);
+  if (!list.length) { box.innerHTML = `<p style="color:var(--t3);">Aucun client encore.</p>`; return; }
+  box.innerHTML = `<div class="fleet-table-wrap"><table class="tbl">
+    <thead><tr><th>Client</th><th>Téléphone</th><th>Locations</th><th>Total dépensé</th><th>Dernier véhicule</th><th></th></tr></thead>
+    <tbody>${list.map(c => `<tr onclick="openClientDetail('${(c.phone||c.email||c.name).replace(/'/g,"\\'")}')">
+      <td><strong>${c.name}</strong></td>
+      <td>${c.phone||'—'}</td>
+      <td>${c.count}</td>
+      <td><strong>${fmtMoney(c.total)}</strong></td>
+      <td>${c.lastCar||'—'}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openClientDetail('${(c.phone||c.email||c.name).replace(/'/g,"\\'")}')">Dossier →</button></td>
+    </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+function openClientDetail(key) {
+  const cRes = RES.filter(r => r.phone===key || r.email===key || r.client===key)
+    .sort((a,b) => b.startDate.localeCompare(a.startDate));
+  if (!cRes.length) return;
+  const c = cRes[0];
+  const total = cRes.reduce((s,r)=>s+(r.amount||0),0);
+  const active = cRes.find(r => r.status==='confirmed' && r.startDate<=today() && r.endDate>=today());
+  openModal(`Client — ${c.client}`, `
+    <div class="vcard-grid" style="margin-bottom:16px;">
+      ${vfield('Téléphone', c.phone)}
+      ${vfield('Email', c.email||'—')}
+      ${vfield('Permis', c.license||'—')}
+      ${vfield('CIN/Passeport', c.cin||'—')}
+      ${vfield('Total dépensé', fmtMoney(total))}
+      ${vfield('Nb. locations', cRes.length)}
+    </div>
+    ${active ? `<div style="background:rgba(37,99,235,.07);border:1px solid rgba(37,99,235,.2);border-radius:10px;padding:14px;margin-bottom:14px;">
+      <div style="font-weight:700;font-size:14px;color:var(--blue);margin-bottom:6px;">Location en cours</div>
+      <div style="font-size:13.5px;">${active.car} — ${fmtDate(active.startDate)} → ${fmtDate(active.endDate)} — ${fmtMoney(active.amount)}</div>
+    </div>` : ''}
+    <div style="font-size:14px;font-weight:700;margin-bottom:10px;">Historique (${cRes.length})</div>
+    <table class="tbl"><thead><tr><th>Réf.</th><th>Véhicule</th><th>Dates</th><th>Montant</th><th>Statut</th></tr></thead>
+    <tbody>${cRes.map(r=>`<tr>
+      <td><strong>${r.id}</strong></td><td>${r.car}</td>
+      <td>${fmtDate(r.startDate)} → ${fmtDate(r.endDate)}</td>
+      <td>${fmtMoney(r.amount)}</td>
+      <td><span class="badge ${r.status==='confirmed'?'b-louee':r.status==='cancelled'?'b-maint':'b-pending'}">${r.status}</span></td>
+    </tr>`).join('')}</tbody></table>
+  `, [{ label:'Contrat PDF', action:`generateContractForClient('${key}')`, cls:'btn-ghost' }]);
+}
+
+// ================================================================
+// PARTENAIRES
+// ================================================================
+function renderPartners() {
+  const box = document.getElementById('partners-list');
+  const list = Object.values(PARTNERS);
+  if (!list.length) {
+    box.innerHTML = `<p style="color:var(--t3);">Aucun partenaire enregistré. Cliquez sur « + Ajouter un partenaire » pour commencer.</p>`; return;
+  }
+  box.innerHTML = list.map(p => {
+    const pRes = RES.filter(r => r.source==='partner' && r.partner===p.id && r.status==='confirmed' && r.endDate >= today());
+    const due  = pRes.reduce((s,r)=>s+(r.amount||0)-(r.paid||0),0);
+    return `<div class="partner-card" onclick="openPartnerDetail('${p.id}')">
+      <div class="partner-avatar">${(p.name||'?')[0].toUpperCase()}</div>
+      <div style="flex:1;">
+        <div style="font-weight:700;font-size:15px;">${p.name}</div>
+        <div style="font-size:13px;color:var(--t2);margin-top:2px;">${p.phone||''} ${p.company?'· '+p.company:''}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:13px;font-weight:700;">${pRes.length} voiture(s) actuellement</div>
+        ${due ? `<div style="font-size:12px;color:var(--red);font-weight:700;">${fmtMoney(due)} dû</div>` : '<div style="font-size:12px;color:var(--green);">À jour</div>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openAddPartner() {
+  openModal('Nouveau partenaire', `
+    <div class="maint-form">
+      <div class="form-g"><label>Nom complet *</label><input class="form-input" id="p-name" placeholder="Mohammed Alaoui"></div>
+      <div class="form-g"><label>Téléphone *</label><input class="form-input" id="p-phone" placeholder="+212 6…"></div>
+      <div class="form-g"><label>Société</label><input class="form-input" id="p-company" placeholder="Nom de l'entreprise"></div>
+      <div class="form-g"><label>Email</label><input class="form-input" id="p-email" type="email"></div>
+    </div>
+    <div class="form-g" style="margin-top:10px;"><label>Notes</label><textarea class="form-textarea" id="p-notes"></textarea></div>
+  `, [{ label:'Enregistrer', action:'savePartner()', cls:'btn-red' }]);
+}
+
+function savePartner() {
+  const name = document.getElementById('p-name')?.value.trim();
+  if (!name) { toast('Nom obligatoire.', 'r'); return; }
+  const id = 'P' + Date.now();
+  PARTNERS[id] = { id, name, phone: document.getElementById('p-phone').value.trim(),
+    company: document.getElementById('p-company').value.trim(),
+    email: document.getElementById('p-email').value.trim(),
+    notes: document.getElementById('p-notes').value.trim(), createdAt: new Date().toISOString() };
+  savePartners();
+  closeModal();
+  renderPartners();
+  toast(`Partenaire "${name}" ajouté.`, 'g');
+}
+
+function openPartnerDetail(pid) {
+  const p = PARTNERS[pid];
+  if (!p) return;
+  const pRes = RES.filter(r => r.partner === pid || (r.source==='partner' && r.client===p.name));
+  const active = pRes.filter(r => r.status==='confirmed' && r.endDate >= today());
+  const totalDue = pRes.reduce((s,r)=>s+(r.amount||0)-(r.paid||0),0);
+  openModal(`Partenaire — ${p.name}`, `
+    <div class="vcard-grid" style="margin-bottom:16px;">
+      ${vfield('Téléphone', p.phone)} ${vfield('Email', p.email||'—')}
+      ${vfield('Société', p.company||'—')} ${vfield('Notes', p.notes||'—')}
+    </div>
+    <div style="font-size:14px;font-weight:700;margin-bottom:8px;">Véhicules actuellement (${active.length})</div>
+    ${active.length ? active.map(r=>`<div style="padding:10px;background:var(--bg);border-radius:9px;margin-bottom:6px;">
+      <strong>${r.car}</strong> — ${fmtDate(r.startDate)} → ${fmtDate(r.endDate)}<br>
+      <span style="font-size:13px;color:var(--t2);">${fmtMoney(r.amount)} · Reste: ${fmtMoney((r.amount||0)-(r.paid||0))}</span>
+    </div>`).join('') : '<p style="color:var(--t3);font-size:13px;">Aucune location active.</p>'}
+    <div style="font-size:14px;font-weight:700;margin:14px 0 8px;">Historique complet</div>
+    <table class="tbl"><thead><tr><th>Réf.</th><th>Véhicule</th><th>Dates</th><th>Montant</th><th>Payé</th></tr></thead>
+    <tbody>${pRes.map(r=>`<tr><td>${r.id}</td><td>${r.car}</td><td>${fmtDate(r.startDate)}→${fmtDate(r.endDate)}</td><td>${fmtMoney(r.amount)}</td><td>${fmtMoney(r.paid||0)}</td></tr>`).join('')}</tbody></table>
+    ${totalDue > 0 ? `<div style="margin-top:12px;padding:12px;background:rgba(196,30,58,.06);border-radius:9px;font-weight:700;color:var(--red);">Total dû : ${fmtMoney(totalDue)}</div>` : ''}
+  `);
+}
+
+// ================================================================
+// PAIEMENTS
+// ================================================================
+function renderPayments() {
+  const due  = RES.filter(r => r.status !== 'cancelled' && (r.paid||0) < (r.amount||0));
+  const totalDue = due.reduce((s,r)=>s+(r.amount||0)-(r.paid||0),0);
+  const totalPaid = RES.filter(r=>r.status!=='cancelled').reduce((s,r)=>s+(r.paid||0),0);
+  const totalAll  = RES.filter(r=>r.status!=='cancelled').reduce((s,r)=>s+(r.amount||0),0);
+  document.getElementById('pay-kpi').innerHTML = [
+    { v: fmtMoney(totalAll), l:'Total facturé' },
+    { v: fmtMoney(totalPaid), l:'Total encaissé', cls:'ok' },
+    { v: fmtMoney(totalDue), l:'Total impayé', cls: totalDue ? 'alert' : 'ok' },
+  ].map(k => `<div class="kpi ${k.cls||''}"><div class="kpi-val">${k.v}</div><div class="kpi-lbl">${k.l}</div></div>`).join('');
+
+  const sorted = [...RES].filter(r=>r.status!=='cancelled').sort((a,b)=>{
+    const da=(a.amount||0)-(a.paid||0), db=(b.amount||0)-(b.paid||0);
+    return db - da;
+  });
+  document.getElementById('pay-tbody').innerHTML = sorted.map(r => {
+    const pct = r.amount ? Math.min(100, Math.round(((r.paid||0)/r.amount)*100)) : 0;
+    const due2 = (r.amount||0)-(r.paid||0);
+    return `<tr>
+      <td><strong>${r.id}</strong></td>
+      <td>${r.client}</td>
+      <td>${r.car}</td>
+      <td style="font-size:12px;">${fmtDate(r.startDate)}→${fmtDate(r.endDate)}</td>
+      <td>${fmtMoney(r.amount)}</td>
+      <td>${fmtMoney(r.paid||0)}</td>
+      <td class="${due2>0?'pay-due':''}"><strong>${due2>0?fmtMoney(due2):'✓'}</strong></td>
+      <td style="min-width:120px;">
+        <div class="pay-bar"><div class="pay-bar-fill ${pct<100&&pct>0?'partial':pct===0?'none':''}" style="width:${pct}%"></div></div>
+        <div style="font-size:11px;color:var(--t2);margin-top:3px;">${pct}%</div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ================================================================
+// ENTRETIENS PAGE
+// ================================================================
+function renderMaintPage() {
+  const box = document.getElementById('maint-list');
+  box.innerHTML = FLEET.map(car => {
+    const m = MAINT[car.id] || {};
+    const alerts = [];
+    [['Vidange',m.vidange_next],['Visite technique',m.vt_next],['Assurance',m.assur]].forEach(([l,d])=>{
+      if (d) { const days=diffDays(today(),d); if(days<=30) alerts.push({l,days,d}); }
+    });
+    return `<div class="alerts-wrap" style="margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        ${thumb(car)}
+        <div style="flex:1;"><div style="font-weight:800;font-size:15px;">${car.name}</div>
+        <div style="font-size:12px;color:var(--t2);">${car.plate||''}</div></div>
+        ${alerts.map(a=>`<span class="badge ${a.days<0?'b-retard':'b-pending'}">${a.l}: ${a.days<0?Math.abs(a.days)+'j retard':a.days+'j'}</span>`).join(' ')}
+        <button class="btn btn-ghost btn-sm" onclick="openVehicleCard(${car.id});setTimeout(()=>{document.querySelector('[onclick*=entretien]')?.click()},100)">Modifier →</button>
+      </div>
+      <div class="vcard-grid" style="grid-template-columns:repeat(4,1fr);">
+        ${vfield('Kilométrage', m.km ? m.km+' km' : '—')}
+        ${vfield('Proch. vidange', m.vidange_next ? fmtDate(m.vidange_next) : '—')}
+        ${vfield('Proch. visite', m.vt_next ? fmtDate(m.vt_next) : '—')}
+        ${vfield('Assurance', m.assur ? fmtDate(m.assur) : '—')}
+      </div>
+      ${m.obs ? `<div style="margin-top:10px;font-size:13px;color:var(--t2);padding:10px;background:var(--bg);border-radius:8px;">${m.obs}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ================================================================
+// QUICK RESERVATION
+// ================================================================
+function openQuickRes() {
+  const carOpts = FLEET.filter(c=>c.status==='available'||c.status==='reserved')
+    .map(c=>`<option value="${c.id}">${c.name} (${c.plate||''})</option>`).join('');
+  const t = today();
+  const t1 = new Date(); t1.setDate(t1.getDate()+1);
+  openModal('Nouvelle location rapide', `
+    <div class="maint-form">
+      <div class="form-g"><label>Véhicule *</label><select class="form-select" id="qr-car" onchange="qrPrice()">${carOpts}</select></div>
+      <div class="form-g"><label>Client *</label><input class="form-input" id="qr-client" placeholder="Nom complet"></div>
+      <div class="form-g"><label>Téléphone *</label><input class="form-input" id="qr-phone" placeholder="+212 6…"></div>
+      <div class="form-g"><label>Date départ *</label><input class="form-input" type="date" id="qr-start" value="${t}" onchange="qrPrice()"></div>
+      <div class="form-g"><label>Date retour *</label><input class="form-input" type="date" id="qr-end" value="${t1.toISOString().slice(0,10)}" onchange="qrPrice()"></div>
+      <div class="form-g"><label>Lieu prise en charge</label><input class="form-input" id="qr-pickup" value="Agence"></div>
+    </div>
+    <div id="qr-price" style="margin-top:12px;padding:12px;background:var(--red-l);border:1px solid var(--red-b);border-radius:10px;font-weight:700;color:var(--red);display:none;"></div>
+  `, [{ label:'Créer la location', action:'saveQuickRes()', cls:'btn-red' }]);
+  setTimeout(qrPrice, 100);
+}
+
+function qrPrice() {
+  const carId = document.getElementById('qr-car')?.value;
+  const s = document.getElementById('qr-start')?.value;
+  const e = document.getElementById('qr-end')?.value;
+  const box = document.getElementById('qr-price');
+  if (!carId || !s || !e) return;
+  const car = FLEET.find(c=>c.id==carId);
+  const days = Math.max(1, Math.round((new Date(e)-new Date(s))/86400000));
+  const ppu  = car?.priceMAD || Math.round((car?.priceEUR||0)*10.8);
+  if (box) { box.style.display='block'; box.textContent = `${days} jour(s) × ${ppu} MAD = ${days*ppu} MAD`; }
+}
+
+function saveQuickRes() {
+  const carId  = document.getElementById('qr-car')?.value;
+  const client = document.getElementById('qr-client')?.value.trim();
+  const phone  = document.getElementById('qr-phone')?.value.trim();
+  const s      = document.getElementById('qr-start')?.value;
+  const e      = document.getElementById('qr-end')?.value;
+  if (!carId||!client||!phone||!s||!e) { toast('Champs obligatoires manquants.','r'); return; }
+  const car   = FLEET.find(c=>c.id==carId);
+  const days  = Math.max(1, Math.round((new Date(e)-new Date(s))/86400000));
+  const ppu   = car?.priceMAD || Math.round((car?.priceEUR||0)*10.8);
+  const id    = 'ASL'+Date.now().toString().slice(-6);
+  ASLDB.addReservation({
+    id, client, phone, car: car?.name||'', carId: car?.id,
+    startDate: s, endDate: e, days, amount: days*ppu, paid: 0,
+    pickup: document.getElementById('qr-pickup')?.value||'Agence',
+    status:'confirmed', source:'admin-quick', createdAt: new Date().toISOString(),
+  });
+  RES = ASLDB.getReservations();
+  closeModal();
+  renderPage(currentPage);
+  toast(`Location ${id} créée.`, 'g');
+}
+
+// ================================================================
+// PDF rapide depuis le tableau de bord
+// ================================================================
+function generateContractForCar(carId) {
+  const car = FLEET.find(c=>c.id==carId);
+  const r   = RES.filter(r=>r.car===car?.name&&r.status==='confirmed')
+    .sort((a,b)=>b.startDate.localeCompare(a.startDate))[0];
+  if (!r) { toast('Aucune réservation confirmée pour ce véhicule.','r'); return; }
+  window.open(`automation.html?res=${r.id}`, '_blank');
+}
+
+function generateContractForClient(key) {
+  window.open(`automation.html?client=${encodeURIComponent(key)}`, '_blank');
+}
+
+// ================================================================
+// MODAL GÉNÉRIQUE
+// ================================================================
+function openModal(title, body, actions=[]) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = body;
+  document.getElementById('modal-foot').innerHTML = actions.map(a =>
+    `<button class="btn ${a.cls}" onclick="${a.action}">${a.label}</button>`).join('');
+  document.getElementById('modal-bd').classList.add('open');
+}
+function closeModal() { document.getElementById('modal-bd').classList.remove('open'); }
+
+// ================================================================
+// SYNC
+// ================================================================
+function syncNow() {
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-label');
+  lbl.textContent = 'Sync…';
+  ASLDB.syncNow().then(() => {
+    loadAll();
+    renderPage(currentPage);
+    dot.className = 'sync-dot ok';
+    lbl.textContent = 'Synchronisé';
+    setTimeout(() => { lbl.textContent = 'Synchroniser'; }, 3000);
+  }).catch(() => {
+    dot.className = 'sync-dot err';
+    lbl.textContent = 'Erreur sync';
+  });
+}
+
+// ================================================================
+// RECHERCHE GLOBALE
+// ================================================================
+function globalSearch(val) {
+  if (!val) return renderFleetTable();
+  renderFleetTable(); // la fonction applique déjà le filtre
+}
+
+// ================================================================
+// TOAST
+// ================================================================
+function toast(msg, cls='') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'toast show' + (cls?' '+cls:'');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+
+
+// ================================================================
+// PROLONGATION — calcul, validation conflit, application
+// ================================================================
+
+// Format date court pour le tableau (02 jan, 15 juin…)
+function fmtDateShort(d) {
+  if (!d) return '—';
+  return new Date(d + 'T00:00:00').toLocaleDateString('fr-FR', { day:'2-digit', month:'short' });
+}
+
+// Calcul dynamique dès que le select change
+function calcProlongation(resId, carId, val) {
+  const customInput = document.getElementById('ext-custom-' + resId);
+  const btn = document.getElementById('ext-btn-' + resId);
+  const suppEl = document.getElementById('supp-' + resId);
+  const retProEl = document.getElementById('retpro-' + resId);
+
+  // Gestion du champ personnalisé
+  if (val === 'custom') {
+    if (customInput) customInput.style.display = 'inline-block';
+    suppEl.textContent = '—';
+    retProEl.textContent = '—';
+    if (btn) btn.style.display = 'none';
+    return;
+  }
+  if (customInput) customInput.style.display = 'none';
+
+  const days = parseInt(val);
+  if (!days || days <= 0) {
+    suppEl.textContent = '—';
+    retProEl.textContent = '—';
+    if (btn) btn.style.display = 'none';
+    return;
+  }
+
+  const r = RES.find(x => x.id === resId);
+  if (!r) return;
+
+  // Prix par jour (depuis la réservation)
+  const ppu = Math.round((r.amount || 0) / Math.max(1, r.days || 1));
+
+  // Nouvelle date de retour
+  const newEnd = new Date(r.endDate + 'T00:00:00');
+  newEnd.setDate(newEnd.getDate() + days);
+  const newEndISO = newEnd.toISOString().slice(0, 10);
+
+  // Supplément
+  const suppl = ppu * days;
+
+  // Afficher
+  suppEl.textContent = suppl.toLocaleString('fr-FR') + ' MAD';
+  retProEl.textContent = fmtDateShort(newEndISO);
+  retProEl.dataset.newEnd = newEndISO;
+  if (btn) btn.style.display = 'inline-flex';
+}
+
+// Validation et application de la prolongation
+function applyProlongation(resId, carId) {
+  const selEl    = document.getElementById('ext-sel-' + resId);
+  const customEl = document.getElementById('ext-custom-' + resId);
+  const retProEl = document.getElementById('retpro-' + resId);
+  const suppEl   = document.getElementById('supp-' + resId);
+
+  let days = parseInt(selEl?.value) || parseInt(customEl?.value);
+  if (!days || days <= 0) { toast('Sélectionnez un nombre de jours.', 'r'); return; }
+
+  const r = RES.find(x => x.id === resId);
+  if (!r) { toast('Réservation introuvable.', 'r'); return; }
+
+  const newEndISO = retProEl?.dataset.newEnd;
+  if (!newEndISO) { toast('Calcul manquant — sélectionnez les jours.', 'r'); return; }
+
+  // ── Vérification conflit ──
+  // Zone prolongée : ]r.endDate … newEndISO]
+  // Conflit si une réservation confirmée COMMENCE dans cette zone ET n'est pas la même
+  const car    = FLEET.find(c => c.id == carId) || {};
+  const stock  = Math.max(1, car.stock || 1);
+  const conflict = RES.filter(x =>
+    x.id !== resId &&
+    x.status === 'confirmed' &&
+    x.car === r.car &&
+    x.startDate <  newEndISO &&   // commence avant la fin de la prolongation
+    x.endDate   >  r.endDate     // et finit après la fin actuelle (= dans la zone)
+  );
+
+  if (conflict.length >= stock) {
+    // Message clair et lisible
+    const details = conflict.slice(0, 3).map(x => {
+      const ds = x.startDate ? new Date(x.startDate+'T00:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'}) : '?';
+      const de = x.endDate   ? new Date(x.endDate  +'T00:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'long',year:'numeric'}) : '?';
+      return `• Client : ${x.client}\n  Départ : ${ds}\n  Retour : ${de}`;
+    }).join('\n\n');
+    const msg = `Impossible de prolonger cette location.\n\n`
+      + `Une réservation confirmée existe déjà sur cette période :\n\n`
+      + details
+      + `\n\nVeuillez choisir une durée plus courte ou modifier les dates existantes.`;
+    alert(msg);
+    toast('⛔ Prolongation bloquée — conflit de réservation.', 'r');
+    return;
+  }
+
+  // ── Appliquer ──
+  const ppu     = Math.round((r.amount || 0) / Math.max(1, r.days || 1));
+  const newDays = Math.max(1, Math.round((new Date(newEndISO) - new Date(r.startDate + 'T00:00:00')) / 86400000));
+  const newAmt  = ppu * newDays;
+
+  // Calculer et sauvegarder le supplément pour l'afficher jusqu'au paiement
+  const extSupplNew = ppu * days;   // supplément de CETTE prolongation
+  const extSupplCum = (r.extSuppl || 0) + extSupplNew;  // cumul total
+  ASLDB.updateReservation(resId, {
+    endDate:         newEndISO,
+    days:            newDays,
+    amount:          newAmt,
+    extendedAt:      new Date().toISOString(),
+    extDays:         (r.extDays || 0) + days,
+    extSuppl:        extSupplCum,   // supplément cumulé total de toutes les prolongations
+    extOrigEndDate:  r.extOrigEndDate || r.endDate,  // date retour AVANT première prolongation
+    extPendingSuppl: extSupplCum - Math.max(0, (r.paid||0) - ((r.amount||0) - extSupplCum)),
+  });
+
+  // ── Recharger localement ──
+  RES   = ASLDB.getReservations();
+  FLEET = ASLDB.getFleet();
+  renderFleetTable();
+  renderKPIs();
+  // ── Forcer la montée vers KV immédiatement ──
+  // Le worker met à jour asl_reservations_v1 → le site client reçoit le changement
+  // via ASLDB.onChange (storage event cross-tab) ou au prochain syncNow côté client
+  const _toastMsg = `✓ Prolongation +${days}j enregistrée. Nouveau retour : ${fmtDateShort(newEndISO)}. Total : ${newAmt.toLocaleString('fr-FR')} MAD`;
+  if (typeof ASLDB.syncNow === 'function') {
+    toast('Synchronisation en cours…');
+    ASLDB.syncNow()
+      .then(() => toast(_toastMsg, 'g'))
+      .catch(() => toast(_toastMsg + ' (sync hors-ligne)', 'g'));
+  } else {
+    toast(_toastMsg, 'g');
+  }
+}
+
+// ================================================================
+// SIDEBAR RÉTRACTABLE
+// ================================================================
+let _sidebarCollapsed = false;
+function toggleSidebar() {
+  const sb  = document.getElementById('the-sidebar');
+  const btn = document.getElementById('sb-toggle-btn');
+  // Mobile : overlay coulissant
+  if (window.innerWidth <= 768) {
+    sb.classList.toggle('mobile-open');
+    let bd = document.querySelector('.sb-mobile-backdrop');
+    if (bd) bd.classList.toggle('show', sb.classList.contains('mobile-open'));
+    return;
+  }
+  _sidebarCollapsed = !_sidebarCollapsed;
+  if (_sidebarCollapsed) {
+    sb.classList.add('collapsed');
+    btn.textContent = '▶';
+    btn.title = 'Afficher le menu';
+    btn.style.left = '0';
+  } else {
+    sb.classList.remove('collapsed');
+    btn.textContent = '◀';
+    btn.title = 'Masquer le menu';
+    btn.style.left = '220px';
+  }
+}
+
+// ================================================================
+// 1. HISTORIQUE GLOBAL (recherche + filtres rapides + période)
+// ================================================================
+let histFilter = 'all';
+
+function setHistFilter(f, el) {
+  histFilter = f;
+  document.querySelectorAll('.hist-filter').forEach(b => b.classList.remove('active', 'btn-red'));
+  el.classList.add('active');
+  // Réinitialiser la période personnalisée si on clique sur un filtre rapide
+  if (f !== 'custom') {
+    document.getElementById('hist-from').value = '';
+    document.getElementById('hist-to').value   = '';
+  }
+  renderHistorique();
+}
+
+function renderHistorique() {
+  const q     = (document.getElementById('hist-search')?.value || '').toLowerCase().trim();
+  const from  = document.getElementById('hist-from')?.value;
+  const to    = document.getElementById('hist-to')?.value;
+  const tbody = document.getElementById('hist-tbody');
+  const sumEl = document.getElementById('hist-summary');
+  if (!tbody) return;
+
+  const t = today();
+  // Calculer les bornes du filtre rapide
+  let rangeFrom = '', rangeTo = '';
+  if (from || to) {
+    rangeFrom = from || '0000-01-01'; rangeTo = to || '9999-12-31';
+  } else if (histFilter === 'today') {
+    rangeFrom = rangeTo = t;
+  } else if (histFilter === 'week') {
+    const d = new Date(); d.setDate(d.getDate() - d.getDay() + 1);
+    rangeFrom = d.toISOString().slice(0,10);
+    const d2 = new Date(d); d2.setDate(d2.getDate() + 6);
+    rangeTo = d2.toISOString().slice(0,10);
+  } else if (histFilter === 'month') {
+    const d = new Date(); rangeFrom = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01`;
+    const d2 = new Date(d.getFullYear(), d.getMonth()+1, 0);
+    rangeTo = d2.toISOString().slice(0,10);
+  } else if (histFilter === 'year') {
+    const y = new Date().getFullYear();
+    rangeFrom = `${y}-01-01`; rangeTo = `${y}-12-31`;
+  }
+
+  // Filtrer les réservations
+  let list = RES.filter(r => {
+    // Plage de dates
+    if (rangeFrom && r.endDate < rangeFrom) return false;
+    if (rangeTo   && r.startDate > rangeTo) return false;
+    // Recherche textuelle multi-champs
+    if (!q) return true;
+    const car = FLEET.find(c => c.name === r.car) || {};
+    return (
+      (r.id        || '').toLowerCase().includes(q) ||
+      (r.client    || '').toLowerCase().includes(q) ||
+      (r.phone     || '').toLowerCase().includes(q) ||
+      (r.email     || '').toLowerCase().includes(q) ||
+      (r.car       || '').toLowerCase().includes(q) ||
+      (car.plate   || '').toLowerCase().includes(q) ||
+      (r.license   || '').toLowerCase().includes(q) ||
+      (r.cin       || '').toLowerCase().includes(q) ||
+      String(r.amount  || '').includes(q)           ||
+      (r.partner   || '').toLowerCase().includes(q)
+    );
+  }).sort((a,b) => (b.startDate||'').localeCompare(a.startDate||''));
+
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="13" style="text-align:center;padding:30px;color:var(--t3);">Aucune réservation trouvée.</td></tr>`;
+    if (sumEl) sumEl.textContent = '';
+    return;
+  }
+
+  const statusCls = { confirmed:'b-louee', pending:'b-pending', cancelled:'b-maint', active:'b-dispo', completed:'b-maint' };
+  const statusLbl = { confirmed:'Confirmée', pending:'En attente', cancelled:'Annulée', active:'En cours', completed:'Terminée' };
+
+  tbody.innerHTML = list.map(r => {
+    const car  = FLEET.find(c => c.name === r.car) || {};
+    const due  = (r.amount||0) - (r.paid||0);
+    return `<tr onclick="openClientDetail('${(r.phone||r.client).replace(/'/g,"\\'")}')">
+      <td><strong style="font-family:monospace;">${r.id}</strong></td>
+      <td><div style="font-weight:600;">${r.client}</div><div style="font-size:11px;color:var(--t2);">${r.nationality||''}</div></td>
+      <td><a href="tel:${r.phone||''}" onclick="event.stopPropagation()" style="color:var(--blue);font-size:12px;">${r.phone||'—'}</a></td>
+      <td>${r.car}</td>
+      <td style="font-family:monospace;font-size:12px;">${car.plate||'—'}</td>
+      <td>${fmtDate(r.startDate)}</td>
+      <td>${fmtDate(r.endDate)}</td>
+      <td style="text-align:center;">${r.days||'?'}</td>
+      <td><strong>${fmtMoney(r.amount)}</strong></td>
+      <td>${fmtMoney(r.paid||0)}</td>
+      <td style="color:${due>0?'var(--red)':'var(--green)'}"><strong>${due>0?fmtMoney(due):'✓'}</strong></td>
+      <td><span class="badge ${statusCls[r.status]||'b-maint'}">${statusLbl[r.status]||r.status}</span></td>
+      <td style="font-size:11px;color:var(--t2);">${r.source||'site'}</td>
+    </tr>`;
+  }).join('');
+
+  // Résumé
+  const total  = list.reduce((s,r)=>s+(r.amount||0), 0);
+  const paid   = list.reduce((s,r)=>s+(r.paid||0),   0);
+  const due2   = total - paid;
+  if (sumEl) sumEl.innerHTML = `
+    <strong>${list.length}</strong> réservation(s) · Total facturé : <strong>${fmtMoney(total)}</strong> ·
+    Encaissé : <strong style="color:var(--green);">${fmtMoney(paid)}</strong> ·
+    Reste dû : <strong style="color:${due2>0?'var(--red)':'var(--green)'};">${fmtMoney(due2)}</strong>`;
+}
+
+
+// Navigation mobile : synchroniser les boutons de la barre bas
+const _origNav = nav;
+function nav(id, el) {
+  _origNav(id, el);
+  // Synchroniser la barre du bas
+  document.querySelectorAll('.mob-nav button').forEach(b => b.classList.remove('active'));
+  const mobBtn = document.querySelector(`.mob-nav button[onclick*="${id}"]`);
+  if (mobBtn) mobBtn.classList.add('active');
+}
+
+// ================================================================
+// INIT
+// ================================================================
+loadAll();
+renderKPIs();
+renderFleetTable();
+renderAlerts();
+renderRetards();
+document.getElementById('sync-dot').className = 'sync-dot ok';
+
+// Rafraîchissement automatique toutes les 60s (si l'onglet est actif)
+setInterval(() => { if (!document.hidden) { loadAll(); renderPage(currentPage); } }, 60000);
+ASLDB.onChange(() => { loadAll(); renderPage(currentPage); });
+
+function adminLogout() {
+  if (confirm('Se déconnecter de l\'administration ?')) {
+    localStorage.removeItem('asl_admin_session');
+    window.location.replace('login.html');
+  }
+}
+</script>
+<!-- Navigation mobile bas d'écran -->
+<nav class="mob-nav" id="mob-nav">
+  <button onclick="nav('suivi',this)" class="active">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/></svg>
+    <span>Flotte</span>
+  </button>
+  <button onclick="nav('alertes',this)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+    <span>Alertes</span>
+  </button>
+  <button onclick="nav('clients',this)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+    <span>Clients</span>
+  </button>
+  <button onclick="nav('historique',this)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><path d="M3 3v5h5"/></svg>
+    <span>Historique</span>
+  </button>
+  <button onclick="nav('paiements',this)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+    <span>Paiements</span>
+  </button>
+</nav>
+
+<script>
+// Toast vert universel sur chaque Enregistrer
+(function() {
+  function showSaveToast(label) {
+    var t = document.getElementById('_save_toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = '_save_toast';
+      t.style.cssText = 'position:fixed;bottom:22px;right:22px;z-index:99999;background:#16a34a;color:#fff;border-radius:12px;padding:13px 20px;font-size:14px;font-weight:700;font-family:inherit;box-shadow:0 6px 24px rgba(22,163,74,.35);display:flex;align-items:center;gap:10px;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none;max-width:360px;';
+      document.body.appendChild(t);
+    }
+    t.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span>' + (label||'Données') + ' enregistré et synchronisé ✓</span>';
+    requestAnimationFrame(function(){ t.style.transform='translateY(0)'; t.style.opacity='1'; });
+    clearTimeout(t._t);
+    t._t = setTimeout(function(){ t.style.transform='translateY(80px)'; t.style.opacity='0'; }, 4000);
+  }
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest ? e.target.closest('button') : null;
+    if (!btn) return;
+    var txt = (btn.textContent||'').trim().toLowerCase();
+    var oc = (btn.getAttribute('onclick')||'').toLowerCase();
+    var isSave = txt.includes('enregistrer') || txt.includes('sauvegarder') ||
+      txt.includes('activer') || txt.includes('synchroniser') ||
+      oc.includes('save') || oc.includes('confirmpay') || oc.includes('markpaid');
+    if (isSave) {
+      var lbl = 'Données';
+      if (oc.includes('seo') || txt.includes('seo')) lbl = 'SEO';
+      else if (oc.includes('faq') || txt.includes('faq')) lbl = 'FAQ';
+      else if (oc.includes('blog')) lbl = 'Article';
+      else if (oc.includes('popup')) lbl = 'Popup';
+      else if (oc.includes('logo')) lbl = 'Logo';
+      setTimeout(function(){ showSaveToast(lbl); }, 300);
+    }
+  }, true);
+})();
+</script>
+
+<script>
+
+(function(){
+  try {
+    if (localStorage.getItem('asl_sb_collapsed') === '1') {
+      var sb = document.querySelector('.sidebar');
+      if (sb) { sb.classList.add('collapsed'); document.body.classList.add('sb-is-collapsed'); }
+    }
+  } catch(e){}
+})();
+</script>
+</body>
+</html>

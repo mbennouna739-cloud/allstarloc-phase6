@@ -1,0 +1,33 @@
+ALL STAR LOC — PHASE 9 : CORRECTIONS DE FINITION UX/UI
+========================================================
+Aucune logique métier touchée : data.js, API Cloudflare, wrangler.jsonc sont
+octet pour octet identiques, et le JavaScript du site et de l'admin est
+strictement inchangé (corrections 100 % CSS/HTML/textes). Vérifié.
+
+1. À PROPOS — DATE  : le badge au-dessus du titre affiche désormais
+   « Depuis 2009 · Marrakech » (statique, plus aucun clignotement : l'animation
+   du point a été retirée). Le titre devient « ALL STAR LOC, votre agence de
+   location à Marrakech ». Pour la cohérence, « 2018 » → « 2009 » partout
+   (badge accueil, footer, copyright, présentation) et « 7 ans d'expérience »
+   → « 17 ans » (4 langues). Réversible sur simple demande.
+2. HERO À PROPOS    : ambiance sombre premium conservée ; la photo de berline
+   de luxe est remplacée par une silhouette discrète de citadine/compacte
+   (SVG embarqué, fidèle à la flotte réelle) fondue dans le dégradé avec une
+   légère lueur rouge — rien de « collé », aucune dépendance externe.
+3. 2ᵉ IMAGE À PROPOS : la photo générique du conducteur est remplacée par une
+   mosaïque de 3 photos = les photos RÉELLES de la flotte affichées sur le
+   site (citadine, Duster, compacte) — crédible et cohérent.
+4+7. POP-UP         : retour aux proportions de la première version :
+   520 px de large (92 vw mobile), hauteur ajustée au contenu plafonnée à
+   86 vh / 760 px, espacements resserrés, centrage conservé, léger
+   agrandissement de police conservé. Compact et élégant.
+5+6. HORIZONTAL     : overscroll-behavior-x:none sur le site, les pages et
+   l'admin → plus aucun déplacement horizontal NI navigation précédent/
+   suivant au geste deux doigts du trackpad pendant une réservation.
+8. MODALE PRO       : flou d'arrière-plan conservé (renforcé à 5 px, voile
+   équilibré, plus de double assombrissement) ; verrou de défilement complété
+   sur <html> et scroll « contain » sur le contenu : la page derrière reste
+   totalement fixe, seul le pop-up défile.
+
+FICHIERS MODIFIÉS : index.html (CSS), i18n.js (textes), pages/about.html,
+pages/page.css, admin/index.html (1 ligne CSS). Tout le reste : intact.

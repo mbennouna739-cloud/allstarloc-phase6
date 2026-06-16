@@ -3,14 +3,30 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/x-icon" href="assets/favicons/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicons/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/favicons/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/favicons/android-chrome-192x192.png">
+  <meta name="theme-color" content="#ffffff">
 <title>ALL STAR LOC — Location de Voiture à Marrakech | Depuis 2018</title>
 <meta name="description" content="Location de voiture à Marrakech. Livraison aéroport gratuite, service 24h/7j, flotte moderne. Réservez en ligne en 2 minutes.">
+<link rel="canonical" href="https://allstarloc.ma/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://allstarloc.ma/">
+<meta property="og:image" content="https://allstarloc.ma/assets/logo-asl.png">
+<meta property="og:site_name" content="ALL STAR LOC">
+<meta property="og:locale" content="fr_FR">
+<meta name="twitter:card" content="summary_large_image">
+
 <meta property="og:title" content="ALL STAR LOC — Location de Voiture Marrakech">
 <meta property="og:description" content="Location de voiture à Marrakech dès 25€/jour. Livraison aéroport gratuite.">
-<meta name="theme-color" content="#C41E3A">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
+/* === Stabilité header : scrollbar toujours réservée (pas de décalage entre pages) === */
+html { scrollbar-gutter: stable; overflow-y: scroll; }
+
 :root {
   --red: #C41E3A;
   --red-dark: #9B1830;
@@ -33,16 +49,18 @@
   --font: 'Outfit', sans-serif;
   --font2: 'DM Sans', sans-serif;
 }
-*{margin:0;padding:0;box-sizing:border-box}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { overflow-x: hidden; max-width: 100%; overscroll-behavior-x: none; }
+@keyframes mmFade { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
 html{scroll-behavior:smooth}
-body{font-family:var(--font);background:var(--white);color:var(--text);overflow-x:hidden}
+body{font-family:var(--font);background:var(--white);color:var(--text)}
 
 /* ==================== HEADER ==================== */
 header {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 900;
-  background: rgba(10,10,10,0.95); backdrop-filter: blur(20px);
+  /* Comportement classique : le header reste en haut de la page et ne suit plus le défilement */
+  position: absolute; top: 0; left: 0; right: 0; z-index: 900;
+  background: rgba(12,12,14,0.97);
   border-bottom: 1px solid rgba(255,255,255,0.06);
-  transition: all 0.3s;
 }
 .header-inner {
   max-width: 1280px; margin: 0 auto; padding: 0 24px;
@@ -103,7 +121,7 @@ nav a:hover { color: white; background: rgba(255,255,255,0.08); }
 .mobile-menu {
   display: none; flex-direction: column;
   background: rgba(10,10,10,0.98); border-top: 1px solid rgba(255,255,255,0.08);
-  padding: 8px 0;
+  padding: 8px 0; animation: mmFade 0.18s ease;
 }
 .mobile-menu.open { display: flex; }
 .mobile-menu a {
@@ -138,15 +156,6 @@ nav a:hover { color: white; background: rgba(255,255,255,0.08); }
   display: grid; grid-template-columns: 1.05fr 1fr; gap: 48px;
   align-items: center; margin-bottom: 40px;
 }
-.hero-badge {
-  display: inline-flex; align-items: center; gap: 8px;
-  background: rgba(196,30,58,0.08); border: 1px solid rgba(196,30,58,0.22);
-  color: var(--red); font-size: 12px; font-weight: 600;
-  padding: 6px 14px; border-radius: 50px; margin-bottom: 22px;
-  letter-spacing: 0.5px; text-transform: uppercase;
-}
-.hero-badge span { width: 6px; height: 6px; background: var(--red); border-radius: 50%; animation: pulse 2s infinite; }
-@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.4)} }
 .hero-title {
   font-size: clamp(34px, 4.4vw, 56px); font-weight: 900; color: var(--black);
   line-height: 1.08; margin-bottom: 18px; letter-spacing: -1.2px;
@@ -161,6 +170,7 @@ nav a:hover { color: white; background: rgba(255,255,255,0.08); }
 .hero-features {
   display: grid; grid-template-columns: 1fr 1fr; gap: 14px 22px; max-width: 480px;
 }
+
 .hero-feature { display: flex; align-items: center; gap: 11px; }
 .hero-feature-icon {
   flex: 0 0 38px; width: 38px; height: 38px; border-radius: 11px;
@@ -174,14 +184,64 @@ nav a:hover { color: white; background: rgba(255,255,255,0.08); }
 /* Voiture */
 .hero-car { position: relative; }
 .hero-car img, .hero-car object { width: 100%; height: auto; display: block; }
+.hero-car > img {
+  /* Voiture seule, naturelle : aucune découpe visible, aucun cadre,
+     aucune ombre artificielle. Proportions d'origine, jamais étirée. */
+  width: 100%; max-width: 720px; height: auto; margin-left: auto;
+}
+@media (max-width: 900px) {
+  .hero-car > img { max-width: 540px; margin: 0 auto; }
+}
 .hero-car-caption {
   text-align: center; font-size: 11px; color: var(--gray3);
   letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px; font-weight: 600;
 }
 
+/* Avertissement « choisissez d'abord vos dates » + mise en valeur du calendrier */
+.booking-step-hint {
+  display: inline-flex; align-items: center; gap: 7px;
+  color: var(--red); font-size: 12px; font-weight: 700;
+  letter-spacing: 0.6px; text-transform: uppercase; margin-bottom: 10px;
+}
+.dates-notice {
+  display: none; margin: 0 0 14px; padding: 12px 16px; border-radius: 11px;
+  background: rgba(37,99,235,0.07); border: 1px solid rgba(37,99,235,0.25);
+  color: #1d4ed8; font-size: 14px; font-weight: 600; font-family: var(--font2);
+}
+.dates-notice.show { display: block; }
+.booking-card.attention { box-shadow: 0 0 0 3px rgba(196,30,58,0.35), 0 24px 70px rgba(10,10,10,0.12); }
+
+/* Véhicules indisponibles : information claire au lieu d'un simple masquage */
+.car-card.unavailable .car-card-img img { filter: grayscale(0.85) brightness(0.92); }
+.unavail-badge {
+  position: absolute; top: 12px; left: 12px; z-index: 3;
+  background: rgba(20,20,24,0.88); color: #fff; font-size: 11.5px; font-weight: 700;
+  padding: 6px 12px; border-radius: 50px; letter-spacing: 0.3px;
+}
+.avail-from {
+  display: flex; align-items: center; gap: 7px; margin: 2px 0 10px;
+  color: #B45309; font-size: 13px; font-weight: 600; font-family: var(--font2);
+}
+.btn-book.btn-edit-dates { background: var(--dark); }
+.btn-book.btn-edit-dates:hover { background: #000; }
+
+/* Caractéristiques par véhicule (gérées dans l'administration) */
+
+.car-extras { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
+.car-extra {
+  font-size: 11px; font-weight: 600; color: var(--text2);
+  background: var(--gray); border: 1px solid var(--gray2);
+  padding: 4px 9px; border-radius: 50px; white-space: nowrap;
+}
+
+/* Champs obligatoires manquants */
+.form-input.input-error, .form-select.input-error {
+  border-color: var(--red) !important; background: rgba(196,30,58,0.05);
+}
+
 /* ==================== BOOKING BAR PREMIUM ==================== */
 .booking-card {
-  background: #fff; border-radius: 18px;
+  background: #fff; border-radius: 18px; border-top: 3px solid var(--red);
   box-shadow: 0 24px 70px rgba(10,10,10,0.12), 0 2px 8px rgba(10,10,10,0.05);
   border: 1px solid rgba(0,0,0,0.05);
   padding: 22px; position: relative;
@@ -280,7 +340,7 @@ nav a:hover { color: white; background: rgba(255,255,255,0.08); }
 .asl-cal-day.sel.start { border-radius: 10px 0 0 10px; }
 .asl-cal-day.sel.end { border-radius: 0 10px 10px 0; }
 .asl-cal-day.sel.single { border-radius: 10px; }
-.asl-cal-day.today:not(.sel) { box-shadow: inset 0 0 0 1.5px var(--red); }
+.asl-cal-day.today:not(.sel) { background: #fff; color: var(--red); font-weight: 700; box-shadow: inset 0 0 0 1.5px rgba(196,30,58,0.55); }
 .asl-cal-hint { font-size: 11px; color: var(--gray3); text-align: center; margin-top: 10px; font-weight: 600; }
 .asl-cal-backdrop { display: none; }
 
@@ -290,6 +350,8 @@ nav a:hover { color: white; background: rgba(255,255,255,0.08); }
 }
 @media(max-width: 900px){
   .hero-top { grid-template-columns: 1fr; gap: 28px; }
+  .hero-top > .hero-left { order: 2; }   /* mobile : image en haut, texte en dessous */
+  .hero-top > .hero-car { order: 1; }
   .hero-car { max-width: 520px; margin: 0 auto; order: -1; }
   .hero-sub { max-width: none; }
 }
@@ -310,7 +372,9 @@ nav a:hover { color: white; background: rgba(255,255,255,0.08); }
 
 /* ==================== TRUST BAR ==================== */
 .trust-bar {
-  background: var(--red); padding: 16px 24px;
+  background: var(--red); padding: 14px 24px;
+  position: relative; overflow: hidden;
+  border: none; outline: none;
 }
 .trust-inner {
   max-width: 1280px; margin: 0 auto;
@@ -351,7 +415,7 @@ nav a:hover { color: white; background: rgba(255,255,255,0.08); }
 .filter-tab {
   padding: 9px 20px; border-radius: 50px; font-size: 13px; font-weight: 600;
   border: 1.5px solid var(--gray2); background: white; color: var(--text2);
-  cursor: pointer; transition: all 0.2s; font-family: var(--font);
+  cursor: pointer; transition: background 0.18s, color 0.18s, border-color 0.18s; font-family: var(--font);
 }
 .filter-tab.active, .filter-tab:hover {
   background: var(--red); color: white; border-color: var(--red);
@@ -360,13 +424,15 @@ nav a:hover { color: white; background: rgba(255,255,255,0.08); }
 /* Car Cards */
 .cars-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px;
+  contain: layout; /* isole les recalculs de la grille du reste de la page */
 }
 .car-card {
   background: white; border-radius: 18px; overflow: hidden;
-  border: 1px solid var(--gray2); transition: all 0.3s;
+  border: 1px solid var(--gray2); transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+  content-visibility: auto; contain-intrinsic-size: 0 420px;
   cursor: pointer; position: relative;
-}
-.car-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); border-color: transparent; }
+ will-change: transform; }
+@media (hover: hover) and (pointer: fine) { .car-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); border-color: transparent; } }
 .car-card-img {
   background: var(--gray); height: 200px; position: relative; overflow: hidden;
   display: flex; align-items: center; justify-content: center;
@@ -382,13 +448,18 @@ nav a:hover { color: white; background: rgba(255,255,255,0.08); }
   letter-spacing: 0.5px; text-transform: uppercase;
 }
 .car-badge.featured { background: var(--red); }
-.car-price-badge {
-  position: absolute; bottom: 14px; right: 14px;
-  background: white; color: var(--red); font-size: 14px;
-  font-weight: 800; padding: 6px 14px; border-radius: 10px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+.car-price-block {
+  display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px;
 }
-.car-price-badge span { font-size: 11px; font-weight: 500; color: var(--text2); }
+.car-price-amount {
+  font-size: 22px; font-weight: 900; color: var(--red);
+  line-height: 1; letter-spacing: -0.5px;
+}
+.car-price-unit { font-size: 12px; font-weight: 500; color: var(--text2); }
+.car-tier-label {
+  font-size: 11.5px; font-weight: 600; color: var(--red); margin-bottom: 12px;
+  opacity: .82;
+}
 
 .car-card-body { padding: 20px; }
 .car-name { font-size: 18px; font-weight: 700; color: var(--black); margin-bottom: 12px; }
@@ -483,23 +554,24 @@ footer { background: var(--dark); border-top: 1px solid rgba(255,255,255,0.06); 
 .footer-logo-text { }
 .footer-logo-name { font-size: 18px; font-weight: 800; color: white; }
 .footer-logo-tag { font-size: 10px; color: var(--gray3); letter-spacing: 1.5px; text-transform: uppercase; }
-.footer-desc { font-size: 14px; color: rgba(255,255,255,0.4); line-height: 1.7; margin-bottom: 20px; font-family: var(--font2); }
+.footer-desc { font-size: 14px; color: rgba(255,255,255,0.72); line-height: 1.7; margin-bottom: 20px; font-family: var(--font2); }
 .footer-contacts { display: flex; flex-direction: column; gap: 10px; }
-.footer-contact { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-.footer-contact-icon { font-size: 16px; }
-.footer-contact-text { font-size: 13px; color: rgba(255,255,255,0.6); font-weight: 500; }
+.footer-contact { display: flex; align-items: center; gap: 10px; text-decoration: none; color: rgba(255,255,255,0.85); }
+.footer-contact:hover { color: var(--red); }
+.footer-contact-icon { font-size: 16px; color: inherit; display: flex; align-items: center; }
+.footer-contact-text { font-size: 13px; color: rgba(255,255,255,0.88); font-weight: 500; }
 .footer-contact:hover .footer-contact-text { color: white; }
 
 .footer-col-title { font-size: 13px; font-weight: 700; color: white; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 18px; }
 .footer-links { display: flex; flex-direction: column; gap: 10px; }
-.footer-link { font-size: 13px; color: rgba(255,255,255,0.45); text-decoration: none; transition: color 0.2s; font-family: var(--font2); }
+.footer-link { font-size: 13px; color: rgba(255,255,255,0.78); text-decoration: none; transition: color 0.2s; font-family: var(--font2); }
 .footer-link:hover { color: var(--red); }
 
 .footer-socials { display: flex; gap: 10px; margin-top: 8px; }
 .footer-social {
   width: 36px; height: 36px; border-radius: 9px; background: rgba(255,255,255,0.06);
   display: flex; align-items: center; justify-content: center;
-  color: rgba(255,255,255,0.5); text-decoration: none; font-size: 16px;
+  color: rgba(255,255,255,0.72); text-decoration: none; font-size: 16px;
   transition: all 0.2s;
 }
 .footer-social:hover { background: var(--red); color: white; }
@@ -509,26 +581,32 @@ footer { background: var(--dark); border-top: 1px solid rgba(255,255,255,0.06); 
   max-width: 1280px; margin: 0 auto; padding: 20px 24px;
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
 }
-.footer-copy { font-size: 12px; color: rgba(255,255,255,0.3); font-family: var(--font2); }
+.footer-copy { font-size: 12px; color: rgba(255,255,255,0.62); font-family: var(--font2); }
 .footer-legal { display: flex; gap: 20px; }
-.footer-legal a { font-size: 12px; color: rgba(255,255,255,0.3); text-decoration: none; transition: color 0.2s; }
-.footer-legal a:hover { color: rgba(255,255,255,0.6); }
+.footer-legal a { font-size: 12px; color: rgba(255,255,255,0.62); text-decoration: none; transition: color 0.2s; }
+.footer-legal a:hover { color: rgba(255,255,255,0.9); }
 
 /* ==================== DRAWER / BOOKING TUNNEL ==================== */
 .drawer-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  position: fixed; inset: 0; background: rgba(8,8,12,0.5);
   z-index: 990; opacity: 0; pointer-events: none; transition: opacity 0.35s;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
 }
 .drawer-overlay.open { opacity: 1; pointer-events: all; }
+html:has(#booking-drawer.open) { overflow: hidden; }
 
 .drawer {
+  /* Pop-up d'origine : panneau latéral droit, compact, professionnel.
+     L'arrière-plan reste flouté et totalement figé (overlay + verrous ci-dessous). */
   position: fixed; top: 0; right: 0; bottom: 0; width: 100%; max-width: 520px;
   background: white; z-index: 1000; display: flex; flex-direction: column;
   transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
   overflow: hidden;
 }
 .drawer.open { transform: translateX(0); }
+@media (max-width: 844px) {
+  .drawer { max-width: 100%; }
+}
 
 .drawer-header {
   padding: 20px 24px; border-bottom: 1px solid var(--gray2);
@@ -585,8 +663,9 @@ footer { background: var(--dark); border-top: 1px solid rgba(255,255,255,0.06); 
 #timer-display { font-weight: 700; }
 
 .drawer-body {
-  flex: 1; overflow-y: auto; padding: 20px 24px 0;
+  flex: 1; min-height: 0; overflow-y: auto; padding: 18px 22px 0;
   scroll-behavior: smooth;
+  overscroll-behavior: contain; /* le scroll ne « déborde » jamais sur la page */
 }
 .drawer-body::-webkit-scrollbar { width: 4px; }
 .drawer-body::-webkit-scrollbar-track { background: transparent; }
@@ -701,6 +780,14 @@ footer { background: var(--dark); border-top: 1px solid rgba(255,255,255,0.06); 
 .summary-row-label { font-size: 13px; color: var(--text2); font-family: var(--font2); }
 .summary-row-val { font-size: 13px; font-weight: 600; color: var(--black); }
 .summary-row.total { background: var(--gray); }
+/* Mention tarifs dégressifs + ligne caution dans le récapitulatif */
+.degressive-note {
+  display: flex; align-items: center; gap: 8px; margin: 0 0 10px;
+  padding: 10px 12px; border-radius: 10px;
+  background: rgba(196,30,58,0.06); border: 1px solid rgba(196,30,58,0.18);
+  color: var(--red); font-size: 12.5px; font-weight: 600; font-family: var(--font2); line-height: 1.45;
+}
+.summary-row.deposit-row .summary-row-val { color: var(--text2); font-weight: 700; }
 .summary-row.total .summary-row-label { font-weight: 700; color: var(--black); font-size: 15px; }
 .summary-row.total .summary-row-val { font-size: 20px; font-weight: 900; color: var(--red); }
 
@@ -765,12 +852,14 @@ footer { background: var(--dark); border-top: 1px solid rgba(255,255,255,0.06); 
 .terms-row {
   display: flex; align-items: flex-start; gap: 12px; margin-top: 16px;
   padding: 14px; background: var(--gray); border-radius: 10px;
+  border: 1px solid var(--gray2);
 }
 .terms-checkbox {
-  width: 18px; height: 18px; border: 2px solid var(--gray2);
-  border-radius: 5px; cursor: pointer; flex-shrink: 0; margin-top: 1px;
+  width: 20px; height: 20px; border: 2px solid #9AA0AB;
+  border-radius: 6px; cursor: pointer; flex-shrink: 0; margin-top: 1px;
   appearance: none; transition: all 0.2s; position: relative;
 }
+.terms-checkbox:hover { border-color: var(--red); }
 .terms-checkbox:checked { background: var(--red); border-color: var(--red); }
 .terms-checkbox:checked::after {
   content: ''; position: absolute; inset: 0;
@@ -815,11 +904,6 @@ footer { background: var(--dark); border-top: 1px solid rgba(255,255,255,0.06); 
 }
 .wa-float-btn:hover { transform: scale(1.08); box-shadow: 0 12px 32px rgba(37,211,102,0.5); }
 .wa-float-btn svg { width: 28px; height: 28px; fill: white; }
-.wa-float-btn::before {
-  content: ''; position: absolute; inset: -4px; border-radius: 50%;
-  border: 2px solid rgba(37,211,102,0.4); animation: wa-ring 2s infinite;
-}
-@keyframes wa-ring { 0%{transform:scale(1);opacity:1} 100%{transform:scale(1.5);opacity:0} }
 .wa-float-tooltip {
   background: var(--dark); color: white; font-size: 13px; font-weight: 600;
   padding: 8px 16px; border-radius: 10px; white-space: nowrap;
@@ -841,7 +925,6 @@ footer { background: var(--dark); border-top: 1px solid rgba(255,255,255,0.06); 
   .why-grid { grid-template-columns: 1fr 1fr; }
   .options-grid { grid-template-columns: 1fr 1fr 1fr; }
   .footer-top { grid-template-columns: 1fr; }
-  .drawer { max-width: 100%; }
 }
 @media(max-width:480px){
   .search-grid { grid-template-columns: 1fr; }
@@ -850,9 +933,15 @@ footer { background: var(--dark); border-top: 1px solid rgba(255,255,255,0.06); 
   .why-grid { grid-template-columns: 1fr; }
 }
 
-/* Animations */
-.fade-in { animation: fadeIn 0.5s ease both; }
-@keyframes fadeIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+/* Animations — légères et non bloquantes pour le scroll */
+.fade-in { animation: fadeIn 0.45s ease both; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:none} }
+/* Dès le premier geste de défilement, on fige les blocs dans leur état final :
+   plus aucune animation ne peut gêner le scroll initial. */
+body.scrolled .fade-in { animation: none !important; opacity: 1 !important; transform: none !important; }
+@media (prefers-reduced-motion: reduce) {
+  .fade-in, .stagger-1, .stagger-2, .stagger-3 { animation: none !important; opacity: 1 !important; transform: none !important; }
+}
 .stagger-1 { animation-delay: 0.1s; }
 .stagger-2 { animation-delay: 0.2s; }
 .stagger-3 { animation-delay: 0.3s; }
@@ -884,6 +973,70 @@ footer { background: var(--dark); border-top: 1px solid rgba(255,255,255,0.06); 
 .mm-row button.active { border-color: var(--red); color: white; }
 [dir="rtl"] .hdr-menu { right: auto; left: 0; }
 [dir="rtl"] .hdr-menu button { text-align: right; }
+
+/* ---- Modale CGV / Confidentialité (au-dessus du tiroir, scroll interne) ---- */
+.legal-overlay {
+  position: fixed; inset: 0; z-index: 1200; background: rgba(10,10,10,0.55);
+  display: flex; align-items: center; justify-content: center; padding: 18px;
+}
+.legal-modal {
+  background: white; border-radius: 16px; width: 100%; max-width: 640px;
+  max-height: 84vh; display: flex; flex-direction: column; overflow: hidden;
+  box-shadow: 0 24px 70px rgba(0,0,0,0.35);
+}
+.legal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid var(--gray2);
+}
+.legal-title { font-size: 16px; font-weight: 800; }
+.legal-x {
+  background: var(--gray); border: none; width: 32px; height: 32px; border-radius: 50%;
+  cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--dark);
+}
+.legal-body { overflow-y: auto; padding: 20px 22px; -webkit-overflow-scrolling: touch; }
+.legal-body h1 { font-size: 19px; margin: 0 0 14px; }
+.legal-body h1 br { display: none; }
+.legal-body h2 { font-size: 15px; margin: 18px 0 8px; }
+.legal-body p, .legal-body li { font-size: 14px; line-height: 1.65; color: var(--text2); font-family: var(--font2); }
+.legal-body ul { padding-left: 20px; margin: 8px 0; }
+.legal-body a { color: var(--red); }
+.legal-body .info-card { background: var(--gray); border-radius: 10px; padding: 14px; margin-top: 14px; }
+.legal-loading { padding: 36px 10px; text-align: center; color: var(--gray3); font-size: 14px; }
+.legal-foot {
+  display: flex; gap: 10px; justify-content: flex-end;
+  padding: 14px 20px; border-top: 1px solid var(--gray2);
+}
+.legal-btn {
+  border: none; border-radius: 10px; padding: 12px 18px; font-family: var(--font);
+  font-size: 14px; font-weight: 700; cursor: pointer;
+}
+.legal-btn.ghost { background: var(--gray); color: var(--dark); }
+.legal-btn.main { background: var(--red); color: white; }
+[dir="rtl"] .legal-body ul { padding-left: 0; padding-right: 20px; }
+@media (max-width: 600px) { .legal-overlay { padding: 10px; } .legal-modal { max-height: 90vh; } }
+
+/* Tailles de police du pop-up : valeurs d'origine (référence validée) */
+.drawer .btn-next:disabled { opacity: 0.45; cursor: not-allowed; }
+.terms-checkbox { background: #fff; }
+
+/* === Cartes assurance — charte All Star Loc (rouge/noir/blanc/gris) === */
+.ins-card{position:relative;border:2px solid var(--gray2,#e5e7eb);border-radius:14px;padding:16px;background:#fff;cursor:pointer;margin-bottom:12px;transition:border-color .18s, background .18s, box-shadow .18s;}
+.ins-card:last-child{margin-bottom:0;}
+.ins-card:hover{border-color:rgba(196,30,58,.4);}
+.ins-card.selected{border-color:var(--red,#C41E3A);background:rgba(196,30,58,.035);box-shadow:0 4px 18px rgba(196,30,58,.1);}
+.ins-card-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.ins-radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--gray3,#9ca3af);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:border-color .18s;}
+.ins-card.selected .ins-radio{border-color:var(--red,#C41E3A);}
+.ins-radio-dot{width:10px;height:10px;border-radius:50%;background:var(--red,#C41E3A);}
+.ins-card-info{flex:1;min-width:120px;}
+.ins-card-name{font-weight:800;font-size:15px;color:var(--dark,#0C0E12);}
+.ins-card-sub{font-size:13px;color:var(--gray3,#6b7280);margin-top:2px;}
+.ins-card-badge{border-radius:50px;padding:5px 14px;font-size:12px;font-weight:800;white-space:nowrap;color:#fff;}
+.ins-card-badge.free{background:var(--dark,#0C0E12);}
+.ins-card-badge.paid{background:var(--red,#C41E3A);}
+.ins-selected-tag{position:absolute;top:-10px;right:14px;background:var(--red,#C41E3A);color:#fff;font-size:11px;font-weight:800;padding:3px 11px;border-radius:50px;box-shadow:0 2px 8px rgba(196,30,58,.3);}
+.ins-card-explain{display:flex;gap:8px;align-items:flex-start;padding:11px 13px;background:var(--gray,#f3f4f6);border-radius:10px;font-size:12px;color:#444;line-height:1.55;margin-top:12px;}
+.ins-card.selected .ins-card-explain{background:rgba(196,30,58,.06);color:#7a1020;}
 </style>
 </head>
 <body>
@@ -923,7 +1076,7 @@ footer { background: var(--dark); border-top: 1px solid rgba(255,255,255,0.06); 
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
         WhatsApp
       </a>
-      <a href="#fleet" class="btn-reserve" onclick="openSearchDrawer(); return false;" data-i18n="nav.book">Réserver</a>
+      <a href="#booking-section" class="btn-reserve" data-i18n="nav.book" onclick="event.preventDefault();var el=document.getElementById('booking-section');if(el)el.scrollIntoView({behavior:'smooth'});">Réserver</a>
       <button class="menu-toggle" onclick="toggleMobileMenu()" aria-label="Menu"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button>
     </div>
   </div>
@@ -953,7 +1106,6 @@ footer { background: var(--dark); border-top: 1px solid rgba(255,255,255,0.06); 
   <div class="hero-content">
     <div class="hero-top">
       <div class="hero-left">
-        <div class="hero-badge"><span></span> <span data-i18n="hero.badge">Agence à Marrakech · Depuis 2018</span></div>
         <h1 class="hero-title fade-in" data-i18n-html="hero.titleHtml">Location de Voiture<br>à Marrakech <span>Sans Surprise</span></h1>
         <p class="hero-sub fade-in stagger-1" data-i18n="hero.sub">Livraison gratuite à l'aéroport Ménara (RAK), au centre-ville et à votre hôtel. Flotte récente, assurance incluse, kilométrage illimité et prix transparents.</p>
         <div class="hero-features fade-in stagger-2">
@@ -984,12 +1136,13 @@ footer { background: var(--dark); border-top: 1px solid rgba(255,255,255,0.06); 
         </div>
       </div>
       <div class="hero-car fade-in stagger-1">
-        <img src="assets/hero-car.svg" alt="Voiture de location compacte gris métallisé — ALL STAR LOC" width="900" height="440">
+        <img src="assets/hero-suv.png" alt="Kia Sportage noir — location de voiture ALL STAR LOC Marrakech" width="720" height="349" decoding="async" fetchpriority="high" onerror="this.onerror=null;this.src='assets/hero-car.svg';">
       </div>
     </div>
 
     <!-- BOOKING PREMIUM -->
-    <div class="booking-card fade-in stagger-2">
+    <div class="booking-card fade-in stagger-2" id="booking-section">
+      <div class="booking-step-hint" data-i18n="bk.stepHint">1. Choisissez vos dates &nbsp;·&nbsp; 2. Trouvez votre voiture</div>
       <div class="booking-title" data-i18n="bk.title">Réservez votre voiture</div>
       <div class="booking-grid">
         <div class="bk-field">
@@ -1045,7 +1198,7 @@ footer { background: var(--dark); border-top: 1px solid rgba(255,255,255,0.06); 
       </div>
       <div class="bk-days">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
-        <span id="days-count">Durée : 3 jours</span>
+        <span id="days-count">—</span>
       </div>
       <!-- Calendrier (un seul, repositionné sous le champ actif) -->
       <div class="asl-cal-backdrop" id="cal-backdrop" onclick="closeCal()"></div>
@@ -1214,9 +1367,7 @@ footer { background: var(--dark); border-top: 1px solid rgba(255,255,255,0.06); 
   <div class="footer-top">
     <div class="footer-brand">
       <div class="footer-logo">
-        <div class="footer-logo-icon">
-          <svg viewBox="0 0 24 24" width="22"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
-        </div>
+        <img src="assets/logo-asl-header.png" alt="ALL STAR LOC" style="height:28px;width:auto;display:block;margin-bottom:12px;">
         <div class="footer-logo-text">
           <div class="footer-logo-name">ALL STAR LOC</div>
           <div class="footer-logo-tag" data-i18n="ft.tag">Location de Voiture Marrakech</div>
@@ -1242,9 +1393,9 @@ footer { background: var(--dark); border-top: 1px solid rgba(255,255,255,0.06); 
         </a>
       </div>
       <div class="footer-socials" style="margin-top:20px;">
-        <a href="pages/contact.html" class="footer-social" title="Retrouvez-nous — page contact">f</a>
-        <a href="pages/contact.html" class="footer-social" title="Retrouvez-nous — page contact"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg></a>
-        <a href="https://wa.me/212675312453" class="footer-social" target="_blank"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
+        <a href="pages/contact.html" class="footer-social" title="Retrouvez-nous — page contact" data-social="facebook">f</a>
+        <a href="pages/contact.html" class="footer-social" title="Retrouvez-nous — page contact" data-social="instagram"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg></a>
+        <a href="https://wa.me/212675312453" class="footer-social" target="_blank" data-social="whatsapp"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
       </div>
     </div>
     <div>
@@ -1254,7 +1405,6 @@ footer { background: var(--dark); border-top: 1px solid rgba(255,255,255,0.06); 
         <a href="pages/lld.html" class="footer-link" data-i18n="ft.s2">Location Longue Durée</a>
         <a href="pages/aeroport.html" class="footer-link" data-i18n="ft.s3">Livraison Aéroport</a>
         <a href="pages/contact.html" class="footer-link" data-i18n="ft.s4">Livraison Hôtel</a>
-        <a href="pages/contact.html" class="footer-link" data-i18n="ft.s5">Location avec Chauffeur</a>
         <a href="pages/contact.html" class="footer-link" data-i18n="ft.s6">Transfert Privé</a>
       </div>
     </div>
@@ -1267,7 +1417,6 @@ footer { background: var(--dark); border-top: 1px solid rgba(255,255,255,0.06); 
         <a href="pages/blog.html" class="footer-link" data-i18n="pf.blog">Blog</a>
         <a href="pages/faq.html" class="footer-link" data-i18n="pf.faq">FAQ</a>
         <a href="pages/contact.html" class="footer-link" data-i18n="nav.contact">Contact</a>
-        <a href="admin/index.html" class="footer-link" data-i18n="ft.qAdmin">Espace Admin</a>
       </div>
     </div>
     <div>
@@ -1297,7 +1446,7 @@ footer { background: var(--dark); border-top: 1px solid rgba(255,255,255,0.06); 
 </footer>
 
 <!-- WHATSAPP FLOAT -->
-<div class="wa-float">
+<div class="wa-float" onclick="window._ASL_track&&window._ASL_track('wa')">
   <div class="wa-float-tooltip" data-i18n="wa.tooltip">Besoin d'aide ?</div>
   <a href="https://wa.me/212675312453?text=Bonjour,%20je%20souhaite%20louer%20une%20voiture%20à%20Marrakech" target="_blank" class="wa-float-btn">
     <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
@@ -1308,6 +1457,22 @@ footer { background: var(--dark); border-top: 1px solid rgba(255,255,255,0.06); 
 <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
 
 <!-- BOOKING DRAWER -->
+
+<!-- Modale CGV / Politique de confidentialité (le client reste dans le tunnel) -->
+<div class="legal-overlay" id="legal-modal" role="dialog" aria-modal="true" style="display:none;" onclick="if(event.target===this)closeLegalModal()">
+  <div class="legal-modal">
+    <div class="legal-head">
+      <div class="legal-title" id="legal-title"></div>
+      <button class="legal-x" onclick="closeLegalModal()" aria-label="Fermer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+    </div>
+    <div class="legal-body" id="legal-body"></div>
+    <div class="legal-foot">
+      <button class="legal-btn ghost" onclick="closeLegalModal()" data-i18n="legal.close">Fermer</button>
+      <button class="legal-btn main" onclick="closeLegalModal()" data-i18n="legal.read">J'ai lu et compris</button>
+    </div>
+  </div>
+</div>
+
 <div class="drawer" id="booking-drawer">
   <div class="drawer-header">
     <button class="drawer-back" onclick="prevStep()"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg></button>
@@ -1351,6 +1516,7 @@ footer { background: var(--dark); border-top: 1px solid rgba(255,255,255,0.06); 
 </div>
 
 <script src="i18n.js"></script>
+<script src="content-bridge.js"></script>
 <script src="data.js"></script>
 <script>
 // ==================== DATA (source unique partagée avec l'admin) ====================
@@ -1368,21 +1534,44 @@ function loadCars() {
       // Prix de référence en MAD (source unique : administration). Repli : conversion depuis priceEUR.
       price: (c.priceMAD != null ? c.priceMAD : Math.round((c.priceEUR || 0) * (ASLDB.RATE_MAD || 10.8))),
       seats: c.seats || 5,
+      doors: c.doors || null,
+      trunk: c.trunk || '',
+      consumption: c.consumption || '',
+      deposit: c.deposit || null,
+      extras: c.extras || '',
+      features: c.features || {},
+      tiers: c.tiers || [],   // tableau [{min,max,price}]
       transmission: c.transmission,
       fuel: c.fuel,
       img: c.img,
       badge: c.badge || c.category,
       featured: !!c.featured,
       services: c.services && c.services.length ? c.services : ['Clim'],
+      stock: c.stock || 1,
+      unitIds: [c.id],
     }));
+
+  // Regrouper les véhicules de même nom → une seule carte par modèle
+  const _grouped = [];
+  CARS.forEach(function(car) {
+    const ex = _grouped.find(function(g){ return g.name === car.name; });
+    if (ex) {
+      ex.stock = (ex.stock || 1) + 1;
+      if (car.unitIds) ex.unitIds = ex.unitIds.concat(car.unitIds);
+      if ((!ex.tiers || !ex.tiers.length) && car.tiers && car.tiers.length) ex.tiers = car.tiers;
+      if (!ex.featured && car.featured) ex.featured = true;
+    } else {
+      _grouped.push(Object.assign({}, car));
+    }
+  });
+  CARS = _grouped;
 }
 loadCars();
 
 // Prix en MAD. Les libellés sont traduits via i18n.js : t('prot.<id>.name'), t('prot.<id>.desc'), t('prot.<id>.f')
 const PROTECTIONS = [
-  { id:'basic',   price:0,   color:'var(--red)' },
-  { id:'premium', price:50,  color:'var(--gold)' },
-  { id:'full',    price:100, color:'var(--green)' },
+  { id:'basic',   price:0,   color:'var(--green)' },
+  { id:'premium', price:110, color:'var(--gold)' },
 ];
 
 const OPTIONS_LIST = [
@@ -1407,7 +1596,7 @@ let state = {
   protection: 'basic',
   options: [],
   customer: {},
-  payment: 'full',
+  payment: 'agency',
   currency: ASL_CUR.get(), // devise persistée (localStorage), MAD par défaut
   promo: '',
   promoDiscount: 0,
@@ -1425,7 +1614,7 @@ function price(mad) {
 
 function calcTotal() {
   if (!state.car) return 0;
-  const carCost = state.car.price * state.days;
+  const carCost = dailyRate(state.car, state.days) * state.days; // tranche tarifaire applicable
   const protCost = (PROTECTIONS.find(p=>p.id===state.protection)?.price || 0) * state.days;
   const optCost = state.options.reduce((s,oid) => {
     const o = OPTIONS_LIST.find(x=>x.id===oid);
@@ -1449,19 +1638,42 @@ function renderCars(filter) {
   const grid = document.getElementById('cars-grid');
   if (!grid) return;
   const useFilter = currentFilter;
-  const filtered = useFilter === 'all' ? CARS : CARS.filter(c=>c.category===useFilter);
+  // Comparaison insensible à la casse + véhicules sans catégorie toujours visibles dans 'all'
+  const filtered = useFilter === 'all'
+    ? CARS
+    : CARS.filter(c => (c.category||'').toLowerCase() === useFilter.toLowerCase());
+  const searchActive = !!(state.startDate && state.endDate);
+  // Avant recherche : prix de base (1 jour). Après : durée réelle choisie.
+  const rateDays = searchActive ? Math.max(1, state.days || 1) : 1;
   if (!filtered.length) {
     grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gray3);font-size:15px;">${t('fleet.emptyHtml')}</div>`;
     return;
   }
-  grid.innerHTML = filtered.map(car => `
-    <div class="car-card" onclick="selectCar(${car.id})">
+  grid.innerHTML = filtered.map(car => {
+    const av = searchActive ? carAvailability(car, state.startDate, state.endDate) : { available: true };
+    const f = car.features || {};
+    const extras = [
+      f.ac ? t('sp.ac') : '', f.bluetooth ? 'Bluetooth' : '', f.gps ? 'GPS' : '',
+      f.camera ? t('sp.cam') : '',
+      car.doors ? t('sp.doors', { n: car.doors }) : '',
+      car.trunk ? t('sp.trunk', { v: car.trunk }) : '',
+      car.consumption ? car.consumption : '',
+      f.insurance ? t('sp.insur') : '', f.airport ? t('sp.airport') : '',
+      (car.depositShow && car.deposit) ? t('sp.deposit', { v: car.deposit + ' MAD' }) : '',
+    ].filter(Boolean);
+    return `
+    <div class="car-card ${av.available ? '' : 'unavailable'}" onclick="${av.available ? `selectCar(${car.id})` : 'scrollToDates()'}">
       <div class="car-card-img">
+        ${av.available ? '' : `<div class="unavail-badge">${t('fleet.unavail')}</div>`}
         <img src="${car.img}" alt="${car.name}" loading="lazy">
         <div class="car-badge ${car.featured?'featured':''}">${car.badge}</div>
-        <div class="car-price-badge">${price(car.price)} <span>${t('u.perDayLong')}</span></div>
       </div>
       <div class="car-card-body">
+        <div class="car-price-block">
+          <span class="car-price-amount">${price(dailyRate(car, rateDays))}</span>
+          <span class="car-price-unit">${t('u.perDayLong')}</span>
+        </div>
+        ${(normalizeTiers(car.tiers).length ? `<div class="car-tier-label">${t('car.tierHint')}</div>` : '')}
         <div class="car-name">${car.name}</div>
         <div class="car-specs">
           <div class="car-spec"><div class="car-spec-icon"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div> ${t('car.seats',{n:car.seats})}</div>
@@ -1474,10 +1686,14 @@ function renderCars(filter) {
             ${car.services.map(s=>`<span class="car-service-tag">${s}</span>`).join('')}
           </div>
         </div>
-        <button class="btn-book">${t('car.book')} <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+        ${extras.length ? `<div class="car-extras">${extras.map(x=>`<span class="car-extra">${x}</span>`).join('')}</div>` : ''}
+      ${av.available ? '' : `<div class="avail-from"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> ${av.from ? t('fleet.availFrom', { d: new Date(av.from + 'T00:00:00').toLocaleDateString(langLocale(), { day:'numeric', month:'short' }) }) : t('fleet.unavail')}</div>`}
+      ${av.available
+        ? `<button class="btn-book">${t('car.book')} <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>`
+        : `<button class="btn-book btn-edit-dates" onclick="event.stopPropagation();scrollToDates()">${t('fleet.editDates')}</button>`}
       </div>
     </div>
-  `).join('');
+  `; }).join('');
 }
 
 function filterCars(cat, btn) {
@@ -1500,11 +1716,161 @@ function startSearch() {
   state.endTime = document.getElementById('end-time').value || state.endTime;
   state.pickupLoc = document.getElementById('pickup-loc').value;
   state.returnLoc = document.getElementById('return-loc').value;
-  document.getElementById('fleet').scrollIntoView({behavior:'smooth'});
+  const _sd = state.startDate || (CAL.start ? dToISO(CAL.start) : '');
+  const _ed = state.endDate   || (CAL.end   ? dToISO(CAL.end)   : '');
+  // Date de départ manquante → message
+  if (!_sd) { showDatesNotice(); return; }
+  // Date de retour manquante → message spécifique
+  if (!_ed) { showReturnDateNotice(); return; }
+  // Vérifier que la durée est d'au moins 2 jours (uniquement au moment de la recherche)
+  const _diff = Math.round((new Date(_ed) - new Date(_sd)) / (1000*60*60*24));
+  if (_diff < 2) { showMinDaysNotice(); return; }
+  CAL.picked = true;
+  state.searched = true;
+  renderCars();
+  const _fleet = document.getElementById('fleet');
+  if (_fleet) _fleet.scrollIntoView({ behavior: 'smooth' });
+}
+
+// Message clair + défilement automatique vers le calendrier
+function showReturnDateNotice() {
+  const bkSection = document.getElementById('booking-section') || document.querySelector('.booking-card');
+  if (bkSection) bkSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const card = document.querySelector('.booking-card');
+  let n = document.getElementById('dates-notice');
+  if (!n && card) {
+    n = document.createElement('div');
+    n.id = 'dates-notice';
+    n.className = 'dates-notice';
+    card.insertBefore(n, card.firstChild);
+  }
+  if (n) {
+    n.textContent = 'Veuillez choisir une date de retour pour continuer.';
+    n.classList.add('show');
+    setTimeout(() => { if (n) n.classList.remove('show'); }, 6000);
+  }
+}
+
+function showMinDaysNotice() {
+  const bkSection = document.getElementById('booking-section') || document.querySelector('.booking-card');
+  if (bkSection) bkSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const card = document.querySelector('.booking-card');
+  let n = document.getElementById('dates-notice');
+  if (!n && card) {
+    n = document.createElement('div');
+    n.id = 'dates-notice';
+    n.className = 'dates-notice';
+    card.insertBefore(n, card.firstChild);
+  }
+  if (n) {
+    n.textContent = 'La durée minimale de location est de 2 jours. Veuillez sélectionner une période d\'au moins 2 jours.';
+    n.classList.add('show');
+    setTimeout(() => { if (n) n.classList.remove('show'); }, 6000);
+  }
+}
+
+function showDatesNotice() {
+  // Remonter vers la section de recherche
+  const bkSection = document.getElementById('booking-section') || document.querySelector('.booking-card');
+  if (bkSection) bkSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // Afficher le message
+  const card = document.querySelector('.booking-card');
+  let n = document.getElementById('dates-notice');
+  if (!n && card) {
+    n = document.createElement('div');
+    n.id = 'dates-notice';
+    n.className = 'dates-notice';
+    card.insertBefore(n, card.firstChild);
+  }
+  if (n) {
+    n.textContent = 'Veuillez sélectionner vos dates de réservation pour vérifier la disponibilité du véhicule.';
+    n.classList.add('show');
+    setTimeout(() => { if (n) n.classList.remove('show'); }, 6000);
+  }
+}
+function scrollToDates() { showDatesNotice(); }
+
+/* ---------- Disponibilités réelles (réservations synchronisées) ---------- */
+function datesOverlap(aS, aE, bS, bE) { return aS <= bE && bS <= aE; }
+function carAvailability(car, startISO, endISO) {
+  if (!startISO || !endISO) return { available: true };
+  const unitIds = car.unitIds || [car.id];
+  const res = ASLDB.getReservations().filter(r =>
+    r.status === 'confirmed' && r.startDate && r.endDate &&
+    (r.car === car.name || unitIds.includes(r.carId)));
+  const stock = Math.max(1, car.stock || 1);
+  const blocked = res.filter(r => datesOverlap(startISO, endISO, r.startDate, r.endDate)).length;
+  if (blocked < stock) return { available: true };  // il reste des unités libres
+  // Toutes les unités sont prises : trouver la première date libre
+  const days = Math.max(1, state.days || 1);
+  let cand = new Date(startISO + 'T00:00:00');
+  for (let i = 0; i < 60; i++) {
+    const cS = dToISO(cand);
+    const cE = dToISO(new Date(cand.getTime() + days * 86400000));
+    const blockedHere = res.filter(r => datesOverlap(cS, cE, r.startDate, r.endDate)).length;
+    if (blockedHere < stock) return { available: false, from: cS };
+    const latest = res.filter(r => datesOverlap(cS, cE, r.startDate, r.endDate))
+                      .sort((a,b) => b.endDate.localeCompare(a.endDate))[0];
+    cand = new Date(new Date(latest.endDate + 'T00:00:00').getTime() + 86400000);
+  }
+  return { available: false, from: null };
+}
+
+function normalizeTiers(raw) {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw.filter(b => b && Number(b.price) > 0);
+  // Ancien format objet {t1,t2,t3,t4,t5} → tableau (migration transparente)
+  const MAP = [[1,3,'t1'],[4,7,'t2'],[8,14,'t3'],[15,20,'t4'],[21,9999,'t5']];
+  return MAP.map(([mn,mx,k]) => ({ min:mn, max:mx, price:Number(raw[k]||0) }))
+            .filter(b => b.price > 0);
+}
+function activeBracket(days) {
+  const car = (typeof state !== 'undefined') && state && state.car;
+  if (!car) return null;
+  const tiers = normalizeTiers(car.tiers);
+  return activeTierBracket(tiers, days);
+}
+function activeTierBracket(tiers, days) {
+  const d = Math.max(1, days || 1);
+  const sorted = [...tiers].sort((a,b) => a.min - b.min);
+  let best = null;
+  for (const b of sorted) {
+    if (d >= b.min && d <= b.max) return b;
+    if (d >= b.min) best = b; // garde la dernière tranche dont min ≤ d (repli)
+  }
+  return best;
+}
+function tierLabel(b) {
+  if (!b) return '';
+  return b.min + (b.max >= 9999 ? '+' : ('-' + b.max)) + ' j';
+}
+function depositLine() {
+  const car = state.car;
+  if (!car || !car.depositShow) return '';
+  const amount = Number(car.deposit);
+  if (!amount || amount <= 0) return '';
+  return `<div class="summary-row deposit-row"><span class="summary-row-label">${t('sum.deposit')}</span>`
+       + `<span class="summary-row-val">${price(amount)}</span></div>`;
+}
+function tierRecapLabel(car, days) {
+  const tiers = normalizeTiers(car && car.tiers);
+  const b = tiers.length ? activeTierBracket(tiers, days) : null;
+  const rate = dailyRate(car, days);
+  let lbl = t('sum.rentTier', { n: days, p: price(rate) });
+  if (b) lbl += ` · ${t('sum.tierApplied', { b: tierLabel(b) })}`;
+  return lbl;
+}
+function dailyRate(car, days) {
+  if (!car) return 0;
+  const tiers = normalizeTiers(car.tiers);
+  if (!tiers.length) return car.price || 0;
+  const b = activeTierBracket(tiers, days);
+  return b ? b.price : (car.price || 0);
 }
 
 // ==================== CALENDRIER PREMIUM ====================
 const CAL = {
+  picked: false, // VISUEL uniquement : rien en rouge tant que le client n'a pas cliqué
   mode: 'start',        // 'start' | 'end'
   view: new Date(),     // mois affiché
   start: null,          // Date sélectionnée départ
@@ -1569,9 +1935,12 @@ function renderCal() {
     const past = date < tdy;
     const beforeStart = CAL.mode === 'end' && CAL.start && date < CAL.start;
     const disabled = past || beforeStart;
-    const isStart = CAL.start && iso === dToISO(CAL.start);
-    const isEnd = CAL.end && iso === dToISO(CAL.end);
-    const inRange = CAL.start && CAL.end && date > CAL.start && date < CAL.end;
+    // Les dates par défaut servent au calcul mais ne sont JAMAIS affichées
+    // comme sélectionnées tant que le client n'a pas cliqué lui-même.
+    const showSel = CAL.picked;
+    const isStart = showSel && CAL.start && iso === dToISO(CAL.start);
+    const isEnd = showSel && CAL.end && iso === dToISO(CAL.end);
+    const inRange = showSel && CAL.start && CAL.end && date > CAL.start && date < CAL.end;
     let cls = 'asl-cal-day';
     if (inRange) cls += ' inrange';
     if (isStart || isEnd) cls += ' sel ' + (isStart && isEnd ? 'single' : isStart ? 'start' : 'end');
@@ -1582,14 +1951,16 @@ function renderCal() {
 }
 
 function calPick(iso) {
+  CAL.picked = true;
   const date = new Date(iso + 'T00:00:00');
   if (CAL.mode === 'start') {
     CAL.start = date;
-    // Si le retour devient invalide, le décaler
-    if (!CAL.end || CAL.end <= CAL.start) {
-      CAL.end = new Date(date); CAL.end.setDate(CAL.end.getDate() + 3);
+    // NE PAS remplir automatiquement la date de retour.
+    // Si l'ancienne date de retour devient antérieure ou égale au départ, on l'efface.
+    if (CAL.end && CAL.end <= CAL.start) {
+      CAL.end = null;
     }
-    // Enchaîne naturellement sur le choix du retour (style Airbnb)
+    // Passer au choix du retour (le client choisit librement)
     CAL.mode = 'end';
     document.getElementById('cal-hint').textContent = t('cal.hintEnd');
     document.getElementById('field-start').classList.remove('active');
@@ -1597,11 +1968,12 @@ function calPick(iso) {
     syncDates();
     renderCal();
   } else {
-    if (CAL.start && date <= CAL.start) return; // jamais de retour avant le départ
+    // Seule contrainte : le retour ne peut pas être avant ou égal au départ
+    if (CAL.start && date <= CAL.start) return;
     CAL.end = date;
     syncDates();
     renderCal();
-    setTimeout(closeCal, 220); // laisse voir la sélection puis ferme
+    setTimeout(closeCal, 220);
   }
 }
 
@@ -1621,6 +1993,11 @@ function syncDates() {
     state.days = days;
     document.getElementById('days-count').textContent = t('bk.dur', { n: days, d: t(days>1?'u.days':'u.day') });
     updateFooter();
+    // Prix dégressifs : re-rendu via rAF annulable par startSearch
+    if (typeof renderCars === 'function' && document.getElementById('cars-grid')) {
+      if (window._syncRafId) cancelAnimationFrame(window._syncRafId);
+      window._syncRafId = requestAnimationFrame(() => { window._syncRafId = null; renderCars(); });
+    }
   }
 }
 
@@ -1631,10 +2008,13 @@ function initBooking() {
   const st = document.getElementById('start-time'), et = document.getElementById('end-time');
   st.innerHTML = times.map(t=>`<option ${t==='10:00'?'selected':''}>${t}</option>`).join('');
   et.innerHTML = times.map(t=>`<option ${t==='10:00'?'selected':''}>${t}</option>`).join('');
-  // Dates par défaut : aujourd'hui → +3 jours
-  CAL.start = today0();
-  CAL.end = new Date(CAL.start); CAL.end.setDate(CAL.end.getDate() + 3);
-  syncDates();
+  // PAS de dates par défaut : le client doit choisir lui-même ses dates.
+  // Le calendrier s'ouvre sur le mois courant, mais aucune date n'est sélectionnée.
+  CAL.start = null;
+  CAL.end = null;
+  CAL.view = new Date();
+  // state.startDate et state.endDate restent vides → aucune disponibilité affichée
+  // et aucun pop-up tant que le client n'a pas choisi + cliqué Rechercher.
   // Fermer au clic extérieur / Échap
   document.addEventListener('click', e => {
     const cal = document.getElementById('asl-cal');
@@ -1645,13 +2025,22 @@ function initBooking() {
 }
 
 function openSearchDrawer() {
+  if (!(state.startDate && state.endDate)) { showDatesNotice(); return; }
   if (!state.car && CARS.length) state.car = CARS.find(c=>c.featured) || CARS[0];
   state.step = 1;
   openDrawer();
 }
 
 function selectCar(id) {
-  state.car = CARS.find(c=>c.id===id);
+  if (!(state.startDate && state.endDate)) { showDatesNotice(); return; }
+  const car = CARS.find(c=>c.id===id);
+  if (!car) return;
+  // Véhicule indisponible sur la période : on n'ouvre pas le pop-up
+  if (state.searched) {
+    const av = carAvailability(car, state.startDate, state.endDate);
+    if (!av.available) { return; }
+  }
+  state.car = car;
   state.step = 1;
   openDrawer();
 }
@@ -1687,12 +2076,61 @@ function startTimer(seconds) {
   }, 1000);
 }
 
+
+// ==================== MODALE CGV / CONFIDENTIALITÉ ====================
+// Ouvre les documents légaux SANS quitter le tunnel : contenu chargé depuis
+// les pages existantes (pages/cgv.html, pages/privacy.html), scroll interne.
+// En cas d'échec de chargement : repli sur l'ouverture classique (nouvel onglet).
+const LEGAL_PAGES = { cgv: 'pages/cgv.html', privacy: 'pages/privacy.html' };
+const legalCache = {};
+function openLegalModal(kind) {
+  const url = LEGAL_PAGES[kind];
+  const overlay = document.getElementById('legal-modal');
+  if (!url || !overlay || typeof fetch !== 'function') { window.open(url, '_blank'); return false; }
+  const title = document.getElementById('legal-title');
+  const body = document.getElementById('legal-body');
+  title.textContent = kind === 'cgv' ? t('ft.lCgv') : t('ft.lPriv');
+  overlay.style.display = 'flex';
+  if (legalCache[kind]) { body.innerHTML = legalCache[kind]; body.scrollTop = 0; return false; }
+  body.innerHTML = `<div class="legal-loading">${t('legal.loading')}</div>`;
+  fetch(url, { cache: 'no-store' })
+    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+    .then(html => {
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const content = doc.querySelector('.page-content');
+      if (!content) throw new Error('contenu introuvable');
+      content.querySelectorAll('script, .cta-band').forEach(e => e.remove());
+      const h1 = doc.querySelector('.page-hero h1');
+      const inner = (h1 ? '<h1>' + h1.innerHTML + '</h1>' : '') + content.innerHTML;
+      legalCache[kind] = inner;
+      body.innerHTML = inner;
+      body.scrollTop = 0;
+    })
+    .catch(() => { closeLegalModal(); window.open(url, '_blank'); });
+  return false; // empêche la navigation : l'utilisateur reste sur l'étape Paiement
+}
+function closeLegalModal() {
+  const overlay = document.getElementById('legal-modal');
+  if (overlay) overlay.style.display = 'none';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLegalModal(); });
+
+// Active/désactive le bouton de confirmation selon la case CGV (étape 5 uniquement)
+function updateConfirmGate() {
+  const btn = document.getElementById('btn-next');
+  if (!btn) return;
+  btn.disabled = (state.step === 5 && !state.termsAccepted);
+}
+
 function nextStep() {
   if (state.step < 6) {
-    if (state.step === 4) saveCustomerForm(); // capture les infos client avant de quitter le formulaire
+    if (state.step === 4) {
+      saveCustomerForm(); // capture les infos client avant de quitter le formulaire
+      if (!validateCustomer()) return; // champs obligatoires : nom, téléphone, permis
+    }
     if (state.step === 5) {
-      const terms = document.querySelector('.terms-checkbox');
-      if (terms && !terms.checked) { alert(t('pay.acceptAlert')); return; }
+      // Garde-fou (le bouton est déjà désactivé tant que la case n'est pas cochée)
+      if (!state.termsAccepted) { alert(t('pay.acceptAlert')); return; }
       confirmBooking();
     }
     state.step++;
@@ -1712,6 +2150,11 @@ function renderStep() {
   document.getElementById('drawer-title').textContent = labels[state.step];
   const footer = document.getElementById('drawer-footer');
   footer.style.display = state.step === 6 ? 'none' : 'block';
+  // Étape Paiement : le bouton devient « Confirmer la réservation »,
+  // désactivé tant que la case CGV n'est pas cochée.
+  const nextSpan = document.querySelector('#btn-next span');
+  if (nextSpan) nextSpan.textContent = state.step === 5 ? t('pay.confirmBtn') : t('dr.next');
+  updateConfirmGate();
   const body = document.getElementById('drawer-body');
   const steps = [null, renderProtection, renderOptions, renderSummary, renderCustomerForm, renderPayment, renderConfirmation];
   if (steps[state.step]) body.innerHTML = steps[state.step]();
@@ -1757,39 +2200,65 @@ function vehicleRecapHTML() {
 }
 
 function renderProtection() {
+  // 2 assurances : tous risques gratuite (franchise 5%) + premium (rachat franchise, 110 MAD/j)
+  if (state.protection !== 'basic' && state.protection !== 'premium') state.protection = 'basic';
+  const deposit = (state.car && state.car.deposit) ? state.car.deposit : 0;
+  const depositHtml = deposit > 0
+    ? `<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:var(--gray);border-radius:12px;margin-bottom:14px;">
+         <span style="font-weight:700;font-size:14px;color:var(--dark);">Caution</span>
+         <span style="font-weight:800;font-size:15px;color:var(--dark);">${deposit} MAD</span>
+       </div>`
+    : '';
   return vehicleRecapHTML() + `
     <div class="step-section">
-      <div class="step-section-title">${t('prot.title')}</div>
-      <div class="protection-options">
-        ${PROTECTIONS.map(p=>`
-          <div class="protection-option ${state.protection===p.id?'selected':''}" data-pid="${p.id}">
-            <div class="protection-option-header">
-              <div class="protection-radio"></div>
-              <div class="protection-info">
-                <div class="protection-name">${t('prot.'+p.id+'.name')}</div>
-                <div class="protection-desc">${t('prot.'+p.id+'.desc')}</div>
-              </div>
-              <div class="protection-price ${p.price===0?'free':''}">${p.price===0?t('prot.free'):price(p.price)+t('u.perDay')}</div>
-            </div>
-            <div class="protection-features">
-              ${t('prot.'+p.id+'.f').map(f=>`<span class="protection-feat"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M20 6 9 17l-5-5"/></svg> ${f}</span>`).join('')}
-            </div>
-          </div>
-        `).join('')}
+      <div class="step-section-title">Caution &amp; Assurance</div>
+      ${depositHtml}
+      <div id="insurance-list">
+        ${insuranceCardHTML('basic')}
+        ${insuranceCardHTML('premium')}
       </div>
     </div>
   `;
 }
 
+function insuranceCardHTML(id) {
+  const sel = state.protection === id;
+  const isBasic = id === 'basic';
+  const title = isBasic ? 'Assurance tous risques' : 'Assurance Premium';
+  const sub = isBasic ? 'Gratuite avec franchise de 5%' : 'Rachat de franchise — zéro franchise';
+  const badge = isBasic ? 'GRATUITE' : '110 MAD/j';
+  const explain = isBasic
+    ? "La franchise de 5% s'applique uniquement si le client est fautif et si les dégâts sont inférieurs à 5%. Si le client n'est pas fautif, il ne paie pas la franchise."
+    : "Avec l'assurance Premium, vous rachetez la franchise de 5%. Vous n'avez rien à payer en cas d'accident ou de dégâts, même si vous êtes fautif. Seulement 110 MAD/jour pour supprimer la franchise.";
+  return `
+    <div class="ins-card ${sel?'selected':''}" data-pid="${id}" onclick="selectInsurance('${id}')">
+      <div class="ins-card-top">
+        <div class="ins-radio">${sel?'<span class="ins-radio-dot"></span>':''}</div>
+        <div class="ins-card-info">
+          <div class="ins-card-name">${title}</div>
+          <div class="ins-card-sub">${sub}</div>
+        </div>
+        <div class="ins-card-badge ${isBasic?'free':'paid'}">${badge}</div>
+        ${sel?'<div class="ins-selected-tag">Sélectionnée</div>':''}
+      </div>
+      <div class="ins-card-explain">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        <span>${explain}</span>
+      </div>
+    </div>`;
+}
+
+function selectInsurance(id) {
+  state.protection = id;
+  // Mettre à jour SEULEMENT les cartes d'assurance, sans re-render complet (pas de scroll)
+  const list = document.getElementById('insurance-list');
+  if (list) list.innerHTML = insuranceCardHTML('basic') + insuranceCardHTML('premium');
+  // Mettre à jour le total dans le footer si présent
+  if (typeof updateFooter === 'function') updateFooter();
+}
+
 function attachProtectionEvents() {
-  document.querySelectorAll('.protection-option').forEach(el => {
-    el.addEventListener('click', () => {
-      state.protection = el.dataset.pid;
-      document.querySelectorAll('.protection-option').forEach(e=>e.classList.remove('selected'));
-      el.classList.add('selected');
-      updateFooter();
-    });
-  });
+  // Sélection gérée par selectInsurance() en inline — aucun re-render complet, pas de scroll.
 }
 
 function renderOptions() {
@@ -1843,12 +2312,14 @@ function renderSummary() {
         <div class="summary-car-name">${car?.name || '-'}</div>
         <div class="summary-car-dates">${state.days} ${t(state.days>1?'u.days':'u.day')} · ${state.pickupLoc || 'Aéroport RAK'} → ${state.returnLoc || 'Aéroport RAK'}</div>
       </div>
+      ${normalizeTiers(state.car && state.car.tiers).length > 0 ? `<div class="degressive-note">${t('sum.degressive')}</div>` : ''}
       <div class="summary-rows">
-        <div class="summary-row"><div class="summary-row-label">${t('sum.rent',{n:state.days,p:price(car?.price||0)})}</div><div class="summary-row-val">${price((car?.price||0)*state.days)}</div></div>
+        <div class="summary-row"><div class="summary-row-label">${tierRecapLabel(car, state.days)}</div><div class="summary-row-val">${price(dailyRate(car, state.days)*state.days)}</div></div>
         <div class="summary-row"><div class="summary-row-label"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg> ${t('prot.'+(prot?.id||'basic')+'.name')}</div><div class="summary-row-val">${prot?.price===0?t('prot.free'):price((prot?.price||0)*state.days)}</div></div>
         ${optRows}
         ${state.payment==='full'?`<div class="summary-row"><div class="summary-row-label" style="color:var(--green)"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/></svg> ${t('sum.fullDisc')}</div><div class="summary-row-val" style="color:var(--green)">-5%</div></div>`:''}
         ${state.promoDiscount?`<div class="summary-row"><div class="summary-row-label" style="color:var(--green)"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></svg> ${t('sum.promo')}</div><div class="summary-row-val" style="color:var(--green)">-${state.promoDiscount}%</div></div>`:''}
+        ${depositLine()}
         <div class="summary-row total"><div class="summary-row-label">${t('sum.total')}</div><div class="summary-row-val">${price(total)}</div></div>
       </div>
     </div>
@@ -1869,7 +2340,7 @@ function renderCustomerForm() {
         </div>
       </div>
       <div class="form-field">
-        <label class="form-label">${t('f.email')} <span class="req">*</span></label>
+        <label class="form-label">${t('f.email')}</label>
         <input class="form-input" type="email" placeholder="${t('ph.email')}" id="f-email" value="${state.customer.email||''}">
       </div>
       <div class="form-field">
@@ -1893,38 +2364,25 @@ function renderCustomerForm() {
         </div>
       </div>
       <div class="form-field">
-        <label class="form-label">${t('f.addr')} <span class="req">*</span></label>
+        <label class="form-label">${t('f.addr')}</label>
         <input class="form-input" type="text" placeholder="${t('ph.addr')}" id="f-address" value="${state.customer.address||''}">
       </div>
-      <div class="form-field">
-        <label class="form-label">${t('f.country')} <span class="req">*</span></label>
-        <select class="form-select" id="f-country">
-          <option value="">${t('f.countryPh')}</option>
-          <option value="Maroc">${t('c.ma')}</option><option value="France">${t('c.fr')}</option><option value="Espagne">${t('c.es')}</option>
-          <option value="Royaume-Uni">${t('c.uk')}</option><option value="États-Unis">${t('c.us')}</option><option value="Allemagne">${t('c.de')}</option>
-          <option value="Italie">${t('c.it')}</option><option value="Belgique">${t('c.be')}</option><option value="Pays-Bas">${t('c.nl')}</option>
-          <option value="Autre">${t('c.other')}</option>
-        </select>
-      </div>
-      <div class="form-field">
-        <label class="form-label">${t('f.flight')}</label>
-        <input class="form-input" type="text" placeholder="${t('ph.flight')}" id="f-flight" value="${state.customer.flight||''}">
-      </div>
+
+
       <div class="form-field full">
         <label class="form-label">${t('f.notes')}</label>
         <textarea class="form-input" rows="3" placeholder="${t('ph.notes')}" id="f-notes" style="resize:vertical;">${state.customer.notes||''}</textarea>
       </div>
       <div style="background:var(--gray);border-radius:12px;padding:16px;">
-        <div class="step-section-title">${t('f.docs')}</div>
+        <div class="step-section-title">Documents</div>
         <div class="form-field" style="margin-bottom:10px;">
-          <label class="form-label">${t('f.lic')}</label>
-          <input class="form-input" type="text" placeholder="${t('ph.lic')}" id="f-license">
+          <label class="form-label">Numéro de permis de conduire <span class="req">*</span></label>
+          <input class="form-input" type="text" placeholder="Ex : 12345/2020" id="f-license" value="${state.customer.license||''}">
         </div>
-        <div class="form-field" style="margin-bottom:10px;">
-          <label class="form-label">${t('f.pass')}</label>
-          <input class="form-input" type="text" placeholder="${t('ph.pass')}" id="f-passport">
+        <div class="form-field">
+          <label class="form-label">Numéro de carte nationale (CIN) <span class="req">*</span></label>
+          <input class="form-input" type="text" placeholder="Ex : AB123456" id="f-cin" value="${state.customer.cin||''}">
         </div>
-        <div style="font-size:12px;color:var(--gray3);">${t('f.docsNote')}</div>
       </div>
     </div>
     <div style="height:20px;"></div>
@@ -1940,61 +2398,75 @@ function saveCustomerForm() {
     prefix: (document.getElementById('f-prefix')?.value || '').split(' ').pop() || '',
     whatsapp: document.getElementById('f-wa')?.value || '',
     address: document.getElementById('f-address')?.value || '',
-    country: document.getElementById('f-country')?.value || '',
-    flight: document.getElementById('f-flight')?.value || '',
     notes: document.getElementById('f-notes')?.value || '',
+    license: document.getElementById('f-license')?.value || '',
+    cin: document.getElementById('f-cin')?.value || '',
   };
+}
+
+// Champs OBLIGATOIRES avant de poursuivre : nom complet, téléphone, n° de permis.
+// (Email, adresse et informations complémentaires restent optionnels.)
+function validateCustomer() {
+  // Champs obligatoires simples (non vides, pas uniquement des espaces)
+  const required = ['f-firstname', 'f-lastname', 'f-phone'];
+  let ok = true;
+  required.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const empty = !el.value || !el.value.trim();
+    el.classList.toggle('input-error', empty);
+    if (empty) ok = false;
+  });
+  // Permis et CIN : obligatoires + minimum 3 caractères + pas uniquement des espaces
+  ['f-license', 'f-cin'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const val = (el.value || '').trim();
+    const invalid = val.length < 3;
+    el.classList.toggle('input-error', invalid);
+    if (invalid) ok = false;
+  });
+  if (!ok) {
+    alert('Veuillez remplir tous les champs obligatoires. Le numéro de permis et le numéro de carte nationale doivent contenir au moins 3 caractères.');
+    const firstErr = document.querySelector('.input-error');
+    if (firstErr && firstErr.scrollIntoView) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  return ok;
 }
 
 function renderPayment() {
   if (state.step === 4) saveCustomerForm();
-  const base = calcTotal();
-  const full = (base * 0.95).toFixed(2);
-  const advance = (base * 0.4).toFixed(2);
+  // 3 options de paiement claires. Tout passe via WhatsApp, le paiement réel
+  // est confirmé manuellement avec le client.
+  const PAY_MODES = ['delivery', 'advance', 'full'];
+  if (!PAY_MODES.includes(state.payment)) state.payment = 'delivery';
+  const payName = {
+    delivery: 'Paiement à l\'agence',
+    advance:  'Avance pour confirmer la réservation',
+    full:     'Paiement complet à l\'avance (-5%)',
+  };
+  const payDesc = {
+    delivery: 'Vous réglez la totalité à l\'agence au moment de la prise en charge du véhicule.',
+    advance:  'Vous versez 40% d\'avance pour confirmer la réservation, et 60% à l\'agence à la prise en charge.',
+    full:     'Vous réglez la totalité à l\'avance et bénéficiez de 5% de réduction sur le montant total.',
+  };
   return `
     <div class="step-section">
-      <div class="step-section-title">${t('pay.title')}</div>
+      <div class="step-section-title">Mode de paiement</div>
       <div class="payment-options">
-        <div class="payment-option ${state.payment==='full'?'selected best':''}" data-pay="full">
+        ${PAY_MODES.map(m => `
+        <div class="payment-option ${state.payment===m?'selected':''}" data-pay="${m}">
           <div class="payment-radio"></div>
           <div class="payment-info">
-            <div class="payment-name">${t('pay.full')} <span class="discount-badge">-5%</span></div>
-            <div class="payment-promo">${t('pay.fullPromo')}</div>
-            <div class="payment-desc">${t('pay.fullDesc')}</div>
+            <div class="payment-name">${payName[m]}</div>
+            <div class="payment-desc">${payDesc[m]}</div>
           </div>
-          <div class="payment-amount">${price(parseFloat(full))}</div>
-        </div>
-        <div class="payment-option ${state.payment==='advance'?'selected':''}" data-pay="advance">
-          <div class="payment-radio"></div>
-          <div class="payment-info">
-            <div class="payment-name">${t('pay.adv')}</div>
-            <div class="payment-desc">${t('pay.advDesc')}</div>
-          </div>
-          <div class="payment-amount">${price(parseFloat(advance))}</div>
-        </div>
-        <div class="payment-option ${state.payment==='onsite'?'selected':''}" data-pay="onsite">
-          <div class="payment-radio"></div>
-          <div class="payment-info">
-            <div class="payment-name">${t('pay.onsite')}</div>
-            <div class="payment-desc">${t('pay.onsiteDesc')}</div>
-          </div>
-          <div class="payment-amount">${price(0)}</div>
-        </div>
-      </div>
-    </div>
-    <div class="step-section">
-      <div style="background:var(--gray);border-radius:12px;padding:16px;margin-bottom:14px;">
-        <div class="form-label" style="margin-bottom:8px;">${t('pay.promoLabel')}</div>
-        <div style="display:flex;gap:8px;">
-          <input class="form-input" type="text" placeholder="${t('ph.promo')}" id="promo-input" style="flex:1;" value="${state.promo}">
-          <button onclick="applyPromo()" style="padding:12px 18px;background:var(--dark);color:white;border:none;border-radius:10px;font-weight:700;cursor:pointer;font-family:var(--font);font-size:13px;">${t('pay.apply')}</button>
-        </div>
-        ${state.promoDiscount ? `<div style="color:var(--green);font-size:13px;margin-top:8px;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M20 6 9 17l-5-5"/></svg> ${t('pay.applied',{n:state.promoDiscount})}</div>` : ''}
+        </div>`).join('')}
       </div>
     </div>
     ${renderSummary()}
     <div class="terms-row">
-      <input type="checkbox" class="terms-checkbox" id="terms-cb" ${state.termsAccepted?'checked':''} onchange="state.termsAccepted=this.checked">
+      <input type="checkbox" class="terms-checkbox" id="terms-cb" ${state.termsAccepted?'checked':''} onchange="state.termsAccepted=this.checked; updateConfirmGate();">
       <label class="terms-text" for="terms-cb" style="cursor:pointer;">${t('pay.termsHtml')}</label>
     </div>
     <div style="height:20px;"></div>
@@ -2018,15 +2490,7 @@ function attachPaymentEvents() {
   });
 }
 
-function applyPromo() {
-  const code = document.getElementById('promo-input')?.value.toUpperCase();
-  state.promo = code;
-  if (code === 'STAR10') state.promoDiscount = 10;
-  else if (code === 'STAR15') state.promoDiscount = 15;
-  else if (code === 'WELCOME5') state.promoDiscount = 5;
-  else { state.promoDiscount = 0; alert(t('pay.invalid')); return; }
-  renderStep();
-}
+
 
 function confirmBooking() {
   // Enregistre la réservation dans la base partagée (visible dans l'admin)
@@ -2038,6 +2502,7 @@ function confirmBooking() {
     id: ref,
     client: `${c.firstname || ''} ${c.lastname || ''}`.trim() || 'Client en ligne',
     email: c.email || '',
+    license: c.license || '',
     phone: c.phone ? `${(c.prefix||'').replace(/[^+0-9]/g,'')}${c.phone}` : '',
     car: state.car ? state.car.name : '',
     carId: state.car ? state.car.id : null,
@@ -2052,6 +2517,8 @@ function confirmBooking() {
     source: 'online',
     status: 'pending',
     payment: state.payment,
+    paymentMethod: state.payment,            // agency | delivery | transfer | whatsapp
+    paymentStatus: 'awaiting_payment',       // En attente de paiement
     nationality: c.country || 'N/A',
     protection: state.protection,
     options: state.options.slice(),
@@ -2063,7 +2530,31 @@ function confirmBooking() {
 
 function renderConfirmation() {
   const ref = state.reservationRef || 'ASL' + Math.floor(Math.random()*900000+100000);
-  const waMsg = encodeURIComponent(`Bonjour ALL STAR LOC, j'ai confirmé la réservation ${ref} pour un(e) ${state.car?.name} du ${state.startDate||'...'} au ${state.endDate||'...'}. Pouvez-vous confirmer ?`);
+  const c = state.customer || {};
+  const payLabelFR = {
+    delivery: 'Paiement à l\'agence',
+    advance: 'Avance 40% (60% à l\'agence)',
+    full: 'Paiement complet à l\'avance (-5%)',
+  };
+  // Message destiné à l'agence : toujours en français, avec toutes les informations utiles
+  const _depositVal = (state.car && state.car.deposit) ? (state.car.deposit + ' MAD') : '';
+  const waMsg = encodeURIComponent(
+    `Bonjour ALL STAR LOC,\nJe confirme ma demande de réservation ${ref} :\n` +
+    `• Client : ${(c.firstname||'')} ${(c.lastname||'')}\n` +
+    `• Téléphone : ${(c.prefix||'')} ${(c.phone||'')}\n` +
+    `• Véhicule : ${state.car?.name || ''}\n` +
+    `• Dates : du ${state.startDate||'...'} au ${state.endDate||'...'} (${state.days} jour${state.days>1?'s':''})\n` +
+    `• Prise en charge : ${state.pickupLoc || 'Aéroport Marrakech (RAK)'}\n` +
+    `• Retour : ${state.returnLoc || 'Aéroport Marrakech (RAK)'}\n` +
+    `• Montant estimé : ${Math.round(calcTotal())} MAD\n` +
+    (_depositVal ? `• Caution : ${_depositVal}\n` : '') +
+    `• Assurance : ${state.protection === 'premium' ? 'Premium (rachat franchise, 110 MAD/j)' : 'Tous risques gratuite (franchise 5%)'}\n` +
+    `• N° permis : ${c.license || '-'}\n` +
+    `• N° carte nationale : ${c.cin || '-'}\n` +
+    `• Paiement : ${payLabelFR[state.payment] || payLabelFR.delivery}\n` +
+    ((c.notes && c.notes.trim()) ? `• Détails : ${c.notes.trim()}\n` : '') +
+    `Merci de me confirmer la disponibilité.`);
+  const payKey = { agency:'pay.agency', delivery:'pay.delivery', transfer:'pay.transfer', whatsapp:'pay.wa' };
   return `
     <div class="confirmation">
       <div class="confirm-icon"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;color:#22c55e;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg></div>
@@ -2078,9 +2569,10 @@ function renderConfirmation() {
         <div style="font-size:13px;color:var(--text2);display:grid;gap:6px;">
           <div><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg> <strong>${state.car?.name}</strong></div>
           <div><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg> ${state.days} ${t(state.days>1?'u.days':'u.day')}</div>
-          <div><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg> ${state.pickupLoc || 'Aéroport RAK'}</div>
-          <div><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg> ${t('cf.total')}: <strong>${price(calcTotal())}</strong></div>
-          <div><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg> ${state.payment==='full'?t('cf.payFull'):state.payment==='advance'?t('cf.payAdv'):t('cf.payOnsite')}</div>
+          <div><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg> ${state.pickupLoc || 'Aéroport RAK'} → ${state.returnLoc || 'Aéroport RAK'}</div>
+          ${(()=>{ const _r = dailyRate(state.car, state.days); const _b = activeBracket(state.days); const _tl = normalizeTiers(state.car&&state.car.tiers).length && _b ? ` · ${tierLabel(_b)}` : ""; return `<div style="color:var(--red);font-weight:700;font-size:13.5px;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg> ${t("cf.total")} : <strong>${price(calcTotal())}</strong> <span style="font-size:11px;font-weight:600;opacity:.75;">(${price(_r)}/j${_tl})</span></div>`; })()} 
+          <div><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg> ${t(payKey[state.payment] || 'pay.agency')}</div>
+          <div style="color:#b45309;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="m22 6-3-3"/></svg> ${t('cf.statusLabel')} : <strong>${t('pay.awaiting')}</strong></div>
         </div>
       </div>
       <a href="https://wa.me/212675312453?text=${waMsg}" target="_blank" class="btn-wa-confirm">
@@ -2121,6 +2613,23 @@ window.onLangApplied = function() {
 
 function toggleMobileMenu() {
   document.getElementById('mobile-menu').classList.toggle('open');
+}
+// Fermeture automatique du menu mobile dès qu'un lien est choisi (navigation immédiate)
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('#mobile-menu a').forEach(a => {
+    a.addEventListener('click', () => document.getElementById('mobile-menu').classList.remove('open'));
+  });
+});
+
+// Fluidité : neutralise les animations d'entrée au tout premier défilement
+if (typeof window !== 'undefined' && window.addEventListener) {
+  (function () {
+    function onFirstScroll() {
+      document.body.classList.add('scrolled');
+      window.removeEventListener('scroll', onFirstScroll);
+    }
+    window.addEventListener('scroll', onFirstScroll, { passive: true, once: true });
+  })();
 }
 
 // ==================== INIT ====================

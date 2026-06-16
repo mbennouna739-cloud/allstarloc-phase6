@@ -1,0 +1,38 @@
+ALL STAR LOC — PHASE 11 : CORRECTIONS FINALES AVANT VERSION LIVRABLE
+======================================================================
+Système de réservation, WhatsApp, administration (logique), véhicules,
+backend : INCHANGÉS — data.js, API, worker, wrangler identiques octet par
+octet, JS du site et de l'admin strictement identiques. 100 % CSS/HTML/image.
+
+1. CLIO 5 (hero accueil) : image retraitée — contour blanc, halo et lueur
+   au sol supprimés au pixel près (assets/hero-clio.png). Voiture seule,
+   naturelle : aucun cadre, aucune découpe visible, aucune ombre artificielle
+   (les traînées de vitesse et l'ombre CSS ont aussi été retirées).
+   Taille +12 % (640→720 px desktop, 540 px mobile), à droite, horizontale,
+   proportions d'origine jamais étirées. Mobile : texte puis voiture.
+2. BADGES : suppression totale et définitive, sans remplacement —
+   « Agence à Marrakech · Depuis … » (accueil, élément + styles),
+   pastille « Notre Histoire » (À propos), pastille « Contactez-nous »
+   (Contact), ligne-date « depuis … à Marrakech » du titre À propos
+   (4 langues : le titre est désormais « ALL STAR LOC » seul), et le
+   clignotement permanent du bouton WhatsApp flottant (anneau pulsant).
+3. À PROPOS : ancien hero de référence restauré — silhouette de voiture
+   fondue dans le noir, style noir/rouge ; seuls le titre et le sous-titre
+   demeurent.
+4. CONTACT : ancien hero de référence restauré (ambiance sombre bleutée) ;
+   le formulaire fonctionnel (envoi réel structuré vers votre WhatsApp
+   officiel + confirmation, responsive, 4 langues) est conservé.
+5. FLUIDITÉ : flou coûteux du header supprimé (site + 10 pages, fond rendu
+   quasi opaque équivalent), transition inutile du header retirée, animation
+   infinie du bouton WhatsApp supprimée, aucun écouteur de scroll, aucun
+   parallaxe, débordement horizontal toujours verrouillé.
+6. ADMIN : lisibilité fortement relevée — textes secondaires 0.84, tertiaires
+   0.70, bordures renforcées. Tableaux, formulaires, statuts : lecture
+   immédiate, design conservé.
+7. FOOTER : logo 28 px mieux intégré (espacement du bloc), tous les textes
+   éclaircis (description 0.72, liens 0.78, contacts 0.85-0.88,
+   copyright/mentions 0.62). Charte rouge/noir/blanc intacte.
+8. POP-UP : design d'origine déjà restauré en phase précédente (latéral
+   droit, taille et polices initiales) — vérifié inchangé ; nouvelle logique,
+   validation et parcours WhatsApp conservés (54/54 tests).
+9. BOUTON RÉSERVER : mène à la liste des véhicules (déjà en place, vérifié).

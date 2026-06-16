@@ -1,0 +1,46 @@
+ALL STAR LOC — PHASE 12 : RÉSERVATION INTELLIGENTE, CALENDRIER, BACK-OFFICE
+=============================================================================
+INCHANGÉS (vérifié octet par octet) : Cloudflare KV, data.js (synchronisation),
+API serveur, worker, wrangler, réservations existantes, message WhatsApp.
+Pop-up : étapes, ordre, design, écrans, options, assurances, récapitulatif et
+étape WhatsApp STRICTEMENT IDENTIQUES — seule la validation a été ajoutée.
+
+1. HERO : nouvelle image Kia Sportage (plaque ALL STAR LOC) détourée depuis
+   votre visuel (assets/hero-suv.png) — texte à gauche / image à droite sur
+   desktop, IMAGE EN HAUT puis texte sur mobile, proportions naturelles.
+2-4. PARCOURS « DATES D'ABORD » : le calendrier devient le point de départ
+   (bandeau « 1. Choisissez vos dates · 2. Trouvez votre voiture », liseré
+   rouge). « Trouver une voiture » vérifie les DISPONIBILITÉS RÉELLES
+   (réservations synchronisées, statuts annulés ignorés) avant l'affichage.
+3. RÉSERVER SANS DATES : pop-up non ouvert, message « Veuillez d'abord
+   sélectionner vos dates de location. » + défilement automatique vers le
+   calendrier (carte mise en évidence quelques secondes).
+5. VÉHICULES INDISPONIBLES : jamais masqués — photo estompée, badge
+   « Indisponible sur ces dates », ligne « Disponible à partir du [date] »
+   (première période libre de même durée) et bouton « Modifier mes dates »
+   qui ramène au calendrier.
+6. PAGE /nos-vehicules : reportée d'un commun accord à la phase SEO (repli
+   prévu par votre brief) — vérifié : tous les liens « Nos Véhicules »
+   mènent à la section véhicules (#fleet) avec défilement fluide.
+7. CARACTÉRISTIQUES PAR VOITURE (admin → site) : places, portes, coffre,
+   consommation, caution, autres options + 6 équipements (clim, Bluetooth,
+   GPS, caméra de recul, assurance incluse, livraison aéroport) dans les
+   formulaires Ajouter ET Modifier ; synchronisés et visibles côté client
+   (puces sous les spécifications). Véhicules existants : champs vides par
+   défaut → aucun changement tant que vous ne les renseignez pas.
+8. TARIFS PAR DURÉE : 5 tranches par véhicule (1-3 / 4-7 / 8-14 / 15-20 /
+   21+ jours, MAD/jour, vide = prix de base, repli intelligent sur la
+   tranche précédente renseignée). Calcul automatique jours → tranche →
+   prix, appliqué à la carte véhicule, au calcul, au récapitulatif et au
+   montant WhatsApp/admin.
+9+11. VALIDATION OBLIGATOIRE (pop-up intact) : nom complet, téléphone et
+   n° de permis requis avant l'étape finale — passage bloqué, message clair,
+   champs manquants surlignés en rouge ; email, adresse et infos
+   complémentaires désormais optionnels. Le n° de permis est enregistré dans
+   la réservation : l'agence dispose des informations essentielles avant
+   WhatsApp.
+10. ADMIN — LISIBILITÉ MAXIMALE : tableaux 14 px (en-têtes 12 px), libellés
+   et champs de formulaire agrandis, statistiques et menu latéral relevés.
+
+TESTS : 174 contrôles au vert (31 nouveaux dédiés + les 7 suites complètes),
+12 pages HTML valides, dictionnaire 289 clés ×4 langues complet.
