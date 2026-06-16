@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<script src="auth-guard.js"></script>
+<meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAADyklEQVR4nNVWzWtjVRS/577PpK8dS5x8VIQg1kW7GUQxSA249C+wG6kG3LgUunDbreCmzMKqiKUJxeCU1pq240DttjhNBwoKacKkDZlYycd7M4kvL7n3uHjNe2mapPWjgmfxuO++c3+/c+7v3nMeICK5SaM3iv7fEsiynEgkdF3nnHPOERERnbHz7J65/KrreiKRkGXZZcCOLS8v479k3VDgiGyapqIoiEjp3983zjkAmKbp8XjsGZcAEQFg4FJEgkgAsOM5xLkbyg2Wcz5kAQEglBIAAKCUAriR9ffvmOiMBkVkh8PrDag/Q0muEWxZltfrHR0dHUTQDXXVdiMCIdhqld7/SJ+KND//5ouvvpyempqdnTVN05ZxOMAVBMgYAWg82FO+2+TlmjimPXfrVq1SSaVS29vbAMAY6xeVy+puJee89/zYATJWfPMd8kddirzuf/uthMB2798/ePTIsqz9/X1VVcml7e0vct/wgdLGj7vBh4djn3zcVhTi9Y6MeEVJmp+fPzo6GpKEYy5Br8iIIAhomtWFT8sAzDCsexsk6A8EAmtra5VKhVK6sLBQr9cFQRimhHPlGGPdt5G3Woj49N73FfBlPaHfyHju+ZewUq3peigYJIR4vV5CyOrqKiK2Wq0LazuVBhEHEHCOnLNG4/RONE99uZEXzuSA9dndB3s/7e3uLi4uyrKsaRqldHp62jCM7vJ1LQI7fOPbtTL4jj2hjBIoUR/7+TB/ki/k8+l0GgBEUbQVXllZ6UmiG6ofAefIedt4ejr1xmPqO1YCJ2T88Z0oWtZWKvXD5qZlWZFIhBAiyzKldHJyslqt9tRgB7aPyOdnf2Nr5JdjVGRKqQdg7MP3iCQdptMPDw4kSYrFYoQQSqksy5lMZn19feBx6s3ADl/XC6+8dir6c5I/K90+kf3mrxnOebFQKBQKiJjNZlVVFTsWDofL5TLn3AYZqkGrjYjG1/Ea8WXlQFa8XSLjxXc/4MgRMRaLzc3N2f52EqIo2u1laWnJUeIKkVtnv+dffjXvCeW8E7nRF8/U0LONLftTNBqdmZmxxzs7O4qiaJqmqqqqquFwuFQqXdagT6lg9TqWK0gpIBIChBAh6AdJIojFJ08QcWJiAgDa7XaxWLSX29Xb5/NpmkYuVp1rN5y/Yt1Qbj/gnAuCcP754tXHTv+ym5ITXU+PctpcN8GNZ+Deg2azea77P4NGxGaz6cy4BMlkcngrv47ZCMlkspcTESVJisfjhmEwxhhj/CrrcWGMtdttXdfj8bgkSX2O6Q3Z///n908aGRXA7Gfj9gAAAABJRU5ErkJggg==">
+  <link rel="apple-touch-icon" href="data:image/png;base64,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">
+  <meta name="theme-color" content="#ffffff">
+<title>ALL STAR LOC — Automatisation Contrats & Dossiers</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root {
+    --red:#C41E3A; --dark:#F4F5F7; --dark2:#FFFFFF; --dark3:#FFFFFF;
+    --border:rgba(18,22,30,0.13); --text:#101216; --text2:rgba(16,18,22,0.84);
+    --text3:rgba(16,18,22,0.55); --green:#16A34A; --yellow:#D97706;
+    --font:'Outfit',sans-serif; --font2:'DM Sans',sans-serif;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:var(--font); background:#F4F5F7; color:var(--text); }
+  link[rel=stylesheet] { display:none; }
+
+  /* ===== LAYOUT ===== */
+  .auto-container { max-width:960px; margin:0 auto; padding:24px 16px; }
+  h1 { font-size:22px; font-weight:800; margin-bottom:6px; }
+  .page-sub { color:var(--text2); font-size:14px; margin-bottom:28px; }
+  .section-title { font-size:16px; font-weight:700; margin:28px 0 14px; display:flex; align-items:center; gap:8px; }
+  .section-title svg { color:var(--red); }
+
+  /* ===== CARDS ===== */
+  .auto-card { background:#fff; border-radius:16px; border:1px solid var(--border); padding:20px; margin-bottom:16px; }
+  .auto-card h3 { font-size:14px; font-weight:700; margin-bottom:12px; color:var(--text2); text-transform:uppercase; letter-spacing:.5px; }
+
+  /* ===== FORM ===== */
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+  .form-row.three { grid-template-columns:1fr 1fr 1fr; }
+  .form-row.single { grid-template-columns:1fr; }
+  .form-group label { display:block; font-size:12.5px; font-weight:600; color:var(--text2); margin-bottom:5px; }
+  .form-group label .req { color:var(--red); }
+  .form-input, .form-select, .form-textarea {
+    width:100%; border:1.5px solid rgba(18,22,30,0.15); border-radius:9px;
+    padding:10px 12px; font-size:14px; font-family:var(--font); color:var(--text);
+    background:white; transition:border-color .2s; outline:none;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color:var(--red); }
+  .form-textarea { min-height:80px; resize:vertical; }
+
+  /* ===== BOUTONS ===== */
+  .btn { display:inline-flex; align-items:center; gap:8px; border:none; border-radius:10px;
+    padding:11px 18px; font-family:var(--font); font-size:14px; font-weight:700; cursor:pointer; transition:all .18s; }
+  .btn-primary { background:var(--red); color:white; }
+  .btn-primary:hover { background:#a91830; }
+  .btn-secondary { background:rgba(18,22,30,0.08); color:var(--text); }
+  .btn-secondary:hover { background:rgba(18,22,30,0.14); }
+  .btn-green { background:#16A34A; color:white; }
+  .btn-green:hover { background:#15803d; }
+  .btn-sm { font-size:12px; padding:7px 12px; }
+  .btn-row { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+
+  /* ===== STATUS CHIPS ===== */
+  .chip { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:50px;
+    font-size:11.5px; font-weight:700; }
+  .chip-pending { background:rgba(217,119,6,.12); color:#92400e; }
+  .chip-confirmed { background:rgba(22,163,74,.12); color:#14532d; }
+  .chip-cancelled { background:rgba(18,22,30,.08); color:var(--text3); }
+
+  /* ===== RECHERCHE CLIENT ===== */
+  .client-suggest { position:relative; }
+  .suggest-list { position:absolute; top:100%; left:0; right:0; background:#fff;
+    border:1.5px solid var(--border); border-radius:9px; z-index:100;
+    box-shadow:0 8px 24px rgba(0,0,0,.10); max-height:200px; overflow-y:auto; display:none; }
+  .suggest-item { padding:10px 12px; cursor:pointer; font-size:13.5px; border-bottom:1px solid var(--border); }
+  .suggest-item:last-child { border-bottom:none; }
+  .suggest-item:hover { background:var(--dark); }
+  .suggest-item strong { color:var(--red); }
+
+  /* ===== OCR ===== */
+  .ocr-zone { border:2px dashed rgba(196,30,58,.35); border-radius:12px;
+    padding:28px; text-align:center; background:rgba(196,30,58,.03); cursor:pointer; transition:all .2s; }
+  .ocr-zone:hover { border-color:var(--red); background:rgba(196,30,58,.06); }
+  .ocr-zone input[type=file] { display:none; }
+  .ocr-result { margin-top:14px; padding:14px; background:#f9f9f9; border-radius:10px;
+    border:1px solid var(--border); font-size:13.5px; line-height:1.7; display:none; }
+  .ocr-spinner { display:none; margin:12px auto; width:28px; height:28px;
+    border:3px solid rgba(196,30,58,.2); border-top:3px solid var(--red);
+    border-radius:50%; animation:spin .8s linear infinite; }
+  @keyframes spin { to{transform:rotate(360deg);} }
+
+  /* ===== PDF PREVIEW ===== */
+  .pdf-preview { background:#f5f5f5; border:1px solid var(--border); border-radius:10px;
+    padding:16px; font-size:13px; line-height:1.8; font-family:monospace; display:none; margin-top:12px; }
+
+  /* ===== HISTORY TABLE ===== */
+  .history-table { width:100%; border-collapse:collapse; font-size:13px; }
+  .history-table th { padding:9px 12px; text-align:left; font-size:11px; font-weight:700;
+    text-transform:uppercase; letter-spacing:.5px; color:var(--text3); border-bottom:2px solid var(--border); }
+  .history-table td { padding:9px 12px; border-bottom:1px solid var(--border); }
+  .history-table tr:last-child td { border-bottom:none; }
+  .history-table tr:hover td { background:rgba(18,22,30,.025); }
+
+  /* ===== NOTIFICATION ===== */
+  .notify { position:fixed; bottom:24px; right:24px; background:var(--text); color:#fff;
+    padding:12px 20px; border-radius:12px; font-size:14px; font-weight:600;
+    opacity:0; transform:translateY(10px); transition:all .3s; pointer-events:none; z-index:9999; }
+  .notify.show { opacity:1; transform:none; }
+
+  @media(max-width:600px) { .form-row,.form-row.three { grid-template-columns:1fr; } }
+
+.sb-logo { flex-direction: column !important; align-items: flex-start !important; gap: 3px !important; padding: 10px 12px 8px !important; }
+.sb-logo img { width: 110px !important; height: auto !important; display: block !important; max-width: 100% !important; }
+.sb-logo-tag, .sb-logo > div { display: none !important; }
+.sidebar { transition: width .25s ease; position: relative; }
+.sidebar.collapsed { width: 0 !important; min-width: 0 !important; overflow: hidden !important; border-right: none !important; }
+.sidebar.collapsed > * { opacity: 0; pointer-events: none; }
+.sb-toggle { position: fixed; top: 14px; left: 14px; z-index: 1200; width: 36px; height: 36px; border-radius: 9px; background: #C41E3A; color: #fff; border: none; cursor: pointer; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+.sb-toggle svg { width: 18px; height: 18px; }
+.sb-collapse-btn { position: absolute; top: 12px; right: 10px; z-index: 50; width: 28px; height: 28px; border-radius: 8px; border: none; cursor: pointer; background: rgba(127,127,127,.12); color: var(--text,#fff); display: flex; align-items: center; justify-content: center; }
+body.sb-is-collapsed .sb-toggle { display: flex; }
+</style>
+</head>
+<body>
+<button class="sb-toggle" onclick="toggleSidebar()" title="Afficher le menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="21" y1="6" y2="6"/><line x1="3" x2="21" y1="12" y2="12"/><line x1="3" x2="21" y1="18" y2="18"/></svg></button>
+
+<div class="auto-container">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
+    <img src="data:image/png;base64,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" alt="ASL" style="width:140px;height:auto;display:block;">
+    <div>
+      <h1>Automatisation — Dossiers & Contrats</h1>
+      <p class="page-sub">Une information saisie une fois, réutilisée partout. Retour : <a href="index.html" style="color:var(--red);">Dashboard →</a></p>
+    </div>
+  </div>
+
+  <!-- ============ 1. RECHERCHE / CRÉATION DOSSIER CLIENT ============ -->
+  <div class="section-title">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    Dossier client & réservation rapide
+  </div>
+
+  <div class="auto-card">
+    <h3>Rechercher ou créer un client</h3>
+    <div class="form-row">
+      <div class="form-group client-suggest">
+        <label>Nom complet <span class="req">*</span></label>
+        <input class="form-input" id="c-name" placeholder="Saisir pour chercher ou créer…" oninput="searchClient(this.value)" autocomplete="off">
+        <div class="suggest-list" id="c-suggest"></div>
+      </div>
+      <div class="form-group">
+        <label>Téléphone <span class="req">*</span></label>
+        <input class="form-input" id="c-phone" placeholder="+212 6 XX XX XX XX">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Email</label>
+        <input class="form-input" id="c-email" type="email" placeholder="email@exemple.com">
+      </div>
+      <div class="form-group">
+        <label>Nationalité</label>
+        <input class="form-input" id="c-nat" placeholder="Marocaine, Française…" value="Marocaine">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>N° Permis de conduire <span class="req">*</span></label>
+        <input class="form-input" id="c-license" placeholder="Ex: R12345">
+      </div>
+      <div class="form-group">
+        <label>N° CIN ou Passeport</label>
+        <input class="form-input" id="c-cin" placeholder="Ex: AB123456">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Adresse</label>
+        <input class="form-input" id="c-addr" placeholder="Rue, quartier…">
+      </div>
+      <div class="form-group">
+        <label>Ville</label>
+        <input class="form-input" id="c-city" placeholder="Marrakech">
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary btn-sm" onclick="loadClientFromRes()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+        Importer depuis une réservation
+      </button>
+      <button class="btn btn-primary btn-sm" onclick="saveClient()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13"/><polyline points="7 3 7 8 15 8"/></svg>
+        Sauvegarder le client
+      </button>
+    </div>
+  </div>
+
+  <!-- ============ 2. OCR DOCUMENTS ============ -->
+  <div class="section-title">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 9h6M9 13h4M9 17h2"/></svg>
+    OCR — Lecture automatique des documents
+  </div>
+
+  <div class="auto-card">
+    <h3>Télécharger un document pour extraction automatique</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div>
+        <div class="ocr-zone" onclick="document.getElementById('ocr-file').click()">
+          <input type="file" id="ocr-file" accept="image/*,application/pdf" onchange="runOCR(this)">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(196,30,58,.5)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <p style="font-size:13.5px;font-weight:600;margin-top:8px;color:var(--text2);">Déposer ou cliquer</p>
+          <p style="font-size:12px;color:var(--text3);margin-top:4px;">Permis / CIN / Passeport (image ou PDF)</p>
+        </div>
+        <div class="ocr-spinner" id="ocr-spinner"></div>
+      </div>
+      <div>
+        <div class="ocr-result" id="ocr-result"></div>
+        <div id="ocr-fields" style="display:none;margin-top:12px;">
+          <div class="form-row single"><div class="form-group"><label>Nom extrait</label><input class="form-input" id="ocr-name"></div></div>
+          <div class="form-row"><div class="form-group"><label>N° document</label><input class="form-input" id="ocr-num"></div><div class="form-group"><label>Date naissance</label><input class="form-input" id="ocr-dob"></div></div>
+          <div class="form-row"><div class="form-group"><label>Date délivrance</label><input class="form-input" id="ocr-issued"></div><div class="form-group"><label>Date expiration</label><input class="form-input" id="ocr-expiry"></div></div>
+          <button class="btn btn-green btn-sm" onclick="applyOCRToClient()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+            Appliquer au formulaire client
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 3. RÉSERVATION RAPIDE ============ -->
+  <div class="section-title">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+    Réservation manuelle rapide
+  </div>
+
+  <div class="auto-card">
+    <h3>Nouvelle réservation admin</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Véhicule <span class="req">*</span></label>
+        <select class="form-select" id="r-car" onchange="updateResPrice()">
+          <option value="">— choisir —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Mode de paiement</label>
+        <select class="form-select" id="r-payment">
+          <option value="agency">Paiement à l'agence</option>
+          <option value="delivery">Paiement à la livraison</option>
+          <option value="transfer">Virement</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Date départ <span class="req">*</span></label>
+        <input class="form-input" id="r-start" type="date" onchange="updateResPrice()">
+      </div>
+      <div class="form-group">
+        <label>Heure départ</label>
+        <input class="form-input" id="r-start-time" type="time" value="10:00">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Date retour <span class="req">*</span></label>
+        <input class="form-input" id="r-end" type="date" onchange="updateResPrice()">
+      </div>
+      <div class="form-group">
+        <label>Heure retour</label>
+        <input class="form-input" id="r-end-time" type="time" value="10:00">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Lieu prise en charge</label>
+        <input class="form-input" id="r-pickup" placeholder="Agence, Aéroport RAK…" value="Agence">
+      </div>
+      <div class="form-group">
+        <label>Lieu retour</label>
+        <input class="form-input" id="r-return" placeholder="Agence, Aéroport RAK…" value="Agence">
+      </div>
+    </div>
+    <div id="r-price-display" style="background:rgba(196,30,58,.07);border:1px solid rgba(196,30,58,.2);
+      border-radius:10px;padding:12px 16px;margin-bottom:12px;display:none;">
+      <span id="r-price-label" style="font-size:15px;font-weight:700;color:var(--red);"></span>
+    </div>
+    <div class="form-row single">
+      <div class="form-group"><label>Notes internes</label><textarea class="form-textarea" id="r-notes" placeholder="Observations, demandes spéciales…"></textarea></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="createManualReservation()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13"/><polyline points="7 3 7 8 15 8"/></svg>
+        Créer la réservation
+      </button>
+      <span id="r-created-id" style="align-self:center;font-size:13px;color:var(--green);font-weight:700;"></span>
+    </div>
+  </div>
+
+  <!-- ============ 4. PROLONGATION ============ -->
+  <div class="section-title">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    Prolongation de réservation
+  </div>
+
+  <div class="auto-card">
+    <h3>Étendre une réservation existante</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Réservation à prolonger</label>
+        <select class="form-select" id="ext-res" onchange="loadExtension()">
+          <option value="">— choisir —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Nouvelle date de retour <span class="req">*</span></label>
+        <input class="form-input" id="ext-end" type="date" onchange="calcExtensionCost()">
+      </div>
+    </div>
+    <div id="ext-info" style="display:none;" class="pdf-preview"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="applyExtension()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        Appliquer la prolongation
+      </button>
+    </div>
+  </div>
+
+  <!-- ============ 5. GÉNÉRATION CONTRATS PDF ============ -->
+  <div class="section-title">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+    Génération automatique des contrats PDF
+  </div>
+
+  <div class="auto-card">
+    <h3>Choisir la réservation à contractualiser</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Réservation</label>
+        <select class="form-select" id="pdf-res" onchange="loadPdfPreview()">
+          <option value="">— choisir —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Type de document</label>
+        <select class="form-select" id="pdf-type">
+          <option value="contrat">Contrat ALL STAR LOC</option>
+          <option value="dpli">Déclaration préalable (DPLI)</option>
+          <option value="both">Les deux</option>
+        </select>
+      </div>
+    </div>
+    <div id="pdf-preview-box" class="pdf-preview"></div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="generatePDF()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+        Télécharger le PDF
+      </button>
+      <button class="btn btn-secondary" onclick="printDoc()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+        Imprimer
+      </button>
+    </div>
+  </div>
+
+  <!-- ============ 6. HISTORIQUE CLIENT ============ -->
+  <div class="section-title">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+    Historique & dossier complet
+  </div>
+
+  <div class="auto-card">
+    <h3>Sélectionner un client pour voir son historique</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Client</label>
+        <select class="form-select" id="hist-client" onchange="renderHistory()">
+          <option value="">— choisir —</option>
+        </select>
+      </div>
+      <div class="form-group" style="align-self:flex-end;">
+        <button class="btn btn-secondary" onclick="exportClientHistory()" style="width:100%;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+          Exporter en PDF
+        </button>
+      </div>
+    </div>
+    <div id="hist-summary" style="display:none;padding:14px;background:rgba(196,30,58,.05);border-radius:10px;margin-bottom:14px;border:1px solid rgba(196,30,58,.15);">
+      <div id="hist-summary-content" style="font-size:13.5px;line-height:1.8;"></div>
+    </div>
+    <div id="hist-table-wrap" style="overflow-x:auto;display:none;">
+      <table class="history-table" id="hist-table">
+        <thead><tr><th>Réf.</th><th>Véhicule</th><th>Dates</th><th>Jours</th><th>Montant</th><th>Statut</th><th>Actions</th></tr></thead>
+        <tbody id="hist-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- NOTIFICATION TOAST -->
+<div class="notify" id="notify"></div>
+
+<!-- ============================================================
+     ZONE D'IMPRESSION PDF (invisible) 
+     ============================================================ -->
+<div id="print-zone" style="display:none;"></div>
+
+<script>
+// ================================================================
+// ACCÈS AUX DONNÉES (partage avec data.js du site principal)
+// ================================================================
+// On charge data.js via iframe/localStorage pour accéder aux mêmes données KV
+// que l'admin principal. La clé de stockage est 'asl_fleet', 'asl_reservations'.
+const STORE_FLEET = 'asl_fleet';
+const STORE_RES   = 'asl_reservations';
+const STORE_CLIENTS = 'asl_clients_v2';  // nouveau store pour les fiches clients enrichies
+
+function getFleet()  { try { return JSON.parse(localStorage.getItem(STORE_FLEET)||'[]'); } catch(e){ return []; } }
+function getRes()    { try { return JSON.parse(localStorage.getItem(STORE_RES)||'[]'); } catch(e){ return []; } }
+function getClients(){ try { return JSON.parse(localStorage.getItem(STORE_CLIENTS)||'{}'); } catch(e){ return {}; } }
+function saveClients(c){ localStorage.setItem(STORE_CLIENTS, JSON.stringify(c)); }
+
+// Normaliser le numéro de téléphone comme clé client
+function normPhone(p){ return (p||'').replace(/[^0-9+]/g,''); }
+
+// ================================================================
+// INIT
+// ================================================================
+window.addEventListener('DOMContentLoaded', () => {
+  populateFleetSelect('r-car');
+  populateResSelect('pdf-res');
+  populateResSelect('ext-res');
+  populateClientSelect('hist-client');
+  
+  // Dates par défaut : aujourd'hui et demain
+  const today = new Date();
+  const tomorrow = new Date(today.getTime() + 86400000);
+  document.getElementById('r-start').value = today.toISOString().slice(0,10);
+  document.getElementById('r-end').value = tomorrow.toISOString().slice(0,10);
+});
+
+function populateFleetSelect(id) {
+  const sel = document.getElementById(id);
+  sel.innerHTML = '<option value="">— choisir —</option>';
+  getFleet().filter(c => c.status === 'available' || c.status === 'reserved')
+    .forEach(c => { const o = document.createElement('option'); o.value = c.id; o.textContent = `${c.name} (${c.plate||''})`; sel.appendChild(o); });
+}
+
+function populateResSelect(id) {
+  const sel = document.getElementById(id);
+  sel.innerHTML = '<option value="">— choisir —</option>';
+  getRes().sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||'')).forEach(r => {
+    const o = document.createElement('option');
+    o.value = r.id;
+    o.textContent = `${r.id} — ${r.client} — ${r.car} (${r.startDate}→${r.endDate})`;
+    sel.appendChild(o);
+  });
+}
+
+function populateClientSelect(id) {
+  const sel = document.getElementById(id);
+  sel.innerHTML = '<option value="">— choisir —</option>';
+  const clients = getClients();
+  // Aussi construire depuis les réservations
+  const fromRes = {};
+  getRes().forEach(r => {
+    const key = normPhone(r.phone) || r.email || r.client;
+    if (!fromRes[key]) fromRes[key] = { name: r.client, phone: r.phone, email: r.email };
+  });
+  const all = { ...fromRes, ...clients };
+  Object.entries(all).forEach(([k,c]) => {
+    const o = document.createElement('option'); o.value = k;
+    o.textContent = `${c.name||k} — ${c.phone||''}`;
+    sel.appendChild(o);
+  });
+}
+
+// ================================================================
+// A. RECHERCHE CLIENT (auto-complétion depuis réservations passées)
+// ================================================================
+function searchClient(val) {
+  const box = document.getElementById('c-suggest');
+  if (!val || val.length < 2) { box.style.display = 'none'; return; }
+  const q = val.toLowerCase();
+  const clients = getClients();
+  const fromRes = {};
+  getRes().forEach(r => {
+    const key = normPhone(r.phone) || r.email || r.client;
+    if (!fromRes[key]) fromRes[key] = { name:r.client, phone:r.phone, email:r.email,
+      license:r.license||'', cin:r.cin||'', addr:r.address||'', city:'' };
+  });
+  const all = { ...fromRes, ...clients };
+  const matches = Object.values(all).filter(c =>
+    (c.name||'').toLowerCase().includes(q) || (c.phone||'').includes(q) || (c.email||'').toLowerCase().includes(q));
+  if (!matches.length) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  box.innerHTML = matches.slice(0,6).map(c =>
+    `<div class="suggest-item" onclick="fillClientForm(${JSON.stringify(c).replace(/"/g,'&quot;')})">
+      <strong>${c.name||''}</strong> <span style="color:var(--text3);font-size:12px;">${c.phone||''} ${c.email?'· '+c.email:''}</span>
+    </div>`).join('');
+}
+
+function fillClientForm(c) {
+  document.getElementById('c-name').value    = c.name    || '';
+  document.getElementById('c-phone').value   = c.phone   || '';
+  document.getElementById('c-email').value   = c.email   || '';
+  document.getElementById('c-nat').value     = c.nationality || c.nat || 'Marocaine';
+  document.getElementById('c-license').value = c.license || '';
+  document.getElementById('c-cin').value     = c.cin     || '';
+  document.getElementById('c-addr').value    = c.addr    || c.address || '';
+  document.getElementById('c-city').value    = c.city    || '';
+  document.getElementById('c-suggest').style.display = 'none';
+  notify('Client chargé — vérifiez et complétez si nécessaire.', 'green');
+}
+
+function loadClientFromRes() {
+  const id = prompt('Entrez l\'identifiant de réservation (ex: ASL123456) :');
+  if (!id) return;
+  const r = getRes().find(x => x.id === id);
+  if (!r) { notify('Réservation introuvable.', 'red'); return; }
+  fillClientForm({ name: r.client, phone: r.phone, email: r.email,
+    license: r.license||'', cin: r.cin||'', addr: r.address||'', city: '', nationality: r.nationality||'' });
+}
+
+function saveClient() {
+  const name = document.getElementById('c-name').value.trim();
+  const phone = document.getElementById('c-phone').value.trim();
+  if (!name || !phone) { notify('Nom et téléphone obligatoires.', 'red'); return; }
+  const key = normPhone(phone) || name;
+  const clients = getClients();
+  clients[key] = {
+    name, phone,
+    email:    document.getElementById('c-email').value.trim(),
+    nationality: document.getElementById('c-nat').value.trim(),
+    license:  document.getElementById('c-license').value.trim(),
+    cin:      document.getElementById('c-cin').value.trim(),
+    addr:     document.getElementById('c-addr').value.trim(),
+    city:     document.getElementById('c-city').value.trim(),
+    updatedAt: new Date().toISOString(),
+  };
+  saveClients(clients);
+  populateClientSelect('hist-client');
+  notify(`Client "${name}" enregistré.`, 'green');
+}
+
+// ================================================================
+// B. OCR — Lecture document via API Claude (claude-sonnet-4-6)
+// ================================================================
+async function runOCR(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const spinner = document.getElementById('ocr-spinner');
+  const result  = document.getElementById('ocr-result');
+  const fields  = document.getElementById('ocr-fields');
+  spinner.style.display = 'block';
+  result.style.display  = 'none';
+  fields.style.display  = 'none';
+
+  // Convertir en base64
+  const b64 = await new Promise(res => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.readAsDataURL(file);
+  });
+  const mt = file.type || 'image/jpeg';
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-6', max_tokens:400,
+        messages:[{ role:'user', content:[
+          { type:'image', source:{ type:'base64', media_type: mt.startsWith('image') ? mt : 'image/jpeg', data: b64 } },
+          { type:'text', text:`Analyse ce document d'identité (CIN marocaine, passeport ou permis de conduire).
+Extrais uniquement les informations suivantes sous forme JSON strict (sans markdown, sans explication) :
+{"nom":"","prenom":"","numero_document":"","date_naissance":"","date_delivrance":"","date_expiration":"","type_document":""}
+Si une information est absente, mets "". Dates au format DD/MM/YYYY.` }
+        ]}]
+      })
+    });
+    const data = await resp.json();
+    const text = (data.content||[]).map(x=>x.text||'').join('');
+    let parsed = {};
+    try { parsed = JSON.parse(text.replace(/```json|```/g,'').trim()); } catch(e) {}
+
+    result.style.display = 'block';
+    result.innerHTML = `<strong style="color:var(--green);">✓ Document analysé</strong><br>
+      <span style="color:var(--text3);font-size:12px;">Type : ${parsed.type_document||'—'}</span>`;
+    fields.style.display = 'block';
+    document.getElementById('ocr-name').value    = [parsed.prenom, parsed.nom].filter(Boolean).join(' ');
+    document.getElementById('ocr-num').value     = parsed.numero_document || '';
+    document.getElementById('ocr-dob').value     = parsed.date_naissance  || '';
+    document.getElementById('ocr-issued').value  = parsed.date_delivrance || '';
+    document.getElementById('ocr-expiry').value  = parsed.date_expiration || '';
+  } catch(e) {
+    result.style.display = 'block';
+    result.innerHTML = `<span style="color:var(--red);">Erreur d'extraction. Vérifiez la qualité de l'image.</span>`;
+  }
+  spinner.style.display = 'none';
+  input.value = '';
+}
+
+function applyOCRToClient() {
+  const name = document.getElementById('ocr-name').value.trim();
+  const num  = document.getElementById('ocr-num').value.trim();
+  if (name) document.getElementById('c-name').value = name;
+  // Tenter de détecter si c'est un permis (met dans c-license) ou CIN (c-cin)
+  if (num) {
+    const isPermis = /^[A-Z]\d{5,}/.test(num) || num.length > 8;
+    if (isPermis) document.getElementById('c-license').value = num;
+    else document.getElementById('c-cin').value = num;
+  }
+  notify('Données OCR appliquées — vérifiez avant de sauvegarder.', 'green');
+}
+
+// ================================================================
+// C. RÉSERVATION MANUELLE RAPIDE
+// ================================================================
+function updateResPrice() {
+  const carId = document.getElementById('r-car').value;
+  const start = document.getElementById('r-start').value;
+  const end   = document.getElementById('r-end').value;
+  const box   = document.getElementById('r-price-display');
+  const lbl   = document.getElementById('r-price-label');
+  if (!carId || !start || !end) { box.style.display = 'none'; return; }
+  const days = Math.max(1, Math.round((new Date(end) - new Date(start)) / 86400000));
+  const car = getFleet().find(c => String(c.id) === carId);
+  if (!car) { box.style.display = 'none'; return; }
+  // Calcul tarif (même logique que le site client)
+  const price = car.priceMAD || Math.round((car.priceEUR||0) * 10.8);
+  const total = price * days;
+  box.style.display = 'block';
+  lbl.textContent = `${days} jour${days>1?'s':''} × ${price} MAD/j = ${total} MAD`;
+}
+
+async function createManualReservation() {
+  const carId = document.getElementById('r-car').value;
+  const start = document.getElementById('r-start').value;
+  const end   = document.getElementById('r-end').value;
+  const name  = document.getElementById('c-name').value.trim();
+  const phone = document.getElementById('c-phone').value.trim();
+  if (!carId || !start || !end || !name || !phone) {
+    notify('Complétez les champs obligatoires (client + véhicule + dates).', 'red'); return;
+  }
+  const days = Math.max(1, Math.round((new Date(end) - new Date(start)) / 86400000));
+  const car  = getFleet().find(c => String(c.id) === carId);
+  const price = (car?.priceMAD || Math.round((car?.priceEUR||0) * 10.8));
+  const id   = 'ASL' + Date.now().toString().slice(-6);
+  const res  = {
+    id, client: name, phone, email: document.getElementById('c-email').value.trim(),
+    nationality: document.getElementById('c-nat').value.trim(),
+    license: document.getElementById('c-license').value.trim(),
+    cin: document.getElementById('c-cin').value.trim(),
+    address: document.getElementById('c-addr').value.trim(),
+    car: car?.name || '', carId: car?.id,
+    startDate: start, endDate: end,
+    startTime: document.getElementById('r-start-time').value,
+    endTime: document.getElementById('r-end-time').value,
+    pickup: document.getElementById('r-pickup').value,
+    returnLoc: document.getElementById('r-return').value,
+    days, amount: price * days,
+    payment: document.getElementById('r-payment').value,
+    status: 'pending', source: 'admin-manual',
+    notes: document.getElementById('r-notes').value.trim(),
+    createdAt: new Date().toISOString(),
+  };
+
+  // Sauvegarder dans localStorage (le KV sync le récupèrera)
+  const list = getRes();
+  list.push(res);
+  localStorage.setItem(STORE_RES, JSON.stringify(list));
+
+  // Sauvegarder le client automatiquement
+  const clients = getClients();
+  const key = normPhone(phone) || name;
+  clients[key] = { name, phone, email: res.email, nationality: res.nationality,
+    license: res.license, cin: res.cin, addr: res.address, updatedAt: new Date().toISOString() };
+  saveClients(clients);
+
+  document.getElementById('r-created-id').textContent = `✓ Réservation ${id} créée`;
+  populateResSelect('pdf-res');
+  populateResSelect('ext-res');
+  populateClientSelect('hist-client');
+  notify(`Réservation ${id} créée et données client sauvegardées.`, 'green');
+}
+
+// ================================================================
+// D. PROLONGATION
+// ================================================================
+function loadExtension() {
+  const id = document.getElementById('ext-res').value;
+  const r = getRes().find(x => x.id === id);
+  const box = document.getElementById('ext-info');
+  if (!r) { box.style.display = 'none'; return; }
+  document.getElementById('ext-end').value = r.endDate;
+  box.style.display = 'block';
+  box.innerHTML = `<strong>${r.client}</strong> — ${r.car}<br>
+    Période actuelle : <strong>${r.startDate} → ${r.endDate}</strong> (${r.days} jours)<br>
+    Montant actuel : <strong>${r.amount} MAD</strong>`;
+}
+
+function calcExtensionCost() {
+  const id     = document.getElementById('ext-res').value;
+  const newEnd = document.getElementById('ext-end').value;
+  const r = getRes().find(x => x.id === id);
+  const box = document.getElementById('ext-info');
+  if (!r || !newEnd) return;
+  const newDays = Math.max(1, Math.round((new Date(newEnd) - new Date(r.startDate)) / 86400000));
+  const car = getFleet().find(c => String(c.id) === String(r.carId)) || {};
+  const ppu = car.priceMAD || Math.round((car.priceEUR||0)*10.8) || Math.round(r.amount/r.days);
+  const extraDays = newDays - r.days;
+  const extraCost = extraDays * ppu;
+  box.style.display = 'block';
+  box.innerHTML = `<strong>${r.client}</strong> — ${r.car}<br>
+    Ancienne fin : <strong>${r.endDate}</strong> | Nouvelle fin : <strong>${newEnd}</strong><br>
+    Jours supplémentaires : <strong>${extraDays > 0 ? '+'+extraDays : extraDays}</strong> × ${ppu} MAD/j<br>
+    <span style="color:var(--red);font-weight:700;">Supplément : ${extraCost} MAD | Nouveau total : ${r.amount + extraCost} MAD</span>`;
+}
+
+function applyExtension() {
+  const id     = document.getElementById('ext-res').value;
+  const newEnd = document.getElementById('ext-end').value;
+  if (!id || !newEnd) { notify('Sélectionnez une réservation et une date.', 'red'); return; }
+  const list = getRes();
+  const r = list.find(x => x.id === id);
+  if (!r) { notify('Réservation introuvable.', 'red'); return; }
+  const newDays = Math.max(1, Math.round((new Date(newEnd) - new Date(r.startDate)) / 86400000));
+  const car = getFleet().find(c => String(c.id) === String(r.carId)) || {};
+  const ppu = car.priceMAD || Math.round((car.priceEUR||0)*10.8) || Math.round(r.amount/r.days);
+  r.endDate = newEnd;
+  r.days = newDays;
+  r.amount = ppu * newDays;
+  r.extendedAt = new Date().toISOString();
+  localStorage.setItem(STORE_RES, JSON.stringify(list));
+  notify(`Prolongation enregistrée — nouveau total : ${r.amount} MAD.`, 'green');
+  loadExtension();
+}
+
+// ================================================================
+// E. GÉNÉRATION PDF
+// ================================================================
+function loadPdfPreview() {
+  const id = document.getElementById('pdf-res').value;
+  const r = getRes().find(x => x.id === id);
+  const box = document.getElementById('pdf-preview-box');
+  if (!r) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  box.innerHTML = `<strong>Réservation ${r.id}</strong>
+Client : ${r.client} | Tél : ${r.phone}
+Email : ${r.email||'—'} | Permis : ${r.license||'—'}
+CIN/Passeport : ${r.cin||'—'} | Nationalité : ${r.nationality||'—'}
+Véhicule : ${r.car} | ${r.startDate} → ${r.endDate} (${r.days}j)
+Montant : ${r.amount} MAD | Prise en charge : ${r.pickup||'Agence'}`;
+}
+
+function generatePDF() {
+  const id   = document.getElementById('pdf-res').value;
+  const type = document.getElementById('pdf-type').value;
+  const r    = getRes().find(x => x.id === id);
+  if (!r) { notify('Sélectionnez une réservation.', 'red'); return; }
+  const car  = getFleet().find(c => String(c.id) === String(r.carId)) || {};
+  if (type === 'contrat' || type === 'both') generateContratPDF(r, car);
+  if (type === 'dpli'    || type === 'both') generateDPLIPDF(r, car);
+}
+
+function generateContratPDF(r, car) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  const W = 210, m = 14;
+
+  // En-tête
+  doc.setFillColor(196, 30, 58);
+  doc.rect(m, m, 60, 14, 'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(11); doc.setFont('helvetica','bold');
+  doc.text('ALL STAR LOC', m+3, m+6);
+  doc.setFontSize(8); doc.setFont('helvetica','normal');
+  doc.text('Location de Voiture', m+3, m+11);
+
+  doc.setTextColor(30,30,30);
+  doc.setFontSize(16); doc.setFont('helvetica','bold');
+  doc.text('CONTRAT', W/2, m+8, { align:'center' });
+  doc.setFontSize(9); doc.setFont('helvetica','normal');
+  doc.text(`N° ${r.id}`, W/2, m+14, { align:'center' });
+
+  doc.setFontSize(8);
+  doc.text('GSM: 06 75 31 24 53', W-m, m+6, { align:'right' });
+  doc.text('Tél/Fax: 05 24 43 62 86', W-m, m+11, { align:'right' });
+
+  // Ligne séparatrice
+  doc.setDrawColor(196,30,58); doc.setLineWidth(0.5);
+  doc.line(m, m+17, W-m, m+17);
+
+  // Section conducteur
+  let y = m + 22;
+  const section = (title, yy) => {
+    doc.setFillColor(240,242,245);
+    doc.rect(m, yy, W-m*2, 7, 'F');
+    doc.setTextColor(30,30,30); doc.setFontSize(10); doc.setFont('helvetica','bold');
+    doc.text(title, m+3, yy+5);
+    doc.setFont('helvetica','normal'); doc.setFontSize(9);
+    return yy + 10;
+  };
+  const field = (label, value, yy, col=0) => {
+    const x = col ? W/2 + 2 : m;
+    const wmax = col ? (W-m-W/2-2) : (W/2 - m - 4);
+    doc.setTextColor(100,100,100); doc.text(label+':', x, yy);
+    doc.setTextColor(30,30,30); doc.setFont('helvetica','bold');
+    doc.text(String(value||''), x+38, yy);
+    doc.setFont('helvetica','normal');
+    doc.setDrawColor(200,200,200); doc.setLineWidth(0.2);
+    doc.line(x, yy+1, x+wmax, yy+1);
+  };
+
+  y = section('1er Conducteur', y);
+  field('Nom', r.client, y); field('Prénom', '', y, 1); y += 8;
+  field('Adresse', r.address||'—', y); y += 8;
+  field('GSM', r.phone, y); y += 8;
+  field('Permis N°', r.license||'—', y); field('Valable au', '', y, 1); y += 8;
+  field('CIN / Passeport', r.cin||'—', y); y += 8;
+
+  y += 4;
+  y = section('Véhicule & Conditions', y);
+  field('Marque/Modèle', r.car, y); field('N° Immatr.', car.plate||'—', y, 1); y += 8;
+  field('Lieu livraison', r.pickup||'Agence', y); field('Date', r.startDate, y, 1); y += 8;
+  field('Lieu reprise', r.returnLoc||r.pickup||'Agence', y); field('Date', r.endDate, y, 1); y += 8;
+  field('Nombre de jours', String(r.days), y); field('Prix/j', Math.round(r.amount/r.days)+' MAD', y, 1); y += 8;
+  field('Mode de paiement', r.payment||'—', y); field('Forfait/S', '—', y, 1); y += 8;
+  field('Niveau carburant', '—', y); field('Kilométrage', '—', y, 1); y += 8;
+
+  y += 4;
+  y = section('Situation du véhicule — Extérieur / Intérieur', y);
+  y += 16; // espace pour le schéma véhicule (rempli manuellement)
+
+  y += 4;
+  y = section('Total & Règlement', y);
+  doc.setFontSize(12); doc.setFont('helvetica','bold'); doc.setTextColor(196,30,58);
+  doc.text(`Total général : ${r.amount} MAD`, m+3, y+5);
+  doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(80,80,80);
+  doc.text(`Mode de règlement : ${r.payment||'—'}`, m+3, y+12); y += 20;
+
+  // Signatures
+  doc.setDrawColor(100,100,100); doc.setLineWidth(0.3);
+  doc.line(m, y, m+60, y);
+  doc.line(W-m-60, y, W-m, y);
+  doc.setFontSize(8); doc.setTextColor(80,80,80);
+  doc.text('Signature et cachet de l\'agence', m, y+4);
+  doc.text('Signature du client', W-m-60, y+4);
+
+  // Pied de page
+  doc.setFontSize(7); doc.setTextColor(130,130,130);
+  doc.text('29 Rue Yougoslavie, Guéliz, Marrakech — RC: 38035 — ICE: 000519200000040', W/2, 290, { align:'center' });
+
+  doc.save(`Contrat_${r.id}_${r.client.replace(/\s+/g,'_')}.pdf`);
+  notify('Contrat PDF généré.', 'green');
+}
+
+function generateDPLIPDF(r, car) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  const W = 210, m = 14;
+
+  // En-tête bilingue (fidèle au document officiel DPLI)
+  doc.setFontSize(11); doc.setFont('helvetica','bold'); doc.setTextColor(30,30,30);
+  doc.text('ROYAUME DU MAROC', m, 20);
+  doc.setFontSize(8); doc.setFont('helvetica','normal');
+  doc.text('Ministère de l\'Équipement, du Transport et de la Logistique', m, 26);
+  doc.text('Réf.: DPLI', m, 32);
+
+  doc.setFontSize(11); doc.setFont('helvetica','bold');
+  doc.text('المملكة المغربية', W-m, 20, { align:'right' });
+  doc.setFontSize(8); doc.setFont('helvetica','normal');
+  doc.text('وزارة التجهيز والنقل واللوجستيك', W-m, 26, { align:'right' });
+
+  doc.setDrawColor(30,30,100); doc.setLineWidth(0.4);
+  doc.line(m, 36, W-m, 36);
+
+  doc.setFontSize(13); doc.setFont('helvetica','bold'); doc.setTextColor(30,30,100);
+  doc.text('Déclaration préalable de location de voiture sans chauffeur', W/2, 43, { align:'center' });
+  doc.setFontSize(9); doc.setFont('helvetica','italic'); doc.setTextColor(80,80,80);
+  doc.text('(à renseigner par le locataire résidant au Maroc)', W/2, 49, { align:'center' });
+
+  doc.setTextColor(30,30,30); doc.setFont('helvetica','normal');
+
+  // Tableau des informations client
+  let y = 56;
+  const row = (fr, ar, val, yy) => {
+    doc.setFillColor(248,249,250); doc.rect(m, yy, W-m*2, 8, 'F');
+    doc.setDrawColor(200,200,200); doc.setLineWidth(0.2);
+    doc.rect(m, yy, W-m*2, 8, 'S');
+    doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(60,60,60);
+    doc.text(fr, m+2, yy+5.5);
+    doc.setFont('helvetica','normal'); doc.setTextColor(30,30,100);
+    doc.text(String(val||''), m+50, yy+5.5);
+    return yy + 8;
+  };
+  y = row('Nom', 'الاسم العائلي', r.client, y);
+  y = row('N° du permis de conduire', 'رقم رخصة السياقة', r.license||'', y);
+  y = row('N° de la C.I.N / carte de séjour', 'رقم البطاقة الوطنية', r.cin||'', y);
+  y = row('Adresse', 'العنوان', r.address||'', y);
+  y = row('N° de GSM', 'الهاتف النقال', r.phone||'', y);
+  y = row('Adresse mail', 'العنوان الالكتروني', r.email||'', y);
+
+  y += 4;
+  doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.setTextColor(30,30,30);
+  doc.text('Déclare avoir pris en location le véhicule :', m, y);
+  y += 8;
+  y = row('Marque / Immatriculation', '', `${r.car} — ${car.plate||'—'}`, y);
+  y = row('Appartenant à l\'agence', '', 'ALL STAR LOC — 29 Rue Yougoslavie, Guéliz, Marrakech', y);
+
+  y += 4;
+  doc.setFontSize(9); doc.setFont('helvetica','bold');
+  doc.text('Pour la période allant du :', m, y); y += 8;
+  y = row('Jour d\'emprunt (JJ/MM/AAAA)', '', r.startDate ? new Date(r.startDate).toLocaleDateString('fr-FR') : '', y);
+  y = row('Heure d\'emprunt (HH:MM)', '', r.startTime||'10:00', y);
+  y = row('Jour de restitution (JJ/MM/AAAA)', '', r.endDate ? new Date(r.endDate).toLocaleDateString('fr-FR') : '', y);
+  y = row('Heure de restitution (HH:MM)', '', r.endTime||'10:00', y);
+
+  y += 10;
+  doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(80,80,80);
+  doc.text(`Fait à : Marrakech`, m, y);
+  doc.text(`Le : ${new Date().toLocaleDateString('fr-FR')}`, m+80, y);
+  y += 16;
+  doc.setDrawColor(100,100,100); doc.setLineWidth(0.3);
+  doc.line(m, y, m+70, y);
+  doc.line(W-m-70, y, W-m, y);
+  doc.setFontSize(7);
+  doc.text('Signature et cachet de l\'agence de location', m, y+4);
+  doc.text('Signature du locataire', W-m-70, y+4);
+
+  doc.save(`DPLI_${r.id}_${r.client.replace(/\s+/g,'_')}.pdf`);
+  notify('Déclaration préalable (DPLI) générée.', 'green');
+}
+
+function printDoc() {
+  const id = document.getElementById('pdf-res').value;
+  const r = getRes().find(x => x.id === id);
+  if (!r) { notify('Sélectionnez une réservation.', 'red'); return; }
+  // Ouvrir dans un nouvel onglet pour impression directe
+  const w = window.open('', '_blank');
+  w.document.write(`<html><head><title>Contrat ${r.id}</title>
+    <style>body{font-family:Arial,sans-serif;font-size:12px;padding:20px;}
+    table{width:100%;border-collapse:collapse;}td,th{border:1px solid #ccc;padding:6px;}
+    h2{color:#C41E3A;}</style></head><body>
+    <h2>ALL STAR LOC — Contrat N° ${r.id}</h2>
+    <table><tr><th>Client</th><td>${r.client}</td><th>Téléphone</th><td>${r.phone}</td></tr>
+    <tr><th>Véhicule</th><td>${r.car}</td><th>Plaque</th><td>—</td></tr>
+    <tr><th>Départ</th><td>${r.startDate} ${r.startTime||''}</td><th>Retour</th><td>${r.endDate} ${r.endTime||''}</td></tr>
+    <tr><th>Jours</th><td>${r.days}</td><th>Montant Total</th><td><strong>${r.amount} MAD</strong></td></tr>
+    <tr><th>Permis</th><td>${r.license||'—'}</td><th>CIN/Passeport</th><td>${r.cin||'—'}</td></tr>
+    </table>
+    <br><p>Signature agence : ____________________</p>
+    <p>Signature client : ____________________</p>
+    <p style="font-size:10px;color:#888;margin-top:40px;">29 Rue Yougoslavie, Guéliz, Marrakech | GSM: 06 75 31 24 53</p>
+    </body></html>`);
+  w.document.close(); w.print();
+}
+
+// ================================================================
+// F. HISTORIQUE CLIENT
+// ================================================================
+function renderHistory() {
+  const key  = document.getElementById('hist-client').value;
+  const wrap = document.getElementById('hist-table-wrap');
+  const sum  = document.getElementById('hist-summary');
+  if (!key) { wrap.style.display = 'none'; sum.style.display = 'none'; return; }
+  
+  const clients = getClients();
+  const client  = clients[key] || {};
+  const all = getRes();
+  
+  // Trouver les réservations de ce client (par nom ou téléphone)
+  const resas = all.filter(r =>
+    normPhone(r.phone) === key || r.email === key || r.client === key ||
+    normPhone(r.phone) === normPhone(client.phone||'') ||
+    (client.name && r.client === client.name));
+
+  const total = resas.reduce((s,r) => s + (r.amount||0), 0);
+  const confirmed = resas.filter(r=>r.status==='confirmed').length;
+
+  // Résumé
+  sum.style.display = 'block';
+  document.getElementById('hist-summary-content').innerHTML =
+    `<strong>${client.name || key}</strong> — ${client.phone||''} — ${client.email||''}<br>
+    Permis : ${client.license||'—'} | CIN : ${client.cin||'—'}<br>
+    <strong>${resas.length} réservation(s)</strong> dont ${confirmed} confirmée(s) | Total dépensé : <strong>${total} MAD</strong>`;
+
+  // Tableau
+  wrap.style.display = 'block';
+  document.getElementById('hist-tbody').innerHTML = resas.length ? resas
+    .sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''))
+    .map(r => `<tr>
+      <td><strong>${r.id}</strong></td>
+      <td>${r.car}</td>
+      <td>${r.startDate} → ${r.endDate}</td>
+      <td>${r.days}j</td>
+      <td><strong>${r.amount} MAD</strong></td>
+      <td><span class="chip chip-${r.status}">${r.status==='confirmed'?'Confirmée':r.status==='pending'?'En attente':'Annulée'}</span></td>
+      <td>
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('pdf-res').value='${r.id}';loadPdfPreview();document.getElementById('pdf-type').value='both';document.querySelector('.section-title:nth-child(9)').scrollIntoView({behavior:'smooth'})">PDF</button>
+      </td>
+    </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;color:var(--text3);padding:20px;">Aucune réservation trouvée.</td></tr>';
+}
+
+function exportClientHistory() {
+  const key = document.getElementById('hist-client').value;
+  if (!key) { notify('Sélectionnez un client.', 'red'); return; }
+  const clients = getClients();
+  const client  = clients[key] || {};
+  const resas   = getRes().filter(r =>
+    normPhone(r.phone) === key || r.email === key || r.client === key ||
+    normPhone(r.phone) === normPhone(client.phone||'') ||
+    (client.name && r.client === client.name));
+  const total = resas.reduce((s,r) => s + (r.amount||0), 0);
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  const W = 210, m = 14;
+
+  doc.setFillColor(196,30,58); doc.rect(m, m, W-m*2, 12, 'F');
+  doc.setTextColor(255,255,255); doc.setFontSize(12); doc.setFont('helvetica','bold');
+  doc.text('ALL STAR LOC — Historique Client', W/2, m+8, { align:'center' });
+
+  doc.setTextColor(30,30,30); doc.setFontSize(10); doc.setFont('helvetica','bold');
+  doc.text(client.name || key, m, m+22);
+  doc.setFont('helvetica','normal'); doc.setFontSize(9);
+  doc.text(`Tél: ${client.phone||'—'}  |  Email: ${client.email||'—'}  |  Permis: ${client.license||'—'}`, m, m+28);
+  doc.text(`Total dépensé : ${total} MAD | ${resas.length} réservation(s)`, m, m+34);
+
+  doc.setDrawColor(196,30,58); doc.setLineWidth(0.4);
+  doc.line(m, m+38, W-m, m+38);
+
+  let y = m+44;
+  const cols = [14, 38, 70, 118, 140, 163, 185];
+  const heads = ['Réf.', 'Véhicule', 'Dates', 'Jours', 'Montant', 'Statut'];
+  doc.setFillColor(240,242,245); doc.rect(m, y-5, W-m*2, 8, 'F');
+  doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(60,60,60);
+  heads.forEach((h,i) => doc.text(h, cols[i], y));
+  y += 5;
+  resas.forEach(r => {
+    doc.setFont('helvetica','normal'); doc.setTextColor(30,30,30);
+    [r.id, r.car, `${r.startDate}→${r.endDate}`, String(r.days)+'j', r.amount+' MAD',
+     r.status==='confirmed'?'Confirmée':r.status==='pending'?'En attente':'Annulée']
+    .forEach((v,i) => { doc.text(String(v), cols[i], y); });
+    doc.setDrawColor(220,220,220); doc.setLineWidth(0.1);
+    doc.line(m, y+2, W-m, y+2);
+    y += 8;
+  });
+
+  doc.save(`Historique_${(client.name||key).replace(/\s+/g,'_')}.pdf`);
+  notify('Historique exporté en PDF.', 'green');
+}
+
+// ================================================================
+// UTILITAIRES
+// ================================================================
+function notify(msg, type='') {
+  const el = document.getElementById('notify');
+  el.textContent = msg;
+  el.style.background = type==='green' ? '#16A34A' : type==='red' ? '#C41E3A' : '#101216';
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3200);
+}
+
+// Fermer la suggestion au clic extérieur
+document.addEventListener('click', e => {
+  if (!e.target.closest('.client-suggest')) document.getElementById('c-suggest').style.display = 'none';
+});
+
+function adminLogout() {
+  if (confirm('Se déconnecter de l\'administration ?')) {
+    localStorage.removeItem('asl_admin_session');
+    window.location.replace('login.html');
+  }
+}
+
+function toggleSidebar(){var sb=document.querySelector('.sidebar');if(!sb)return;sb.classList.toggle('collapsed');document.body.classList.toggle('sb-is-collapsed',sb.classList.contains('collapsed'));try{localStorage.setItem('asl_sb_collapsed',sb.classList.contains('collapsed')?'1':'0');}catch(e){}}
+(function(){try{if(localStorage.getItem('asl_sb_collapsed')==='1'){var sb=document.querySelector('.sidebar');if(sb){sb.classList.add('collapsed');document.body.classList.add('sb-is-collapsed');}}}catch(e){}})();
+</script>
+</body>
+</html>
