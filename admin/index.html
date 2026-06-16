@@ -318,8 +318,16 @@ body.sb-is-collapsed .topbar { padding-left: 60px; }
   /* Bouton burger toujours visible sur mobile */
   .sb-toggle { display: flex !important; }
   body.sb-is-collapsed .main { margin-left: 0 !important; }
-  /* Topbar : laisser la place au burger */
-  .topbar { padding-left: 60px !important; }
+  /* Topbar : laisser la place au burger, organiser proprement */
+  .topbar { padding-left: 56px !important; flex-wrap: wrap !important; row-gap: 10px !important;
+    align-items: center !important; min-height: 52px; }
+  .topbar-title, #topbar-title { font-size: 16px !important; flex: 1 1 auto; }
+  /* Les boutons d'action passent sur leur propre ligne, bien espacés */
+  .topbar-right { width: 100% !important; display: flex !important; flex-wrap: wrap !important;
+    gap: 8px !important; justify-content: flex-start !important; }
+  .topbar-right > * { flex: 0 0 auto; }
+  .topbar-right .btn, .topbar-right button, .topbar-right a {
+    font-size: 12.5px !important; padding: 9px 12px !important; white-space: nowrap; }
   /* Overlay sombre quand sidebar ouverte */
   .sb-mobile-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:1050; }
   .sb-mobile-backdrop.show { display:block; }
@@ -345,7 +353,7 @@ body.sb-is-collapsed .topbar { padding-left: 60px; }
 @media (max-width: 768px) {
   /* Masquer le contenu desktop complexe, afficher le dashboard mobile */
   .main > .topbar { display: flex; }
-  #mobile-dash { display: block; padding: 14px 12px 80px; background: var(--dark, #F4F5F7); min-height: 100vh; }
+  #mobile-dash { display: block; padding: 18px 12px 80px; background: var(--dark, #F4F5F7); min-height: 100vh; }
   .main > .content { display: none; } /* on masque le contenu desktop, remplacé par mobile-dash */
   .md-greet { font-size: 15px; font-weight: 800; color: var(--text,#101216); margin: 4px 2px 14px; }
   .md-greet span { color: var(--red,#C41E3A); }
@@ -384,6 +392,14 @@ body.sb-is-collapsed .topbar { padding-left: 60px; }
   .md-cal-day { font-size: 19px; font-weight: 900; color: var(--red,#C41E3A); line-height: 1; }
   .md-cal-month { font-size: 10px; color: var(--t2,#888); text-transform: uppercase; font-weight: 700; }
   .md-cal-info { flex: 1; min-width: 0; }
+  /* Boutons d'action mobile (prolonger / confirmer) */
+  .md-prolong-btn, .md-confirm-btn {
+    flex-shrink: 0; border: none; border-radius: 8px; padding: 8px 12px;
+    font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap;
+    color: #fff; background: var(--red, #C41E3A);
+  }
+  .md-confirm-btn { background: #16a34a; }
+  .md-prolong-btn:active, .md-confirm-btn:active { opacity: .8; }
 }
 </style>
 </head>
@@ -505,6 +521,14 @@ body.sb-is-collapsed .topbar { padding-left: 60px; }
     <div class="md-section">
       <div class="md-section-title">↩️ Retours prévus (calendrier)</div>
       <div id="md-returns-list"></div>
+    </div>
+    <div class="md-section">
+      <div class="md-section-title">⏳ Réservations en attente <span class="badge" id="md-pending-count">0</span></div>
+      <div id="md-pending-list"></div>
+    </div>
+    <div class="md-section">
+      <div class="md-section-title">🔧 Alertes (vidange · entretien · assurance) <span class="badge" id="md-alerts-count">0</span></div>
+      <div id="md-alerts-list"></div>
     </div>
     <div class="md-section">
       <div class="md-section-title">✅ Véhicules disponibles <span class="badge" id="md-avail-count">0</span></div>
@@ -1690,9 +1714,92 @@ function renderMobileDash() {
       var carName = (r.car && r.car.name) ? r.car.name : (r.carName || 'Véhicule');
       var client = (r.client && r.client.name) ? r.client.name : (r.client || '');
       return '<div class="md-cal-item"><div class="md-cal-date"><div class="md-cal-day">'+day+'</div><div class="md-cal-month">'+mon+'</div></div>'+
-        '<div class="md-cal-info"><div class="md-row-name">'+carName+'</div><div class="md-row-sub">Retour · '+client+'</div></div></div>';
+        '<div class="md-cal-info"><div class="md-row-name">'+carName+'</div><div class="md-row-sub">Retour · '+client+'</div></div>'+
+        '<button class="md-prolong-btn" onclick="prolongerReservation(\''+(r.id||'')+'\')">Prolonger</button></div>';
     }).join('') : '<div class="md-empty">Aucun retour prévu</div>';
   }
+
+  // Réservations en attente de confirmation
+  var pl = document.getElementById('md-pending-list');
+  if (pl) {
+    pl.innerHTML = pending.length ? pending.map(function(r){
+      var carName = (r.car && r.car.name) ? r.car.name : (r.carName || 'Véhicule');
+      var client = (r.client && r.client.name) ? r.client.name : (r.client || 'Client');
+      var dates = (r.startDate||'') + (r.endDate ? ' → ' + r.endDate : '');
+      return '<div class="md-row"><div class="md-row-icon orange">⏳</div>'+
+        '<div class="md-row-info"><div class="md-row-name">'+carName+'</div>'+
+        '<div class="md-row-sub">'+client+' · '+dates+'</div></div>'+
+        '<button class="md-confirm-btn" onclick="confirmerReservation(\''+(r.id||'')+'\')">Confirmer</button></div>';
+    }).join('') : '<div class="md-empty">Aucune réservation en attente</div>';
+  }
+  var pc = document.getElementById('md-pending-count'); if (pc) pc.textContent = pending.length;
+
+  // Alertes vidange / entretien / assurance (lues depuis asl_maint_v1)
+  var MAINT = {};
+  try { MAINT = JSON.parse(localStorage.getItem('asl_maint_v1') || '{}'); } catch(e) {}
+  function diffDays(dateStr) {
+    if (!dateStr) return null;
+    var d = new Date(dateStr); if (isNaN(d)) return null;
+    return Math.round((d - today) / 86400000);
+  }
+  var alerts = [];
+  Object.keys(MAINT).forEach(function(carId){
+    var m = MAINT[carId] || {};
+    var car = fleet.find(function(c){ return String(c.id) === String(carId); });
+    var carName = car ? car.name : ('Véhicule #' + carId);
+    [['Vidange', m.vidange_next], ['Entretien / VT', m.vt_next], ['Assurance', m.assur]].forEach(function(pair){
+      var label = pair[0], date = pair[1];
+      var dd = diffDays(date);
+      if (dd !== null && dd <= 30) alerts.push({ car: carName, label: label, date: date, days: dd });
+    });
+  });
+  alerts.sort(function(a,b){ return a.days - b.days; });
+  var all = document.getElementById('md-alerts-list');
+  if (all) {
+    all.innerHTML = alerts.length ? alerts.map(function(a){
+      var urgent = a.days < 0, soon = a.days <= 7;
+      var cls = urgent ? 'red' : soon ? 'orange' : 'green';
+      var txt = urgent ? Math.abs(a.days)+'j de retard' : a.days===0 ? "Aujourd'hui" : 'dans '+a.days+'j';
+      return '<div class="md-row"><div class="md-row-icon '+cls+'">🔧</div>'+
+        '<div class="md-row-info"><div class="md-row-name">'+a.car+' — '+a.label+'</div>'+
+        '<div class="md-row-sub">'+a.date+'</div></div>'+
+        '<div class="md-row-tag '+cls+'">'+txt+'</div></div>';
+    }).join('') : '<div class="md-empty">Aucune alerte dans les 30 jours</div>';
+  }
+  var ac = document.getElementById('md-alerts-count'); if (ac) ac.textContent = alerts.length;
+}
+
+// ---- Prolongation depuis le mobile : modifier la date de retour ----
+function prolongerReservation(resId) {
+  if (!resId) { alert('Réservation introuvable.'); return; }
+  var res = (typeof ASLDB !== 'undefined' && ASLDB.getReservations) ? ASLDB.getReservations() : [];
+  var r = res.find(function(x){ return String(x.id) === String(resId); });
+  if (!r) { alert('Réservation introuvable.'); return; }
+  var current = r.endDate || '';
+  var nouvelle = prompt('Nouvelle date de retour (AAAA-MM-JJ) :', current);
+  if (!nouvelle) return;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(nouvelle)) { alert('Format invalide. Utilisez AAAA-MM-JJ.'); return; }
+  if (nouvelle <= (r.startDate || '')) { alert('La date de retour doit être après la date de départ.'); return; }
+  r.endDate = nouvelle;
+  r.extended = true;
+  if (typeof ASLDB !== 'undefined' && ASLDB.updateReservation) {
+    ASLDB.updateReservation(r.id, { endDate: nouvelle, extended: true });
+  }
+  if (typeof toast === 'function') toast('Date de retour prolongée au ' + nouvelle, 'g');
+  else alert('Prolongation enregistrée : retour le ' + nouvelle);
+  renderMobileDash();
+}
+
+// ---- Confirmer une réservation en attente depuis le mobile ----
+function confirmerReservation(resId) {
+  if (!resId) return;
+  var res = (typeof ASLDB !== 'undefined' && ASLDB.getReservations) ? ASLDB.getReservations() : [];
+  var r = res.find(function(x){ return String(x.id) === String(resId); });
+  if (!r) return;
+  if (!confirm('Confirmer la réservation de ' + ((r.client && r.client.name) || r.client || 'ce client') + ' ?')) return;
+  if (typeof ASLDB !== 'undefined' && ASLDB.updateReservation) ASLDB.updateReservation(r.id, { status: 'confirmed' });
+  if (typeof toast === 'function') toast('Réservation confirmée', 'g');
+  renderMobileDash();
 }
 // Rendu au chargement + au resize
 window.addEventListener('resize', function(){ if (window.innerWidth <= 768) renderMobileDash(); });

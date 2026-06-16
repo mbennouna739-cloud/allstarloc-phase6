@@ -2136,7 +2136,7 @@ async function saveFAQItem(idx){
 const SOCIAL_KEY = 'asl_social_v1';
 
 function loadSocialConfig() {
-  const cfg = load(SOCIAL_KEY) || {};
+  const cfg = load(K.social) || {};
   const set = (id, v) => { const e = document.getElementById(id); if (e) e.value = v || ''; };
   set('social-whatsapp', cfg.whatsapp);
   set('social-instagram', cfg.instagram);
@@ -2155,11 +2155,9 @@ async function saveSocialConfig() {
     snapchat: get('social-snapchat'),
     updatedAt: new Date().toISOString(),
   };
-  save(SOCIAL_KEY, cfg);
-  // Synchroniser vers KV (clé marketing.social) → content-bridge applique aux icônes du footer
+  // Sauvegarder sous la BONNE clé (celle lue par getMktData → KV → content-bridge)
+  save(K.social, cfg);
   try {
-    const mkt = getMktData();
-    mkt.social = cfg;
     await syncToKV('Réseaux Sociaux');
   } catch(e) {}
   const msg = document.getElementById('social-saved-msg');

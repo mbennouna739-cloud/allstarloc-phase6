@@ -607,6 +607,21 @@ html:has(#booking-drawer.open) { overflow: hidden; }
 @media (max-width: 844px) {
   .drawer { max-width: 100%; }
 }
+/* Stabilité mobile : le drawer garde une hauteur stable même quand le clavier s'ouvre.
+   Seul le corps (.drawer-body) défile ; l'en-tête et le pied restent fixes,
+   ce qui évite tout « saut » de mise en page pendant la saisie. */
+@media (max-width: 768px) {
+  .drawer {
+    height: 100dvh;            /* hauteur dynamique : suit la zone visible réelle */
+    max-height: 100dvh;
+    top: 0; bottom: auto;
+  }
+  .drawer-header { position: sticky; top: 0; }
+  .drawer-body { -webkit-overflow-scrolling: touch; }
+  .drawer-footer { position: sticky; bottom: 0; }
+  /* Les champs ne provoquent pas de zoom iOS (qui décale la mise en page) */
+  .drawer input, .drawer select, .drawer textarea { font-size: 16px; }
+}
 
 .drawer-header {
   padding: 20px 24px; border-bottom: 1px solid var(--gray2);

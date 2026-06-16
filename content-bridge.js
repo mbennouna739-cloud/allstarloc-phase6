@@ -166,7 +166,21 @@
   /* ---- Chargement : KV d'abord, localStorage en fallback ---- */
   /* Appliquer d'abord le cache local immédiatement (pas de flash) */
   var cached = rd(LOCAL_KEY);
-  if (cached) applyMarketing(cached);
+  if (cached) {
+    applyMarketing(cached);
+    /* Ré-appliquer les traductions pour que H1 / titres modifiés apparaissent tout de suite */
+    if (typeof applyI18n === 'function') applyI18n();
+  }
+
+  /* Garantir l'application APRÈS l'init i18n (évite que applyI18n du DOMContentLoaded
+     ne remette les valeurs par défaut). On ré-applique le cache puis les traductions. */
+  document.addEventListener('DOMContentLoaded', function () {
+    var c = rd(LOCAL_KEY);
+    if (c) {
+      applyMarketing(c);
+      if (typeof applyI18n === 'function') applyI18n();
+    }
+  });
 
   /* Puis fetch KV en arrière-plan pour mettre à jour */
   if (typeof fetch !== 'undefined') {
