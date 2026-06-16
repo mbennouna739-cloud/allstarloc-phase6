@@ -841,6 +841,31 @@ function showPage(id, el) {
   document.getElementById('page-'+id).classList.add('active');
   document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
   if(el) el.classList.add('active');
+
+  // Sur mobile : basculer entre le dashboard mobile et le contenu détaillé
+  if (window.innerWidth <= 768) {
+    var md = document.getElementById('mobile-dash');
+    var content = document.querySelector('.content');
+    if (id === 'dashboard') {
+      // Retour au tableau de bord mobile simplifié
+      if (md) md.style.display = 'block';
+      if (content) content.style.display = 'none';
+      renderMobileDash();
+    } else {
+      // Afficher la vraie page (Calendrier, Flotte, Clients, Paiements, Options…)
+      if (md) md.style.display = 'none';
+      if (content) content.style.display = 'block';
+    }
+    // Fermer la sidebar overlay après le clic
+    var sb = document.querySelector('.sidebar');
+    if (sb && sb.classList.contains('mobile-open')) {
+      sb.classList.remove('mobile-open');
+      var bd = document.querySelector('.sb-mobile-backdrop');
+      if (bd) bd.classList.remove('show');
+      var tog = document.querySelector('.sb-toggle');
+      if (tog) tog.style.display = 'flex';
+    }
+  }
   const titles = {
     dashboard:'Tableau de bord', reservations:'Réservations', calendar:'Calendrier',
     fleet:'Gestion Flotte', availability:'Disponibilités', customers:'Clients',

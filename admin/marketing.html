@@ -945,22 +945,44 @@ async function syncToKV(label) {
   const data = getMktData();
   // 1. Sauvegarder localement d'abord (immédiat)
   save(MKT_LOCAL_KEY, data);
-  // 2. Envoyer vers KV
+  // 2. Envoyer vers KV AVEC la clé admin (sinon le serveur refuse l'écriture : 403)
   try {
+    const headers = { 'Content-Type': 'application/json' };
+    let adminKey = '';
+    try { adminKey = localStorage.getItem('asl_admin_key') || ''; } catch(e) {}
+    if (adminKey) headers['X-ASL-Key'] = adminKey;
+
     const resp = await fetch('/api/marketing', {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: headers,
       body: JSON.stringify(data),
     });
     if (resp.ok) {
-      showSyncStatus((label || 'Données') + ' synchronisées avec le site. Rafraîchissez le site client pour voir les changements.');
+      // 3. VÉRIFICATION RÉELLE : relire depuis le serveur pour confirmer
+      try {
+        const check = await fetch('/api/marketing', { headers: { 'Cache-Control': 'no-cache' } });
+        const cd = await check.json();
+        const savedH1 = cd && cd.data && cd.data.content ? cd.data.content['hero.titleHtml'] : null;
+        const localH1 = data.content ? data.content['hero.titleHtml'] : null;
+        if (savedH1 === localH1) {
+          showSyncStatus('✓ ' + (label || 'Données') + ' bien enregistrées sur le serveur. Rafraîchissez le site public (Ctrl+F5) pour voir le changement.');
+        } else {
+          showSyncStatus('⚠ Envoyé au serveur mais la relecture ne correspond pas. La base KV est peut-être en cours de propagation (attendez 1 min).', 'warn');
+        }
+      } catch(e) {
+        showSyncStatus('✓ ' + (label || 'Données') + ' envoyées au serveur. Rafraîchissez le site public.');
+      }
+      return true;
+    } else if (resp.status === 403) {
+      showSyncStatus('⚠ Écriture refusée (clé admin). Déconnectez-vous puis reconnectez-vous, ou vérifiez ADMIN_KEY dans Cloudflare.', 'warn');
+      return false;
     } else {
-      // Erreur KV — données déjà sauvegardées localement
-      showSyncStatus((label || 'Données') + ' sauvegardées localement. La sync KV sera retentée au prochain enregistrement.', 'warn');
+      showSyncStatus('⚠ Le serveur a renvoyé une erreur (' + resp.status + '). Vérifiez que la base KV "ASL_DB" est bien liée (page /api/health).', 'warn');
+      return false;
     }
   } catch (e) {
-    // Hors-ligne — localStorage suffit pour l'instant
-    showSyncStatus((label || 'Données') + ' sauvegardées localement (hors-ligne). Elles seront synchronisées automatiquement.');
+    showSyncStatus((label || 'Données') + ' sauvegardées en local (serveur injoignable). En test local c\'est normal ; sur Cloudflare cela indique un problème de déploiement.', 'warn');
+    return false;
   }
 }
 
@@ -1065,30 +1087,35 @@ function loadSEOPage(key) {
   const d = seoData[key] || SEO_DEFAULTS[key] || {};
   const names = { index:'Accueil', 'nos-vehicules':'Nos Véhicules', about:'À propos',
     contact:'Contact', aeroport:'Aéroport Ménara', faq:'FAQ', blog:'Blog' };
-  document.getElementById('seo-page-name').textContent = names[key] || key;
-  document.getElementById('seo-page-url').textContent  = 'allstarloc.ma/' + (d.slug || key !== 'index' ? key : '');
-  document.getElementById('seo-title').value    = d.title    || '';
-  document.getElementById('seo-desc').value     = d.desc     || '';
-  document.getElementById('seo-h1').value       = d.h1       || '';
-  document.getElementById('seo-slug').value     = d.slug     || (key !== 'index' ? key : '');
-  document.getElementById('seo-keywords').value = d.keywords || '';
-  document.getElementById('seo-text').value     = d.text     || '';
-  document.getElementById('seo-canonical').value= d.canonical|| `https://allstarloc.ma/${key !== 'index' ? key : ''}`;
-  document.getElementById('seo-editor').style.display = 'block';
+  // Helpers null-safe : un champ absent ne fait plus planter la fonction
+  const setText = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+  const setVal  = (id, v) => { const e = document.getElementById(id); if (e) e.value = v; };
+  setText('seo-page-name', names[key] || key);
+  setText('seo-page-url', 'allstarloc.ma/' + (d.slug || key !== 'index' ? key : ''));
+  setVal('seo-title',     d.title    || '');
+  setVal('seo-desc',      d.desc     || '');
+  setVal('seo-h1',        d.h1       || '');
+  setVal('seo-slug',      d.slug     || (key !== 'index' ? key : ''));
+  setVal('seo-keywords',  d.keywords || '');
+  setVal('seo-text',      d.text     || '');
+  setVal('seo-canonical', d.canonical|| ('https://allstarloc.ma/' + (key !== 'index' ? key : '')));
+  var editorCard = document.getElementById('seo-editor-card') || document.getElementById('seo-editor');
+  if (editorCard) editorCard.style.display = 'block';
   updateSEOScore();
 }
 
 async function saveSEO() {
   if (!currentSEOPage) return;
+  const val = id => { const e = document.getElementById(id); return e ? e.value : ''; };
   const seoData = load(K.seo) || {};
   seoData[currentSEOPage] = {
-    title:     document.getElementById('seo-title').value,
-    desc:      document.getElementById('seo-desc').value,
-    h1:        document.getElementById('seo-h1').value,
-    slug:      document.getElementById('seo-slug').value,
-    keywords:  document.getElementById('seo-keywords').value,
-    text:      document.getElementById('seo-text').value,
-    canonical: document.getElementById('seo-canonical').value,
+    title:     val('seo-title'),
+    desc:      val('seo-desc'),
+    h1:        val('seo-h1'),
+    slug:      val('seo-slug'),
+    keywords:  val('seo-keywords'),
+    text:      val('seo-text'),
+    canonical: val('seo-canonical'),
     updatedAt: new Date().toISOString(),
   };
   save(K.seo, seoData);
