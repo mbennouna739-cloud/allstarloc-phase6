@@ -1,0 +1,34 @@
+ALL STAR LOC — PHASE 5 : LANGUES & MULTIDEVISES FONCTIONNELLES
+================================================================
+
+NOUVEAU FICHIER
+- i18n.js (racine) : moteur de traduction (FR/EN/ES/AR, 246 clés par langue)
+  + cœur devises (MAD/EUR/USD/GBP, base de calcul MAD, taux alignés sur l'admin :
+  1 EUR = 10.8 MAD). Persistance via localStorage (asl_lang / asl_currency).
+
+LANGUES
+- Sélecteur de langue dans le header (desktop) et le menu mobile : FR, EN, ES, AR.
+- Arabe : passage automatique en RTL (dir="rtl").
+- Pages traduites : Accueil complet (hero, recherche, calendrier, flotte,
+  pourquoi nous, avis, footer), tunnel de réservation complet (6 étapes,
+  formulaires, paiement, confirmation), À propos, Contact, menus, footers.
+- Le choix reste actif pendant toute la navigation (localStorage).
+- Les valeurs envoyées à l'administration restent canoniques en français
+  (lieux, pays, options) : la liaison Admin ↔ Site est inchangée.
+
+DEVISES
+- Sélecteur de devise dans le header, le footer et le menu mobile.
+- MAD = devise principale et base de calcul (prix admin priceMAD).
+- EUR / USD / GBP calculées automatiquement à l'affichage.
+- Mise à jour instantanée : cartes véhicules, tunnel, résumé, paiement, total.
+- Les réservations sont toujours enregistrées en MAD (champ amount) pour l'admin.
+
+INCHANGÉ
+- admin/index.html, data.js, assets (logo, favicon), icônes Lucide de la
+  phase 4, design général, calendrier, tunnel, et les 8 autres pages internes.
+
+LIMITES CONNUES
+- Les pages secondaires (Blog, FAQ, CGV, LLD, Aéroport, Mentions, Confidentialité,
+  Article) restent en français (hors périmètre demandé).
+- L'administration reste en français (usage interne).
+- Taux de change fixes (modifiables dans i18n.js, CUR_RATES).

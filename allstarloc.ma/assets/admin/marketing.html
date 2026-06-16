@@ -1,0 +1,2310 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<script src="auth-guard.js"></script>
+<meta name="robots" content="noindex, nofollow">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAADyklEQVR4nNVWzWtjVRS/577PpK8dS5x8VIQg1kW7GUQxSA249C+wG6kG3LgUunDbreCmzMKqiKUJxeCU1pq240DttjhNBwoKacKkDZlYycd7M4kvL7n3uHjNe2mapPWjgmfxuO++c3+/c+7v3nMeICK5SaM3iv7fEsiynEgkdF3nnHPOERERnbHz7J65/KrreiKRkGXZZcCOLS8v479k3VDgiGyapqIoiEjp3983zjkAmKbp8XjsGZcAEQFg4FJEgkgAsOM5xLkbyg2Wcz5kAQEglBIAAKCUAriR9ffvmOiMBkVkh8PrDag/Q0muEWxZltfrHR0dHUTQDXXVdiMCIdhqld7/SJ+KND//5ouvvpyempqdnTVN05ZxOMAVBMgYAWg82FO+2+TlmjimPXfrVq1SSaVS29vbAMAY6xeVy+puJee89/zYATJWfPMd8kddirzuf/uthMB2798/ePTIsqz9/X1VVcml7e0vct/wgdLGj7vBh4djn3zcVhTi9Y6MeEVJmp+fPzo6GpKEYy5Br8iIIAhomtWFT8sAzDCsexsk6A8EAmtra5VKhVK6sLBQr9cFQRimhHPlGGPdt5G3Woj49N73FfBlPaHfyHju+ZewUq3peigYJIR4vV5CyOrqKiK2Wq0LazuVBhEHEHCOnLNG4/RONE99uZEXzuSA9dndB3s/7e3uLi4uyrKsaRqldHp62jCM7vJ1LQI7fOPbtTL4jj2hjBIoUR/7+TB/ki/k8+l0GgBEUbQVXllZ6UmiG6ofAefIedt4ejr1xmPqO1YCJ2T88Z0oWtZWKvXD5qZlWZFIhBAiyzKldHJyslqt9tRgB7aPyOdnf2Nr5JdjVGRKqQdg7MP3iCQdptMPDw4kSYrFYoQQSqksy5lMZn19feBx6s3ADl/XC6+8dir6c5I/K90+kf3mrxnOebFQKBQKiJjNZlVVFTsWDofL5TLn3AYZqkGrjYjG1/Ea8WXlQFa8XSLjxXc/4MgRMRaLzc3N2f52EqIo2u1laWnJUeIKkVtnv+dffjXvCeW8E7nRF8/U0LONLftTNBqdmZmxxzs7O4qiaJqmqqqqquFwuFQqXdagT6lg9TqWK0gpIBIChBAh6AdJIojFJ08QcWJiAgDa7XaxWLSX29Xb5/NpmkYuVp1rN5y/Yt1Qbj/gnAuCcP754tXHTv+ym5ITXU+PctpcN8GNZ+Deg2azea77P4NGxGaz6cy4BMlkcngrv47ZCMlkspcTESVJisfjhmEwxhhj/CrrcWGMtdttXdfj8bgkSX2O6Q3Z///n908aGRXA7Gfj9gAAAABJRU5ErkJggg==">
+  <link rel="apple-touch-icon" href="data:image/png;base64,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">
+  <meta name="theme-color" content="#ffffff">
+<title>ALL STAR LOC — Marketing Digital</title>
+<style>
+:root{
+  --red:#C41E3A;--red-l:rgba(196,30,58,.09);--red-b:rgba(196,30,58,.22);
+  --bg:#F1F3F6;--card:#fff;--border:rgba(18,22,30,.10);
+  --text:#0C0E12;--t2:rgba(12,14,18,.60);--t3:rgba(12,14,18,.36);
+  --green:#16A34A;--yellow:#D97706;--blue:#2563EB;--purple:#7C3AED;
+  --font:'Outfit',sans-serif;
+}
+html,body{overflow-x:hidden;max-width:100%;overscroll-behavior-x:none;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;}
+a{text-decoration:none;color:inherit;}
+.layout{display:flex;height:100vh;overflow:hidden;}
+.sidebar{width:230px;background:var(--card);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;}
+.main{flex:1;overflow-y:auto;}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);
+  padding:12px 24px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:10;}
+.content{padding:22px 26px;}
+/* sidebar */
+.sb-logo{padding:16px 14px 10px;border-bottom:1px solid var(--border);}
+.sb-logo-name{font-size:14px;font-weight:900;}
+.sb-logo-sub{font-size:10px;color:var(--red);font-weight:700;text-transform:uppercase;letter-spacing:1px;}
+.sb-group{padding:12px 8px 4px;font-size:10px;color:var(--t3);font-weight:700;letter-spacing:1.5px;text-transform:uppercase;}
+.sb-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;
+  margin:1px 5px;font-size:13px;font-weight:500;cursor:pointer;color:var(--t2);}
+.sb-item:hover{background:var(--bg);color:var(--text);}
+.sb-item.active{background:var(--red-l);color:var(--red);font-weight:700;}
+.sb-item svg{flex-shrink:0;}
+.sb-back{margin:5px 8px;padding:11px 13px;display:flex;align-items:center;gap:9px;
+  font-size:13px;font-weight:700;color:#fff;background:rgba(196,30,58,.14);
+  border:1px solid rgba(196,30,58,.3);cursor:pointer;border-radius:9px;transition:background .15s;}
+.sb-back:hover{background:var(--bg);}
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:7px;border:none;border-radius:9px;
+  padding:8px 16px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;}
+.btn-red{background:var(--red);color:#fff;} .btn-red:hover{background:#a91830;}
+.btn-ghost{background:var(--bg);color:var(--text);} .btn-ghost:hover{background:rgba(18,22,30,.12);}
+.btn-green{background:var(--green);color:#fff;}
+.btn-sm{padding:6px 12px;font-size:12px;}
+/* pages */
+.page{display:none;} .page.active{display:block;}
+/* kpi */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+.kpi{background:var(--card);border-radius:14px;padding:18px 20px;border:1px solid var(--border);}
+.kpi-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;}
+.kpi-val{font-size:28px;font-weight:900;line-height:1;}
+.kpi-lbl{font-size:12px;color:var(--t2);margin-top:4px;}
+/* card */
+.card{background:var(--card);border-radius:14px;border:1px solid var(--border);padding:20px;margin-bottom:16px;}
+.card-head{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.card-title{font-size:14px;font-weight:800;flex:1;}
+.card-sub{font-size:12px;color:var(--t2);margin-top:2px;}
+/* form */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.fg label{display:block;font-size:12px;font-weight:700;color:var(--t2);margin-bottom:5px;}
+.fi,.fs,.ft{width:100%;border:1.5px solid var(--border);border-radius:9px;
+  padding:9px 12px;font-size:13.5px;font-family:var(--font);color:var(--text);
+  background:#fff;outline:none;transition:border-color .15s;}
+.fi:focus,.fs:focus,.ft:focus{border-color:var(--red);}
+.ft{min-height:80px;resize:vertical;}
+/* seo */
+.seo-score-bar{height:6px;background:var(--bg);border-radius:3px;overflow:hidden;margin-top:4px;}
+.seo-score-fill{height:100%;border-radius:3px;transition:width .4s;}
+.char-count{font-size:11px;font-weight:700;margin-top:3px;}
+.char-count.ok{color:var(--green);} .char-count.warn{color:var(--yellow);} .char-count.bad{color:var(--red);}
+/* table */
+.tbl{width:100%;border-collapse:collapse;}
+.tbl th{padding:9px 12px;text-align:left;font-size:10.5px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.4px;color:var(--t3);border-bottom:2px solid var(--border);}
+.tbl td{padding:9px 12px;border-bottom:1px solid rgba(18,22,30,.05);font-size:13px;vertical-align:middle;}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:rgba(18,22,30,.018);}
+/* badge */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:50px;font-size:11px;font-weight:700;}
+.b-pub{background:rgba(22,163,74,.15);color:#14532d;}
+.b-draft{background:rgba(217,119,6,.12);color:#78350f;}
+.b-hidden{background:rgba(18,22,30,.08);color:var(--t2);}
+/* tabs */
+.tabs{display:flex;gap:3px;background:var(--bg);border-radius:10px;padding:3px;width:fit-content;margin-bottom:18px;}
+.tab{padding:7px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:var(--t2);}
+.tab.active{background:#fff;color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.08);}
+/* search */
+.search-box{display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--border);
+  border-radius:9px;padding:8px 12px;flex:1;}
+.search-box input{border:none;background:transparent;font-size:13.5px;font-family:var(--font);outline:none;flex:1;}
+/* sync */
+.sync-bar{padding:11px 16px;border-radius:10px;margin-bottom:14px;font-size:13px;font-weight:700;display:none;}
+.sync-bar.ok{background:rgba(22,163,74,.1);border:1px solid rgba(22,163,74,.3);color:var(--green);}
+.sync-bar.warn{background:rgba(217,119,6,.1);border:1px solid rgba(217,119,6,.3);color:var(--yellow);}
+/* éditeur sections */
+.section-row{display:flex;align-items:center;gap:12px;padding:13px 16px;
+  background:var(--card);border:1.5px solid var(--border);border-radius:11px;margin-bottom:8px;cursor:grab;}
+.section-row:hover{border-color:var(--red-b);}
+.section-row.hidden-sec{opacity:.45;}
+.section-handle{color:var(--t3);font-size:18px;cursor:grab;user-select:none;flex-shrink:0;}
+.section-icon{font-size:20px;flex-shrink:0;}
+.section-name{font-weight:700;font-size:14px;flex:1;}
+.section-desc{font-size:12px;color:var(--t2);}
+/* IA panel */
+.ai-panel{background:linear-gradient(135deg,#0f172a 0%,#1e1b4b 100%);
+  border-radius:14px;padding:20px;margin-bottom:16px;color:#e2e8f0;}
+.ai-panel-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.ai-badge{background:rgba(124,58,237,.8);color:#fff;padding:3px 10px;border-radius:20px;
+  font-size:10px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;}
+.ai-btn{display:inline-flex;align-items:center;gap:6px;border:1.5px solid rgba(255,255,255,.2);
+  background:rgba(255,255,255,.08);color:#e2e8f0;border-radius:9px;padding:8px 16px;
+  font-family:var(--font);font-size:12.5px;font-weight:700;cursor:pointer;}
+.ai-btn:hover{background:rgba(255,255,255,.15);}
+.ai-btn.primary{background:#7c3aed;border-color:#7c3aed;color:#fff;}
+.ai-spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);
+  border-top:2px solid #fff;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.ai-suggestions{display:flex;flex-direction:column;gap:6px;margin-top:10px;}
+.ai-suggestion-item{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+  border-radius:8px;padding:10px 14px;cursor:pointer;font-size:13px;
+  display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.ai-suggestion-item:hover{background:rgba(124,58,237,.25);border-color:#7c3aed;}
+.ai-suggestion-item .apply-btn{background:#7c3aed;color:#fff;border:none;border-radius:6px;
+  padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.ai-kw-chip{display:inline-flex;align-items:center;gap:4px;background:rgba(124,58,237,.2);
+  border:1px solid rgba(124,58,237,.4);color:#c4b5fd;border-radius:20px;
+  padding:3px 10px;font-size:12px;margin:3px;cursor:pointer;}
+.ai-kw-chip:hover{background:rgba(124,58,237,.4);}
+.ai-section-title{font-size:11px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.8px;color:rgba(255,255,255,.5);margin:14px 0 8px;}
+.ai-season-badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:700;
+  background:rgba(217,119,6,.2);color:#fbbf24;border:1px solid rgba(217,119,6,.3);}
+.ai-trend-item{font-size:12.5px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.07);
+  display:flex;align-items:center;gap:8px;}
+.ai-trend-item:last-child{border-bottom:none;}
+/* modal */
+.modal-bd{position:fixed;inset:0;background:rgba(10,12,18,.45);z-index:100;
+  display:none;align-items:center;justify-content:center;}
+.modal-bd.open{display:flex;}
+.modal{background:#fff;border-radius:18px;width:min(760px,95vw);max-height:90vh;
+  display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.18);}
+.modal-head{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;}
+.modal-head h3{font-size:15px;font-weight:800;flex:1;}
+.modal-body{padding:20px;overflow-y:auto;flex:1;}
+.modal-foot{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;}
+/* toast */
+.toast{position:fixed;bottom:20px;right:20px;background:#0c0e12;color:#fff;
+  padding:11px 18px;border-radius:11px;font-size:13px;font-weight:600;
+  opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none;z-index:999;}
+.toast.show{opacity:1;transform:none;}
+.toast.g{background:var(--green);} .toast.r{background:var(--red);}
+/* social */
+.social-row{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--border);}
+.social-row:last-child{border-bottom:none;}
+.social-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+/* popup preview */
+.popup-preview{border:1.5px solid var(--border);border-radius:14px;padding:24px;
+  background:#fff;text-align:center;}
+/* responsive */
+@media(max-width:900px){.sidebar{width:52px;} .sb-item span,.sb-group,.sb-logo-name,.sb-logo-sub{display:none;} .kpi-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:600px){.kpi-grid{grid-template-columns:1fr;} .form-grid{grid-template-columns:1fr;} .content{padding:14px;}}
+
+/* Logo sidebar — ajustement taille */
+.sb-logo { flex-direction: column !important; align-items: flex-start !important; gap: 3px !important; padding: 10px 12px 8px !important; }
+.sb-logo img { width: 110px !important; height: auto !important; display: block !important; max-width: 100% !important; }
+.sb-logo-tag, .sb-logo > div { display: none !important; }
+
+/* === Sidebar collapse (flèche plein écran) === */
+.sidebar { transition: width .25s ease, transform .25s ease; position: relative; }
+.sidebar.collapsed { width: 0 !important; min-width: 0 !important; overflow: hidden !important; border-right: none !important; }
+.sidebar.collapsed > * { opacity: 0; pointer-events: none; }
+.sb-toggle {
+  position: fixed; top: 14px; left: 14px; z-index: 1200;
+  width: 36px; height: 36px; border-radius: 9px;
+  background: var(--red, #C41E3A); color: #fff; border: none; cursor: pointer;
+  display: none; align-items: center; justify-content: center;
+  box-shadow: 0 4px 14px rgba(0,0,0,.25); transition: left .25s ease;
+}
+.sb-toggle svg { width: 18px; height: 18px; }
+.sb-collapse-btn {
+  position: absolute; top: 12px; right: 10px; z-index: 50;
+  width: 28px; height: 28px; border-radius: 8px; border: none; cursor: pointer;
+  background: rgba(127,127,127,.12); color: var(--text, #fff);
+  display: flex; align-items: center; justify-content: center; transition: background .15s;
+}
+.sb-collapse-btn:hover { background: rgba(196,30,58,.18); color: #C41E3A; }
+body.sb-is-collapsed .sb-toggle { display: flex; }
+
+/* === Bouton Déconnexion sidebar === */
+.sb-logout{margin:5px 8px;padding:11px 13px;display:flex;align-items:center;gap:9px;
+  font-size:13px;font-weight:800;color:#fff;background:#C41E3A;
+  cursor:pointer;border-radius:9px;text-decoration:none;transition:background .15s;
+  box-shadow:0 3px 12px rgba(196,30,58,.3);}
+.sb-logout:hover{background:#a01530;}
+
+/* === Collapse layout flex : recentrage contenu === */
+.main { transition: all .25s ease; }
+body.sb-is-collapsed .content { max-width: 100%; }
+.content table, .table-card table { width: 100%; }
+.content, .table-card { max-width: 100%; overflow-x: auto; }
+
+/* === Sidebar toujours fixe, ne scrolle jamais avec le contenu === */
+.sidebar { height: 100vh; position: sticky; top: 0; overflow-y: auto; overflow-x: hidden; }
+.sidebar::-webkit-scrollbar { width: 6px; }
+.sidebar::-webkit-scrollbar-thumb { background: rgba(127,127,127,.3); border-radius: 3px; }
+
+/* === Bouton Retour sous-section === */
+
+
+
+/* Bouton Retour discret */
+.sb-retour{margin:6px;padding:9px 12px;display:flex;align-items:center;gap:9px;
+  font-size:13px;font-weight:600;color:var(--t2,#888);background:transparent;
+  cursor:pointer;border-radius:8px;text-decoration:none;transition:background .15s,color .15s;border:1px solid var(--border,rgba(255,255,255,.08));}
+.sb-retour:hover{background:rgba(127,127,127,.08);color:var(--text,#fff);}
+.sb-retour svg{opacity:.7;}
+
+/* === RESPONSIVE ADMIN MOBILE (renforcé) === */
+@media (max-width: 768px) {
+  .sidebar { position: fixed !important; top:0; left:0; bottom:0; z-index:1100;
+    transform: translateX(-100%); transition: transform .25s ease; width: 250px !important; }
+  .sidebar.mobile-open { transform: translateX(0) !important; box-shadow: 0 0 40px rgba(0,0,0,.4); }
+  .main { margin-left: 0 !important; }
+  .sb-toggle { display: flex !important; }
+  .topbar { padding-left: 60px !important; }
+  .sb-mobile-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:1050; }
+  .sb-mobile-backdrop.show { display:block; }
+  .content { padding: 16px 12px !important; }
+  table { min-width: 520px; }
+  .content table, .table-card { display:block; width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  [class*="grid"] { grid-template-columns: 1fr !important; }
+}
+</style>
+</head>
+<body>
+<button class="sb-toggle" onclick="toggleSidebar()" title="Afficher le menu">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="21" y1="6" y2="6"/><line x1="3" x2="21" y1="12" y2="12"/><line x1="3" x2="21" y1="18" y2="18"/></svg>
+</button>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-logo">
+  <button class="sb-collapse-btn" onclick="toggleSidebar()" title="Masquer le menu">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+  </button>
+    <img src="data:image/png;base64,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" alt="ALL STAR LOC" style="display:block;">
+    <div class="sb-logo-sub" style="font-size:10px;color:#C41E3A;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:6px;">Marketing Digital</div>
+  </div>
+
+  <div class="sb-group">Vue d'ensemble</div>
+  <div class="sb-item active" onclick="nav('dashboard',this)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/></svg>
+    <span>Tableau de bord</span>
+  </div>
+
+  <div class="sb-group">Contenu & SEO</div>
+  
+  <div class="sb-item" onclick="nav('editor',this)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+    <span>Éditeur contenu</span>
+  </div>
+  <div class="sb-item" onclick="nav('ia',this)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+    <span>IA Marketing</span>
+  </div>
+  <div class="sb-item" onclick="nav('blog',this)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
+    <span>Blog</span>
+  </div>
+  <div class="sb-item" onclick="nav('faq',this)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+    <span>FAQ</span>
+  </div>
+  <div class="sb-item" onclick="nav('popup',this)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg>
+    <span>Popup &amp; CTA</span>
+  </div>
+
+  <div class="sb-group">Acquisition</div>
+  <div class="sb-item" onclick="nav('newsletter',this)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+    <span>Newsletter</span>
+  </div>
+  <div class="sb-item" onclick="nav('ads',this)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    <span>Google Ads</span>
+  </div>
+  
+  <div class="sb-item" onclick="nav('email',this)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+    <span>Configuration Email</span>
+  </div>
+  <div class="sb-item" onclick="nav('social',this)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
+    <span>Réseaux Sociaux</span>
+  </div>
+
+  <div style="flex:1;"></div>
+  <a class="sb-retour" href="index.html" title="Retour à l'administration principale">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    <span>Retour à l'administration</span>
+  </a>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div style="font-size:16px;font-weight:800;flex:1;" id="page-title">Tableau de bord
+  </div>
+    <button class="btn btn-ghost btn-sm" onclick="window.open('../index.html','_blank')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" x2="21" y1="14" y2="3"/></svg>
+      Voir le site
+    </button>
+  </div>
+
+  <!-- PAGE DASHBOARD -->
+  <div class="content page active" id="page-dashboard">
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="kpi-icon" style="background:rgba(37,99,235,.1);color:var(--blue);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        </div>
+        <div class="kpi-val" id="kpi-res">—</div>
+        <div class="kpi-lbl">Réservations ce mois</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-icon" style="background:rgba(22,163,74,.1);color:var(--green);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/></svg>
+        </div>
+        <div class="kpi-val" id="kpi-art">—</div>
+        <div class="kpi-lbl">Articles publiés</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-icon" style="background:rgba(196,30,58,.1);color:var(--red);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+        </div>
+        <div class="kpi-val" id="kpi-nl">—</div>
+        <div class="kpi-lbl">Abonnés newsletter</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-icon" style="background:rgba(124,58,237,.1);color:var(--purple);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/></svg>
+        </div>
+        <div class="kpi-val" id="kpi-faq">—</div>
+        <div class="kpi-lbl">Questions FAQ</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Score SEO par page</div>
+          <button class="btn btn-ghost btn-sm" onclick="nav('seo',document.querySelector('[onclick*=seo]'))">Gérer →</button>
+        </div>
+        <table class="tbl"><thead><tr><th>Page</th><th>Score</th><th>État</th></tr></thead>
+        <tbody id="dash-seo-tbody"></tbody></table>
+      </div>
+      <div class="card">
+        <div class="card-head"><div class="card-title">Recommandations</div></div>
+        <div id="dash-recs" style="font-size:13px;line-height:2;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE SEO PAR PAGE -->
+  <div class="content page" id="page-seo">
+    <div class="tabs" id="seo-page-tabs">
+      <div class="tab active" onclick="loadSEOPage('index',this)">Accueil</div>
+      <div class="tab" onclick="loadSEOPage('nos-vehicules',this)">Véhicules</div>
+      <div class="tab" onclick="loadSEOPage('about',this)">À propos</div>
+      <div class="tab" onclick="loadSEOPage('contact',this)">Contact</div>
+      <div class="tab" onclick="loadSEOPage('aeroport',this)">Aéroport</div>
+      <div class="tab" onclick="loadSEOPage('faq',this)">FAQ</div>
+      <div class="tab" onclick="loadSEOPage('blog',this)">Blog</div>
+    </div>
+
+    <div class="card" id="seo-editor-card">
+      <div class="card-head">
+        <div><div class="card-title" id="seo-page-name">Accueil</div>
+          <div class="card-sub" id="seo-page-url">allstarloc.ma/</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="generateSEOAI()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          Suggestions IA
+        </button>
+        <button class="btn btn-red btn-sm" onclick="saveSEO()">Enregistrer</button>
+      </div>
+      <div id="sync-bar-seo" class="sync-bar"></div>
+      <div class="form-grid" style="margin-bottom:14px;">
+        <div class="fg">
+          <label>Titre SEO <span style="color:var(--t3);font-weight:400;">(50-60 car.)</span></label>
+          <input class="fi" id="seo-title" oninput="updateSEOScore()">
+          <div id="seo-title-count" class="char-count"></div>
+          <div class="seo-score-bar"><div id="seo-title-bar" class="seo-score-fill" style="width:0;background:var(--green);"></div></div>
+        </div>
+        <div class="fg">
+          <label>Meta Description <span style="color:var(--t3);font-weight:400;">(150-160 car.)</span></label>
+          <input class="fi" id="seo-desc" oninput="updateSEOScore()">
+          <div id="seo-desc-count" class="char-count"></div>
+          <div class="seo-score-bar"><div id="seo-desc-bar" class="seo-score-fill" style="width:0;background:var(--green);"></div></div>
+        </div>
+      </div>
+      <div class="form-grid" style="margin-bottom:14px;">
+        <div class="fg"><label>H1</label><input class="fi" id="seo-h1"></div>
+        <div class="fg"><label>H2 (sous-titre)</label><input class="fi" id="seo-h2"></div>
+      </div>
+      <div class="fg" style="margin-bottom:14px;">
+        <label>Mots-clés ciblés <span style="color:var(--t3);font-weight:400;">(séparés par virgules)</span></label>
+        <input class="fi" id="seo-keywords" placeholder="location voiture marrakech, louer voiture marrakech">
+      </div>
+      <div class="fg" style="margin-bottom:14px;">
+        <label>Texte SEO <span style="color:var(--t3);font-weight:400;">(contenu optimisé)</span></label>
+        <textarea class="ft" id="seo-text" rows="4"></textarea>
+      </div>
+      <div style="background:var(--bg);border-radius:10px;padding:14px;">
+        <div style="font-size:13px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px;">
+          Score SEO
+          <span id="seo-score-val" style="font-size:18px;font-weight:900;"></span>
+          <span id="seo-score-label" style="font-size:11px;padding:2px 8px;border-radius:20px;font-weight:700;"></span>
+        </div>
+        <div id="seo-recs" style="font-size:12.5px;line-height:1.9;color:var(--t2);"></div>
+      </div>
+    </div>
+
+    <!-- Panel IA -->
+    <div class="ai-panel" id="ai-panel" style="display:none;">
+      <div class="ai-panel-head">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        <div style="flex:1;font-weight:800;font-size:14px;">Suggestions IA <span class="ai-badge">Claude AI</span></div>
+        <span class="ai-season-badge" id="ai-season-label"></span>
+        <button class="ai-btn" onclick="generateSEOAI()" style="font-size:11px;padding:6px 12px;">↻ Actualiser</button>
+      </div>
+      <div id="ai-loading" style="display:none;text-align:center;padding:20px;">
+        <div class="ai-spinner" style="margin:0 auto 10px;"></div>
+        <div style="font-size:13px;color:rgba(255,255,255,.6);">Analyse en cours…</div>
+      </div>
+      <div id="ai-content" style="display:none;">
+        <div class="ai-section-title">💡 Suggestions H1</div>
+        <div class="ai-suggestions" id="ai-h1-list"></div>
+        <div class="ai-section-title">📌 Suggestions H2</div>
+        <div class="ai-suggestions" id="ai-h2-list"></div>
+        <div class="ai-section-title">📝 Meta Descriptions</div>
+        <div class="ai-suggestions" id="ai-meta-list"></div>
+        <div class="ai-section-title">🔍 Mots-clés</div>
+        <div id="ai-kw-list" style="margin-bottom:4px;"></div>
+        <button class="ai-btn" onclick="applyAllKeywords()" style="font-size:11px;margin-top:6px;">Appliquer tous les mots-clés</button>
+        <div class="ai-section-title">📅 Tendances actuelles</div>
+        <div id="ai-trends-list"></div>
+        <div class="ai-section-title">✍️ Idées d'articles</div>
+        <div id="ai-blog-ideas"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE ÉDITEUR CONTENU -->
+  <div class="content page" id="page-editor">
+    <div class="card">
+      <div class="card-head">
+        <div><div class="card-title">Éditeur de contenu — Structure de la page</div>
+          <div class="card-sub">Réorganisez, masquez ou affichez les sections sans toucher au code</div>
+        </div>
+        <button class="btn btn-red btn-sm" onclick="saveEditorLayout()">Enregistrer</button>
+      </div>
+      <div id="sync-bar-editor" class="sync-bar"></div>
+      <p style="font-size:13px;color:var(--t2);margin-bottom:16px;">
+        Glissez les sections pour les réordonner. Cliquez sur l'œil pour masquer/afficher.
+      </p>
+      <div id="sections-list"></div>
+    </div>
+  </div>
+
+  <!-- PAGE IA MARKETING -->
+  <div class="content page" id="page-ia">
+    <div class="card">
+      <div class="card-head">
+        <div><div class="card-title">Assistant IA Marketing</div>
+          <div class="card-sub">Générez du contenu optimisé SEO adapté à votre agence et à la saison</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+        <button class="btn btn-ghost btn-sm ia-page-btn active" onclick="setIAPage('index',this)">Accueil</button>
+        <button class="btn btn-ghost btn-sm ia-page-btn" onclick="setIAPage('nos-vehicules',this)">Nos Véhicules</button>
+        <button class="btn btn-ghost btn-sm ia-page-btn" onclick="setIAPage('about',this)">À propos</button>
+        <button class="btn btn-ghost btn-sm ia-page-btn" onclick="setIAPage('contact',this)">Contact</button>
+        <button class="btn btn-ghost btn-sm ia-page-btn" onclick="setIAPage('blog',this)">Blog</button>
+      </div>
+      <div class="ai-panel">
+        <div class="ai-panel-head">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          <div style="flex:1;font-weight:800;font-size:14px;">Claude AI <span class="ai-badge">SEO Marrakech</span></div>
+          <span class="ai-season-badge" id="ia-season-badge"></span>
+          <button class="ai-btn primary" onclick="generateIAMarketing()" id="ia-gen-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/></svg>
+            Générer le contenu
+          </button>
+        </div>
+        <div id="ia-loading" style="display:none;text-align:center;padding:24px;">
+          <div class="ai-spinner" style="margin:0 auto 10px;"></div>
+          <div style="font-size:13px;color:rgba(255,255,255,.6);">Génération en cours…</div>
+        </div>
+        <div id="ia-result" style="display:none;">
+          <div class="ai-section-title">💡 H1 suggérés</div>
+          <div id="ia-h1" class="ai-suggestions"></div>
+          <div class="ai-section-title">📌 H2 suggérés</div>
+          <div id="ia-h2" class="ai-suggestions"></div>
+          <div class="ai-section-title">📝 Meta Descriptions</div>
+          <div id="ia-meta" class="ai-suggestions"></div>
+          <div class="ai-section-title">🔍 Mots-clés</div>
+          <div id="ia-kw"></div>
+          <div class="ai-section-title">✍️ Idées d'articles de blog</div>
+          <div id="ia-blog" class="ai-suggestions"></div>
+          <div class="ai-section-title">❓ Questions FAQ suggérées</div>
+          <div id="ia-faq" class="ai-suggestions"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE BLOG -->
+  <div class="content page" id="page-blog">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+      <h2 style="font-size:18px;font-weight:900;flex:1;">Blog</h2>
+      <button class="btn btn-red" onclick="openBlogEditor()">+ Nouvel article</button>
+    </div>
+    <div class="tabs">
+      <div class="tab active" onclick="filterBlog('all',this)">Tous</div>
+      <div class="tab" onclick="filterBlog('published',this)">Publiés</div>
+      <div class="tab" onclick="filterBlog('draft',this)">Brouillons</div>
+    </div>
+    <div class="card">
+      <table class="tbl"><thead><tr><th>Titre</th><th>Catégorie</th><th>Date</th><th>Statut</th><th>Score SEO</th><th></th></tr></thead>
+      <tbody id="blog-tbody"></tbody></table>
+    </div>
+  </div>
+
+  <!-- PAGE FAQ -->
+  <div class="content page" id="page-faq">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+      <div>
+        <h2 style="font-size:18px;font-weight:900;">FAQ</h2>
+        <p style="font-size:13px;color:var(--t2);margin-top:2px;">Injectée en Schema.org sur le site → meilleur référencement Google</p>
+      </div>
+      <button class="btn btn-red" onclick="openFAQEditor()">+ Ajouter</button>
+    </div>
+    <div id="sync-bar-faq" class="sync-bar"></div>
+    <div class="card"><div id="faq-list"></div>
+      <div id="faq-empty" style="text-align:center;padding:30px;color:var(--t3);">Aucune question. Cliquez sur + Ajouter.</div>
+    </div>
+  </div>
+
+  <!-- PAGE POPUP & CTA -->
+  <div class="content page" id="page-popup">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="card">
+        <div class="card-head"><div class="card-title">Popup principal</div>
+          <button class="btn btn-red btn-sm" onclick="savePopupConfig()">Enregistrer</button>
+        </div>
+        <div id="sync-bar-popup" class="sync-bar"></div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:700;">
+            <input type="checkbox" id="popup-active" style="accent-color:var(--red);width:16px;height:16px;"> Activer le popup
+          </label>
+          <div class="fg"><label>Délai avant affichage (secondes)</label>
+            <input class="fi" id="popup-delay" type="number" min="0" max="60" value="5" oninput="updatePopupPreview()"></div>
+          <div class="fg"><label>Titre</label>
+            <input class="fi" id="popup-title" placeholder="Offre spéciale Marrakech" oninput="updatePopupPreview()"></div>
+          <div class="fg"><label>Texte</label>
+            <textarea class="ft" id="popup-text" rows="3" oninput="updatePopupPreview()"></textarea></div>
+          <div class="fg"><label>Texte du bouton CTA</label>
+            <input class="fi" id="popup-cta" placeholder="Réserver maintenant" oninput="updatePopupPreview()"></div>
+          <div class="fg"><label>Afficher sur</label>
+            <select class="fs" id="popup-pages">
+              <option value="all">Toutes les pages</option>
+              <option value="home">Accueil uniquement</option>
+              <option value="vehicules">Nos Véhicules</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div class="card-title">Aperçu</div></div>
+        <div class="popup-preview">
+          <div id="pp-title" style="font-size:16px;font-weight:800;margin-bottom:8px;color:var(--red);">Titre du popup</div>
+          <div id="pp-text" style="font-size:13px;color:var(--t2);margin-bottom:14px;">Texte descriptif</div>
+          <button class="btn btn-red btn-sm" id="pp-cta">Réserver maintenant</button>
+        </div>
+        <div class="card" style="margin-top:16px;">
+          <div class="card-head"><div class="card-title">Bouton WhatsApp flottant</div></div>
+          <div class="fg"><label>Texte du bouton</label>
+            <input class="fi" id="wa-btn-text" placeholder="Réserver sur WhatsApp"></div>
+          <button class="btn btn-ghost btn-sm" style="margin-top:10px;" onclick="saveWAConfig()">Enregistrer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE NEWSLETTER -->
+  <div class="content page" id="page-newsletter">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+      <h2 style="font-size:18px;font-weight:900;flex:1;">Newsletter</h2>
+      <button class="btn btn-ghost btn-sm" onclick="exportCSV()">Exporter CSV</button>
+      <button class="btn btn-red btn-sm" onclick="openAddContact()">+ Ajouter</button>
+    </div>
+    <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);" id="nl-kpi"></div>
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <div class="search-box">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input placeholder="Nom, email, téléphone…" oninput="filterNL(this.value)">
+        </div>
+      </div>
+      <table class="tbl"><thead><tr><th>Nom</th><th>Email</th><th>Téléphone</th><th>Source</th><th>Date</th><th></th></tr></thead>
+      <tbody id="nl-tbody"></tbody></table>
+    </div>
+  </div>
+
+  <!-- PAGE ADS -->
+  <div class="content page" id="page-ads">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="card">
+        <div class="card-head"><div class="card-title">Google Ads — Configuration</div>
+          <button class="btn btn-red btn-sm" onclick="saveAds()">Enregistrer</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div class="fg"><label>ID Google Ads</label><input class="fi" id="ads-id" placeholder="AW-XXXXXXXXXX"></div>
+          <div class="fg"><label>Balise globale (gtag.js)</label><textarea class="ft" id="ads-gtag" rows="4"></textarea></div>
+          <div class="fg"><label>Conversion Réservation</label><input class="fi" id="ads-conv_res" placeholder="AW-XXX/YYYY"></div>
+          <div class="fg"><label>Conversion WhatsApp</label><input class="fi" id="ads-conv_wa" placeholder="AW-XXX/YYYY"></div>
+          <div class="fg"><label>Conversion Appel</label><input class="fi" id="ads-conv_call" placeholder="AW-XXX/YYYY"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div class="card-title">Performances</div></div>
+        <div style="text-align:center;padding:40px 20px;color:var(--t3);">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:12px;"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          <div style="font-size:14px;font-weight:600;margin-bottom:6px;">Connectez Google Ads</div>
+          <div style="font-size:12.5px;">Entrez votre ID pour activer le suivi</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE ANALYTICS -->
+  <div class="content page" id="page-analytics">
+    <div class="card">
+      <div class="card-head"><div class="card-title">Google Analytics 4</div>
+        <button class="btn btn-red btn-sm" onclick="saveAnalytics()">Enregistrer</button>
+      </div>
+      <div class="fg" style="margin-bottom:12px;"><label>ID de mesure GA4</label>
+        <input class="fi" id="ga4-id" placeholder="G-XXXXXXXXXX"></div>
+      <div class="fg"><label>Snippet gtag.js</label>
+        <textarea class="ft" id="ga4-code" rows="5"></textarea></div>
+      <div style="margin-top:20px;padding:20px;background:var(--bg);border-radius:10px;text-align:center;color:var(--t3);">
+        <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Connectez GA4 pour voir les statistiques</div>
+        <div style="font-size:12px;">Visiteurs · Sessions · Pages vues · Conversions</div>
+      </div>
+    </div>
+  </div>
+
+<!-- PAGE CONFIGURATION EMAIL -->
+<div class="content page" id="page-email">
+  <h2 style="font-size:18px;font-weight:900;margin-bottom:6px;">Configuration Email</h2>
+  <p style="font-size:13px;color:var(--t2);margin-bottom:20px;">
+    Configurez votre adresse email professionnelle pour recevoir automatiquement les demandes de réservation et de contact.
+  </p>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div class="card">
+      <div class="card-head"><div class="card-title">Adresses de réception</div>
+        <button class="btn btn-red btn-sm" onclick="saveEmailConfig()">Enregistrer</button>
+      </div>
+      <div class="fg" style="margin-bottom:12px;">
+        <label>Email de réception des réservations</label>
+        <input class="fi" id="email-reservation" type="email" placeholder="reservation@allstarloc.ma">
+      </div>
+      <div class="fg" style="margin-bottom:12px;">
+        <label>Email de réception du contact</label>
+        <input class="fi" id="email-contact" type="email" placeholder="contact@allstarloc.ma">
+      </div>
+      <div class="fg">
+        <label>Email expéditeur (from)</label>
+        <input class="fi" id="email-from" type="email" placeholder="no-reply@allstarloc.ma">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="card-title">Serveur SMTP</div></div>
+      <div class="fg" style="margin-bottom:12px;">
+        <label>SMTP Host</label>
+        <input class="fi" id="smtp-host" placeholder="smtp.gmail.com / mail.allstarloc.ma">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+        <div class="fg">
+          <label>SMTP Port</label>
+          <input class="fi" id="smtp-port" placeholder="587">
+        </div>
+        <div class="fg">
+          <label>Sécurité</label>
+          <select class="fs" id="smtp-security">
+            <option value="tls">TLS (587)</option>
+            <option value="ssl">SSL (465)</option>
+            <option value="none">Aucune</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg" style="margin-bottom:12px;">
+        <label>SMTP Username</label>
+        <input class="fi" id="smtp-user" placeholder="reservation@allstarloc.ma">
+      </div>
+      <div class="fg" style="margin-bottom:14px;">
+        <label>SMTP Password</label>
+        <input class="fi" id="smtp-pass" type="password" placeholder="••••••••">
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-red btn-sm" onclick="saveEmailConfig()" style="flex:1;">Enregistrer</button>
+        <button class="btn btn-ghost btn-sm" onclick="testEmailConfig()" style="flex:1;">Tester l'envoi</button>
+      </div>
+      <div id="email-test-result" style="display:none;margin-top:12px;padding:10px 14px;border-radius:9px;font-size:13px;font-weight:600;"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <div class="card-head"><div class="card-title">Informations envoyées dans chaque email de réservation</div></div>
+    <div style="font-size:13px;color:var(--t2);line-height:2;columns:2;">
+      Nom du client · Téléphone · Email · Véhicule choisi · Date de départ · Date de retour ·
+      Lieu de départ · Lieu de retour · Numéro de permis · Numéro de carte nationale ·
+      Mode de paiement · Caution · Détails supplémentaires
+    </div>
+    <div style="margin-top:14px;padding:14px;background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.18);border-radius:10px;font-size:12.5px;color:#1d4ed8;line-height:1.7;">
+      <strong>Note :</strong> Sur un site statique, l'envoi d'email nécessite un service backend (worker Cloudflare,
+      service SMTP via API, ou formulaire relayé). Cette configuration est sauvegardée et prête à être connectée
+      à votre service d'envoi après déploiement. Pour l'instant, les demandes passent par WhatsApp.
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<!-- PAGE RÉSEAUX SOCIAUX -->
+<div class="content page" id="page-social">
+  <h2 style="font-size:18px;font-weight:900;margin-bottom:6px;">Réseaux Sociaux</h2>
+  <p style="font-size:13px;color:var(--t2);margin-bottom:20px;">
+    Renseignez les liens complets de vos réseaux sociaux. Ils seront synchronisés automatiquement avec le site client : les icônes du footer pointeront vers ces liens.
+  </p>
+
+  <div class="card" style="max-width:620px;">
+    <div class="card-head"><div class="card-title">Liens des réseaux sociaux</div>
+      <button class="btn btn-red btn-sm" onclick="saveSocialConfig()">Enregistrer</button>
+    </div>
+
+    <div class="fg" style="margin-bottom:14px;">
+      <label style="display:flex;align-items:center;gap:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="#25D366"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.39-1.48-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.61-.92-2.21-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48 0 1.46 1.07 2.88 1.21 3.07.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.69.62.71.23 1.36.2 1.87.12.57-.08 1.76-.72 2-1.41.25-.7.25-1.29.18-1.41-.08-.13-.27-.2-.57-.35z"/></svg>
+        WhatsApp
+      </label>
+      <input class="fi" id="social-whatsapp" placeholder="https://wa.me/212675312453">
+    </div>
+
+    <div class="fg" style="margin-bottom:14px;">
+      <label style="display:flex;align-items:center;gap:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E1306C" stroke-width="2"><rect width="20" height="20" x="2" y="2" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="#E1306C"/></svg>
+        Instagram
+      </label>
+      <input class="fi" id="social-instagram" placeholder="https://instagram.com/votrepage">
+    </div>
+
+    <div class="fg" style="margin-bottom:14px;">
+      <label style="display:flex;align-items:center;gap:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.96.93-1.96 1.89v2.25h3.33l-.53 3.49h-2.8V24C19.61 23.1 24 18.1 24 12.07z"/></svg>
+        Facebook
+      </label>
+      <input class="fi" id="social-facebook" placeholder="https://facebook.com/votrepage">
+    </div>
+
+    <div class="fg" style="margin-bottom:14px;">
+      <label style="display:flex;align-items:center;gap:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.3 0 .59.04.86.13V9.4a6.33 6.33 0 0 0-1-.05A6.34 6.34 0 0 0 5.09 20.2a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.13-.2z"/></svg>
+        TikTok
+      </label>
+      <input class="fi" id="social-tiktok" placeholder="https://tiktok.com/@votrepage">
+    </div>
+
+    <div class="fg">
+      <label style="display:flex;align-items:center;gap:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="#FFFC00" stroke="#000" stroke-width="0.5"><path d="M12.2 2c2.5.07 4.3 1.9 4.5 4.4.07.9 0 1.8.05 2.7 0 .2.1.3.3.3.4 0 .8-.2 1.2-.1.5.1.7.6.4 1-.3.4-.8.5-1.2.7-.3.1-.5.3-.4.6.4 1.4 1.3 2.4 2.7 2.9.4.1.6.4.5.7-.2.5-1.5.8-2 .9-.1 0-.2.2-.2.3-.1.5-.4.6-.9.5-.5-.1-1-.2-1.5-.1-.4.1-.7.4-1 .7-.7.6-1.5 1-2.5 1s-1.8-.4-2.5-1c-.3-.3-.6-.6-1-.7-.5-.1-1 0-1.5.1-.5.1-.8 0-.9-.5 0-.1-.1-.3-.2-.3-.5-.1-1.8-.4-2-.9-.1-.3.1-.6.5-.7 1.4-.5 2.3-1.5 2.7-2.9.1-.3-.1-.5-.4-.6-.4-.2-.9-.3-1.2-.7-.3-.4-.1-.9.4-1 .4-.1.8.1 1.2.1.2 0 .3-.1.3-.3.05-.9-.02-1.8.05-2.7C7.5 3.9 9.3 2.07 11.8 2h.4z"/></svg>
+        Snapchat
+      </label>
+      <input class="fi" id="social-snapchat" placeholder="https://snapchat.com/add/votrepage">
+    </div>
+
+    <div style="margin-top:16px;display:flex;gap:8px;">
+      <button class="btn btn-red" onclick="saveSocialConfig()" style="flex:1;">Enregistrer les liens</button>
+    </div>
+    <div id="social-saved-msg" style="display:none;margin-top:12px;padding:10px 14px;border-radius:9px;font-size:13px;font-weight:600;background:rgba(22,163,74,.1);color:#16a34a;">
+      Liens enregistrés et synchronisés avec le site client.
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bd" id="modal-bd" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-head"><h3 id="modal-title">—</h3>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()" style="padding:6px;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-foot" id="modal-foot"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const K = {
+  seo:        'asl_mkt_seo_v1',
+  content:    'asl_mkt_content_v1',
+  faq:        'asl_mkt_faq_v1',
+  blog:       'asl_mkt_blog_v1',
+  menu:       'asl_mkt_menu_v1',
+  ads:        'asl_mkt_ads_v1',
+  social:     'asl_mkt_social_v1',
+  newsletter: 'asl_mkt_nl_v1',
+  keywords:   'asl_mkt_kw_v1',
+  analytics:  'asl_mkt_ga_v1',
+  reputation: 'asl_mkt_rep_v1',
+  gbp:        'asl_mkt_gbp_v1',
+  posts:      'asl_mkt_posts_v1',
+};
+
+const SEO_DEFAULTS = {
+  index: { title:'ALL STAR LOC — Location de Voiture à Marrakech | Depuis 2018', desc:'Location de voiture à Marrakech. Livraison aéroport gratuite, service 24h/7j, flotte moderne. Réservez en ligne en 2 minutes.', slug:'', keywords:'location voiture marrakech, louer voiture marrakech' },
+  'nos-vehicules': { title:'Nos Véhicules — Location de Voiture à Marrakech | ALL STAR LOC', desc:'Découvrez toute la flotte ALL STAR LOC à Marrakech : citadines, berlines et SUV récents. Tarifs dégressifs, assurance incluse.', slug:'nos-vehicules', keywords:'citadine marrakech, suv marrakech, berline marrakech' },
+  about:   { title:'À propos — ALL STAR LOC Marrakech', desc:'Découvrez ALL STAR LOC, votre partenaire de confiance pour la location de voiture à Marrakech depuis 2018.', slug:'about', keywords:'location voiture marrakech agence, ALL STAR LOC' },
+  contact: { title:'Contact — ALL STAR LOC Marrakech', desc:'Contactez ALL STAR LOC pour louer une voiture à Marrakech. Réponse rapide, devis gratuit, livraison à l\'aéroport.', slug:'contact', keywords:'contact location voiture marrakech' },
+  aeroport:{ title:'Location Voiture Aéroport Marrakech Ménara | ALL STAR LOC', desc:'Location de voiture à l\'aéroport de Marrakech Ménara. Livraison gratuite et rapide à votre arrivée.', slug:'aeroport', keywords:'location voiture aeroport marrakech, rak location' },
+  faq:     { title:'FAQ — Questions Fréquentes | ALL STAR LOC Marrakech', desc:'Retrouvez les réponses à toutes vos questions sur la location de voiture à Marrakech avec ALL STAR LOC.', slug:'faq', keywords:'faq location voiture marrakech' },
+  blog:    { title:'Blog Location Voiture Marrakech | ALL STAR LOC', desc:'Conseils, guides et actualités sur la location de voiture et le tourisme à Marrakech.', slug:'blog', keywords:'blog location voiture marrakech, guide tourisme marrakech' },
+};
+
+const I18N_DEFAULTS = {
+  'hero.titleHtml': 'Location de Voiture<br>à Marrakech <span>Sans Surprise</span>',
+  'hero.sub':       "Livraison gratuite à l'aéroport Ménara (RAK), au centre-ville et à votre hôtel. Flotte récente, assurance incluse, kilométrage illimité et prix transparents.",
+  'hero.badge':     'Agence à Marrakech · Depuis 2018',
+  'nav.book':       'Réserver',
+  'hero.f1':        'Livraison aéroport gratuite',
+  'hero.f2':        'Disponible 24h/24, 7j/7',
+  'fleet.titleHtml':'Choisissez le Véhicule<br><span>Idéal pour Marrakech</span>',
+  'why.titleHtml':  'Pourquoi Choisir<br><span>ALL STAR LOC ?</span>',
+  'bk.find':        'Trouver une voiture',
+  'nav.home':       'Accueil',
+  'nav.fleet':      'Nos Véhicules',
+  'bk.title':       'Réservez votre voiture',
+  'nav.wa247':      'WhatsApp 24h/7j',
+};
+
+const CONTENT_FIELDS = [
+  { id:'ov-hero-titleHtml', key:'hero.titleHtml' },
+  { id:'ov-hero-sub',       key:'hero.sub'       },
+  { id:'ov-hero-badge',     key:'hero.badge'     },
+  { id:'ov-nav-book',       key:'nav.book'       },
+  { id:'ov-hero-f1',        key:'hero.f1'        },
+  { id:'ov-hero-f2',        key:'hero.f2'        },
+  { id:'ov-fleet-titleHtml',key:'fleet.titleHtml'},
+  { id:'ov-why-titleHtml',  key:'why.titleHtml'  },
+  { id:'ov-bk-find',        key:'bk.find'        },
+  { id:'ov-nav-home',       key:'nav.home'       },
+  { id:'ov-nav-fleet',      key:'nav.fleet'      },
+  { id:'ov-bk-title',       key:'bk.title'       },
+  { id:'ov-nav-wa247',      key:'nav.wa247'      },
+];
+
+const MENU_DEFAULTS = [
+  { key:'accueil',      label:'Accueil',       href:'/',               visible:true  },
+  { key:'vehicules',    label:'Nos véhicules', href:'/nos-vehicules',  visible:true  },
+  { key:'aeroport',     label:'Aéroport',      href:'/aeroport',       visible:true  },
+  { key:'blog',         label:'Blog',          href:'/blog',           visible:true  },
+  { key:'contact',      label:'Contact',       href:'/contact',        visible:true  },
+  { key:'faq',          label:'FAQ',           href:'/faq',            visible:false },
+];
+
+
+const CONTENT_KEY = 'asl_mkt_content_v1';
+const POPUP_KEY   = 'asl_mkt_popup_v1';
+const AB_KEY      = 'asl_mkt_ab_v1';
+const TRACK_KEY   = 'asl_mkt_track_v1';
+const MKT_LOCAL_KEY = 'asl_mkt_all_v1';
+const load = k => { try { return JSON.parse(localStorage.getItem(k)||'null'); } catch{ return null; } };
+const save = (k,v) => localStorage.setItem(k, JSON.stringify(v));
+const getRes = () => { try { return JSON.parse(localStorage.getItem('asl_reservations_v1')||'[]'); } catch{ return []; } };
+
+
+
+const SITE_SECTIONS = [
+  { id:'hero',    icon:'🏠', name:'Hero',                  desc:'Titre principal, sous-titre, CTA' },
+  { id:'search',  icon:'🔍', name:'Recherche véhicule',    desc:'Calendrier et filtres de recherche' },
+  { id:'fleet',   icon:'🚗', name:'Véhicules populaires',  desc:'Grille des voitures disponibles' },
+  { id:'why',     icon:'⭐', name:'Pourquoi nous choisir', desc:'Arguments de confiance' },
+  { id:'reviews', icon:'💬', name:'Avis clients',          desc:'Témoignages et notes' },
+  { id:'faq',     icon:'❓', name:'FAQ',                   desc:'Questions fréquentes' },
+  { id:'cta',     icon:'🎯', name:'CTA final',             desc:'Bouton de réservation en bas de page' },
+];
+const SECTIONS_KEY = 'asl_mkt_sections_v1';
+
+
+function toast(msg, cls='') {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = 'toast show' + (cls?' '+cls:'');
+  setTimeout(()=>el.classList.remove('show'), 3200);
+}
+
+function openModal(title, body, actions=[]) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = body;
+  document.getElementById('modal-foot').innerHTML = actions.map(a=>`<button class="btn ${a.cls}" onclick="${a.action}">${a.label}</button>`).join('');
+  document.getElementById('modal-bd').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal-bd').classList.remove('open'); }
+
+function showSyncStatus(msg, type) {
+  const s = document.getElementById('sync-status');
+  if (s) {
+    s.style.display = 'block';
+    const ok = type !== 'warn';
+    s.style.background = ok ? 'rgba(22,163,74,.1)' : 'rgba(217,119,6,.1)';
+    s.style.border = ok ? '1px solid rgba(22,163,74,.3)' : '1px solid rgba(217,119,6,.3)';
+    s.style.color = ok ? 'var(--green)' : 'var(--yellow)';
+    s.innerHTML = (ok ? '✅ ' : '⚠ ') + msg + (ok ? ' <a href="../index.html" target="_blank" style="color:var(--green);font-weight:700;">Ouvrir le site →</a>' : '');
+    setTimeout(() => { if(s) s.style.display='none'; }, 9000);
+  }
+}
+
+async function syncToKV(label) {
+  const data = getMktData();
+  // 1. Sauvegarder localement d'abord (immédiat)
+  save(MKT_LOCAL_KEY, data);
+  // 2. Envoyer vers KV
+  try {
+    const resp = await fetch('/api/marketing', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (resp.ok) {
+      showSyncStatus((label || 'Données') + ' synchronisées avec le site. Rafraîchissez le site client pour voir les changements.');
+    } else {
+      // Erreur KV — données déjà sauvegardées localement
+      showSyncStatus((label || 'Données') + ' sauvegardées localement. La sync KV sera retentée au prochain enregistrement.', 'warn');
+    }
+  } catch (e) {
+    // Hors-ligne — localStorage suffit pour l'instant
+    showSyncStatus((label || 'Données') + ' sauvegardées localement (hors-ligne). Elles seront synchronisées automatiquement.');
+  }
+}
+
+function getMktData() {
+  // Construire l'objet marketing complet depuis tous les stores localStorage
+  return {
+    content:  load(K.content)    || {},
+    seo:      load(K.seo)        || {},
+    faq:      load(K.faq)        || [],
+    blog:     load(K.blog)       || [],
+    popup:    load(K.popup)      || {},
+    ab:       load(K.ab)         || {},
+    keywords: load(K.keywords)   || [],
+    ads:      load(K.ads)        || {},
+    social:   load(K.social)     || {},
+    analytics:load(K.analytics)  || {},
+    reputation:load(K.reputation)|| [],
+    menu:     load(K.menu)       || [],
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+function calcSEOScore(d) {
+  let score = 0;
+  const title = d.title || '';
+  const desc  = d.desc  || '';
+  if (title.length >= 40 && title.length <= 65) score += 25;
+  else if (title.length > 0) score += 10;
+  if (desc.length >= 120 && desc.length <= 165) score += 25;
+  else if (desc.length > 0) score += 10;
+  if (d.keywords && d.keywords.length > 5) score += 20;
+  if (d.h1)   score += 15;
+  if (d.slug) score += 10;
+  if (d.text && d.text.length > 100) score += 5;
+  return Math.min(100, score);
+}
+
+function updateSEOScore() {
+  const title = document.getElementById('seo-title')?.value || '';
+  const desc  = document.getElementById('seo-desc')?.value  || '';
+
+  // Titre
+  const tc = document.getElementById('seo-title-count');
+  const tb = document.getElementById('seo-title-bar');
+  if (tc && tb) {
+    const l = title.length;
+    tc.textContent = `${l} caractères ${l<40?'(trop court)':l>65?'(trop long)':'(✓ idéal)'}`;
+    tc.className = 'char-count ' + (l>=40&&l<=65?'ok':l>0?'warn':'bad');
+    tb.style.width = Math.min(100, l/65*100) + '%';
+    tb.style.background = l>=40&&l<=65?'var(--green)':l>0?'var(--yellow)':'var(--red)';
+  }
+
+  // Description
+  const dc = document.getElementById('seo-desc-count');
+  const db = document.getElementById('seo-desc-bar');
+  if (dc && db) {
+    const l = desc.length;
+    dc.textContent = `${l} caractères ${l<120?'(trop courte)':l>165?'(trop longue)':'(✓ idéale)'}`;
+    dc.className = 'char-count ' + (l>=120&&l<=165?'ok':l>0?'warn':'bad');
+    db.style.width = Math.min(100, l/165*100) + '%';
+    db.style.background = l>=120&&l<=165?'var(--green)':l>0?'var(--yellow)':'var(--red)';
+  }
+
+  // Score global
+  const d = { title, desc,
+    h1:       document.getElementById('seo-h1')?.value,
+    keywords: document.getElementById('seo-keywords')?.value,
+    slug:     document.getElementById('seo-slug')?.value,
+    text:     document.getElementById('seo-text')?.value,
+  };
+  const score = calcSEOScore(d);
+  const sv = document.getElementById('seo-score-val');
+  const sl = document.getElementById('seo-score-label');
+  if (sv) sv.textContent = score + '/100';
+  if (sl) {
+    sl.textContent  = score>=80?'Excellent':score>=60?'Bon':score>=40?'Moyen':'Faible';
+    sl.style.background = score>=80?'rgba(22,163,74,.15)':score>=60?'rgba(217,119,6,.15)':'rgba(196,30,58,.15)';
+    sl.style.color      = score>=80?'var(--green)':score>=60?'var(--yellow)':'var(--red)';
+  }
+
+  // Recommandations
+  const recs = [];
+  if (!title) recs.push('❌ Titre SEO manquant');
+  else if (title.length < 40) recs.push('⚠ Titre trop court (min 40 car.)');
+  else if (title.length > 65) recs.push('⚠ Titre trop long (max 65 car.)');
+  else recs.push('✅ Titre optimal');
+  if (!desc) recs.push('❌ Meta description manquante');
+  else if (desc.length < 120) recs.push('⚠ Meta description trop courte (min 120 car.)');
+  else if (desc.length > 165) recs.push('⚠ Meta description trop longue (max 165 car.)');
+  else recs.push('✅ Meta description optimale');
+  if (!d.h1) recs.push('⚠ H1 manquant — important pour le SEO');
+  else recs.push('✅ H1 défini');
+  if (!d.keywords) recs.push('💡 Ajoutez des mots-clés ciblés');
+  else recs.push('✅ Mots-clés définis');
+  const rec = document.getElementById('seo-recs');
+  if (rec) rec.innerHTML = recs.map(r => `<div>${r}</div>`).join('');
+}
+
+function loadSEOPage(key) {
+  currentSEOPage = key;
+  const seoData = load(K.seo) || {};
+  const d = seoData[key] || SEO_DEFAULTS[key] || {};
+  const names = { index:'Accueil', 'nos-vehicules':'Nos Véhicules', about:'À propos',
+    contact:'Contact', aeroport:'Aéroport Ménara', faq:'FAQ', blog:'Blog' };
+  document.getElementById('seo-page-name').textContent = names[key] || key;
+  document.getElementById('seo-page-url').textContent  = 'allstarloc.ma/' + (d.slug || key !== 'index' ? key : '');
+  document.getElementById('seo-title').value    = d.title    || '';
+  document.getElementById('seo-desc').value     = d.desc     || '';
+  document.getElementById('seo-h1').value       = d.h1       || '';
+  document.getElementById('seo-slug').value     = d.slug     || (key !== 'index' ? key : '');
+  document.getElementById('seo-keywords').value = d.keywords || '';
+  document.getElementById('seo-text').value     = d.text     || '';
+  document.getElementById('seo-canonical').value= d.canonical|| `https://allstarloc.ma/${key !== 'index' ? key : ''}`;
+  document.getElementById('seo-editor').style.display = 'block';
+  updateSEOScore();
+}
+
+async function saveSEO() {
+  if (!currentSEOPage) return;
+  const seoData = load(K.seo) || {};
+  seoData[currentSEOPage] = {
+    title:     document.getElementById('seo-title').value,
+    desc:      document.getElementById('seo-desc').value,
+    h1:        document.getElementById('seo-h1').value,
+    slug:      document.getElementById('seo-slug').value,
+    keywords:  document.getElementById('seo-keywords').value,
+    text:      document.getElementById('seo-text').value,
+    canonical: document.getElementById('seo-canonical').value,
+    updatedAt: new Date().toISOString(),
+  };
+  save(K.seo, seoData);
+  /* Sync immédiate : mettre aussi dans content_overrides si H1 défini */
+  if (seoData[currentSEOPage].h1) {
+    const ov = load(K.content) || {};
+    ov['hero.titleHtml'] = seoData[currentSEOPage].h1;
+    save(K.content, ov);
+  }
+  await syncToKV('SEO');
+  toast('✅ SEO sauvegardé et synchronisé', 'g');
+}
+
+function renderSEOSummary() {
+  const kws = load(K.keywords) || [];
+  const tbody = document.getElementById('kw-tbody');
+  if (tbody) {
+    tbody.innerHTML = kws.map(k => `<tr>
+      <td><strong>${k.kw}</strong></td>
+      <td>${k.vol||'—'}</td>
+      <td>${k.diff||'—'}</td>
+      <td>${k.pos||'—'}</td>
+      <td>${k.page||'—'}</td>
+      <td><button class="btn btn-ghost btn-sm" onclick="deleteKW('${k.id}')">✕</button></td>
+    </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--t3);padding:20px;">Aucun mot-clé. Ajoutez vos cibles SEO.</td></tr>';
+  }
+  // Schema.org
+  const schema = document.getElementById('schema-preview');
+  if (schema) schema.textContent = JSON.stringify({
+    "@context":"https://schema.org","@type":"LocalBusiness",
+    "name":"ALL STAR LOC","description":"Location de voiture à Marrakech depuis 2018",
+    "url":"https://allstarloc.ma","telephone":"+212675312453",
+    "address":{"@type":"PostalAddress","streetAddress":"29 Rue Yougoslavie","addressLocality":"Marrakech","postalCode":"40000","addressCountry":"MA"},
+    "priceRange":"25€–120€","openingHours":"Mo-Su 08:00-22:00",
+  }, null, 2);
+}
+
+function addKeyword() {
+  openModal('Ajouter un mot-clé', `
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="fg"><label>Mot-clé ciblé *</label><input class="fi" id="kw-kw" placeholder="location voiture marrakech"></div>
+      <div class="fg"><label>Volume mensuel estimé</label><input class="fi" id="kw-vol" placeholder="1 200"></div>
+      <div class="fg"><label>Difficulté (0-100)</label><input class="fi" id="kw-diff" type="number" placeholder="42"></div>
+      <div class="fg"><label>Position actuelle</label><input class="fi" id="kw-pos" type="number" placeholder="5"></div>
+      <div class="fg"><label>Page ciblée</label><input class="fi" id="kw-page" placeholder="/nos-vehicules"></div>
+    </div>
+  `, [{ label:'Ajouter', action:'saveKeyword()', cls:'btn-red' }]);
+}
+
+function deleteKW(id) {
+  const kws = (load(K.keywords)||[]).filter(k=>k.id!==id);
+  save(K.keywords, kws); renderSEOSummary(); toast('Supprimé', 'g');
+}
+
+function getSeason() {
+  const m = new Date().getMonth() + 1;
+  const d = new Date().getDate();
+  if ((m === 12 && d >= 20) || m === 1 || (m === 2 && d <= 10)) return { label:'Hiver ❄️', period:'hiver', fr:'hiver' };
+  if (m >= 3 && m <= 5) return { label:'Printemps 🌸', period:'spring', fr:'printemps' };
+  if (m >= 6 && m <= 8) return { label:'Été ☀️', period:'summer', fr:'été' };
+  return { label:'Automne 🍂', period:'autumn', fr:'automne' };
+}
+
+function getMarrakechContext() {
+  const now = new Date();
+  const month = now.toLocaleString('fr-FR', { month:'long' });
+  const season = getSeason();
+  const vacances = [7, 8, 12].includes(now.getMonth()+1) ? 'vacances scolaires françaises' :
+    [2, 4, 10].includes(now.getMonth()+1) ? 'vacances scolaires (zones)' : null;
+  const events = {
+    3: 'Festival du Printemps de Marrakech',
+    6: 'Festival National des Arts Populaires',
+    10: 'Marathon de Marrakech (octobre)',
+    12: 'Fêtes de fin d\'année et Noël',
+  };
+  return { month, season, vacances, event: events[now.getMonth()+1] || null };
+}
+
+function getFallbackSuggestions(pageName, ctx, season) {
+  // Suggestions statiques de qualité si l'API est hors ligne
+  return {
+    h1: [
+      `Location de voiture à Marrakech – Prix imbattables ${ctx.month}`,
+      `Louez votre voiture à Marrakech en ${season.fr}`,
+      `Location voiture Marrakech – Livraison aéroport gratuite`,
+      `ALL STAR LOC – Votre location de voiture à Marrakech`,
+      `Location SUV & Citadine Marrakech – Réservez en ligne`,
+    ],
+    h2: [
+      `Notre flotte disponible à Marrakech`,
+      `Livraison gratuite à l'aéroport Ménara (RAK)`,
+      `Tarifs dégressifs et transparents`,
+      `Pourquoi choisir ALL STAR LOC ?`,
+    ],
+    meta: [
+      { text: `Location de voiture à Marrakech dès 250 DH/jour. Flotte récente, livraison aéroport gratuite. Réservez en ligne ! ALL STAR LOC`, len: 130 },
+      { text: `ALL STAR LOC, votre agence de confiance pour la location de voiture à Marrakech. Clio 5, SUV, berlines. Livraison aéroport incluse. Réservez maintenant !`, len: 158 },
+      { text: `Louez une voiture à Marrakech en ${season.fr} avec ALL STAR LOC. Service 24h/7j, flotte récente, prix compétitifs. Profitez de nos offres !`, len: 147 },
+    ],
+    keywords: {
+      principal: 'location voiture marrakech',
+      secondaires: ['louer voiture marrakech', 'location voiture aeroport marrakech', 'location clio 5 marrakech', 'location suv marrakech'],
+      locaux: ['location voiture gueliz marrakech', 'location voiture pas chere marrakech', `location voiture marrakech ${season.fr}`],
+      saisonniers: [`location voiture marrakech ${ctx.month}`, `voiture location marrakech ${season.fr}`],
+    },
+    trends: [
+      { kw: `location voiture marrakech ${ctx.month}`, reason: 'Requêtes très saisonnières sur Google' },
+      { kw: 'location voiture famille marrakech', reason: 'Forte demande en période touristique' },
+      { kw: 'location voiture luxe marrakech', reason: 'Segment premium en croissance' },
+    ],
+    blog_ideas: [
+      `Top 10 des activités à faire en voiture autour de Marrakech en ${season.fr}`,
+      `Guide complet : louer une voiture à l'aéroport de Marrakech Ménara`,
+      `Itinéraire ${ctx.month} : visiter le Maroc en voiture depuis Marrakech`,
+    ],
+  };
+}
+
+async function generateSEOAI() {
+  if (!currentSEOPage) { toast('Sélectionnez d\'abord une page', 'r'); return; }
+
+  const panel   = document.getElementById('ai-panel');
+  const loading = document.getElementById('ai-loading');
+  const content = document.getElementById('ai-content');
+  const seasonEl = document.getElementById('ai-season-label');
+
+  panel.style.display = 'block';
+  loading.style.display = 'block';
+  content.style.display = 'none';
+
+  const ctx = getMarrakechContext();
+  const season = getSeason();
+  if (seasonEl) seasonEl.textContent = season.label + ' · ' + ctx.month;
+
+  // Données actuelles de la page
+  const currentTitle = document.getElementById('seo-title')?.value || '';
+  const currentH1    = document.getElementById('seo-h1')?.value   || '';
+  const currentKW    = document.getElementById('seo-keywords')?.value || '';
+  const pageNames    = { index:'Accueil', 'nos-vehicules':'Nos Véhicules', about:'À propos',
+    contact:'Contact', aeroport:'Aéroport Ménara', faq:'FAQ', blog:'Blog' };
+  const pageName = pageNames[currentSEOPage] || currentSEOPage;
+
+  const PROMPT = `Tu es un expert SEO spécialisé en location de voiture au Maroc, particulièrement pour Marrakech.
+L'agence s'appelle ALL STAR LOC (allstarloc.ma), spécialisée en location de voiture à Marrakech depuis 2018.
+Coordonnées : 29 Rue Yougoslavie, Guéliz, Marrakech. Tél: 06 75 31 24 53.
+
+CONTEXTE TEMPOREL ACTUEL :
+- Mois : ${ctx.month}
+- Saison : ${season.fr}
+${ctx.vacances ? '- Période : ' + ctx.vacances : ''}
+${ctx.event ? '- Événement : ' + ctx.event : ''}
+
+PAGE À OPTIMISER : ${pageName} (slug: ${currentSEOPage})
+Titre actuel : "${currentTitle}"
+H1 actuel : "${currentH1}"
+Mots-clés actuels : "${currentKW}"
+
+Génère une réponse JSON STRICT (sans markdown, sans explication) avec exactement cette structure :
+{
+  "h1": ["H1 option 1", "H1 option 2", "H1 option 3", "H1 option 4", "H1 option 5"],
+  "h2": ["H2 option 1", "H2 option 2", "H2 option 3", "H2 option 4"],
+  "meta": [
+    {"text": "meta courte 120-140 caractères", "len": 130},
+    {"text": "meta longue 150-165 caractères", "len": 158},
+    {"text": "meta avec CTA 140-155 caractères", "len": 147}
+  ],
+  "keywords": {
+    "principal": "mot-clé principal (1 seul)",
+    "secondaires": ["kw1", "kw2", "kw3", "kw4", "kw5"],
+    "locaux": ["kw local 1", "kw local 2", "kw local 3"],
+    "saisonniers": ["kw saison 1", "kw saison 2"]
+  },
+  "trends": [
+    {"kw": "mot-clé tendance actuelle", "reason": "pourquoi pertinent maintenant"},
+    {"kw": "mot-clé 2", "reason": "raison"},
+    {"kw": "mot-clé 3", "reason": "raison"}
+  ],
+  "blog_ideas": [
+    "Titre article de blog idée 1 (lié à la période actuelle)",
+    "Titre article de blog idée 2",
+    "Titre article de blog idée 3"
+  ]
+}
+
+CONTRAINTES :
+- Tous les textes en français
+- Orienté Marrakech, Maroc, tourisme local
+- Inclure des variantes avec noms de véhicules : Clio 5, Kia Picanto, SUV, Dacia Sandero
+- Intégrer la saisonnalité et le mois actuel dans au moins 2 suggestions
+- Les meta doivent inclure un CTA (Réservez, Réservation, Profitez)
+- Score de pertinence local élevé`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1200,
+        messages: [{ role: 'user', content: PROMPT }]
+      })
+    });
+    const data = await resp.json();
+    const raw  = (data.content || []).map(x => x.text || '').join('');
+    let parsed;
+    try {
+      parsed = JSON.parse(raw.replace(/```json|```/g, '').trim());
+    } catch(e) {
+      // Tentative de récupération partielle
+      const m = raw.match(/\{[\s\S]+\}/);
+      if (m) parsed = JSON.parse(m[0]);
+      else throw new Error('JSON invalide');
+    }
+
+    loading.style.display = 'none';
+    content.style.display = 'block';
+    renderAISuggestions(parsed);
+
+  } catch(err) {
+    loading.style.display = 'none';
+    content.style.display = 'block';
+    // Fallback avec suggestions statiques contextualisées
+    renderAISuggestions(getFallbackSuggestions(pageName, ctx, season));
+    console.warn('API fallback:', err);
+  }
+}
+
+function renderAISuggestions(d) {
+  // H1
+  const h1El = document.getElementById('ai-h1-list');
+  if (h1El && d.h1) h1El.innerHTML = d.h1.map((h,i) =>
+    `<div class="ai-suggestion-item">
+      <span>${h}</span>
+      <button class="apply-btn" onclick="applyAI('seo-h1','${h.replace(/'/g,"\\'")}')">Appliquer</button>
+    </div>`).join('');
+
+  // H2
+  const h2El = document.getElementById('ai-h2-list');
+  if (h2El && d.h2) h2El.innerHTML = d.h2.map(h =>
+    `<div class="ai-suggestion-item">
+      <span>${h}</span>
+      <button class="apply-btn" onclick="appendToField('seo-h2','${h.replace(/'/g,"\\'")}')">+ Ajouter</button>
+    </div>`).join('');
+
+  // Meta
+  const metaEl = document.getElementById('ai-meta-list');
+  if (metaEl && d.meta) metaEl.innerHTML = d.meta.map(m => {
+    const cls = m.len >= 120 && m.len <= 165 ? 'var(--green)' : 'var(--yellow)';
+    return `<div class="ai-suggestion-item" style="flex-direction:column;align-items:flex-start;gap:6px;">
+      <div style="display:flex;justify-content:space-between;width:100%;align-items:center;">
+        <span style="font-size:12px;">${m.text}</span>
+        <button class="apply-btn" onclick="applyAI('seo-desc','${m.text.replace(/'/g,"\\'")}');updateSEOScore()">Appliquer</button>
+      </div>
+      <span style="font-size:10px;color:${cls};font-weight:700;">${m.len} car.</span>
+    </div>`;
+  }).join('');
+
+  // Mots-clés
+  const kwEl = document.getElementById('ai-kw-list');
+  _aiKeywords = [];
+  if (kwEl && d.keywords) {
+    const all = [d.keywords.principal, ...(d.keywords.secondaires||[]), ...(d.keywords.locaux||[]), ...(d.keywords.saisonniers||[])].filter(Boolean);
+    _aiKeywords = all;
+    kwEl.innerHTML = all.map(k =>
+      `<span class="ai-kw-chip" onclick="addKeywordToField('${k.replace(/'/g,"\\'")}')">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12h14"/></svg>
+        ${k}
+      </span>`).join('');
+  }
+
+  // Tendances saisonnières
+  const tEl = document.getElementById('ai-trends-list');
+  if (tEl && d.trends) tEl.innerHTML = d.trends.map(t =>
+    `<div class="ai-trend-item">
+      <span style="font-weight:700;color:#a78bfa;min-width:160px;">${t.kw}</span>
+      <span style="font-size:12px;color:rgba(255,255,255,.6);">${t.reason}</span>
+      <button class="apply-btn" style="background:rgba(124,58,237,.5);" onclick="addKeywordToField('${t.kw.replace(/'/g,"\\'")}')">+</button>
+    </div>`).join('');
+
+  // Blog ideas
+  const bEl = document.getElementById('ai-blog-ideas');
+  if (bEl && d.blog_ideas) bEl.innerHTML = d.blog_ideas.map(idea =>
+    `<div class="ai-suggestion-item">
+      <span>✍️ ${idea}</span>
+      <button class="apply-btn" onclick="createArticleFromIdea('${idea.replace(/'/g,"\\'")}')">Créer</button>
+    </div>`).join('');
+}
+
+function applyAI(fieldId, value) {
+  const el = document.getElementById(fieldId);
+  if (el) { el.value = value; updateSEOScore(); toast('Suggestion appliquée ✓', 'g'); }
+}
+
+function addKeywordToField(kw) {
+  const el = document.getElementById('seo-keywords');
+  if (!el) return;
+  const existing = el.value.split(',').map(s=>s.trim()).filter(Boolean);
+  if (!existing.includes(kw)) {
+    el.value = [...existing, kw].join(', ');
+    toast(`"${kw}" ajouté aux mots-clés ✓`, 'g');
+  } else {
+    toast(`"${kw}" déjà présent`, '');
+  }
+}
+
+function applyAllKeywords() {
+  const el = document.getElementById('seo-keywords');
+  if (!el || !_aiKeywords.length) return;
+  el.value = _aiKeywords.join(', ');
+  toast('Tous les mots-clés appliqués ✓', 'g');
+}
+
+function appendToField(fieldId, value) {
+  const el = document.getElementById(fieldId);
+  if (!el) return;
+  el.value = el.value ? el.value + '\n' + value : value;
+  toast('H2 ajouté ✓', 'g');
+}
+
+function loadContentEditor() {
+  const overrides = load(CONTENT_KEY) || {};
+  CONTENT_FIELDS.forEach(f => {
+    const el = document.getElementById(f.id);
+    if (el) el.value = overrides[f.key] !== undefined ? overrides[f.key] : (I18N_DEFAULTS[f.key] || '');
+  });
+}
+
+async function saveContentOverrides() {
+  const overrides = load(CONTENT_KEY) || {};
+  CONTENT_FIELDS.forEach(f => {
+    const el = document.getElementById(f.id);
+    if (el) {
+      const val = el.value.trim();
+      if (val && val !== I18N_DEFAULTS[f.key]) {
+        overrides[f.key] = val;  // override actif
+      } else if (val === '' || val === I18N_DEFAULTS[f.key]) {
+        delete overrides[f.key]; // revenir à la valeur par défaut
+      }
+    }
+  });
+  save(CONTENT_KEY, overrides);
+
+  // Afficher la confirmation de sync
+  const status = document.getElementById('sync-status');
+  if (status) {
+    status.style.display = 'block';
+    status.style.background = 'rgba(22,163,74,.1)';
+    status.style.border = '1px solid rgba(22,163,74,.3)';
+    status.style.color = 'var(--green)';
+    const count = Object.keys(overrides).length;
+    status.innerHTML = `✅ ${count} modification(s) synchronisée(s) avec le site client.<br>
+      <span style="font-weight:400;font-size:12px;">
+        Rafraîchissez le site (F5) pour voir les changements.
+        <a href="../index.html" target="_blank" style="color:var(--green);font-weight:700;">Ouvrir le site →</a>
+      </span>`;
+    setTimeout(() => { if(status) status.style.display='none'; }, 8000);
+  }
+  await syncToKV('Contenu');
+  toast('✅ Contenu synchronisé — rafraîchissez le site', 'g');
+}
+
+function loadPopupConfig() {
+  const pc = load(POPUP_KEY) || {};
+  const el = (id) => document.getElementById(id);
+  if (el('popup-active')) el('popup-active').checked = !!pc.active;
+  if (el('popup-delay'))  el('popup-delay').value  = pc.delay  !== undefined ? pc.delay  : 5;
+  if (el('popup-title'))  el('popup-title').value  = pc.title  || '';
+  if (el('popup-text'))   el('popup-text').value   = pc.text   || '';
+  if (el('popup-cta'))    el('popup-cta').value    = pc.cta    || 'Réserver maintenant';
+  if (el('popup-pages'))  el('popup-pages').value  = pc.pages  || 'all';
+  updatePopupPreview();
+}
+
+async function savePopupConfig() {
+  const pc = {
+    active: document.getElementById('popup-active')?.checked,
+    delay:  parseInt(document.getElementById('popup-delay')?.value) || 5,
+    title:  document.getElementById('popup-title')?.value  || '',
+    text:   document.getElementById('popup-text')?.value   || '',
+    cta:    document.getElementById('popup-cta')?.value    || 'Réserver maintenant',
+    pages:  document.getElementById('popup-pages')?.value  || 'all',
+  };
+  save(POPUP_KEY, pc);
+  await syncToKV('Popup');
+  toast('✅ Popup enregistré', 'g');
+}
+
+function updatePopupPreview() {
+  const t = document.getElementById('popup-title')?.value   || 'Titre du popup';
+  const tx= document.getElementById('popup-text')?.value    || 'Texte descriptif';
+  const c = document.getElementById('popup-cta')?.value     || 'Bouton CTA';
+  if (document.getElementById('pp-title')) document.getElementById('pp-title').textContent = t;
+  if (document.getElementById('pp-text'))  document.getElementById('pp-text').textContent  = tx;
+  if (document.getElementById('pp-cta'))   document.getElementById('pp-cta').textContent   = c;
+}
+
+function renderBlog() {
+  const articles = load(K.blog) || [];
+  const filtered = blogFilter === 'all' ? articles
+    : articles.filter(a => a.status === blogFilter);
+  const tbody = document.getElementById('blog-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = filtered.length ? filtered.map(a => `<tr>
+    <td><strong>${a.title}</strong></td>
+    <td>${a.category||'—'}</td>
+    <td>${a.author||'Admin'}</td>
+    <td>${a.date ? new Date(a.date).toLocaleDateString('fr-FR') : '—'}</td>
+    <td><span class="badge ${a.status==='published'?'b-pub':a.status==='draft'?'b-draft':'b-hidden'}">${a.status==='published'?'Publié':a.status==='draft'?'Brouillon':'Masqué'}</span></td>
+    <td>${calcSEOScore(a)}/100</td>
+    <td style="display:flex;gap:4px;flex-wrap:wrap;">
+      <button class="btn btn-ghost btn-sm" onclick="openBlogEditor('${a.id}')">Modifier</button>
+      <button class="btn btn-ghost btn-sm" onclick="toggleBlogStatus('${a.id}')">${a.status==='published'?'Masquer':'Publier'}</button>
+      <button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteArticle('${a.id}')">✕</button>
+    </td>
+  </tr>`).join('') : `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--t3);">Aucun article. Créez votre premier contenu SEO.</td></tr>`;
+}
+
+function filterBlog(f, el) {
+  blogFilter = f;
+  document.querySelectorAll('#page-blog .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderBlog();
+}
+
+function openBlogEditor(id) {
+  const articles = load(K.blog) || [];
+  const a = id ? articles.find(x=>x.id===id) : null;
+  openModal(a ? 'Modifier l\'article' : 'Nouvel article', `
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="fg"><label>Titre *</label><input class="fi" id="b-title" value="${a?.title||''}"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+        <div class="fg"><label>Catégorie</label><input class="fi" id="b-cat" value="${a?.category||''}" placeholder="Conseils, Guides…"></div>
+        <div class="fg"><label>Auteur</label><input class="fi" id="b-author" value="${a?.author||'Admin'}"></div>
+        <div class="fg"><label>Statut</label><select class="fs" id="b-status"><option value="draft" ${a?.status==='draft'?'selected':''}>Brouillon</option><option value="published" ${a?.status==='published'?'selected':''}>Publié</option><option value="hidden" ${a?.status==='hidden'?'selected':''}>Masqué</option></select></div>
+      </div>
+      <div class="fg"><label>Tags <span class="opt">(séparés par virgules)</span></label><input class="fi" id="b-tags" value="${(a?.tags||[]).join(', ')}"></div>
+      <div class="fg"><label>Image de couverture (URL)</label><input class="fi" id="b-img" value="${a?.img||''}" placeholder="https://…"></div>
+      <div class="fg"><label>Contenu de l'article</label><textarea class="ft" id="b-content" rows="8">${a?.content||''}</textarea></div>
+      <div class="fg"><label>Titre SEO</label><input class="fi" id="b-seo-title" value="${a?.title||''}" oninput="updateBlogSEO()"></div>
+      <div class="fg"><label>Meta Description</label><input class="fi" id="b-seo-desc" value="${a?.desc||''}" oninput="updateBlogSEO()">
+        <div id="b-seo-count" class="char-count"></div>
+      </div>
+    </div>
+  `, [
+    { label: 'Enregistrer', action: `saveBlog('${id||''}')`, cls:'btn-red' },
+    { label: 'Annuler', action:'closeModal()', cls:'btn-ghost' },
+  ]);
+  setTimeout(updateBlogSEO, 50);
+}
+
+async function saveBlog(id) {
+  const title = document.getElementById('b-title')?.value.trim();
+  if (!title) { toast('Titre obligatoire','r'); return; }
+  const articles = load(K.blog) || [];
+  if (id) {
+    const idx = articles.findIndex(a=>a.id===id);
+    if (idx>=0) articles[idx] = { ...articles[idx], title, category:document.getElementById('b-cat').value, author:document.getElementById('b-author').value, status:document.getElementById('b-status').value, tags:document.getElementById('b-tags').value.split(',').map(t=>t.trim()), img:document.getElementById('b-img').value, content:document.getElementById('b-content').value, desc:document.getElementById('b-seo-desc').value, updatedAt:new Date().toISOString() };
+  } else {
+    articles.unshift({ id:Date.now().toString(), title, category:document.getElementById('b-cat').value, author:document.getElementById('b-author').value, status:document.getElementById('b-status').value, tags:document.getElementById('b-tags').value.split(',').map(t=>t.trim()), img:document.getElementById('b-img').value, content:document.getElementById('b-content').value, desc:document.getElementById('b-seo-desc').value, date:new Date().toISOString(), createdAt:new Date().toISOString() });
+  }
+  save(K.blog, articles);
+  await syncToKV('Blog');
+  closeModal(); renderBlog(); toast('✅ Article enregistré et synchronisé', 'g');
+}
+
+function toggleBlogStatus(id) {
+  const articles = load(K.blog)||[];
+  const a = articles.find(x=>x.id===id);
+  if (a) { a.status = a.status==='published' ? 'draft' : 'published'; save(K.blog, articles); renderBlog(); toast('Statut mis à jour','g'); }
+}
+
+function deleteArticle(id) {
+  if (!confirm('Supprimer cet article ?')) return;
+  save(K.blog, (load(K.blog)||[]).filter(a=>a.id!==id));
+  renderBlog(); toast('Article supprimé','g');
+}
+
+function updateBlogSEO() {
+  const d = document.getElementById('b-seo-desc')?.value||'';
+  const c = document.getElementById('b-seo-count');
+  if (c) { c.textContent = `${d.length}/165 car.`; c.className='char-count '+(d.length>=120&&d.length<=165?'ok':d.length>0?'warn':'bad'); }
+}
+
+function renderFAQ() {
+  const faqs = load(K.faq) || [];
+  const list  = document.getElementById('faq-list');
+  const empty = document.getElementById('faq-empty');
+  if (!list) return;
+  if (!faqs.length) {
+    list.innerHTML = '';
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+  list.innerHTML = faqs.map((f, i) => `
+    <div style="border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;">
+      <div style="display:flex;align-items:flex-start;gap:12px;">
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:14px;margin-bottom:6px;">${f.question}</div>
+          <div style="font-size:13px;color:var(--t2);line-height:1.6;">${f.answer}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <button class="btn btn-ghost btn-sm" onclick="openFAQEditor(${i})">Modifier</button>
+          <button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteFAQ(${i})">✕</button>
+        </div>
+      </div>
+      <div style="margin-top:8px;display:flex;align-items:center;gap:8px;">
+        <label style="font-size:12px;display:flex;align-items:center;gap:5px;cursor:pointer;">
+          <input type="checkbox" ${f.active !== false ? 'checked' : ''} onchange="toggleFAQ(${i},this.checked)" style="accent-color:var(--red);">
+          Actif (Schema.org)
+        </label>
+        <span style="font-size:11px;color:var(--t3);">Position ${i+1}</span>
+      </div>
+    </div>`).join('');
+}
+
+function openFAQEditor(idx) {
+  const faqs = load(K.faq) || [];
+  const f = idx !== undefined ? faqs[idx] : null;
+  openModal(f ? 'Modifier la question' : 'Ajouter une question', `
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div class="fg"><label>Question <span style="color:var(--red);">*</span></label>
+        <input class="fi" id="faq-q" value="${f ? f.question.replace(/"/g,'&quot;') : ''}"
+          placeholder="Comment réserver une voiture à Marrakech ?">
+      </div>
+      <div class="fg"><label>Réponse <span style="color:var(--red);">*</span></label>
+        <textarea class="ft" id="faq-a" rows="5"
+          placeholder="Vous pouvez réserver directement sur notre site…">${f ? f.answer : ''}</textarea>
+      </div>
+      <div class="fg"><label>
+        <input type="checkbox" id="faq-active" ${f ? (f.active !== false ? 'checked' : '') : 'checked'} style="accent-color:var(--red);margin-right:6px;">
+        Actif sur le site (Schema.org)
+      </label></div>
+    </div>
+  `, [
+    { label:'Enregistrer & Synchroniser', action:`saveFAQItem(${idx !== undefined ? idx : 'undefined'})`, cls:'btn-red' },
+    { label:'Annuler', action:'closeModal()', cls:'btn-ghost' },
+  ]);
+}
+
+async function saveFAQItem(idx) {
+  const q = document.getElementById('faq-q')?.value.trim();
+  const a = document.getElementById('faq-a')?.value.trim();
+  if (!q || !a) { toast('Question et réponse obligatoires', 'r'); return; }
+  const faqs = load(K.faq) || [];
+  const item = { question:q, answer:a, active: document.getElementById('faq-active')?.checked !== false };
+  if (idx !== undefined && idx < faqs.length) faqs[idx] = item;
+  else faqs.push(item);
+  save(K.faq, faqs);
+  closeModal();
+  renderFAQ();
+  await syncToKV('FAQ');
+  toast('✅ FAQ sauvegardée et synchronisée', 'g');
+}
+
+function deleteFAQ(idx) {
+  if (!confirm('Supprimer cette question ?')) return;
+  const faqs = (load(K.faq)||[]).filter((_,i) => i !== idx);
+  save(K.faq, faqs); renderFAQ(); toast('Question supprimée', 'g');
+}
+
+function toggleFAQ(idx, active) {
+  const faqs = load(K.faq) || [];
+  if (faqs[idx]) { faqs[idx].active = active; save(K.faq, faqs); toast(active ? 'FAQ activée' : 'FAQ désactivée', 'g'); }
+}
+
+function renderNewsletter() {
+  const nl = load(K.newsletter) || [];
+  // KPIs
+  document.getElementById('nl-kpi').innerHTML = [
+    { v:nl.length, l:'Abonnés total', cls:'' },
+    { v:nl.filter(c=>c.source==='site').length, l:'Depuis le site', cls:'ok' },
+    { v:nl.filter(c=>{const d=new Date(c.date||0);const now=new Date();return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();}).length, l:'Ce mois', cls:'' },
+  ].map(k=>`<div class="kpi ${k.cls}"><div class="kpi-val">${k.v}</div><div class="kpi-lbl">${k.l}</div></div>`).join('');
+  // Table
+  renderNLTable(nl);
+}
+
+function renderNLTable(nl) {
+  document.getElementById('nl-tbody').innerHTML = nl.length ? nl.map(c=>`<tr>
+    <td>${c.name||'—'}</td>
+    <td>${c.email||'—'}</td>
+    <td>${c.phone||'—'}</td>
+    <td><span class="badge b-pub">${c.source||'manuel'}</span></td>
+    <td>${c.date ? new Date(c.date).toLocaleDateString('fr-FR') : '—'}</td>
+    <td><button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteContact('${c.id}')">✕</button></td>
+  </tr>`).join('')
+  : `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--t3);">Aucun abonné.</td></tr>`;
+}
+
+function filterNL(q) {
+  const nl = (load(K.newsletter)||[]).filter(c=>
+    (c.name||'').toLowerCase().includes(q.toLowerCase())||
+    (c.email||'').toLowerCase().includes(q.toLowerCase())||
+    (c.phone||'').includes(q));
+  renderNLTable(nl);
+}
+
+function openAddContact() {
+  openModal('Ajouter un contact', `
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="fg"><label>Nom</label><input class="fi" id="nl-name"></div>
+      <div class="fg"><label>Email</label><input class="fi" id="nl-email" type="email"></div>
+      <div class="fg"><label>Téléphone <span class="opt">(optionnel)</span></label><input class="fi" id="nl-phone"></div>
+      <div class="fg"><label>Source</label><select class="fs" id="nl-src"><option>manuel</option><option>site</option><option>réservation</option><option>formulaire</option></select></div>
+    </div>
+  `, [{ label:'Ajouter', action:'saveContact()', cls:'btn-red' }]);
+}
+
+function saveContact() {
+  const email = document.getElementById('nl-email')?.value.trim();
+  if (!email) { toast('Email obligatoire','r'); return; }
+  const nl = load(K.newsletter)||[];
+  nl.push({ id:Date.now().toString(), name:document.getElementById('nl-name')?.value, email, phone:document.getElementById('nl-phone')?.value, source:document.getElementById('nl-src')?.value, date:new Date().toISOString() });
+  save(K.newsletter, nl);
+  closeModal(); renderNewsletter(); toast('Contact ajouté','g');
+}
+
+function deleteContact(id) {
+  save(K.newsletter, (load(K.newsletter)||[]).filter(c=>c.id!==id));
+  renderNewsletter(); toast('Supprimé','g');
+}
+
+function exportCSV() {
+  const nl = load(K.newsletter)||[];
+  if (!nl.length) { toast('Aucun contact à exporter','r'); return; }
+  const csv = ['Nom,Email,Téléphone,Source,Date', ...nl.map(c=>[c.name||'',c.email||'',c.phone||'',c.source||'',c.date||''].join(','))].join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+  a.download = `newsletter_allstarloc_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); toast('Export CSV téléchargé','g');
+}
+
+function loadAds() { const d=load(K.ads)||{}; ['id','gtag','conv-res','conv-wa','conv-call'].forEach(k=>{const el=document.getElementById('ads-'+k);if(el)el.value=d[k.replace('-','_')]||'';}); }
+
+async function saveAds() { const d={}; ['id','gtag','conv-res','conv-wa','conv-call'].forEach(k=>{const el=document.getElementById('ads-'+k);if(el)d[k.replace('-','_')]=el.value;}); save(K.ads,d); toast('Google Ads enregistré','g'); }
+
+function loadAnalytics() { const d=load(K.analytics)||{}; ['ga4-id','ga4-code'].forEach(k=>{const el=document.getElementById(k);if(el)el.value=d[k.replace('-','_')]||'';}); }
+
+async function saveAnalytics() { const d={}; ['ga4-id','ga4-code'].forEach(k=>{const el=document.getElementById(k);if(el)d[k.replace('-','_')]=el.value;}); save(K.analytics,d); toast('Analytics enregistré','g'); }
+
+function renderMenu() {
+  const items = load(K.menu) || MENU_DEFAULTS;
+  document.getElementById('menu-items').innerHTML = items.map((item,i) => `
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);">
+      <span style="cursor:grab;color:var(--t3);font-size:16px;">⠿</span>
+      <div style="flex:1;">
+        <input class="fi" value="${item.label}" id="ml-${item.key}" style="font-weight:600;border:none;background:transparent;padding:0;font-size:14px;" onchange="updateMenuLabel('${item.key}',this.value)">
+        <div style="font-size:12px;color:var(--t2);">${item.href}</div>
+      </div>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--t2);">
+        <input type="checkbox" ${item.visible?'checked':''} onchange="toggleMenuVisibility('${item.key}',this.checked)" style="accent-color:var(--red);">
+        Visible
+      </label>
+    </div>`).join('');
+}
+
+function saveMenu() {
+  const items = load(K.menu) || MENU_DEFAULTS;
+  save(K.menu, items);
+  toast('Menu enregistré — rechargez le site pour voir les changements', 'g');
+}
+
+function toggleMenuVisibility(key, visible) {
+  const items = load(K.menu) || MENU_DEFAULTS;
+  const item = items.find(i=>i.key===key);
+  if (item) { item.visible = visible; save(K.menu, items); }
+}
+
+function updateMenuLabel(key, label) {
+  const items = load(K.menu) || MENU_DEFAULTS;
+  const item = items.find(i=>i.key===key);
+  if (item) { item.label = label; save(K.menu, items); }
+}
+
+function loadSocial() {
+  const d = load(K.social)||{};
+  ['fb','ig','tt','wa','gbp','yt'].forEach(k=>{const el=document.getElementById('s-'+k);if(el)el.value=d[k]||'';});
+  renderPosts();
+}
+
+async function saveSocial() {
+  const d = {};
+  ['fb','ig','tt','wa','gbp','yt'].forEach(k=>{const el=document.getElementById('s-'+k);if(el)d[k]=el.value;});
+  save(K.social,d); await syncToKV('Réseaux sociaux'); toast('✅ Réseaux sociaux enregistrés','g');
+}
+
+function renderPosts() {
+  const posts = load(K.posts)||[];
+  const box = document.getElementById('posts-list');
+  if (!box) return;
+  box.innerHTML = posts.slice(0,5).map(p=>`<div style="padding:8px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;font-size:12.5px;">
+    <strong>${p.net}</strong> · ${p.date?new Date(p.date).toLocaleDateString('fr-FR'):'Brouillon'}<br>
+    <span style="color:var(--t2);">${(p.text||'').slice(0,60)}…</span>
+  </div>`).join('') || '<p style="font-size:12px;color:var(--t3);">Aucun post planifié.</p>';
+}
+
+function savePost() {
+  const text = document.getElementById('post-text')?.value.trim();
+  if (!text) return;
+  const posts = load(K.posts)||[];
+  posts.unshift({ id:Date.now().toString(), net:document.getElementById('post-net')?.value, text, date:document.getElementById('post-date')?.value, createdAt:new Date().toISOString() });
+  save(K.posts,posts); renderPosts(); document.getElementById('post-text').value=''; toast('Post enregistré','g');
+}
+
+function renderPages() {
+  const pagesDef = [
+    { key:'index',         name:'Accueil',       url:'index.html',               icon:'🏠' },
+    { key:'nos-vehicules', name:'Nos Véhicules',  url:'nos-vehicules.html',       icon:'🚗' },
+    { key:'about',         name:'À propos',       url:'about.html',               icon:'ℹ️' },
+    { key:'contact',       name:'Contact',        url:'contact.html',             icon:'📞' },
+    { key:'blog',          name:'Blog',           url:'blog.html',                icon:'✍️' },
+    { key:'faq',           name:'FAQ',            url:'faq.html',                 icon:'❓' },
+    { key:'aeroport',      name:'Aéroport',       url:'aeroport.html',            icon:'✈️' },
+  ];
+  const seoData = load(K.seo) || {};
+  document.getElementById('pages-list').innerHTML = pagesDef.map(p => {
+    const d = seoData[p.key] || SEO_DEFAULTS[p.key] || {};
+    const score = calcSEOScore(d);
+    return `<div class="card" style="margin-bottom:10px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="font-size:24px;">${p.icon}</div>
+        <div style="flex:1;">
+          <div style="font-weight:800;font-size:15px;">${p.name}</div>
+          <div style="font-size:12px;color:var(--t2);">${d.title||'Titre SEO non défini'}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px;color:var(--t3);">Score SEO</div>
+          <div style="font-weight:900;color:${score>=80?'var(--green)':score>=50?'var(--yellow)':'var(--red)'};">${score}/100</div>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-ghost btn-sm" onclick="nav('seo',document.querySelector('[onclick*=seo]'));setTimeout(()=>loadSEOPage('${p.key}'),80)">Éditer SEO</button>
+          <a class="btn btn-ghost btn-sm" href="../${p.key==='index'?'':('pages/'+p.url)}" target="_blank">Voir →</a>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+
+// ================================================================
+// IA MARKETING — Page dédiée
+// ================================================================
+let _iaPage = 'index';
+
+function setIAPage(page, el) {
+  _iaPage = page;
+  document.querySelectorAll('.ia-page-btn').forEach(b => {
+    b.style.background = ''; b.style.color = '';
+  });
+  if (el) { el.style.background = 'var(--red)'; el.style.color = '#fff'; }
+  const badge = document.getElementById('ia-season-badge');
+  if (badge) badge.textContent = getSeason().label + ' · ' + getMarrakechContext().month;
+}
+
+async function generateIAMarketing() {
+  const ctx = getMarrakechContext();
+  const season = getSeason();
+  const pageNames = {index:'Accueil','nos-vehicules':'Nos Véhicules',about:'À propos',contact:'Contact',blog:'Blog'};
+  const pageName = pageNames[_iaPage] || _iaPage;
+  const loadingEl = document.getElementById('ia-loading');
+  const resultEl  = document.getElementById('ia-result');
+  if (loadingEl) loadingEl.style.display = 'block';
+  if (resultEl)  resultEl.style.display = 'none';
+
+  const PROMPT = `Tu es un expert SEO spécialisé en location de voiture à Marrakech, Maroc.
+Agence : ALL STAR LOC, 29 Rue Yougoslavie Guéliz, allstarloc.ma
+Page : ${pageName} | Mois : ${ctx.month} | Saison : ${season.fr}
+${ctx.event ? 'Événement : ' + ctx.event : ''}
+Réponds UNIQUEMENT en JSON valide (sans markdown) :
+{
+  "h1":["H1 option 1","H1 option 2","H1 option 3","H1 option 4","H1 option 5"],
+  "h2":["H2-1","H2-2","H2-3","H2-4"],
+  "meta":[{"text":"meta 120-140 car","len":130},{"text":"meta 150-165 car","len":158},{"text":"meta avec CTA","len":145}],
+  "keywords":["kw1","kw2","kw3","kw4","kw5","kw local 1","kw local 2","kw saison"],
+  "blog_ideas":["Idée article 1 lié à ${ctx.month}","Idée article 2","Idée article 3"],
+  "faq":[{"q":"Question 1 ?","a":"Réponse 1."},{"q":"Question 2 ?","a":"Réponse 2."},{"q":"Question 3 ?","a":"Réponse 3."}]
+}`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:1200,
+        messages:[{role:'user',content:PROMPT}]})
+    });
+    const data = await resp.json();
+    const raw = (data.content||[]).map(x=>x.text||'').join('');
+    let parsed;
+    try { parsed = JSON.parse(raw.replace(/```json|```/g,'').trim()); }
+    catch(e) { const m=raw.match(/\{[\s\S]+\}/); if(m) parsed=JSON.parse(m[0]); else throw e; }
+    if (loadingEl) loadingEl.style.display='none';
+    if (resultEl)  resultEl.style.display='block';
+    renderIAResult(parsed);
+  } catch(err) {
+    const fb = getFallbackSuggestions(pageName, ctx, season);
+    if (loadingEl) loadingEl.style.display='none';
+    if (resultEl)  resultEl.style.display='block';
+    renderIAResult({
+      h1: fb.h1, h2: fb.h2,
+      meta: fb.meta.map(m=>({text:m.text,len:m.len})),
+      keywords: [...(fb.keywords.secondaires||[]),...(fb.keywords.locaux||[]),...(fb.keywords.saisonniers||[])],
+      blog_ideas: fb.blog_ideas,
+      faq:[
+        {q:'Comment réserver une voiture à Marrakech ?',a:'Réservez directement sur notre site en 2 minutes ou par WhatsApp.'},
+        {q:'Livraison à l\'aéroport de Marrakech ?',a:'Oui, livraison gratuite à l\'aéroport Ménara (RAK) 24h/7j.'},
+        {q:'Quels documents pour louer ?',a:'Permis de conduire, pièce d\'identité ou passeport, et carte bancaire.'},
+      ]
+    });
+  }
+}
+
+function renderIAResult(d) {
+  const esc = s => s.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  const h1El = document.getElementById('ia-h1');
+  if (h1El && d.h1) h1El.innerHTML = d.h1.map(h=>`<div class="ai-suggestion-item">
+    <span>${h}</span>
+    <button class="apply-btn" onclick="applyIAToSEO('seo-h1','${esc(h)}')">Appliquer</button>
+  </div>`).join('');
+  const h2El = document.getElementById('ia-h2');
+  if (h2El && d.h2) h2El.innerHTML = d.h2.map(h=>`<div class="ai-suggestion-item">
+    <span>${h}</span>
+    <button class="apply-btn" onclick="applyIAToSEO('seo-h2','${esc(h)}')">Appliquer</button>
+  </div>`).join('');
+  const metaEl = document.getElementById('ia-meta');
+  if (metaEl && d.meta) metaEl.innerHTML = d.meta.map(m=>{
+    const c=m.len>=120&&m.len<=165?'var(--green)':'var(--yellow)';
+    return `<div class="ai-suggestion-item" style="flex-direction:column;align-items:flex-start;gap:5px;">
+      <div style="display:flex;justify-content:space-between;width:100%;align-items:center;gap:8px;">
+        <span style="font-size:12px;">${m.text}</span>
+        <button class="apply-btn" onclick="applyIAToSEO('seo-desc','${esc(m.text)}');updateSEOScore()">Appliquer</button>
+      </div>
+      <span style="font-size:10px;color:${c};font-weight:700;">${m.len} car.</span>
+    </div>`;
+  }).join('');
+  const kwEl = document.getElementById('ia-kw');
+  if (kwEl && d.keywords) kwEl.innerHTML = d.keywords.map(k=>
+    `<span class="ai-kw-chip" onclick="addIAKeywordToSEO('${esc(k)}')">${k}</span>`).join('');
+  const blogEl = document.getElementById('ia-blog');
+  if (blogEl && d.blog_ideas) blogEl.innerHTML = d.blog_ideas.map(idea=>`<div class="ai-suggestion-item">
+    <span>✍️ ${idea}</span>
+    <button class="apply-btn" onclick="createBlogFromIA('${esc(idea)}')">Créer</button>
+  </div>`).join('');
+  const faqEl = document.getElementById('ia-faq');
+  if (faqEl && d.faq) faqEl.innerHTML = d.faq.map(f=>`<div class="ai-suggestion-item" style="flex-direction:column;align-items:flex-start;gap:4px;">
+    <div style="font-weight:700;font-size:13px;">❓ ${f.q}</div>
+    <div style="font-size:12px;color:rgba(255,255,255,.65);line-height:1.5;">${f.a}</div>
+    <button class="apply-btn" style="margin-top:4px;" onclick="addFAQFromIA('${esc(f.q)}','${esc(f.a)}')">+ FAQ</button>
+  </div>`).join('');
+}
+
+function applyIAToSEO(fieldId, value) {
+  const el = document.getElementById(fieldId);
+  if (!el) {
+    nav('seo', document.querySelector('[onclick*="nav(\'seo\'"]'));
+    setTimeout(()=>{ const e2=document.getElementById(fieldId); if(e2){e2.value=value;updateSEOScore();} },200);
+    toast('✓ Allez sur SEO par page pour voir le champ mis à jour','g');
+    return;
+  }
+  el.value = value;
+  if (typeof updateSEOScore==='function') updateSEOScore();
+  toast('✓ Appliqué — cliquez Enregistrer','g');
+}
+function addIAKeywordToSEO(kw) {
+  const el = document.getElementById('seo-keywords');
+  if (!el) return;
+  const ex = el.value.split(',').map(s=>s.trim()).filter(Boolean);
+  if (!ex.includes(kw)) { el.value=[...ex,kw].join(', '); toast('"'+kw+'" ajouté aux mots-clés','g'); }
+}
+function addFAQFromIA(q, a) {
+  const faqs = load(K.faq)||[];
+  faqs.push({question:q,answer:a,active:true});
+  save(K.faq,faqs);
+  syncToKV('FAQ');
+  toast('❓ Question ajoutée à la FAQ','g');
+}
+function createBlogFromIA(title) {
+  nav('blog',document.querySelector('[onclick*="nav(\'blog\'"]'));
+  setTimeout(()=>{ openBlogEditor(); setTimeout(()=>{ const t=document.getElementById('b-title'); if(t)t.value=title; },150); },100);
+}
+
+// ================================================================
+// ÉDITEUR SECTIONS
+// ================================================================
+function renderEditorPage() {
+  const stored = load(SECTIONS_KEY);
+  const secs = stored || SITE_SECTIONS.map(s=>({...s,visible:true}));
+  const list = document.getElementById('sections-list');
+  if (!list) return;
+  list.innerHTML = secs.map((s,i)=>`
+    <div class="section-row ${s.visible===false?'hidden-sec':''}" data-idx="${i}" draggable="true"
+      ondragstart="dragStart(event,${i})" ondragover="event.preventDefault()" ondrop="dropSection(event,${i})">
+      <span class="section-handle">⠿</span>
+      <span class="section-icon">${s.icon}</span>
+      <div style="flex:1;">
+        <div class="section-name">${s.name}</div>
+        <div class="section-desc">${s.desc}</div>
+      </div>
+      <button onclick="toggleSection(${i})" title="${s.visible!==false?'Masquer':'Afficher'}"
+        style="background:none;border:none;cursor:pointer;font-size:18px;padding:4px 8px;">${s.visible!==false?'👁':'🚫'}</button>
+    </div>`).join('');
+}
+let _dragIdx=null;
+function dragStart(e,idx){ _dragIdx=idx; e.dataTransfer.effectAllowed='move'; }
+function dropSection(e,toIdx){
+  e.preventDefault();
+  if(_dragIdx===null||_dragIdx===toIdx){_dragIdx=null;return;}
+  const s=load(SECTIONS_KEY)||SITE_SECTIONS.map(x=>({...x,visible:true}));
+  const [m]=s.splice(_dragIdx,1); s.splice(toIdx,0,m);
+  save(SECTIONS_KEY,s); _dragIdx=null; renderEditorPage();
+}
+function toggleSection(idx){
+  const s=load(SECTIONS_KEY)||SITE_SECTIONS.map(x=>({...x,visible:true}));
+  s[idx].visible=s[idx].visible===false;
+  save(SECTIONS_KEY,s); renderEditorPage();
+}
+function saveEditorLayout(){
+  const s=load(SECTIONS_KEY)||SITE_SECTIONS.map(x=>({...x,visible:true}));
+  save(SECTIONS_KEY,s);
+  syncToKV('Structure pages');
+  const bar=document.getElementById('sync-bar-editor');
+  if(bar){bar.className='sync-bar ok';bar.style.display='block';
+    bar.innerHTML='✅ Structure enregistrée. <a href="../index.html" target="_blank" style="color:var(--green);font-weight:700;">Voir le site →</a>';
+    setTimeout(()=>bar.style.display='none',7000);}
+  toast('✅ Structure enregistrée','g');
+}
+
+// WA config
+function saveWAConfig(){
+  const cfg=load(K.content)||{};
+  cfg['wa.btn_text']=document.getElementById('wa-btn-text')?.value||'';
+  save(K.content,cfg); syncToKV('Bouton WhatsApp');
+  toast('✅ WhatsApp enregistré','g');
+}
+
+// ================================================================
+// PAGE TITLES & NAV
+// ================================================================
+const PAGE_TITLES = {
+  dashboard:'Tableau de bord', seo:'SEO par page', editor:'Éditeur de contenu',
+  ia:'IA Marketing', blog:'Blog', faq:'FAQ', popup:'Popup & CTA',
+  newsletter:'Newsletter', ads:'Google Ads', analytics:'Analytics', email:'Configuration Email', social:'Réseaux Sociaux',
+};
+
+function nav(id, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+  const page = document.getElementById('page-'+id);
+  if (page) page.classList.add('active');
+  if (el) el.classList.add('active');
+  const titleEl = document.getElementById('page-title');
+  if (titleEl) titleEl.textContent = PAGE_TITLES[id]||id;
+  renderPage(id);
+  // Toujours afficher le contenu depuis le haut
+  const mainEl = document.querySelector('.main');
+  if (mainEl) mainEl.scrollTop = 0;
+  if (page && page.scrollIntoView) page.scrollIntoView({ block: 'start' });
+}
+
+function renderPage(id) {
+  if (id==='dashboard')  renderDashboard();
+  if (id==='seo')        { const firstTab=document.querySelector('#seo-page-tabs .tab'); loadSEOPage('index',firstTab); }
+  if (id==='editor')     renderEditorPage();
+  if (id==='ia')         { const b=document.getElementById('ia-season-badge'); if(b) b.textContent=getSeason().label+' · '+getMarrakechContext().month; }
+  if (id==='blog')       renderBlog();
+  if (id==='faq')        renderFAQ();
+  if (id==='popup')      loadPopupConfig();
+  if (id==='newsletter') renderNewsletter();
+  if (id==='ads')        loadAds();
+  if (id==='analytics')  loadAnalytics();
+  if (id==='email')      loadEmailConfig();
+  if (id==='social')     loadSocialConfig();
+}
+
+// Dashboard
+function renderDashboard() {
+  const res=getRes(), now=new Date();
+  const m=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  const monthRes=res.filter(r=>(r.startDate||'').startsWith(m));
+  const arts=load(K.blog)||[]; const nls=load(K.newsletter)||[]; const faqs=load(K.faq)||[];
+  const el=id=>document.getElementById(id);
+  if(el('kpi-res')) el('kpi-res').textContent=monthRes.length;
+  if(el('kpi-art')) el('kpi-art').textContent=arts.filter(a=>a.status==='published').length;
+  if(el('kpi-nl'))  el('kpi-nl').textContent=nls.length;
+  if(el('kpi-faq')) el('kpi-faq').textContent=faqs.length;
+  const pages=[
+    {key:'index',name:'Accueil'},{key:'nos-vehicules',name:'Nos Véhicules'},
+    {key:'about',name:'À propos'},{key:'contact',name:'Contact'},{key:'aeroport',name:'Aéroport'}
+  ];
+  const seoData=load(K.seo)||{};
+  const tbody=el('dash-seo-tbody');
+  if(tbody) tbody.innerHTML=pages.map(p=>{
+    const d=seoData[p.key]||{}; const sc=calcSEOScore(d);
+    const c=sc>=80?'var(--green)':sc>=50?'var(--yellow)':'var(--red)';
+    return `<tr onclick="nav('seo',document.querySelector('[onclick*=seo]'));setTimeout(()=>loadSEOPage('${p.key}',null),80)" style="cursor:pointer;">
+      <td><strong>${p.name}</strong></td>
+      <td><span style="font-weight:800;color:${c};">${sc}/100</span></td>
+      <td><span style="font-size:12px;color:${c};">${sc>=80?'Bon':sc>=50?'Moyen':'Faible'}</span></td>
+    </tr>`;
+  }).join('');
+  const recs=[];
+  pages.forEach(p=>{const d=seoData[p.key]||{};
+    if(!d.title||d.title.length<40) recs.push(`⚠ <b>${p.name}</b> : titre SEO trop court`);
+    if(!d.desc||d.desc.length<100)  recs.push(`⚠ <b>${p.name}</b> : meta trop courte`);
+  });
+  if(!arts.length) recs.push('💡 Créez votre premier article de blog');
+  if(!faqs.length) recs.push('💡 Ajoutez des FAQ pour le référencement');
+  const recsEl=el('dash-recs');
+  if(recsEl) recsEl.innerHTML=recs.length
+    ? recs.slice(0,5).map(r=>`<div style="padding:5px 0;border-bottom:1px solid var(--border);">${r}</div>`).join('')
+    : '<div style="color:var(--green);font-weight:700;">✓ Tout est bien optimisé !</div>';
+}
+
+// Sync bar helpers
+const _origSaveSEO = saveSEO;
+async function saveSEO() {
+  await _origSaveSEO();
+  const bar=document.getElementById('sync-bar-seo');
+  if(bar){bar.className='sync-bar ok';bar.style.display='block';
+    bar.innerHTML='✅ SEO enregistré. <a href="../index.html" target="_blank" style="color:var(--green);font-weight:700;">Voir le site →</a>';
+    setTimeout(()=>bar.style.display='none',7000);}
+}
+const _origSavePopup=savePopupConfig;
+async function savePopupConfig(){
+  await _origSavePopup();
+  const bar=document.getElementById('sync-bar-popup');
+  if(bar){bar.className='sync-bar ok';bar.style.display='block';
+    const pc=load(K.popup)||{};
+    bar.innerHTML='✅ Popup '+(pc.active?'activé':'désactivé')+'. Rafraîchissez le site.';
+    setTimeout(()=>bar.style.display='none',7000);}
+}
+const _origSaveFAQ=saveFAQItem;
+async function saveFAQItem(idx){
+  await _origSaveFAQ(idx);
+  const bar=document.getElementById('sync-bar-faq');
+  if(bar){bar.className='sync-bar ok';bar.style.display='block';
+    bar.innerHTML='✅ FAQ enregistrée — Schema.org synchronisé.';
+    setTimeout(()=>bar.style.display='none',7000);}
+}
+
+
+// ================================================================
+// RÉSEAUX SOCIAUX
+// ================================================================
+const SOCIAL_KEY = 'asl_social_v1';
+
+function loadSocialConfig() {
+  const cfg = load(SOCIAL_KEY) || {};
+  const set = (id, v) => { const e = document.getElementById(id); if (e) e.value = v || ''; };
+  set('social-whatsapp', cfg.whatsapp);
+  set('social-instagram', cfg.instagram);
+  set('social-facebook', cfg.facebook);
+  set('social-tiktok', cfg.tiktok);
+  set('social-snapchat', cfg.snapchat);
+}
+
+async function saveSocialConfig() {
+  const get = id => (document.getElementById(id)?.value || '').trim();
+  const cfg = {
+    whatsapp: get('social-whatsapp'),
+    instagram: get('social-instagram'),
+    facebook: get('social-facebook'),
+    tiktok: get('social-tiktok'),
+    snapchat: get('social-snapchat'),
+    updatedAt: new Date().toISOString(),
+  };
+  save(SOCIAL_KEY, cfg);
+  // Synchroniser vers KV (clé marketing.social) → content-bridge applique aux icônes du footer
+  try {
+    const mkt = getMktData();
+    mkt.social = cfg;
+    await syncToKV('Réseaux Sociaux');
+  } catch(e) {}
+  const msg = document.getElementById('social-saved-msg');
+  if (msg) { msg.style.display = 'block'; setTimeout(() => { msg.style.display = 'none'; }, 4000); }
+  if (typeof toast === 'function') toast('Réseaux sociaux enregistrés', 'g');
+}
+
+
+// ================================================================
+// INIT
+// ================================================================
+renderDashboard();
+setTimeout(()=>{
+  const b=document.getElementById('ia-season-badge');
+  if(b) b.textContent=getSeason().label+' · '+getMarrakechContext().month;
+},50);
+
+
+function adminLogout() {
+  if (confirm('Se déconnecter de l\'administration ?')) {
+    localStorage.removeItem('asl_admin_session');
+    window.location.replace('login.html');
+  }
+}
+</script>
+
+<script>
+// Toast vert universel sur chaque Enregistrer
+(function() {
+  function showSaveToast(label) {
+    var t = document.getElementById('_save_toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = '_save_toast';
+      t.style.cssText = 'position:fixed;bottom:22px;right:22px;z-index:99999;background:#16a34a;color:#fff;border-radius:12px;padding:13px 20px;font-size:14px;font-weight:700;font-family:inherit;box-shadow:0 6px 24px rgba(22,163,74,.35);display:flex;align-items:center;gap:10px;transform:translateY(80px);opacity:0;transition:all .3s;pointer-events:none;max-width:360px;';
+      document.body.appendChild(t);
+    }
+    t.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span>' + (label||'Données') + ' enregistré et synchronisé ✓</span>';
+    requestAnimationFrame(function(){ t.style.transform='translateY(0)'; t.style.opacity='1'; });
+    clearTimeout(t._t);
+    t._t = setTimeout(function(){ t.style.transform='translateY(80px)'; t.style.opacity='0'; }, 4000);
+  }
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest ? e.target.closest('button') : null;
+    if (!btn) return;
+    var txt = (btn.textContent||'').trim().toLowerCase();
+    var oc = (btn.getAttribute('onclick')||'').toLowerCase();
+    var isSave = txt.includes('enregistrer') || txt.includes('sauvegarder') ||
+      txt.includes('activer') || txt.includes('synchroniser') ||
+      oc.includes('save') || oc.includes('confirmpay') || oc.includes('markpaid');
+    if (isSave) {
+      var lbl = 'Données';
+      if (oc.includes('seo') || txt.includes('seo')) lbl = 'SEO';
+      else if (oc.includes('faq') || txt.includes('faq')) lbl = 'FAQ';
+      else if (oc.includes('blog')) lbl = 'Article';
+      else if (oc.includes('popup')) lbl = 'Popup';
+      else if (oc.includes('logo')) lbl = 'Logo';
+      setTimeout(function(){ showSaveToast(lbl); }, 300);
+    }
+  }, true);
+})();
+
+// ================================================================
+// CONFIGURATION EMAIL
+// ================================================================
+const EMAIL_KEY = 'asl_email_config_v1';
+
+function loadEmailConfig() {
+  const cfg = load(EMAIL_KEY) || {};
+  const set = (id, v) => { const e = document.getElementById(id); if (e) e.value = v || ''; };
+  set('email-reservation', cfg.reservation);
+  set('email-contact', cfg.contact);
+  set('email-from', cfg.from);
+  set('smtp-host', cfg.host);
+  set('smtp-port', cfg.port);
+  set('smtp-user', cfg.user);
+  set('smtp-pass', cfg.pass);
+  const sec = document.getElementById('smtp-security');
+  if (sec && cfg.security) sec.value = cfg.security;
+}
+
+async function saveEmailConfig() {
+  const get = id => document.getElementById(id)?.value || '';
+  const cfg = {
+    reservation: get('email-reservation'),
+    contact: get('email-contact'),
+    from: get('email-from'),
+    host: get('smtp-host'),
+    port: get('smtp-port'),
+    security: get('smtp-security'),
+    user: get('smtp-user'),
+    pass: get('smtp-pass'),
+    updatedAt: new Date().toISOString(),
+  };
+  save(EMAIL_KEY, cfg);
+  // Synchroniser vers KV (sans le mot de passe en clair dans le contenu public marketing)
+  try {
+    const mkt = getMktData();
+    mkt.email_config = { reservation: cfg.reservation, contact: cfg.contact, from: cfg.from, host: cfg.host, port: cfg.port, security: cfg.security, user: cfg.user };
+    await syncToKV('Configuration Email');
+  } catch(e) {}
+  toast('Configuration email enregistrée', 'g');
+}
+
+function testEmailConfig() {
+  const res = document.getElementById('email-test-result');
+  const host = document.getElementById('smtp-host')?.value;
+  const user = document.getElementById('smtp-user')?.value;
+  if (!res) return;
+  res.style.display = 'block';
+  if (!host || !user) {
+    res.style.background = 'rgba(217,119,6,.1)';
+    res.style.color = 'var(--yellow)';
+    res.textContent = 'Veuillez remplir au moins le SMTP Host et le Username avant de tester.';
+    return;
+  }
+  res.style.background = 'rgba(37,99,235,.08)';
+  res.style.color = '#1d4ed8';
+  res.innerHTML = 'La configuration est enregistrée. L\'envoi réel sera actif une fois le service SMTP connecté au backend après déploiement (worker Cloudflare ou API d\'envoi).';
+}
+
+</script>
+
+<script>
+function toggleSidebar() {
+  var sb = document.querySelector('.sidebar');
+  if (!sb) return;
+  if (window.innerWidth <= 768) {
+    sb.classList.toggle('mobile-open');
+    var bd = document.querySelector('.sb-mobile-backdrop');
+    if (bd) bd.classList.toggle('show', sb.classList.contains('mobile-open'));
+    return;
+  }
+  sb.classList.toggle('collapsed');
+  document.body.classList.toggle('sb-is-collapsed', sb.classList.contains('collapsed'));
+  try { localStorage.setItem('asl_sb_collapsed', sb.classList.contains('collapsed') ? '1' : '0'); } catch(e){}
+}
+(function(){
+  try {
+    if (localStorage.getItem('asl_sb_collapsed') === '1') {
+      var sb = document.querySelector('.sidebar');
+      if (sb) { sb.classList.add('collapsed'); document.body.classList.add('sb-is-collapsed'); }
+    }
+  } catch(e){}
+})();
+</script>
+</body>
+</html>

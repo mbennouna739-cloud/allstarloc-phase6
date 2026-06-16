@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /admin-allstarloc/
+Disallow: /functions/
+Disallow: /worker/
+
+User-agent: Googlebot
+Disallow: /admin/
+
+Sitemap: https://allstarloc.ma/sitemap.xml

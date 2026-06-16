@@ -1,0 +1,65 @@
+ALL STAR LOC — PHASE 13 : FINITION, SCROLL, CAUTION, VÉHICULES, ADMIN
+=======================================================================
+Cloudflare KV, data.js (synchronisation), API, worker, wrangler :
+INCHANGÉS — vérifiés octet par octet.
+
+1. PROBLÈME DE SCROLL AU CHARGEMENT — CAUSES IDENTIFIÉES ET CORRIGÉES
+   Deux causes cumulatives produisaient le ralentissement initial :
+   A) L'image hero (350 Ko PNG) était décodée de façon SYNCHRONE pendant
+      le premier rendu, bloquant le thread principal au moment précis où
+      l'utilisateur scrollait. → Correction : `decoding="async"` ; le
+      navigateur décode l'image en arrière-plan sans bloquer le scroll.
+   B) Les animations fade-in/translateY s'exécutaient sur les gros blocs
+      (titre hero, carte réservation) juste après le chargement, ajoutant
+      une couche de peinture pendant le premier scroll. → Correction : au
+      PREMIER geste de défilement (écouteur passif, supprimé aussitôt),
+      tous les blocs animés sont figés dans leur état final
+      (`body.scrolled .fade-in`). Le scroll devient immédiatement fluide.
+      `prefers-reduced-motion` : animations désactivées d'emblée.
+
+2. DATES PAR DÉFAUT : aujourd'hui → aujourd'hui + 2 jours (corrigé, +3→+2).
+
+3+4. FEATURES & TARIFS DÉGRESSIFS PAR VÉHICULE : déjà implémentés en
+   phase 12 (caractéristiques, 5 tranches, champs admin Ajouter+Modifier,
+   synchronisation KV). Phase 13 ajoute le carburant « Hybride » dans les
+   deux formulaires. Tout est pilotable admin sans toucher au code.
+
+5. EXPLICATION DES TARIFS CÔTÉ CLIENT :
+   - Récapitulatif enrichi : ligne « Location · N j · {p}/jour » + mention
+     de la tranche appliquée si le véhicule a des tarifs dégressifs.
+   - Bandeau « Tarifs dégressifs selon la durée... » affiché dans le récap
+     uniquement pour les véhicules avec tranches renseignées.
+   - Clés traduites ×4 langues.
+
+6. GESTION DE LA CAUTION DEPUIS L'ADMIN (montant + interrupteur) :
+   - Case à cocher « Afficher la caution sur le site et dans le pop-up »
+     dans les formulaires Ajouter ET Modifier.
+   - Si désactivée (défaut) : la caution n'apparaît nulle part.
+   - Si activée + montant renseigné : ligne informative dans le récap
+     « Caution — restituée au retour » + puce sur la carte véhicule.
+   - Non additionnée au total (c'est une garantie, pas un prix).
+   - Modifiable, activable, désactivable en permanence depuis l'admin.
+
+7. PAGE /NOS-VEHICULES (pages/nos-vehicules.html) :
+   - Page dédiée SEO avec balises <title>, <meta description>, <canonical>.
+   - Lit la flotte synchronisée via ASLDB (même KV que l'admin) → mise à
+     jour en temps réel si l'admin modifie un véhicule.
+   - Filtres par catégorie, équipements, tarifs, bloc CTA.
+   - « Réserver » depuis cette page → redirige vers la page d'accueil
+     (#fleet) : réservation centralisée via le calendrier.
+   - Les liens « Nos Véhicules » de toutes les pages internes pointent
+     maintenant vers cette vraie page.
+
+8. LOGO OFFICIEL ASL DANS L'ADMIN : logo extrait depuis votre image
+   (fond noir conservé, recadrage propre, 30 Ko) — remplace le pictogramme
+   générique. Fichier : admin/logo-asl.png.
+
+9. ADMINISTRATION 100 % MODIFIABLE (confirmation) :
+   Features véhicules, tarifs par tranche, caution (montant + affichage),
+   carburant (Diesel/Essence/Hybride) : tout est géré par les formulaires
+   admin, sauvegardé dans Cloudflare KV via ASLDB, synchronisé en temps
+   réel sur le site. Aucun élément n'est codé en dur : zéro modification
+   de code nécessaire pour changer une valeur.
+
+TESTS : 176 contrôles au vert (31 fonctionnels + 7 suites × résultats
+complets), 13 pages HTML valides, dictionnaire 305 clés ×4 langues.

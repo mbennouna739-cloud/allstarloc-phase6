@@ -1,0 +1,46 @@
+ALL STAR LOC — PHASE 1 : ADMIN CONNECTÉ AU SITE CLIENT
+=======================================================
+
+FICHIERS
+--------
+- index.html        : site client (connecté à la base partagée)
+- admin/index.html  : administration (connectée à la base partagée)
+- data.js           : NOUVEAU — source de données unique (véhicules + réservations)
+
+COMMENT TESTER EN LOCAL
+-----------------------
+Important : pour que le site client et l'admin partagent les mêmes données,
+ouvrez-les via un petit serveur local (et non en double-cliquant sur les fichiers) :
+
+  1. Ouvrez un terminal dans le dossier du projet
+  2. Lancez :  python -m http.server 8000
+     (ou avec Node :  npx serve)
+  3. Site client : http://localhost:8000/
+     Admin       : http://localhost:8000/admin/
+
+SCÉNARIO DE TEST (validé automatiquement, 13/13)
+------------------------------------------------
+1. Admin → Gestion Flotte → "+ Ajouter un véhicule" → Enregistrer
+2. Fermez l'onglet admin, rouvrez-le → le véhicule est toujours là
+3. Ouvrez le site client → le véhicule apparaît dans la flotte
+4. Site client → réservez un véhicule (parcours complet jusqu'à la confirmation)
+5. Admin → Tableau de bord → la réservation apparaît (badge, stats, liste)
+6. Admin → "✓ Confirmer" → le statut est sauvegardé définitivement
+
+CE QUI EST CONNECTÉ
+-------------------
+- Ajout / modification / suppression de véhicule (persistant, visible sur le site)
+- Statuts : maintenance et hors service = véhicule masqué du site client
+- Réservation client → apparaît dans l'admin en temps réel (onglets ouverts) 
+- Dashboard avec vraies données : réservations du mois, revenus MAD,
+  véhicules actifs, graphique hebdomadaire réel, dernières réservations
+- Prix en MAD (admin) et en € (site client), conversion automatique proposée
+
+LIMITE IMPORTANTE À CONNAÎTRE
+-----------------------------
+Le stockage utilise le navigateur (localStorage). C'est parfait pour tester
+et pour gérer la flotte depuis VOTRE navigateur, MAIS :
+- les données ne sont pas partagées entre deux appareils différents ;
+- un client qui réserve depuis SON téléphone n'apparaîtra pas dans VOTRE admin.
+Pour un site en ligne avec de vrais clients, une phase "backend"
+(base de données en ligne, ex. Supabase/Firebase) sera nécessaire.

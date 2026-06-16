@@ -1,0 +1,53 @@
+ALL STAR LOC — PHASE 2 : PAGES CRÉÉES & LIENS CORRIGÉS
+=======================================================
+
+NOUVEAUTÉS DE CETTE PHASE
+-------------------------
+Dossier pages/ créé avec 10 pages au style du site :
+  - about.html ................ À propos
+  - contact.html .............. Contact (WhatsApp, tél, email, agence, services sur demande)
+  - blog.html ................. Blog (1 article publié + 2 à venir)
+  - article-guide-location.html Article : guide complet de la location à Marrakech
+  - cgv.html .................. Conditions générales de location (10 articles)
+  - privacy.html .............. Politique de confidentialité
+  - mentions.html ............. Mentions légales
+  - faq.html .................. FAQ interactive (10 questions)
+  - lld.html .................. Location longue durée
+  - aeroport.html ............. Livraison aéroport
+  - page.css .................. Style partagé (mêmes couleurs/polices que le site)
+
+LIENS CORRIGÉS DANS index.html
+------------------------------
+  - Adresse du footer → Google Maps
+  - Icônes réseaux sociaux → page contact
+  - "Livraison Hôtel", "Location avec Chauffeur", "Transfert Privé" → page contact
+  - MENU MOBILE : le bouton ☰ ouvre maintenant un vrai menu (il ne faisait rien)
+  - Header mobile compacté (le bouton menu sortait de l'écran sur petit écran)
+
+TUNNEL DE RÉSERVATION
+---------------------
+  - Le lien "conditions générales" ouvre la vraie page CGV dans un NOUVEL ONGLET
+    → le tunnel n'est jamais interrompu
+  - La case d'acceptation est cliquable (case ET texte)
+  - Sans acceptation : la réservation est bloquée avec un message
+  - Avec acceptation : confirmation + enregistrement dans l'admin (inchangé)
+
+TESTS AUTOMATISÉS
+-----------------
+  Phase 2 : 9/9 réussis (crawl 12 pages sans lien mort, menu mobile,
+            tunnel complet jusqu'à confirmation, réservation visible en admin)
+  Phase 1 : 13/13 réussis (non-régression : connexion admin ↔ site intacte)
+
+COMMENT TESTER EN LOCAL
+-----------------------
+  1. Terminal dans le dossier du projet
+  2. python -m http.server 8000
+  3. Site  : http://localhost:8000/
+     Admin : http://localhost:8000/admin/
+
+RAPPEL (inchangé depuis la Phase 1)
+-----------------------------------
+Le stockage des données utilise le navigateur (localStorage) : parfait pour
+tester, mais une phase "backend" sera nécessaire avant la mise en ligne réelle
+pour que les réservations des clients (depuis leurs appareils) arrivent
+dans votre admin.

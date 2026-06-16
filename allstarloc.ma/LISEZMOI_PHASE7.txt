@@ -1,0 +1,36 @@
+ALL STAR LOC — PHASE 7 : FINALISATION DU TUNNEL DE RÉSERVATION
+================================================================
+
+ÉTAPE PAIEMENT (sans carte bancaire, sans simulation)
+- 4 modes au choix, aucune coordonnée bancaire demandée ni stockée :
+  Paiement à l'agence (défaut) · à la livraison · par virement bancaire ·
+  via WhatsApp après validation.
+- La réservation est enregistrée côté serveur avec : véhicule, nom, téléphone,
+  email, dates, lieux (prise en charge + retour), montant estimé (MAD),
+  mode de paiement choisi, statut « En attente de paiement »
+  (champs paymentMethod / paymentStatus ; statut admin : pending, inchangé).
+- Code promo conservé, calculs de prix inchangés.
+
+CASE CGV
+- Visible, cliquable ; le bouton devient « Confirmer la réservation » à
+  l'étape 5 et reste DÉSACTIVÉ tant que la case n'est pas cochée.
+- Les liens CGV / Politique de confidentialité s'ouvrent désormais dans une
+  MODALE (scroll interne, bouton Fermer, bouton « J'ai lu et compris ») :
+  l'utilisateur reste dans le tunnel, aucune donnée perdue. Contenu chargé
+  depuis les pages existantes (inchangées) ; repli automatique en nouvel
+  onglet si le chargement échoue.
+
+CONFIRMATION
+- Message : « Votre demande de réservation a été envoyée avec succès.
+  Notre équipe vous contactera rapidement pour confirmer la disponibilité
+  et finaliser le paiement. » + statut « En attente de paiement ».
+- Bouton principal : « Confirmer ma réservation sur WhatsApp » (optionnel,
+  la réservation est déjà enregistrée) avec message prérempli complet :
+  nom, téléphone, véhicule, dates, lieux, montant, mode de paiement.
+
+LISIBILITÉ DU POP-UP
+- +1 px ciblé sur les textes du tiroir (labels, options, descriptions,
+  boutons) ; titres, couleurs, espacements, animation et hiérarchie inchangés.
+
+FICHIERS MODIFIÉS : index.html, i18n.js (4 langues), data.js (fiabilisation
+de l'attente de synchronisation). Back-office, pages, API, wrangler : intacts.

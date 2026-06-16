@@ -1,0 +1,38 @@
+// ============================================================
+// ALL STAR LOC — Configuration du déploiement Cloudflare Workers
+//
+// ⚠️ DEUX CHOSES À VÉRIFIER/COMPLÉTER AVANT DE POUSSER SUR GITHUB :
+//
+// 1. "name" : doit être EXACTEMENT le nom de votre Worker existant
+//    (visible dans le tableau de bord Cloudflare → Workers & Pages).
+//    S'il s'appelle autrement que "allstarloc", modifiez la ligne ci-dessous.
+//
+// 2. "id" du namespace KV : collez l'ID de votre namespace ASL-DATA
+//    (Cloudflare → Storage & Databases → KV → ASL-DATA → l'ID est affiché
+//    à côté du nom ; bouton copier). Remplacez la valeur placeholder.
+//
+// La variable ADMIN_KEY (recommandée) se configure dans le tableau de bord :
+// Workers & Pages → votre Worker → Settings → Variables and Secrets.
+// ============================================================
+{
+  "name": "allstarloc",
+  "compatibility_date": "2026-05-01",
+
+  // Point d'entrée serveur : gère /api/* (synchronisation + images)
+  "main": "worker/index.js",
+
+  // Fichiers statiques du site (racine du dépôt).
+  // Les fichiers listés dans .assetsignore ne sont pas publiés.
+  "assets": {
+    "directory": ".",
+    "binding": "ASSETS"
+  },
+
+  // Base de données KV — stockage central des véhicules, réservations et images.
+  "kv_namespaces": [
+    {
+      "binding": "ASL_DB",
+      "id": "REMPLACEZ_PAR_L_ID_DE_VOTRE_NAMESPACE_KV"
+    }
+  ]
+}

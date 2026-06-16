@@ -1,0 +1,82 @@
+ALL STAR LOC — PHASE 6B : ACTIVATION DE L'API SUR VOTRE WORKER EXISTANT
+=========================================================================
+
+POURQUOI CETTE VERSION
+Votre site est déployé en tant que Cloudflare WORKER (URL *.workers.dev).
+Le dossier /functions (convention Cloudflare Pages) n'y est jamais exécuté,
+d'où le 404 sur /api/health et le badge « Hors ligne — données locales ».
+Cette version ajoute 3 fichiers qui activent l'API sur votre Worker :
+  - wrangler.jsonc   → configuration du Worker (entrée, assets, binding KV)
+  - worker/index.js  → route /api/* vers l'API existante, sert le site sinon
+  - .assetsignore    → exclut les fichiers techniques des assets publiés
+AUCUN autre fichier n'a changé (design, pages, textes, interface : intacts).
+
+=========================================================================
+ÉTAPES EXACTES DE DÉPLOIEMENT (dans l'ordre)
+=========================================================================
+
+ÉTAPE 1 — Récupérer l'ID du namespace KV « ASL-DATA »
+  1. Tableau de bord Cloudflare → menu gauche → Storage & Databases → KV.
+  2. Si « ASL-DATA » n'existe pas : bouton « Create namespace »,
+     nom : ASL-DATA, créer.
+  3. Dans la liste, repérez la colonne « ID » à côté de ASL-DATA
+     (suite de 32 caractères hexadécimaux). Cliquez sur l'icône copier.
+
+ÉTAPE 2 — Renseigner l'ID dans wrangler.jsonc
+  1. Ouvrez le fichier wrangler.jsonc (racine du projet).
+  2. Remplacez REMPLACEZ_PAR_L_ID_DE_VOTRE_NAMESPACE_KV par l'ID copié,
+     en gardant les guillemets. Exemple :
+       "kv_namespaces": [
+         { "binding": "ASL_DB", "id": "3f2a9c1b8d4e47f0a6b5c3d2e1f09a8b" }
+       ]
+  3. Vérifiez aussi la ligne "name": "allstarloc" — elle doit correspondre
+     EXACTEMENT au nom de votre Worker dans le tableau de bord
+     (Workers & Pages → la carte de votre projet). Sinon, corrigez-la.
+
+ÉTAPE 3 — Vérifier la commande de déploiement du projet
+  1. Workers & Pages → votre Worker → Settings → onglet Build
+     (section « Build configuration » du dépôt GitHub connecté).
+  2. « Deploy command » doit être :  npx wrangler deploy
+     (« Build command » peut rester vide.)
+
+ÉTAPE 4 — Pousser sur GitHub
+  Remplacez le contenu de votre dépôt par celui de ce ZIP (ou ajoutez les
+  3 nouveaux fichiers + ce LISEZMOI), commit, push. Cloudflare redéploie
+  automatiquement.
+
+ÉTAPE 5 — Vérifications (2 minutes)
+  1. https://VOTRE-URL.workers.dev/api/health
+     → attendu : {"ok":true,"kv":"lié (ASL_DB)","adminKey":"non configurée (écritures ouvertes)"}
+  2. Ouvrez l'administration : le badge en bas à gauche doit être VERT
+     « Synchronisé (serveur) ». La flotte initiale est envoyée au serveur
+     automatiquement au premier chargement.
+  3. Ajoutez un véhicule de test depuis l'admin (PC), puis ouvrez le site
+     sur votre téléphone : il apparaît (au plus tard sous 8 secondes,
+     ou immédiatement en rouvrant l'onglet).
+
+ÉTAPE 6 — (Fortement recommandé) Protéger les écritures
+  1. Workers & Pages → votre Worker → Settings → Variables and Secrets
+     → Add : nom ADMIN_KEY, valeur = un mot de passe long (25+ caractères),
+     type Secret. Sauvegarder (un redéploiement peut être proposé).
+  2. Ouvrez data.js (racine), reportez la MÊME valeur :
+       const ADMIN_KEY  = 'votre-mot-de-passe';
+     puis commit + push.
+  3. /api/health doit alors afficher "adminKey":"configurée".
+  Effet : seules vos pages peuvent modifier la flotte, les statuts de
+  réservation et téléverser des images ; les clients peuvent toujours
+  réserver (volontairement public).
+
+=========================================================================
+DÉPANNAGE RAPIDE
+=========================================================================
+- /api/health → 404 encore :
+  le déploiement n'a pas utilisé wrangler.jsonc. Vérifiez l'étape 3
+  (Deploy command = npx wrangler deploy) et relancez un déploiement.
+- /api/health → 503 « ASL_DB » :
+  l'ID du namespace est manquant/incorrect dans wrangler.jsonc (étape 1-2).
+- Échec de déploiement mentionnant le nom du Worker :
+  la ligne "name" ne correspond pas au Worker existant (étape 2.3).
+- Badge rouge « Clé admin invalide » :
+  la valeur ADMIN_KEY de data.js diffère de celle du tableau de bord.
+- Domaine officiel allstarloc.ma : rattachez-le plus tard au même Worker
+  (Settings → Domains & Routes) — aucune autre modification nécessaire.
