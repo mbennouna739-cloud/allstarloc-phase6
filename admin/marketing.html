@@ -2416,19 +2416,45 @@ async function saveAllTexts() {
     }
   });
   save(K.content, overrides);
-  const ok = await syncToKV('Textes du site');
+
   const box = document.getElementById('alltexts-saved');
-  if (box) {
-    box.style.display = 'block';
-    if (ok) {
-      box.style.background = 'rgba(22,163,74,.1)'; box.style.color = '#16a34a';
-      box.innerHTML = 'OK : ' + Object.keys(overrides).length + ' texte(s) personnalise(s) enregistre(s) et synchronise(s). Rafraichissez le site public (Ctrl+F5).';
+  if (box) { box.style.display = 'block'; box.style.background = '#f1f5f9'; box.style.color = '#334155'; box.innerHTML = '⏳ Envoi au serveur…'; }
+
+  // Construire l'objet complet ET l'envoyer DIRECTEMENT (sans dépendre d'une autre fonction)
+  const fullData = getMktData();
+  fullData.content = overrides; // garantir que nos overrides sont inclus
+
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    let adminKey = ''; try { adminKey = localStorage.getItem('asl_admin_key') || ''; } catch(e) {}
+    if (adminKey) headers['X-ASL-Key'] = adminKey;
+
+    const resp = await fetch('/api/marketing', { method: 'PUT', headers: headers, body: JSON.stringify(fullData) });
+    const result = await resp.json().catch(function(){ return {}; });
+
+    if (resp.ok && result.saved) {
+      // Vérifier en relisant
+      const back = await fetch('/api/marketing', { headers: { 'Cache-Control': 'no-cache' } });
+      const bd = await back.json();
+      const ok = bd && bd.data && bd.data.content && JSON.stringify(bd.data.content) === JSON.stringify(overrides);
+      if (box) {
+        box.style.background = '#f0fdf4'; box.style.color = '#15803d';
+        box.innerHTML = '✅ ' + Object.keys(overrides).length + ' texte(s) enregistré(s) ET confirmé(s) sur le serveur (' + (result.bytes||0) + ' octets). Rafraîchissez le site public avec Ctrl+F5.';
+      }
+    } else if (resp.ok) {
+      if (box) { box.style.background = '#fffbeb'; box.style.color = '#b45309'; box.innerHTML = '⚠ Le serveur a répondu mais sans confirmer l\'écriture. Réessayez.'; }
+    } else if (resp.status === 403) {
+      if (box) { box.style.background = '#fef2f2'; box.style.color = '#b91c1c'; box.innerHTML = '❌ Écriture refusée (403). Déconnectez-vous et reconnectez-vous à l\'admin.'; }
     } else {
-      box.style.background = 'rgba(217,119,6,.12)'; box.style.color = '#b45309';
-      box.innerHTML = 'Attention : enregistre en local. La synchro serveur a echoue (voir /api/health).';
+      if (box) { box.style.background = '#fef2f2'; box.style.color = '#b91c1c'; box.innerHTML = '❌ Erreur serveur ' + resp.status + ' : ' + (result.error || 'inconnue'); }
     }
-    setTimeout(function(){ box.style.display = 'none'; }, 8000);
+  } catch(e) {
+    if (box) {
+      box.style.background = '#fef2f2'; box.style.color = '#b91c1c';
+      box.innerHTML = '❌ Serveur injoignable. Si tu testes en local (file://), c\'est normal : la sync ne marche QUE sur le site déployé Cloudflare.';
+    }
   }
+  setTimeout(function(){ if (box) box.style.display = 'none'; }, 12000);
 }
 
 
