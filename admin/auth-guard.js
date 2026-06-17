@@ -6,6 +6,19 @@
   const SESSION_KEY = 'asl_admin_session';
   const SESSION_TTL = 8 * 60 * 60 * 1000;
 
+  // ---- MODE TEST LOCAL ----
+  // En local (fichier ouvert directement ou localhost), on crée automatiquement
+  // une session temporaire pour pouvoir tester l'admin SANS mot de passe.
+  // Sur le vrai site (Cloudflare / domaine), la connexion reste obligatoire.
+  var isLocal = location.protocol === 'file:' ||
+                location.hostname === 'localhost' ||
+                location.hostname === '127.0.0.1';
+  if (isLocal && !localStorage.getItem(SESSION_KEY)) {
+    localStorage.setItem(SESSION_KEY, JSON.stringify({
+      user: 'test-local', exp: Date.now() + SESSION_TTL, token: 'local-test'
+    }));
+  }
+
   function logout(reason) {
     localStorage.removeItem(SESSION_KEY);
     const base = window.location.pathname.includes('/admin/') ? '' : 'admin/';

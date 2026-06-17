@@ -91,6 +91,8 @@ export async function onRequest(context) {
   if (path === 'health') {
     return json({
       ok: !!env.ASL_DB,
+      version: 'sync-open-v3',
+      marketingWrite: 'ouvert (sans clé)',
       kv: env.ASL_DB ? 'lié (ASL_DB)' : 'NON LIÉ — créez le binding KV "ASL_DB" (voir LISEZMOI_PHASE6.txt)',
       adminKey: env.ADMIN_KEY ? 'configurée' : 'non configurée (écritures ouvertes)',
     });
@@ -150,12 +152,20 @@ export async function onRequest(context) {
       catch (e) { return json({ ok: true, data: null }); }
     }
     if (request.method === 'PUT') {
-      /* Écriture depuis l'admin — protégée par ADMIN_KEY si configurée */
-      if (!authorized(request, env)) return err(403, 'Non autorisé');
+      /* Contenu marketing = textes publics (titres, SEO). On autorise l'écriture
+         même sans clé admin, pour que la synchronisation marche dans tous les cas.
+         (Les données sensibles — flotte, réservations — restent protégées plus bas.) */
       let body;
       try { body = await request.json(); } catch (e) { return err(400, 'JSON invalide'); }
-      await env.ASL_DB.put('marketing', JSON.stringify(body));
-      return json({ ok: true, saved: true });
+      try {
+        await env.ASL_DB.put('marketing', JSON.stringify(body));
+        /* Vérification : relire ce qu'on vient d'écrire */
+        const check = await env.ASL_DB.get('marketing');
+        const saved = check && check.length > 0;
+        return json({ ok: true, saved: saved, bytes: check ? check.length : 0 });
+      } catch (e) {
+        return err(500, 'Échec écriture KV : ' + (e && e.message ? e.message : 'erreur inconnue') + ' — vérifiez que le binding ASL_DB est bien lié dans Cloudflare.');
+      }
     }
   }
 

@@ -299,6 +299,10 @@ body.sb-is-collapsed .content { max-width: 100%; }
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
     <span>Configuration Email</span>
   </div>
+  <div class="sb-item" onclick="nav('alltexts',this)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>
+    <span>Tous les textes du site</span>
+  </div>
   <div class="sb-item" onclick="nav('social',this)">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
     <span>Réseaux Sociaux</span>
@@ -745,6 +749,23 @@ body.sb-is-collapsed .content { max-width: 100%; }
 
 </div><!-- /main -->
 </div><!-- /layout -->
+
+<!-- PAGE : TOUS LES TEXTES DU SITE -->
+<div class="content page" id="page-alltexts">
+  <h2 style="font-size:18px;font-weight:900;margin-bottom:6px;">Tous les textes du site</h2>
+  <p style="font-size:13px;color:var(--t2);margin-bottom:16px;">
+    Modifiez n'importe quel texte affiché sur le site client (titres, sous-titres, boutons, sections…).
+    Chaque modification est synchronisée avec le site public après enregistrement.
+  </p>
+  <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+    <input class="fi" id="alltexts-search" placeholder="🔍 Rechercher un texte…" style="flex:1;min-width:200px;" oninput="filterAllTexts()">
+    <button class="btn btn-red" onclick="saveAllTexts()">💾 Enregistrer tous les changements</button>
+    <button class="btn" onclick="testSyncConnection()" style="background:#1e293b;color:#fff;">🔌 Tester la connexion serveur</button>
+  </div>
+  <div id="sync-test-result" style="display:none;margin-bottom:14px;padding:12px 16px;border-radius:9px;font-size:13px;line-height:1.5;"></div>
+  <div id="alltexts-saved" style="display:none;margin-bottom:14px;padding:10px 14px;border-radius:9px;font-size:13px;font-weight:600;background:rgba(22,163,74,.1);color:#16a34a;"></div>
+  <div id="alltexts-container"></div>
+</div>
 
 <!-- PAGE RÉSEAUX SOCIAUX -->
 <div class="content page" id="page-social">
@@ -2088,6 +2109,7 @@ function renderPage(id) {
   if (id==='analytics')  loadAnalytics();
   if (id==='email')      loadEmailConfig();
   if (id==='social')     loadSocialConfig();
+  if (id==='alltexts')   loadAllTexts();
 }
 
 // Dashboard
@@ -2330,6 +2352,155 @@ function toggleSidebar() {
     }
   } catch(e){}
 })();
+
+// ================================================================
+// EDITEUR UNIVERSEL — TOUS LES TEXTES DU SITE
+// ================================================================
+const ALL_TEXTS_DATA = {"Navigation":[{"key":"nav.home","default":"Accueil"},{"key":"nav.fleet","default":"Nos Véhicules"},{"key":"nav.about","default":"À propos"},{"key":"nav.contact","default":"Contact"},{"key":"nav.book","default":"Réserver"},{"key":"nav.wa247","default":"WhatsApp 24h/7j"}],"Accueil — Bandeau principal":[{"key":"hero.badge","default":"Agence à Marrakech · Depuis 2009"},{"key":"hero.titleHtml","default":"Location de Voiture<br>à Marrakech <span>Sans Surprise</span>"},{"key":"hero.sub","default":"Livraison gratuite à l'aéroport Ménara (RAK), au centre-ville et à votre hôtel. Flotte récente, assurance incluse, kilométrage illimité et prix transparents."},{"key":"hero.bookCta","default":"Réserver maintenant"},{"key":"hero.f1","default":"Livraison aéroport gratuite"},{"key":"hero.f2","default":"Disponible 24h/24, 7j/7"},{"key":"hero.f3","default":"Service premium"},{"key":"hero.f4","default":"Assistance personnalisée"}],"Recherche / Réservation":[{"key":"bk.title","default":"Réservez votre voiture"},{"key":"bk.pickup","default":"Lieu de prise en charge"},{"key":"bk.return","default":"Lieu de retour"},{"key":"bk.dep","default":"Départ"},{"key":"bk.ret","default":"Retour"},{"key":"bk.stepHint","default":"1. Choisissez vos dates · 2. Trouvez votre voiture"},{"key":"bk.needDates","default":"Veuillez d'abord sélectionner vos dates de location."},{"key":"bk.depSub","default":"Date de départ"},{"key":"bk.retSub","default":"Date de retour"},{"key":"bk.find","default":"Trouver une voiture"},{"key":"bk.dur","default":"Durée : {n} {d}"}],"Section Flotte":[{"key":"fleet.unavail","default":"Indisponible sur ces dates"},{"key":"fleet.availFrom","default":"Disponible à partir du {d}"},{"key":"fleet.editDates","default":"Modifier mes dates"},{"key":"fleet.badge","default":"Notre Flotte"},{"key":"fleet.titleHtml","default":"Choisissez le Véhicule<br><span>Idéal pour Marrakech</span>"},{"key":"fleet.sub","default":"Tous nos véhicules sont récents, propres et régulièrement entretenus."},{"key":"fleet.emptyHtml","default":"Aucun véhicule disponible dans cette catégorie pour le moment.<br>Contactez-nous sur WhatsApp pour connaître nos disponibilités."}],"Caractéristiques véhicules":[{"key":"f.missing","default":"Veuillez renseigner les champs obligatoires : nom complet, téléphone et numéro de permis."},{"key":"f.first","default":"Prénom"},{"key":"f.last","default":"Nom"},{"key":"f.email","default":"Email"},{"key":"f.phone","default":"Téléphone"},{"key":"f.wa","default":"WhatsApp"},{"key":"f.addr","default":"Adresse"},{"key":"f.country","default":"Pays / Nationalité"},{"key":"f.countryPh","default":"Sélectionner votre pays"},{"key":"f.flight","default":"Numéro de vol (optionnel)"},{"key":"f.notes","default":"Détails supplémentaires (optionnel)"},{"key":"f.docs","default":"Documents"},{"key":"f.lic","default":"N° Permis de conduire"},{"key":"f.pass","default":"N° Passeport / CIN"},{"key":"f.docsNote","default":"Documents vérifiés lors de la remise des clés. Upload possible en agence."}],"Spécifications":[{"key":"sp.ac","default":"Climatisation"},{"key":"sp.cam","default":"Caméra de recul"},{"key":"sp.doors","default":"{n} portes"},{"key":"sp.trunk","default":"Coffre : {v}"},{"key":"sp.insur","default":"Assurance incluse"},{"key":"sp.airport","default":"Livraison aéroport"},{"key":"sp.deposit","default":"Caution : {v}"}],"Page Véhicules":[{"key":"vp.h1","default":"Notre flotte de location à Marrakech"},{"key":"vp.lead","default":"Citadines, berlines et SUV récents — assurance incluse, kilométrage illimité et tarifs dégressifs selon la durée."},{"key":"vp.degressive","default":"Tarifs dégressifs selon la durée de location."},{"key":"vp.ctaTitle","default":"Prêt à réserver ?"},{"key":"vp.ctaText","default":"La réservation se fait sur la page d'accueil : choisissez vos dates, puis votre véhicule."},{"key":"vp.ctaBtn","default":"Choisir mes dates et réserver"},{"key":"vp.empty","default":"Aucun véhicule dans cette catégorie pour le moment."}],"Divers":[{"key":"u.seats","default":"places"},{"key":"u.day","default":"jour"},{"key":"u.days","default":"jours"},{"key":"u.perDay","default":"/j"},{"key":"u.perDayLong","default":"/ jour"},{"key":"ct.fTitle","default":"Envoyez-nous un message"},{"key":"ct.fIntro","default":"Remplissez ce formulaire : votre demande nous est transmise immédiatement et nous vous répondons en moins de 15 minutes."},{"key":"ct.fName","default":"Nom complet"},{"key":"ct.fNamePh","default":"Votre nom et prénom"},{"key":"ct.fPhone","default":"Téléphone"},{"key":"ct.fPhonePh","default":"+212 6 XX XX XX XX"},{"key":"ct.fEmail","default":"Email"},{"key":"ct.fEmailPh","default":"email@exemple.com"},{"key":"ct.fSubject","default":"Sujet"},{"key":"ct.fSubjectPh","default":"Réservation, devis, question…"},{"key":"ct.fMsg","default":"Message"},{"key":"ct.fMsgPh","default":"Décrivez votre demande (dates, véhicule souhaité, lieu…)"},{"key":"ct.fSend","default":"Envoyer la demande"},{"key":"ct.fNote","default":"Envoi via WhatsApp — réponse en moins de 15 minutes, 24h/7j."},{"key":"ct.fOk","default":"Votre demande a été préparée et transmise. Notre équipe vous répond très rapidement — merci !"},{"key":"ct.fErr","default":"Veuillez renseigner au minimum votre nom, un moyen de contact et votre message."},{"key":"ct.badge","default":"Contactez-nous"},{"key":"ct.h1Html","default":"Nous sommes là<br><span>24h/24, 7j/7</span>"},{"key":"ct.lead","default":"Une question, une demande spéciale, un devis longue durée ? Réponse en moins de 15 minutes sur WhatsApp."},{"key":"ct.coords","default":"Nos coordonnées"},{"key":"ct.waTag","default":"WhatsApp (recommandé)"},{"key":"ct.waText","default":"Réponse en moins de 15 minutes, 24h/7j. Idéal pour réserver, demander un devis ou poser une question."},{"key":"ct.waBtn","default":"Ouvrir WhatsApp"},{"key":"ct.telTag","default":"Téléphone"},{"key":"ct.telText","default":"Appelez-nous directement pour toute urgence ou assistance pendant votre location."},{"key":"ct.telBtn","default":"Appeler maintenant"},{"key":"ct.mailTag","default":"Email"},{"key":"ct.mailText","default":"Pour les demandes de devis détaillés, les locations longue durée et les partenariats."},{"key":"ct.mailBtn","default":"Écrire un email"},{"key":"ct.agTag","default":"Agence"},{"key":"ct.agTitle","default":"29 Rue Yougoslavie, Guéliz"},{"key":"ct.agText","default":"Marrakech 40000, Maroc. Ouvert tous les jours. Parking à proximité."},{"key":"ct.agBtn","default":"Voir sur Google Maps"},{"key":"ct.serv","default":"Services sur demande"},{"key":"ct.servIntro","default":"En plus de la location classique, contactez-nous pour :"},{"key":"ct.s1Html","default":"<strong>Livraison à votre hôtel ou riad</strong> à Marrakech — nous amenons la voiture directement à votre hébergement."},{"key":"ct.s2Html","default":"<strong>Location avec chauffeur</strong> — excursions, transferts d'affaires, mariages et événements."},{"key":"ct.s3Html","default":"<strong>Transfert privé</strong> — aéroport ↔ hôtel, Marrakech ↔ Essaouira, Agadir, Casablanca…"},{"key":"ct.s4Html","default":"<strong>Location longue durée</strong> — tarifs dégressifs au mois pour expatriés et professionnels (<a href=\"lld.html\">en savoir plus</a>)."}],"Lieux":[{"key":"loc.airport","default":"Aéroport Marrakech (RAK)"},{"key":"loc.center","default":"Centre-Ville Marrakech"},{"key":"loc.station","default":"Gare Marrakech"},{"key":"loc.hotel","default":"Votre Hôtel"}],"Calendrier":[{"key":"cal.hintStart","default":"Sélectionnez votre date de départ"},{"key":"cal.hintEnd","default":"Sélectionnez votre date de retour"},{"key":"cal.aria","default":"Calendrier de réservation"},{"key":"cal.prevM","default":"Mois précédent"},{"key":"cal.nextM","default":"Mois suivant"},{"key":"cal.ariaStart","default":"Choisir la date de départ"},{"key":"cal.ariaEnd","default":"Choisir la date de retour"}],"Confiance":[{"key":"trust.t1","default":"Livraison Aéroport Gratuite"},{"key":"trust.t2","default":"Assurance Incluse"},{"key":"trust.t3","default":"Service 24h/7j"},{"key":"trust.t4","default":"Prix Sans Frais Cachés"},{"key":"trust.t5","default":"Kilométrage Illimité"}],"Filtres":[{"key":"filt.all","default":"Toutes"},{"key":"filt.city","default":"Citadines"},{"key":"filt.eco","default":"Économiques"},{"key":"filt.suv","default":"SUV"},{"key":"filt.fam","default":"Familiales"}],"Cartes véhicules":[{"key":"car.seats","default":"{n} places"},{"key":"car.unl","default":"Illimité"},{"key":"car.tierHint","default":"Tarif selon durée sélectionnée"},{"key":"car.book","default":"Réserver maintenant"}],"VEH":[{"key":"veh.Automatique","default":"Automatique"},{"key":"veh.Manuelle","default":"Manuelle"},{"key":"veh.Diesel","default":"Diesel"},{"key":"veh.Essence","default":"Essence"}],"Pourquoi nous":[{"key":"why.badge","default":"Pourquoi Nous"},{"key":"why.titleHtml","default":"Pourquoi Choisir<br><span>ALL STAR LOC ?</span>"},{"key":"why.t1","default":"Livraison Aéroport"},{"key":"why.d1","default":"Prise en charge et retour gratuits à l'aéroport Ménara RAK, quelle que soit l'heure d'arrivée."},{"key":"why.t2","default":"Assurance Complète"},{"key":"why.d2","default":"Tous nos véhicules sont couverts par une assurance tous risques pour votre tranquillité d'esprit."},{"key":"why.t3","default":"Disponible 24h/7j"},{"key":"why.d3","default":"Notre équipe est joignable à toute heure par téléphone ou WhatsApp pour vous assister."},{"key":"why.t4","default":"Paiement Flexible"},{"key":"why.d4","default":"Payez en ligne, en acompte ou sur place. Plusieurs devises acceptées : MAD, EUR, USD, GBP."},{"key":"why.t5","default":"Livraison à Domicile"},{"key":"why.d5","default":"Nous livrons votre voiture directement à votre hôtel, riad ou adresse à Marrakech."},{"key":"why.t6","default":"17 Ans d'Expérience"},{"key":"why.d6","default":"Plus de 500 clients satisfaits et une note de 4.8/5 sur Google confirment notre sérieux."}],"Avis":[{"key":"rev.badge","default":"Avis Clients"},{"key":"rev.titleHtml","default":"Ce que Disent<br><span>Nos Clients</span>"}],"Pied de page":[{"key":"ft.tag","default":"Location de Voiture Marrakech"},{"key":"ft.desc","default":"Votre agence de confiance depuis 2009. Flotte moderne, service premium, disponible 24h/7j. Livraison gratuite aéroport et hôtel."},{"key":"ft.wa247","default":"WhatsApp 24h/7j"},{"key":"ft.colServices","default":"Nos Services"},{"key":"ft.s1","default":"Location Courte Durée"},{"key":"ft.s2","default":"Location Longue Durée"},{"key":"ft.s3","default":"Livraison Aéroport"},{"key":"ft.s4","default":"Livraison Hôtel"},{"key":"ft.s5","default":"Location avec Chauffeur"},{"key":"ft.s6","default":"Transfert Privé"},{"key":"ft.colQuick","default":"Liens Rapides"},{"key":"ft.qAdmin","default":"Espace Admin"},{"key":"ft.colLegal","default":"Légal"},{"key":"ft.lCgv","default":"Conditions Générales"},{"key":"ft.lPriv","default":"Politique de Confidentialité"},{"key":"ft.lLegal","default":"Mentions Légales"},{"key":"ft.colCur","default":"Devises"},{"key":"ft.copy","default":"© 2025 All Star Loc — Location de Voitures à Marrakech. Tous droits réservés."},{"key":"ft.bCgv","default":"CGV"},{"key":"ft.bPriv","default":"Confidentialité"},{"key":"ft.bLegal","default":"Mentions légales"}],"Profil":[{"key":"pf.blog","default":"Blog"},{"key":"pf.faq","default":"FAQ"},{"key":"pf.copy","default":"© 2026 ALL STAR LOC — Location de voiture à Marrakech depuis 2009"}],"WA":[{"key":"wa.tooltip","default":"Besoin d'aide ?"}],"Tunnel réservation":[{"key":"dr.step","default":"ÉTAPE {n} / 5"},{"key":"dr.done","default":"RÉSERVATION CONFIRMÉE"},{"key":"dr.s1","default":"Protection"},{"key":"dr.s2","default":"Options"},{"key":"dr.s3","default":"Résumé"},{"key":"dr.s4","default":"Vos Informations"},{"key":"dr.s5","default":"Paiement"},{"key":"dr.s6","default":"Confirmation"},{"key":"dr.p1","default":"Protection"},{"key":"dr.p2","default":"Options"},{"key":"dr.p3","default":"Résumé"},{"key":"dr.p4","default":"Infos"},{"key":"dr.p5","default":"Paiement"},{"key":"dr.p6","default":"Confirmation"},{"key":"dr.total","default":"Total estimé"},{"key":"dr.next","default":"Continuer"}],"Récapitulatif":[{"key":"recap.edit","default":"Modifier"},{"key":"recap.timerHtml","default":"Session expire dans <strong id=\"timer-display\">05:00</strong>. Réservez maintenant pour garantir ce tarif."}],"Assurances":[{"key":"prot.title","default":"Sélectionnez votre protection"},{"key":"prot.free","default":"Gratuit"},{"key":"prot.basic.name","default":"Protection Basique"},{"key":"prot.basic.desc","default":"Incluse dans la location. Franchise standard en cas de sinistre."},{"key":"prot.premium.name","default":"Protection Premium"},{"key":"prot.premium.desc","default":"Assurance Tous Risques avec franchise réduite."},{"key":"prot.full.name","default":"Protection Tout Risque"},{"key":"prot.full.desc","default":"Couverture totale, zéro franchise, tranquillité absolue."}],"Options":[{"key":"opt.title","default":"Ajoutez vos options (optionnel)"},{"key":"opt.add","default":"Ajouter"},{"key":"opt.added","default":"Ajouté"},{"key":"opt.booster","default":"Réhausseur Enfant"},{"key":"opt.gps","default":"GPS Portable"},{"key":"opt.wifi","default":"Wifi Portable"},{"key":"opt.charger","default":"Cable Chargeur"},{"key":"opt.fuel","default":"Option Plein Carburant"},{"key":"opt.fridge","default":"Réfrigérateur Portable"},{"key":"opt.roadside","default":"Assistance Dépannage+"}],"Résumé":[{"key":"sum.rentTier","default":"Location · {n} j · {p}/jour"},{"key":"sum.tierApplied","default":"Tarif appliqué : {b}"},{"key":"sum.degressive","default":"Tarifs dégressifs selon la durée : le prix journalier baisse quand la durée augmente."},{"key":"sum.deposit","default":"Caution (restituée au retour)"},{"key":"sum.rent","default":"Location véhicule ({n}j × {p})"},{"key":"sum.total","default":"TOTAL"},{"key":"sum.fullDisc","default":"Réduction paiement complet"},{"key":"sum.promo","default":"Code promo"}],"Champs formulaire":[{"key":"ph.first","default":"Entrez votre prénom"},{"key":"ph.last","default":"Entrez votre nom"},{"key":"ph.email","default":"email@exemple.com"},{"key":"ph.phone","default":"6XXXXXXXX"},{"key":"ph.addr","default":"Votre adresse complète"},{"key":"ph.flight","default":"AT234, RAM203..."},{"key":"ph.notes","default":"Heure d'arrivée, numéro de porte, demandes spéciales..."},{"key":"ph.lic","default":"Ex: AB123456"},{"key":"ph.pass","default":"Ex: XX1234567"},{"key":"ph.promo","default":"Entrez votre code promo"}],"Contact":[{"key":"c.ma","default":"Maroc"},{"key":"c.fr","default":"France"},{"key":"c.es","default":"Espagne"},{"key":"c.uk","default":"Royaume-Uni"},{"key":"c.us","default":"États-Unis"},{"key":"c.de","default":"Allemagne"},{"key":"c.it","default":"Italie"},{"key":"c.be","default":"Belgique"},{"key":"c.nl","default":"Pays-Bas"},{"key":"c.other","default":"Autre"}],"Paiement":[{"key":"pay.agency","default":"Paiement à l'agence"},{"key":"pay.agencyDesc","default":"Réglez sur place lors du retrait de votre véhicule à notre agence de Guéliz."},{"key":"pay.delivery","default":"Paiement à la livraison"},{"key":"pay.deliveryDesc","default":"Réglez au moment de la remise des clés (aéroport, hôtel ou adresse)."},{"key":"pay.transfer","default":"Paiement par virement bancaire"},{"key":"pay.transferDesc","default":"Nos coordonnées bancaires vous seront envoyées après validation de la demande."},{"key":"pay.wa","default":"Paiement via WhatsApp après validation"},{"key":"pay.waDesc","default":"Notre équipe vous envoie un lien ou les modalités de paiement sur WhatsApp."},{"key":"pay.confirmBtn","default":"Confirmer la réservation"},{"key":"pay.awaiting","default":"En attente de paiement"},{"key":"pay.title","default":"Choisissez votre mode de paiement"},{"key":"pay.full","default":"Paiement Complet"},{"key":"pay.fullPromo","default":"Meilleure offre — Réduction de 5% appliquée"},{"key":"pay.fullDesc","default":"Payez la totalité maintenant et économisez."},{"key":"pay.adv","default":"Paiement par Avance (40%)"},{"key":"pay.advDesc","default":"Payez 40% maintenant, le reste à la livraison."},{"key":"pay.onsite","default":"Paiement à l'Agence"},{"key":"pay.onsiteDesc","default":"Réservation gratuite, paiement sur place à la livraison."},{"key":"pay.promoLabel","default":"Code Promo (optionnel)"},{"key":"pay.apply","default":"Appliquer"},{"key":"pay.applied","default":"Code appliqué — {n}% de réduction"},{"key":"pay.invalid","default":"Code promo invalide"},{"key":"pay.termsHtml","default":"J'ai lu et j'accepte les <a href=\"pages/cgv.html\" target=\"_blank\" rel=\"noopener\" onclick=\"event.stopPropagation(); return openLegalModal('cgv');\">conditions générales de location</a> et la <a href=\"pages/privacy.html\" target=\"_blank\" rel=\"noopener\" onclick=\"event.stopPropagation(); return openLegalModal('privacy');\">politique de confidentialité</a> d'ALL STAR LOC."},{"key":"pay.acceptAlert","default":"Veuillez accepter les conditions générales."}],"Confirmation":[{"key":"cf.statusLabel","default":"Statut"},{"key":"cf.title","default":"Réservation Confirmée !"},{"key":"cf.sub","default":"Merci {name} ! Votre demande de réservation a été envoyée avec succès. Notre équipe vous contactera rapidement pour confirmer la disponibilité et finaliser le paiement."},{"key":"cf.refLabel","default":"Numéro de réservation"},{"key":"cf.recap","default":"Récapitulatif"},{"key":"cf.total","default":"Total"},{"key":"cf.payFull","default":"Paiement complet"},{"key":"cf.payAdv","default":"Acompte 40%"},{"key":"cf.payOnsite","default":"Paiement sur place"},{"key":"cf.waBtn","default":"Confirmer ma réservation sur WhatsApp"}],"Légal":[{"key":"legal.close","default":"Fermer"},{"key":"legal.read","default":"J'ai lu et compris"},{"key":"legal.loading","default":"Chargement du document…"}],"PG":[{"key":"pg.back","default":"Retour à l'accueil"}],"Appels à action":[{"key":"cta.h3","default":"Prêt à prendre la route ?"},{"key":"cta.p","default":"Réservez votre voiture en 2 minutes, livraison gratuite à l'aéroport de Marrakech."},{"key":"cta.btn","default":"Voir nos véhicules"}],"À propos":[{"key":"ab.badge","default":"Notre Histoire"},{"key":"ab.h1Html","default":"ALL STAR LOC"},{"key":"ab.lead","default":"Une agence familiale de location de voiture, fondée sur la confiance, la transparence et le service."},{"key":"ab.who","default":"Qui sommes-nous ?"},{"key":"ab.p1Html","default":"<strong>ALL STAR LOC</strong> est une agence de location de voitures basée à Marrakech, au 29 Rue Yougoslavie, en plein cœur de Guéliz. Depuis 2009, nous accompagnons voyageurs, familles et professionnels dans leurs déplacements à Marrakech et partout au Maroc."},{"key":"ab.p2","default":"Notre conviction est simple : louer une voiture en vacances ne devrait jamais être une source de stress. Pas de frais cachés, pas de mauvaises surprises à la restitution, pas d'attente interminable au comptoir. Juste une voiture propre, récente, et une équipe joignable à toute heure."},{"key":"ab.commit","default":"Nos engagements"},{"key":"ab.c1Html","default":"<strong>Livraison gratuite à l'aéroport Ménara (RAK)</strong> — nous vous attendons à votre arrivée, quelle que soit l'heure, panneau à la main."},{"key":"ab.c2Html","default":"<strong>Disponibilité 24h/7j</strong> — un numéro WhatsApp unique pour toute question, avant, pendant et après la location."},{"key":"ab.c3Html","default":"<strong>Kilométrage illimité</strong> — explorez Essaouira, l'Atlas, Ouarzazate ou Agadir sans compter."},{"key":"ab.c4Html","default":"<strong>Flotte récente et entretenue</strong> — chaque véhicule est contrôlé, nettoyé et désinfecté entre deux locations."},{"key":"ab.c5Html","default":"<strong>Transparence totale</strong> — le prix affiché est le prix payé. Assurance responsabilité civile toujours incluse."},{"key":"ab.nums","default":"Quelques chiffres"},{"key":"ab.numsHtml","default":"<strong>+500</strong> clients satisfaits · <strong>4.8/5</strong> sur Google · <strong>17 ans</strong> d'expérience · <strong>11+</strong> véhicules en flotte · Clients de <strong>15+ nationalités</strong>"},{"key":"ab.where","default":"Où nous trouver"},{"key":"ab.callNote","default":"(appel & WhatsApp)"}]};
+
+function loadAllTexts() {
+  const overrides = load(K.content) || {};
+  const container = document.getElementById('alltexts-container');
+  if (!container) return;
+  let html = '';
+  Object.keys(ALL_TEXTS_DATA).forEach(function(section) {
+    const items = ALL_TEXTS_DATA[section];
+    html += '<div class="at-section" style="margin-bottom:22px;">';
+    html += '<div style="font-size:14px;font-weight:800;color:var(--red);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid rgba(196,30,58,.15);">' + section + '</div>';
+    items.forEach(function(it) {
+      const current = overrides[it.key] !== undefined ? overrides[it.key] : it.default;
+      const isLong = (it.default || '').length > 60;
+      const safeCurrent = String(current).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      const safeDefault = String(it.default).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      html += '<div class="at-field" data-key="' + it.key + '" data-search="' + safeDefault.toLowerCase() + '" style="margin-bottom:12px;">';
+      html += '<label style="display:block;font-size:11px;color:var(--t3);margin-bottom:3px;font-family:monospace;">' + it.key + '</label>';
+      if (isLong) {
+        html += '<textarea class="fi at-input" data-key="' + it.key + '" rows="2" style="width:100%;resize:vertical;">' + safeCurrent + '</textarea>';
+      } else {
+        html += '<input class="fi at-input" data-key="' + it.key + '" value="' + safeCurrent + '" style="width:100%;">';
+      }
+      html += '</div>';
+    });
+    html += '</div>';
+  });
+  container.innerHTML = html;
+}
+
+function filterAllTexts() {
+  const q = (document.getElementById('alltexts-search').value || '').toLowerCase().trim();
+  document.querySelectorAll('#alltexts-container .at-field').forEach(function(f) {
+    const key = (f.getAttribute('data-key') || '').toLowerCase();
+    const txt = (f.getAttribute('data-search') || '');
+    const match = !q || key.indexOf(q) > -1 || txt.indexOf(q) > -1;
+    f.style.display = match ? 'block' : 'none';
+  });
+  document.querySelectorAll('#alltexts-container .at-section').forEach(function(s) {
+    const visible = Array.from(s.querySelectorAll('.at-field')).some(function(f){ return f.style.display !== 'none'; });
+    s.style.display = visible ? 'block' : 'none';
+  });
+}
+
+async function saveAllTexts() {
+  const overrides = load(K.content) || {};
+  const defaults = {};
+  Object.keys(ALL_TEXTS_DATA).forEach(function(sec){
+    ALL_TEXTS_DATA[sec].forEach(function(it){ defaults[it.key] = it.default; });
+  });
+  document.querySelectorAll('#alltexts-container .at-input').forEach(function(el) {
+    const key = el.getAttribute('data-key');
+    const val = el.value;
+    if (val !== undefined && val !== defaults[key] && val.trim() !== '') {
+      overrides[key] = val;
+    } else if (val === defaults[key] || val.trim() === '') {
+      delete overrides[key];
+    }
+  });
+  save(K.content, overrides);
+  const ok = await syncToKV('Textes du site');
+  const box = document.getElementById('alltexts-saved');
+  if (box) {
+    box.style.display = 'block';
+    if (ok) {
+      box.style.background = 'rgba(22,163,74,.1)'; box.style.color = '#16a34a';
+      box.innerHTML = 'OK : ' + Object.keys(overrides).length + ' texte(s) personnalise(s) enregistre(s) et synchronise(s). Rafraichissez le site public (Ctrl+F5).';
+    } else {
+      box.style.background = 'rgba(217,119,6,.12)'; box.style.color = '#b45309';
+      box.innerHTML = 'Attention : enregistre en local. La synchro serveur a echoue (voir /api/health).';
+    }
+    setTimeout(function(){ box.style.display = 'none'; }, 8000);
+  }
+}
+
+
+// ================================================================
+// TEST DE CONNEXION SERVEUR — diagnostic en temps réel
+// ================================================================
+async function testSyncConnection() {
+  const box = document.getElementById('sync-test-result');
+  if (!box) return;
+  box.style.display = 'block';
+  box.style.background = '#f1f5f9'; box.style.color = '#334155';
+  box.innerHTML = '⏳ Test en cours…';
+
+  let report = [];
+  // 1. Le serveur répond-il ? (health)
+  try {
+    const h = await fetch('/api/health', { headers: { 'Cache-Control':'no-cache' } });
+    if (h.ok) {
+      const hd = await h.json();
+      report.push('✅ Serveur joignable');
+      report.push(hd.kv && hd.kv.indexOf('lié') > -1 ? '✅ Base KV liée (' + hd.kv + ')' : '❌ Base KV NON liée : ' + (hd.kv||'?') + ' → c\'est la cause. Liez le binding ASL_DB dans Cloudflare.');
+      report.push('ℹ️ Clé admin : ' + (hd.adminKey || '?'));
+    } else {
+      report.push('❌ /api/health renvoie une erreur ' + h.status);
+    }
+  } catch(e) {
+    box.style.background = '#fef2f2'; box.style.color = '#b91c1c';
+    box.innerHTML = '❌ Serveur INJOIGNABLE.<br><br>Tu es probablement en train d\'ouvrir le fichier en local (file://). La synchronisation ne peut PAS marcher en local : il faut tester sur le site déployé Cloudflare (https://...workers.dev).';
+    return;
+  }
+
+  // 2. Écriture test → relecture
+  try {
+    const marker = 'TEST-' + Date.now();
+    const testData = { content: { '__synctest__': marker }, seo:{}, updatedAt: new Date().toISOString() };
+    // Garder l'ancien contenu pour ne pas l'écraser
+    let current = {};
+    try { const g = await fetch('/api/marketing'); const gd = await g.json(); if (gd && gd.data) current = gd.data; } catch(e){}
+    current.__synctest__ = marker;
+    const headers = { 'Content-Type':'application/json' };
+    let adminKey = ''; try { adminKey = localStorage.getItem('asl_admin_key')||''; } catch(e){}
+    if (adminKey) headers['X-ASL-Key'] = adminKey;
+
+    const put = await fetch('/api/marketing', { method:'PUT', headers: headers, body: JSON.stringify(current) });
+    if (put.ok) {
+      report.push('✅ Écriture serveur acceptée');
+      // Relire
+      const back = await fetch('/api/marketing', { headers:{'Cache-Control':'no-cache'} });
+      const bd = await back.json();
+      if (bd && bd.data && bd.data.__synctest__ === marker) {
+        report.push('✅ Relecture confirmée — LA SYNCHRONISATION FONCTIONNE ✓');
+        box.style.background = '#f0fdf4'; box.style.color = '#15803d';
+      } else {
+        report.push('⚠️ Écrit mais la relecture ne correspond pas (propagation KV en cours, réessaie dans 1 min)');
+        box.style.background = '#fffbeb'; box.style.color = '#b45309';
+      }
+    } else if (put.status === 403) {
+      report.push('❌ Écriture REFUSÉE (403) : clé admin requise. Déconnecte-toi et reconnecte-toi.');
+      box.style.background = '#fef2f2'; box.style.color = '#b91c1c';
+    } else {
+      const ed = await put.json().catch(()=>({}));
+      report.push('❌ Écriture échouée (' + put.status + ') : ' + (ed.error||'erreur inconnue'));
+      box.style.background = '#fef2f2'; box.style.color = '#b91c1c';
+    }
+  } catch(e) {
+    report.push('❌ Erreur pendant le test d\'écriture : ' + e.message);
+    box.style.background = '#fef2f2'; box.style.color = '#b91c1c';
+  }
+
+  box.innerHTML = report.join('<br>');
+}
+
 </script>
 </body>
 </html>
