@@ -5,9 +5,9 @@
 <script src="auth-guard.js"></script>
 <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAADyklEQVR4nNVWzWtjVRS/577PpK8dS5x8VIQg1kW7GUQxSA249C+wG6kG3LgUunDbreCmzMKqiKUJxeCU1pq240DttjhNBwoKacKkDZlYycd7M4kvL7n3uHjNe2mapPWjgmfxuO++c3+/c+7v3nMeICK5SaM3iv7fEsiynEgkdF3nnHPOERERnbHz7J65/KrreiKRkGXZZcCOLS8v479k3VDgiGyapqIoiEjp3983zjkAmKbp8XjsGZcAEQFg4FJEgkgAsOM5xLkbyg2Wcz5kAQEglBIAAKCUAriR9ffvmOiMBkVkh8PrDag/Q0muEWxZltfrHR0dHUTQDXXVdiMCIdhqld7/SJ+KND//5ouvvpyempqdnTVN05ZxOMAVBMgYAWg82FO+2+TlmjimPXfrVq1SSaVS29vbAMAY6xeVy+puJee89/zYATJWfPMd8kddirzuf/uthMB2798/ePTIsqz9/X1VVcml7e0vct/wgdLGj7vBh4djn3zcVhTi9Y6MeEVJmp+fPzo6GpKEYy5Br8iIIAhomtWFT8sAzDCsexsk6A8EAmtra5VKhVK6sLBQr9cFQRimhHPlGGPdt5G3Woj49N73FfBlPaHfyHju+ZewUq3peigYJIR4vV5CyOrqKiK2Wq0LazuVBhEHEHCOnLNG4/RONE99uZEXzuSA9dndB3s/7e3uLi4uyrKsaRqldHp62jCM7vJ1LQI7fOPbtTL4jj2hjBIoUR/7+TB/ki/k8+l0GgBEUbQVXllZ6UmiG6ofAefIedt4ejr1xmPqO1YCJ2T88Z0oWtZWKvXD5qZlWZFIhBAiyzKldHJyslqt9tRgB7aPyOdnf2Nr5JdjVGRKqQdg7MP3iCQdptMPDw4kSYrFYoQQSqksy5lMZn19feBx6s3ADl/XC6+8dir6c5I/K90+kf3mrxnOebFQKBQKiJjNZlVVFTsWDofL5TLn3AYZqkGrjYjG1/Ea8WXlQFa8XSLjxXc/4MgRMRaLzc3N2f52EqIo2u1laWnJUeIKkVtnv+dffjXvCeW8E7nRF8/U0LONLftTNBqdmZmxxzs7O4qiaJqmqqqqquFwuFQqXdagT6lg9TqWK0gpIBIChBAh6AdJIojFJ08QcWJiAgDa7XaxWLSX29Xb5/NpmkYuVp1rN5y/Yt1Qbj/gnAuCcP754tXHTv+ym5ITXU+PctpcN8GNZ+Deg2azea77P4NGxGaz6cy4BMlkcngrv47ZCMlkspcTESVJisfjhmEwxhhj/CrrcWGMtdttXdfj8bgkSX2O6Q3Z///n908aGRXA7Gfj9gAAAABJRU5ErkJggg==">
-  <link rel="apple-touch-icon" href="data:image/png;base64,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">
-  <meta name="theme-color" content="#ffffff">
+  <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAFGUlEQVR4nLWXW48UVRDHf3VOd+/srIBscJcdCLqAgFFMEIgCChIURVC5uwJCTHz3S5j4CXzw3Xff/QpGMEYTL6gR2GXvCzv3yznlQ3fPzuzOzowxVHKSntPnVP2r6l9VPUIHGd22Uzvt/1+ZmfxLVu+1bTwpw92ANB/6Nd6KOL0gsrLRrwcpCAEYzY33bdy3GgZQRVUTIIIxpvm7J4ipvyXoEzACOCACbBKHBgphSGgtiOAaDaq1GtbavkFIP94LUEMZFcvX4RYyCBuCgM/n/mHo/Gm++vILvHrK5QoXLk0wNfWQKIr6AmGUOKTdlgBFlHdNlgMywIhYxgioiFIqlhgb28q2XI7du3Zy8eKH5ItFjLU99Spgeh9RHMoGhHN2kAIeBzxWxyMLi3OzeO9xzqGqXJu4yqaNG2g06omP3XWbXvaNQlGV12SAlySihBIBZfWUjLC89JhqpYK1Fu89e/c8z8kTx8nnC1jT2z/TT/5VlfN2iEAERTEIefWUjKG4nOfR42UAvPcA3Lg+gSbPPTnQy3gFZZcJOWEzFNRjECzwSB01K1RKJZaWlmJlSQmefvsUL+zbR7lcRmRN82sH0IMglFR5z2bZIpZGcikG4KkLVKtVFhYWmwqdc2QyGS5fvkChDzJ2TVIdZZMI52yWimqcDsCIMK+OhkCjUWdmbg7SdyYO6scTVxge3ky9XutivgsJrUJRPcdMhn0moow282WABXWoCuo8MzOz8QtVjDF47xl/7lneOnWSQr6ANfa/k1ABUbhoh5qet8q8eoS4/c7OzrbfTRrQrU+us2rerZGOAFLy7TURx+wgRfXYlvcOeKgN6uqp1uvcvz8Z30sIl7biN0+8wf79L1IqlZqp6QCgc17K6jkXZNkspkm+FFxdFaPKDhuya/w5rDVtACAmYxRFTFy9lACQNXZAkS1bd7RFN514EcK3mTF2SEAVbQ+kCNV6HTP8NLnvvsE+vZGBMGyZy3FPMMbwYHKKV48ep1qtJmXaIwUGKKjnuM2w24SUVxtPZABhUITs4CADUbQ2tMbgnGP7thzvvP0Wy8sFjLFrz62OiipYFS7Yp5qDqJNoEinfR8e7dfM6gQ1Qr92rwABlPC/akCM2Q1F911ap0HXkpmR8/dhRDhx4mWKpmHChzWYLIVAqqnxgh9goBrdKoQcGxfCTq/B+fZorc3c5fvZDDhw8wvc/3InPrIqIcw5rLdc+vkqlXEmqoZXwiQhQB0bFciYYoqS6xnsFAmDKO372NX6vl/nl19/48fYd7t27lwBoj4i1cd4vX7pALjdGrVZrq5bmLBAgr56TQZadJqSyDvkMsIAjQsiIIZvNEmQyzM3Pt8BcERHBOcfoyAhnz57h8XIeY1eoZ1rJFxGTz9G9f817h1fi5T3eeaanZ7rciOXmjWsMRBHeaSsJ48ZTxPOyiThkB8hrnEffYTlgThtI0wePMTA9PYP3HlWNQbWsNAqHDx3k8KFXKBTyzcZkYKW7fRRuYItYIoTBDiuLEAKL6mhSScFYw/z8PMYYwjDEGLNmWWsJAstnn31KrVZrVkOwMPtANo9s11FjGZeQ265KfZ38Q/xJPqOOMCGSqhIGIQ8mp/jj7p+kDq0WVQUR9uzeTS6XI5/P82jhYaxleGS7pj2qnw+pTg1KVRFjOk7OFFT6LQHgvGdx9sFKPWx+ZpvGB9dT0apqfWjrdc90P43E0tzkyl+zVIYTEE9aFhPjawA8aSCthlP5Fy1ovp57ATNiAAAAAElFTkSuQmCC">
+  <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAYAAAA9zQYyAAAZ/ElEQVR4nO2d2ZMc13Wnv3tvVnVXV2NpLs2dIm0KFDnmIpMgIICbCAoLCRAECQJoLCRlOxwezTyPHWFZjvHIL/Ia4ZElhRWe0Iv94FV2xDwoPJbD/4TmRZQpakGvhe5au7syjx8yb1Z1o6sb6KrMyszKLyIjGoWqXCp/eeuee+7vHnXPA78g5ORkBD3sE8jJGSS5oHMyRS7onEyRCzonU+SCzskUuaBzMkUu6JxMkQs6J1Pkgs7JFLmgczJFLuicTJELOidT5ILOyRS5oHMyRS7onEzhIPl06JzskLfQOZkiF3ROpsgFnZMpckHnZIpc0DmZIhd0TqbIBZ2TKXJB52SKXNA5mcIZ9gkkDQ0ooJ/8qQK8bfahlELr/tsSEcHzvL73kyVyQXehgCbCevD3bhGgCIyhbhK1UopWa5X19bU+juDjFAqUxseRfPpCSC7oAAWsIzyuCtyrzK5FLUAB+ERcPpZ1Cl2iVkqxvr7O4wce48EHH0BEUOr2j2I/d312jh/84P9TLBZzUQfkgg7whaj408KdPKEKNJFdBRht4A6l+Z31Cv+7vcYdSuEG/2eMYWmpwuk3T/Hl3/7Nvs/5Jz/9GS8cegnX83b1YGSRPCgEDFDD4xU9zmOqwAIeTYT6LrYGQlWEn+GiN2tMBK01H//4EzzPY319Hc/zdrW1220efOB+Tpz4AtVqFWPMML66xJELGr911ijOmTIKQeF/MbvZDOAhVMRDb+pDC2CMZmFhEa01xhi01rvalFKICB+8fwVtDNJXGJsdtOB/0aO6KaCB8BlV4LAeo4bQT1ungVWEJXExm47liWAch4XFRf+9fYx02Bb56NHP8fRTv0S93kBpPfTvc9jbyLfQCmghnDUT7EOH/d3dIPgtdB1hReTmFloEYww3bixTbzTC13aL63kUHIerly/RbLYGMhSYdkb6G/BHNuAeDCd1iQZeX1+IL2hFDY8aXthCh/8fCHplZYXl5ZXwtd1iAgGff/dt7r/vXtbW1kY+OBxpQWugHgSDj6oCLfobf7b7XBaPRo+uizGGeqNBpVLp80j+MKDrukxP382pk8f94HDEW+mRvnoBiijeNWVcpG8xg9/lqIjHWo/92cTKwoLfjx7E+LEIfPHDa4yNjeGN+Hj0yArab52Fp1WR53WROrsbd+7GdjkWxKW9jaDbbpv5+YXwM/3gB4fCwed/mYPP/zK1Wm2k+9Ije+U2M/iWmWACzaBmRCgFi+Lh9VCqUgrP9bg+O+u/MIAW1XVdlFJcnrnI2tp6LuhRQwFrwIM4nDQl6n0Gg90IsHQLj4ftcgwCO4T37rmzPPKph2m1WiMbHI6koG0w+JoZ5wEc1ug/GLR4AgtbZQktImjtz8MABiI8Gxzu27eX06dPUa3VRjZzqIc/FB7/5iFMAOfMBOsDCgbBfyhchEVx0YBscWxBMEYzPz/vf2ZQLWmwn/evzjBZnsB12zcdexS2kWuhbTD4vB7js2psIMGgReFnCSvi9cw22rHoxQFkC7sxWuN5Hs88/RQvHj1CbURb6ZETtALaCG/pMsUt5ivvFsEfsmsgrIiH6bFvK+hKpUKz1QpfGwR2sv+VmQusr7dHsh89UoL209zwqCpwzJSoDTAYBF/QVTyqm7KEdkIRyu90OI7D8ko1zBYO7PhBi3z6zVMcOPAYzWZz5EQ9UrNZtEDD8zipS31N4t8Kv4VWrIhHQwQtoHwFU6vVqNVqiCcoFFpp6rV6mC0cVAttg8Nyucy7585Sq9Yx2gz9e4/1Hg/km0wJLrBHaU6bCVZlcMGgxWYJVxFM4E4BOHzoMIcPHUYrzWprFWMMrdZq2I8epNvEtsgzly6wb99e2u32wPadBkZG0DYYPKLHeEoVaTDYiFgArRSL4uHi92dLpRJf+4M/5Ft/8W2+8c1v8eff+CbT09O4bhvXbYcjHYPMVusgOHz8wKc59tqrVKujFRyOjKAVfkv4tilj1OCCwW40sCAuGE29WuP06TMcP36cG5UKKysrHDlyhJnLV2g0mggwOzsffHKwZ+MFacqrVy+NnNdwJARt3dyf1gVeMuPUZLDBoEXwkyr2X/v27WN1dTUMChuNBnv37vW7BQLXr89GcBa+K0ZEeP21z/Pkk5+h2WiOTDp8JK5SA00RTpsJ7lKGNoMLBrsRYEm8cF0PO8ciPA+tcV1f8Eop5ucXw78HiR8ceoyPj3Pp4nnqjUYu6CzRBqaU5g0zQVOiySYpoC3WeuULdCuhWi+gcQzzCws939cvOsi9X3zvXe68844wQM06mRe0Aeri8bIe54Au0mTwoxtgJzwJS3KzU2UzIoJjDAuBoKNoPW1w+PDDD3Hi+OsjExxmXtB29OEdp4yKYKjOYoCGCMtbWK9uPqlOtnB1dTWiM/IfHBH48IMraKN3OqtMkGlBa/xg8AlV4LAepzbgoTqLn1Shy0u482NjjGF5ZYXllf69hdsdA4QXjx7hmaeeol7Pfl8601engJYIZ02Zfao/R/d2CP66HisI9Vvoowt+l6BWq3PjxrL/WkTDa67r4TgOV69cHAlneGavLnR0K8NJU6IR0VCdxQEq4rIa/ApsL08Js4W2Hx2VoI0JnOHnz42EMzyzgtb4weArZpxH9WAc3b3ozhK2xZ+vse37xS7cuNbxFkbUvQ2d4XffzalTgTPcZPa2Z1fQAhSV4l0ziRthMGjRwCIuHrf24Cil8DyP2bm54JVoA7YNzvBehscMkElBh45uXeR5PdhJ/NsxL+5tyVIizBZ203GGP8fB55/LtDM8k1elgHUR3jJlJpQamKN7Ozw2Zgl3wq7xHFW2cDOhM/zyhUw7wzN3VaGjWzuc1CXqEQeD9piu+EkVrW5Z0uFKpBC9oEfFGZ45Qdtg8Jgu8YAerKO7F50sobtzUiVAxBfZwM2yPeg4w/dx+vQbmXWGZ07QHjChFG+bCdZjCAbBT6o06WQJbxXHcahUKqyvr8fUWgbO8GszTJbL4USpLJGp9aEVUEN4To/x2ZiCwTBLKMIK/hK6tgJWr5Za8NeK1sZwYznabGE3xnSc4UePHqFaqwWLpQ//3g1qy1QLbWe8nTVlihFN4t9MJ0voUd+0fIGdWRe+t6tIkHV/V2u1yLOF3YTO8MsXgl8GexXZIDMLzSiEFh6PaofXTSmySfxb0fESemj8xWRAWF1t4jgO7XabdruN4zisrrYQ8dtwrRWtVjMSb2HPcw36zWducoYP/x4OYstMC63xZ7udNBPcM2BH93YIYJRiSdywz+55HhMTE3zve9/jo48+4t5772V6epr5+Xm++91/ZGxsLGyt19bXmYs4W9jNRmf429Rq9UwFh5kp62Yd3WcicnRvh8a3XoXmKxGKxSI///nP+NKX/isnTpxARPj+9/+VH/7wh0xMTOB5HsYYXNdldnZuu90PHNvtuTxzga9/41uZcoZnQtAaWEF4XZd4ShUjmya6HfOyccTAd31P8NOf/oSvf/3PAMX4+HgoZiD0Fs7apXVj6studob/0z//X/bv35eJUY9MdDmso/tchI7u7RBgIcgSduN5HsVikampO5iamgrmUXgbPqmUClvoOBMddj7HtaszQZ8+G6Re0NbRfSBiR/d2x29LsOLoFg+TiOC6Lq7r3hT0iYA2mrmYkivdbHSGP0EjI87w1F+BdXSfMeVIHd29sPOul4Ms4e1iyyVDvILudobPXHyPRkac4am/gjgc3dvh27w8KreZJQRCs+zS0hLtdvyrhWbRGZ7qxRqNWEd3iccjdHT3QuhkCWsiaFH+0NstbuJ1CnGurFT9fca40lG3M/zk8S9QXQnmdyTg3u52S3ULLfhZunedMsQ8VGePb1BU8aiJh8PN4xRKKYwxYV3vDZ8XwTFOLN7CXoTO8PcDZ3jKlw5LraDjcnTvhAFuiEdri18HpRRra2tUKhV/gfMt1mtWStFsNllaii9b2M0GZ/jT6XeGp/bMQ0e3E62jeycMvvVqfdMDpZRidXWVBx96iK985Xf56ld/nyeffJJWa6PzWmvN2tparNnCzbiuh1PIRs3wVCZW7MjCtDKcMhORO7p7IfjCXfBcXGHD8IqIv1L/7/3e/+Lw4cO4rssLhw5x7eoV6nU/3Wxb47brdq1EGj/WNPve+XN87Q//mHq9seH80kQqH0UN1MTjVVOK3NG9EwqY35SYsPMlpqamuP/++1lYWGB+fp4777yT6enpDUsJDCtbuNX5+jXDT6TaGZ7KsxZgTCnOO+VYHN07ncuiuFueg+d5tNttjDE4joPruniet6kfHWQL5+LPFm5GBH4l5c7w1Al6o6N7PDZH91ZYL+FCjywhbBToVmK12cLZufizhd2EzvCDz3HwYHqd4ak7Y+voPmvKlGNydG97LnDb1qvNmCC5AsNtoa0z/MrMRVbX1nJBR411dD+gHU6aidjnbWzGDh1uV2hzJ7qzhTd3R+IldIa/c5ZHH/lUKp3hqRK0DQZfj9HR3QubJayLX5dQ77KIp7ViDStb2E23M/xMSp3hqRK0dXSfc8qxObp7YbOU1S4vYT+Crlbj9Rb2xtYMv5xKZ3hqBG2DwYN6PDZH907YLGGzz3PRWgfZQr8fPUxBh87wZ57ixRePpK6VHrYmbpnQ0e3E5+jeCQMs4fb0L1rXd/fWq+7K6lpnJdJh06kZfpF2ymqGp0LQYY1uXYjd0d0LwV9Cd0HcLcfCVVBJ1nEcHMfBGEOhUNhyfWbbd7Vj0cNO0IXO8NOnOPB4umqGD1sXt4Tv6PZid3TvhALmPe+mXwub9l5aWuKv//qvwrnO3/nOd/j4448ZHx/fYMVSSiGedJllh6voNDvDUzGXI3R0O/E7urdD2NpLCJ3SyP/nL/+S//cv/4Ixhh/96EcUi8VNvkJ/T0nJFlpCZ/ilC3z9z9PjDE/8QjMaoYYbWY3u3WKzhIvSRqvO4jKbt1JpnJ/85BP+4z9+RKk03rVSUWcT8RedmZ3z53MkQdChM/zxT3Ps2KtUqyvB/I7ha2J7vSQce//POZNDcXT3wmYJF9neS2id3zc7vjdiHBMGhUkQNHQ5w6/MpGbmXaIFbR3dvzgkR/d2KGAVoS4eBTQGem5a/BbPOlc2b1prxopFqtVaz5GQYRA6w499niee+AzNZvKd4YnuQ4c1uh3f0b3UR4p5kAhQwF/+6xNpsyIuLbaeV6IUiCfISr1nK6eVYm1tnY8++ojl5RX279+XCGErpWi3Xb9m+IXzfPkr/3PDQjlJRN1978OJ/S2x6eW/H7+PR1WB1S1sTsPAnlcT4V/dJu2e56UQ10VPTjD1W19ClUrBp7eadScUCg5vvnGKUmk8EYIGv8uktebHP/6EQ0deGYo7/XZIbAttgGXxOGUmOKCLrCSkdQZfjh4wjuKCM9n7IVMKkTamPMW+D6/d3jESIppuZ/jrxz7P3/zt3zM1NZXYlLiT1ObZ2pvOF/agJBnjzpsR/NR3bxSCh/HalJZuoPfuIShSuPW7FYkc7xUREPjih+/zd//wXeyYThJJZA9fAQ18R/cRPU6N5ASDm9kuGOxsCscYHGf7LYliBv8hE4SXXzrKM88k2xmeyLPS+I7uM0N2dOd0cF0Xx3G4dOG9RI92JO6sumt0nzZlGkNY3ivnZuyvx6WL57n//vsSWzM8cVqxk/hfCR3dyRjZGHXs/I57pqc5dfI4Kwl1hifujAS/Rvc7ziReQoPBkUaED65dZaxYTKQzPFGCtpP4n9XFYHmv5AaDo4gJSsB97vALHHrheWq1euL60ok6GwWsiXDGTMZWozvn9rDO8JmLF1hdTd6yYYlZTleJL+YHle/orufBYCKxweE7587yyKcCZzhq6PqxW2I049foFr5gSjysncSkuXM2opSi7brccccUZ986Ta2aLM9hYgTtAeNK8ZaZZC0Xc6Lxp/QKVy9folQq4SUoDZ4IQfuts8cLZoznzFje3Ug4xhg8ET772Wd4+aWjrCTIGZ4I3Sj8WilnzSRjCZrEn9MbO4X06pUZ2mHN8OEzdEHbifKf0g7H8mAwNdgW+c03TvDYY79Is5mMZcOGrh0bDL7plLlPm7z/nBJscLhnzx7eO/9OYpzhQxe0C0wqzRlTTpSjO2dndNAiX5m5wN69e3AT4AwfqqBtMHjEjPFLOjmO7pxbo+MMP8Brn38lEcHhUPWj8MfD3zF7cPJgMJXY+RwffnAVSYDXcGiCDh3dpsDLCXN059w6G53hjwdzpYfXcRzaQjMaoSmeX6Nbx1+jux8EPxF0W5vn3daWlnUwumuGX7r4HvW6LWUxLF0NCb9Gt+GMKQ+lRnc/OMAEitKtbkrjTEygtUYH63DstCVhCOxWsS3y5UsXuOuuu4ZaM3worm/r6H7DKXPAJMvRvRMaWBGPOXF3fgiVQsRFrze58YMfoCf9Es7bZiGCifT333cfe/ZM7vj2JKC1xt3gDP8Hpqb2D8UZru6656HYf9s0UEP49tg0x50yKynpP7sIdyjDn63d4KtrS0wpgzvgUNZxHBYWFviTP/oa//2//QbtdhvHSexqEyGu66K15vv/9u+8+dY77Nu7B9eNP0iMXUdhjW5d5EhC1nq+XebFyjiKtsBfvPHn12d3fmuCsMN1L790lGeH6AyP/Yi2RvcZk0ZHt286WOQWuht9oI1hLlhaN/H9jS5CZ/jF4TnDYz1i6OjWhtNO+hzdtkbiYvCrEkn7LH6fdG7eL8SpUyTojjP8vaE5w2PVU8fRPZFKR7fGn0i1JC5ORDdKRCg4DosLi/4xE2Zx2o6NzvATQ3GGx3o0IXB0mzIe6Rl3Bv/cDYq6SBjERtNC+2XeKjduUK83wtdShQgfvH9lKM7w2ARtZ9U9q8c4nNLMoAYaeNT7LIW8E7ZuYbVajfAo0dBxhh/i0AsHY3eGx3Ykv6yxv7zXhNKpc3T7LTQsi0tDBLPLyrE7Hidooev1OpVKJXwtTYTO8EvxO8NjOZIV84Pa4aQpp3YSv1GKJfEiN/AqpWi1WiwsDr8Q524IneHvnOWRmGuGx6KrjqN7IrWObsG/jkXxaEc8b1srxXq7zXww0pEyPXec4VOBMzzGaaWxCLrj6C4PteB8f/i/KgviBt2lCK9CKTzP5fqsTa6kTNF0O8NnKJVKsaXBddTznxT+UN1BM85zZpx6CoPBbuZpxzNvTBTXr8+RVrqd4S+99CIrtRo6CBij3CLXlnV0v516R7efJVwIJyVFeSWC1ppZ20KnKLnSjXWGX4vRGR6poK2j+xFd4JgppTYYhODBjDhLaBEBbdKZLexmGM7wSPVlg8E3nDL3aSfVjm77cFbEw0R8U0QEx5hwlCNN2cJuup3hF2Jyhkf6TYU1ulPu6LZZwoYIy+JXjo22hfbHopeWKjSbrfC1NGJ/XS7PXIzFGR7Z6qNaoO55fE6P81QGHN0GqOP5Gc4YokKjDbVqNZXZwm6sM/wzjx/gtVdfYaVaw2gT2fcWmcaso/tdZzL1jm4bPS+LF2mWMDxe0ELXanUqN26Er6UVO5/jix9ei9wZHomgraP7MVPk5ZRO4t+MoxQVcVmN6ZdGa02r1Qpn3aVZ0HHWDI9kr7ZGdxod3VthW+hF8ViPKRaw9b/nUpot7KbbGT5z8b1I3SyR7DV0dDvpc3RvTYxZQotSeJ7H7KxNrqRY0XQ5w2cucNddd0bmDB+41gz+8l4vmnEOmCLNFA/VbWZe4jaMCddT5i3sxWZneDWilf8HvtCMIGgF5wt+UfdsiNkPAhfFDf7yiHyYAw+l0p8t3ID4BuBf/ZX3gxZ78N/bQFvobkf30YwEg9DxEi5IO/IxaIsIGEczN78ApDdb2E3HGf4izz7zNPX64Cf/D3RvoaM7YzW67XzuOLKEFpstnF8IBJ3SbOFmrDN85lI0zvCB7a3b0X3GmUydo3s7DIoGwnLEyxdsJPAWViqsrq7FdtSoCZ3hl6Jxhg/s/lhH96spdXT3QvAD3ap44ZJlsXU5jGF5eZnl5eXgtXSPdED0zvCB7UnwHd3nnMnUObq3w45BV8WjGUOWMDxu6C1sZErQFhHhww8GXzN8IILe6OjOTjBoMUqxHHgJ47yuMFu4lE5vYS9styMKZ/hA9tJxdE9SzliNbtvlWBQ3tiyhRYXZQj8wzIiegY4z/PLMYJ3hfe+l29F9ykmvo3s7/CxhO/ZRG4V/48Ox6AzRcYa/PVBneN/ay4Kje3v8ZrGTJYzx6pSffJi9nl6zbC82OsPPDMwZ3regraP7rJPVGt1+ELggXnBtcYpKgmxh+lYivRWsM/zalcHVDO9L0J0a3dbRnb3uRsdL6EbuJdxM6C2cS7e3sBcdZ/izvBw4w/ttpfvSX+jodtLu6O6NjRGWxI0tS2jZnC1MU92VWyV0hl8djDN817UOFNBCeEg7vGImWBEPgcykuy0Kv3zGcsQLNPbCcRyWKhVarRaFQiEYusuWsNvtNieOf4FHH32Eubl5isXirocody1oDTREuFzcy38xRRbFG04FoggRoIji51471ixhePwgubK8vIxSeuhVWqNkamo/v/Hrv8b/+K0vc/fd47Tbu2sad61BDygrxboI315bzuDohi/eAorr0qYuXmxZwvD4gaCr1Rrf/NZfMH3PNOIJaoiFLQeOgIjnj7mvrzM5We6r2JC6c/rBXd8jhR8UrkPsAVOcaGBSDTfcrVar/o2204gzhFJ+AOw4TlDKbvcX2FcvQfBvdIbai54MOzbYv39/qOWsfd/2mjyRMEjcLX13e7OU5k4ywyhimUayNmycM+Lkgs7JFLmgczKFk7GAOWfEcbI2BJQz2uRdjpxM4WRulD5npMlb6JxMkQs6J1Pkgs7JFLmgczJFLuicTJELOidT5ILOyRS5oHMyRS7onEyRCzonU+SCzskUuaBzMkUu6JxM8Z/8LwUmEGlP5gAAAABJRU5ErkJggg==">
+  <meta name="theme-color" content="#12151B">
 <title>ALL STAR LOC — Marketing Digital</title>
 <style>
 :root{
@@ -237,7 +237,102 @@ body.sb-is-collapsed .content { max-width: 100%; }
   .content table, .table-card { display:block; width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; }
   [class*="grid"] { grid-template-columns: 1fr !important; }
 }
+.lang-tab { padding:9px 16px; border:1.5px solid var(--border,#e2e8f0); background:#fff; border-radius:9px;
+  font-size:13px; font-weight:700; cursor:pointer; color:var(--t2,#555); font-family:inherit; }
+.lang-tab.active { background:var(--red,#C41E3A); color:#fff; border-color:var(--red,#C41E3A); }
+
+/* ===== Éditeur de textes plein écran (façon logiciel pro) ===== */
+#text-editor-overlay {
+  position:fixed; inset:0; z-index:99990;
+  background:rgba(15,18,24,.55); backdrop-filter:blur(3px);
+  display:flex; align-items:center; justify-content:center; padding:24px;
+}
+.te-modal {
+  width:100%; max-width:1100px; height:calc(100vh - 48px); max-height:920px;
+  background:#f7f8fa; border-radius:16px; overflow:hidden;
+  display:flex; flex-direction:column;
+  box-shadow:0 24px 70px rgba(0,0,0,.35);
+}
+.te-header {
+  background:#fff; border-bottom:1px solid #e8eaee; padding:18px 24px 14px;
+  flex-shrink:0; display:flex; flex-direction:column; gap:12px;
+}
+.te-header-top { display:flex; align-items:center; justify-content:space-between; }
+.te-title { font-size:18px; font-weight:900; color:#101216; }
+.te-close {
+  width:36px; height:36px; border:none; border-radius:9px; background:#f1f3f5;
+  font-size:16px; cursor:pointer; color:#475569; font-weight:700; transition:background .15s;
+}
+.te-close:hover { background:#e2e6ea; }
+.te-langtabs { display:flex; gap:6px; flex-wrap:wrap; }
+.te-toolbar { display:flex; gap:10px; align-items:center; }
+.te-toolbar .fi { flex:1; }
+.te-status { display:none; padding:10px 14px; border-radius:9px; font-size:13px; font-weight:600; }
+.te-body {
+  flex:1; overflow-y:auto; padding:20px 24px 40px;
+}
+.te-body::-webkit-scrollbar { width:10px; }
+.te-body::-webkit-scrollbar-thumb { background:#cbd2d9; border-radius:8px; }
+.at-field-ml { margin-bottom:14px; padding:12px 14px; background:#fff; border:1px solid #eef0f3; border-radius:10px; }
+.at-field-ml label { display:block; font-size:11px; color:#94a3b8; margin-bottom:5px; font-family:monospace; }
+.at-field-ml .at-input { width:100%; }
+.at-field-ml[dir="rtl"] input, .at-field-ml[dir="rtl"] textarea { direction:rtl; text-align:right; }
+@media (max-width:768px) {
+  #text-editor-overlay { padding:0; }
+  .te-modal { height:100vh; max-height:100vh; border-radius:0; max-width:100%; }
+  .te-toolbar { flex-direction:column; align-items:stretch; }
+}
+
+/* ===================================================================
+   MARKETING — Modules en fenêtres/popup (logique « centre de contrôle »)
+   La sidebar reste toujours visible : les popups s'ouvrent à droite d'elle.
+   =================================================================== */
+:root{ --mkt-sb:230px; }
+@media(max-width:900px){ :root{ --mkt-sb:52px; } }
+@media(max-width:768px){ :root{ --mkt-sb:0px; } }
+body.sb-is-collapsed{ --mkt-sb:0px; }   /* sidebar repliée → popup pleine largeur */
+
+#mkt-pop{ position:fixed; top:0; right:0; bottom:0; left:var(--mkt-sb);
+  z-index:9000; display:none; align-items:center; justify-content:center; padding:26px; }
+#mkt-pop.open{ display:flex; }
+#mkt-pop .mkt-pop-bd{ position:absolute; inset:0; background:rgba(15,18,24,.5); backdrop-filter:blur(4px); }
+.mkt-pop-win{ position:relative; z-index:1; background:var(--bg,#f1f3f6);
+  width:100%; max-width:1080px; max-height:calc(100vh - 52px);
+  border-radius:16px; box-shadow:0 24px 70px rgba(0,0,0,.32);
+  display:flex; flex-direction:column; overflow:hidden; }
+.mkt-pop-head{ flex-shrink:0; display:flex; align-items:center; gap:12px;
+  padding:16px 22px; background:var(--card,#fff); border-bottom:1px solid var(--border); }
+.mkt-pop-title{ font-size:16px; font-weight:900; flex:1; color:var(--text); display:flex; align-items:center; gap:10px; }
+.mkt-pop-close{ width:36px; height:36px; border:none; border-radius:10px; cursor:pointer; flex-shrink:0;
+  background:#f1f3f5; color:#475569; display:flex; align-items:center; justify-content:center; transition:background .15s,color .15s; }
+.mkt-pop-close:hover{ background:rgba(196,30,58,.12); color:var(--red); }
+.mkt-pop-body{ flex:1; min-height:0; overflow-y:auto; padding:22px; }
+.mkt-pop-body::-webkit-scrollbar{ width:10px; }
+.mkt-pop-body::-webkit-scrollbar-thumb{ background:#cbd2d9; border-radius:8px; }
+/* La page hébergée occupe toute la largeur de la popup (zéro espace blanc inutile) */
+.mkt-pop-body > .page{ display:block !important; padding:0 !important; max-width:none !important; }
+.mkt-pop-body > .page > h2:first-child{ margin-top:0; }
+.mkt-pop-body .card{ max-width:none !important; }
+@media(max-width:768px){
+  #mkt-pop{ padding:0; }
+  .mkt-pop-win{ max-width:100%; max-height:100%; height:100%; border-radius:0; }
+}
+/* L'éditeur de textes plein écran respecte lui aussi la sidebar */
+#text-editor-overlay{ left:var(--mkt-sb) !important; right:0 !important; top:0 !important; bottom:0 !important; }
+@media(max-width:768px){ #text-editor-overlay{ left:0 !important; } }
+
+/* ===== Tableau de bord — accès rapide aux modules (centre de contrôle) ===== */
+.mkt-launch{ display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:16px; }
+.mkt-launch-card{ text-align:left; background:var(--card,#fff); border:1px solid var(--border);
+  border-radius:14px; padding:18px; cursor:pointer; font-family:inherit;
+  display:flex; flex-direction:column; gap:10px; transition:transform .15s, box-shadow .15s, border-color .15s; }
+.mkt-launch-card:hover{ transform:translateY(-2px); box-shadow:0 12px 30px rgba(18,22,30,.10); border-color:rgba(196,30,58,.35); }
+.mkt-launch-ic{ width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; }
+.mkt-launch-tt{ font-size:15px; font-weight:800; color:var(--text); }
+.mkt-launch-sb{ font-size:12.5px; color:var(--t2); line-height:1.5; }
+.mkt-launch-go{ margin-top:auto; font-size:12.5px; font-weight:800; color:var(--red); }
 </style>
+
 </head>
 <body>
 <button class="sb-toggle" onclick="toggleSidebar()" title="Afficher le menu">
@@ -266,10 +361,6 @@ body.sb-is-collapsed .content { max-width: 100%; }
   <div class="sb-item" onclick="nav('alltexts',this)">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>
     <span>Tous les textes du site</span>
-  </div>
-  <div class="sb-item" onclick="nav('seo',this)">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-    <span>SEO par page</span>
   </div>
   <div class="sb-item" onclick="nav('faq',this)">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
@@ -335,19 +426,40 @@ body.sb-is-collapsed .content { max-width: 100%; }
       </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-      <div class="card">
-        <div class="card-head">
-          <div class="card-title">Score SEO par page</div>
-          <button class="btn btn-ghost btn-sm" onclick="nav('seo',document.querySelector('[onclick*=seo]'))">Gérer →</button>
+    <div style="margin-bottom:14px;font-size:14px;font-weight:800;color:var(--text);">Accès rapide aux modules</div>
+    <div class="mkt-launch">
+      <button class="mkt-launch-card" onclick="nav('alltexts',document.querySelector('.sb-item[onclick*=alltexts]'))">
+        <div class="mkt-launch-ic" style="background:rgba(196,30,58,.1);color:var(--red);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>
         </div>
-        <table class="tbl"><thead><tr><th>Page</th><th>Score</th><th>État</th></tr></thead>
-        <tbody id="dash-seo-tbody"></tbody></table>
-      </div>
-      <div class="card">
-        <div class="card-head"><div class="card-title">Recommandations</div></div>
-        <div id="dash-recs" style="font-size:13px;line-height:2;"></div>
-      </div>
+        <div class="mkt-launch-tt">Tous les textes du site</div>
+        <div class="mkt-launch-sb">Édition multilingue (FR · EN · ES · AR) de tous les contenus, synchronisée avec le site.</div>
+        <div class="mkt-launch-go">Ouvrir l'éditeur →</div>
+      </button>
+      <button class="mkt-launch-card" onclick="nav('faq',document.querySelector('.sb-item[onclick*=faq]'))">
+        <div class="mkt-launch-ic" style="background:rgba(37,99,235,.1);color:var(--blue);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
+        </div>
+        <div class="mkt-launch-tt">FAQ</div>
+        <div class="mkt-launch-sb">Questions / réponses injectées en Schema.org pour le référencement Google.</div>
+        <div class="mkt-launch-go">Gérer la FAQ →</div>
+      </button>
+      <button class="mkt-launch-card" onclick="nav('popup',document.querySelector('.sb-item[onclick*=popup]'))">
+        <div class="mkt-launch-ic" style="background:rgba(217,119,6,.1);color:var(--yellow);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg>
+        </div>
+        <div class="mkt-launch-tt">Popup &amp; CTA</div>
+        <div class="mkt-launch-sb">Fenêtre promotionnelle et appels à l'action affichés sur le site client.</div>
+        <div class="mkt-launch-go">Configurer →</div>
+      </button>
+      <button class="mkt-launch-card" onclick="nav('social',document.querySelector('.sb-item[onclick*=social]'))">
+        <div class="mkt-launch-ic" style="background:rgba(124,58,237,.1);color:var(--purple);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
+        </div>
+        <div class="mkt-launch-tt">Réseaux sociaux</div>
+        <div class="mkt-launch-sb">Liens WhatsApp, Instagram, Facebook, TikTok, Snapchat synchronisés au footer.</div>
+        <div class="mkt-launch-go">Modifier les liens →</div>
+      </button>
     </div>
   </div>
 
@@ -728,19 +840,41 @@ body.sb-is-collapsed .content { max-width: 100%; }
 
 <!-- PAGE : TOUS LES TEXTES DU SITE -->
 <div class="content page" id="page-alltexts">
-  <h2 style="font-size:18px;font-weight:900;margin-bottom:6px;">Tous les textes du site</h2>
-  <p style="font-size:13px;color:var(--t2);margin-bottom:16px;">
-    Modifiez n'importe quel texte affiché sur le site client (titres, sous-titres, boutons, sections…).
-    Chaque modification est synchronisée avec le site public après enregistrement.
-  </p>
-  <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
-    <input class="fi" id="alltexts-search" placeholder="🔍 Rechercher un texte…" style="flex:1;min-width:200px;" oninput="filterAllTexts()">
-    <button class="btn btn-red" onclick="saveAllTexts()">💾 Enregistrer tous les changements</button>
-    <button class="btn" onclick="testSyncConnection()" style="background:#1e293b;color:#fff;">🔌 Tester la connexion serveur</button>
+  <div style="text-align:center;padding:60px 20px;">
+    <div style="font-size:48px;margin-bottom:16px;">📝</div>
+    <h2 style="font-size:22px;font-weight:900;margin-bottom:10px;">Éditeur de textes du site</h2>
+    <p style="font-size:14px;color:var(--t2);max-width:520px;margin:0 auto 24px;line-height:1.6;">
+      Modifiez tous les textes de votre site dans les 4 langues (Français, English, Español, العربية).
+      L'éditeur s'ouvre en plein écran pour un confort maximal.
+    </p>
+    <button class="btn btn-red" style="font-size:15px;padding:14px 28px;" onclick="openTextEditor()">
+      ✏️ Ouvrir l'éditeur de textes
+    </button>
   </div>
-  <div id="sync-test-result" style="display:none;margin-bottom:14px;padding:12px 16px;border-radius:9px;font-size:13px;line-height:1.5;"></div>
-  <div id="alltexts-saved" style="display:none;margin-bottom:14px;padding:10px 14px;border-radius:9px;font-size:13px;font-weight:600;background:rgba(22,163,74,.1);color:#16a34a;"></div>
-  <div id="alltexts-container"></div>
+</div>
+
+<!-- ÉDITEUR PLEIN ÉCRAN (modale pro) -->
+<div id="text-editor-overlay" style="display:none;">
+  <div class="te-modal">
+    <header class="te-header">
+      <div class="te-header-top">
+        <div class="te-title">📝 Tous les textes du site</div>
+        <button class="te-close" onclick="closeTextEditor()" title="Fermer">✕</button>
+      </div>
+      <div class="te-langtabs" id="alltexts-langtabs">
+        <button class="lang-tab active" data-lang="fr" onclick="switchTextLang('fr',this)">🇫🇷 Français</button>
+        <button class="lang-tab" data-lang="en" onclick="switchTextLang('en',this)">🇬🇧 English</button>
+        <button class="lang-tab" data-lang="es" onclick="switchTextLang('es',this)">🇪🇸 Español</button>
+        <button class="lang-tab" data-lang="ar" onclick="switchTextLang('ar',this)">🇸🇦 العربية</button>
+      </div>
+      <div class="te-toolbar">
+        <input class="fi" id="alltexts-search" placeholder="🔍 Rechercher un texte (titre, mot, ou clé)…" oninput="filterAllTexts()">
+        <button class="btn btn-red" onclick="saveAllTexts()">💾 Enregistrer cette langue</button>
+      </div>
+      <div id="alltexts-saved" class="te-status"></div>
+    </header>
+    <div class="te-body" id="alltexts-container"></div>
+  </div>
 </div>
 
 <!-- PAGE RÉSEAUX SOCIAUX -->
@@ -801,6 +935,20 @@ body.sb-is-collapsed .content { max-width: 100%; }
     <div id="social-saved-msg" style="display:none;margin-top:12px;padding:10px 14px;border-radius:9px;font-size:13px;font-weight:600;background:rgba(22,163,74,.1);color:#16a34a;">
       Liens enregistrés et synchronisés avec le site client.
     </div>
+  </div>
+</div>
+
+<!-- POPUP MODULES MARKETING (FAQ / Popup & CTA / Réseaux sociaux) -->
+<div id="mkt-pop" aria-hidden="true">
+  <div class="mkt-pop-bd" onclick="closeModulePopup()"></div>
+  <div class="mkt-pop-win" role="dialog" aria-modal="true" aria-labelledby="mkt-pop-title">
+    <div class="mkt-pop-head">
+      <div class="mkt-pop-title" id="mkt-pop-title">—</div>
+      <button class="mkt-pop-close" onclick="closeModulePopup()" title="Fermer (Échap)" aria-label="Fermer">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="mkt-pop-body" id="mkt-pop-body"></div>
   </div>
 </div>
 
@@ -2057,20 +2205,86 @@ const PAGE_TITLES = {
   newsletter:'Newsletter', ads:'Google Ads', analytics:'Analytics', email:'Configuration Email', social:'Réseaux Sociaux',
 };
 
-function nav(id, el) {
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+/* === Navigation Marketing : modules en fenêtres/popup ===
+   - Tableau de bord : affichage classique (arrière-plan permanent).
+   - Tous les textes : éditeur plein écran existant (popup).
+   - FAQ / Popup & CTA / Réseaux sociaux : fenêtre superposée centrée.
+   - SEO par page / IA : désactivés (logique de contenus centralisée). */
+const MKT_POPUP_IDS = ['faq','popup','social'];
+let _mktHosted = null, _mktAnchor = null;
+
+function setActiveInlinePage(id){
+  document.querySelectorAll('.page').forEach(p=>{ if(!p.closest('#mkt-pop-body')) p.classList.remove('active'); });
   const page = document.getElementById('page-'+id);
-  if (page) page.classList.add('active');
-  if (el) el.classList.add('active');
+  if (page && !page.closest('#mkt-pop-body')) page.classList.add('active');
   const titleEl = document.getElementById('page-title');
   if (titleEl) titleEl.textContent = PAGE_TITLES[id]||id;
+  if (id==='dashboard') { try{ renderDashboard(); }catch(e){} }
+}
+
+function openModulePopup(id){
+  const host = document.getElementById('mkt-pop');
+  const body = document.getElementById('mkt-pop-body');
+  const page = document.getElementById('page-'+id);
+  if (!host || !body || !page) return;
+  _mktAnchor = document.createComment('mkt-anchor');           // mémorise la place d'origine
+  page.parentNode.insertBefore(_mktAnchor, page);
+  body.appendChild(page);
+  page.classList.add('active');
+  _mktHosted = page;
+  const t = document.getElementById('mkt-pop-title');
+  if (t) t.textContent = PAGE_TITLES[id]||id;
+  host.classList.add('open');
+  host.setAttribute('aria-hidden','false');
+  document.body.style.overflow = 'hidden';
+  body.scrollTop = 0;
+  try { renderPage(id); } catch(e){}
+}
+
+function closeModulePopup(silent){
+  const host = document.getElementById('mkt-pop');
+  if (_mktHosted && _mktAnchor && _mktAnchor.parentNode){     // remet la page à sa place
+    _mktAnchor.parentNode.insertBefore(_mktHosted, _mktAnchor);
+    _mktAnchor.remove();
+    _mktHosted.classList.remove('active');
+  }
+  _mktHosted = null; _mktAnchor = null;
+  if (host){ host.classList.remove('open'); host.setAttribute('aria-hidden','true'); }
+  if (!silent) document.body.style.overflow = '';
+}
+
+function nav(id, el) {
+  if (id === 'seo' || id === 'ia') id = 'dashboard';           // modules désactivés → dashboard
+  document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+  if (el) el.classList.add('active');
+  closeModulePopup(true);                                       // ferme toute fenêtre ouverte
+  if (typeof closeTextEditor === 'function') closeTextEditor();
+
+  if (id === 'alltexts') {                                      // éditeur de textes plein écran
+    setActiveInlinePage('dashboard');
+    if (typeof openTextEditor === 'function') openTextEditor();
+    return;
+  }
+  if (MKT_POPUP_IDS.includes(id)) {                             // FAQ / Popup / Réseaux → popup
+    setActiveInlinePage('dashboard');
+    openModulePopup(id);
+    return;
+  }
+  // pages classiques (tableau de bord, etc.)
+  document.body.style.overflow = '';
+  setActiveInlinePage(id);
   renderPage(id);
-  // Toujours afficher le contenu depuis le haut
   const mainEl = document.querySelector('.main');
   if (mainEl) mainEl.scrollTop = 0;
-  if (page && page.scrollIntoView) page.scrollIntoView({ block: 'start' });
 }
+
+// Fermeture des popups modules avec la touche Échap
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape') {
+    const host = document.getElementById('mkt-pop');
+    if (host && host.classList.contains('open')) closeModulePopup();
+  }
+});
 
 function renderPage(id) {
   if (id==='dashboard')  renderDashboard();
@@ -2085,7 +2299,7 @@ function renderPage(id) {
   if (id==='analytics')  loadAnalytics();
   if (id==='email')      loadEmailConfig();
   if (id==='social')     loadSocialConfig();
-  if (id==='alltexts')   loadAllTexts();
+  if (id==='alltexts')   {} // l'éditeur s'ouvre via le bouton "Ouvrir l'éditeur"
 }
 
 // Dashboard
@@ -2348,130 +2562,12 @@ function toggleSidebar() {
 // ================================================================
 // EDITEUR UNIVERSEL — TOUS LES TEXTES DU SITE
 // ================================================================
-const ALL_TEXTS_DATA = {"Navigation":[{"key":"nav.home","default":"Accueil"},{"key":"nav.fleet","default":"Nos Véhicules"},{"key":"nav.about","default":"À propos"},{"key":"nav.contact","default":"Contact"},{"key":"nav.book","default":"Réserver"},{"key":"nav.wa247","default":"WhatsApp 24h/7j"}],"Accueil — Bandeau principal":[{"key":"hero.badge","default":"Agence à Marrakech · Depuis 2009"},{"key":"hero.titleHtml","default":"Location de Voiture<br>à Marrakech <span>Sans Surprise</span>"},{"key":"hero.sub","default":"Livraison gratuite à l'aéroport Ménara (RAK), au centre-ville et à votre hôtel. Flotte récente, assurance incluse, kilométrage illimité et prix transparents."},{"key":"hero.bookCta","default":"Réserver maintenant"},{"key":"hero.f1","default":"Livraison aéroport gratuite"},{"key":"hero.f2","default":"Disponible 24h/24, 7j/7"},{"key":"hero.f3","default":"Service premium"},{"key":"hero.f4","default":"Assistance personnalisée"}],"Recherche / Réservation":[{"key":"bk.title","default":"Réservez votre voiture"},{"key":"bk.pickup","default":"Lieu de prise en charge"},{"key":"bk.return","default":"Lieu de retour"},{"key":"bk.dep","default":"Départ"},{"key":"bk.ret","default":"Retour"},{"key":"bk.stepHint","default":"1. Choisissez vos dates · 2. Trouvez votre voiture"},{"key":"bk.needDates","default":"Veuillez d'abord sélectionner vos dates de location."},{"key":"bk.depSub","default":"Date de départ"},{"key":"bk.retSub","default":"Date de retour"},{"key":"bk.find","default":"Trouver une voiture"},{"key":"bk.dur","default":"Durée : {n} {d}"}],"Section Flotte":[{"key":"fleet.unavail","default":"Indisponible sur ces dates"},{"key":"fleet.availFrom","default":"Disponible à partir du {d}"},{"key":"fleet.editDates","default":"Modifier mes dates"},{"key":"fleet.badge","default":"Notre Flotte"},{"key":"fleet.titleHtml","default":"Choisissez le Véhicule<br><span>Idéal pour Marrakech</span>"},{"key":"fleet.sub","default":"Tous nos véhicules sont récents, propres et régulièrement entretenus."},{"key":"fleet.emptyHtml","default":"Aucun véhicule disponible dans cette catégorie pour le moment.<br>Contactez-nous sur WhatsApp pour connaître nos disponibilités."}],"Caractéristiques véhicules":[{"key":"f.missing","default":"Veuillez renseigner les champs obligatoires : nom complet, téléphone et numéro de permis."},{"key":"f.first","default":"Prénom"},{"key":"f.last","default":"Nom"},{"key":"f.email","default":"Email"},{"key":"f.phone","default":"Téléphone"},{"key":"f.wa","default":"WhatsApp"},{"key":"f.addr","default":"Adresse"},{"key":"f.country","default":"Pays / Nationalité"},{"key":"f.countryPh","default":"Sélectionner votre pays"},{"key":"f.flight","default":"Numéro de vol (optionnel)"},{"key":"f.notes","default":"Détails supplémentaires (optionnel)"},{"key":"f.docs","default":"Documents"},{"key":"f.lic","default":"N° Permis de conduire"},{"key":"f.pass","default":"N° Passeport / CIN"},{"key":"f.docsNote","default":"Documents vérifiés lors de la remise des clés. Upload possible en agence."}],"Spécifications":[{"key":"sp.ac","default":"Climatisation"},{"key":"sp.cam","default":"Caméra de recul"},{"key":"sp.doors","default":"{n} portes"},{"key":"sp.trunk","default":"Coffre : {v}"},{"key":"sp.insur","default":"Assurance incluse"},{"key":"sp.airport","default":"Livraison aéroport"},{"key":"sp.deposit","default":"Caution : {v}"}],"Page Véhicules":[{"key":"vp.h1","default":"Notre flotte de location à Marrakech"},{"key":"vp.lead","default":"Citadines, berlines et SUV récents — assurance incluse, kilométrage illimité et tarifs dégressifs selon la durée."},{"key":"vp.degressive","default":"Tarifs dégressifs selon la durée de location."},{"key":"vp.ctaTitle","default":"Prêt à réserver ?"},{"key":"vp.ctaText","default":"La réservation se fait sur la page d'accueil : choisissez vos dates, puis votre véhicule."},{"key":"vp.ctaBtn","default":"Choisir mes dates et réserver"},{"key":"vp.empty","default":"Aucun véhicule dans cette catégorie pour le moment."}],"Divers":[{"key":"u.seats","default":"places"},{"key":"u.day","default":"jour"},{"key":"u.days","default":"jours"},{"key":"u.perDay","default":"/j"},{"key":"u.perDayLong","default":"/ jour"},{"key":"ct.fTitle","default":"Envoyez-nous un message"},{"key":"ct.fIntro","default":"Remplissez ce formulaire : votre demande nous est transmise immédiatement et nous vous répondons en moins de 15 minutes."},{"key":"ct.fName","default":"Nom complet"},{"key":"ct.fNamePh","default":"Votre nom et prénom"},{"key":"ct.fPhone","default":"Téléphone"},{"key":"ct.fPhonePh","default":"+212 6 XX XX XX XX"},{"key":"ct.fEmail","default":"Email"},{"key":"ct.fEmailPh","default":"email@exemple.com"},{"key":"ct.fSubject","default":"Sujet"},{"key":"ct.fSubjectPh","default":"Réservation, devis, question…"},{"key":"ct.fMsg","default":"Message"},{"key":"ct.fMsgPh","default":"Décrivez votre demande (dates, véhicule souhaité, lieu…)"},{"key":"ct.fSend","default":"Envoyer la demande"},{"key":"ct.fNote","default":"Envoi via WhatsApp — réponse en moins de 15 minutes, 24h/7j."},{"key":"ct.fOk","default":"Votre demande a été préparée et transmise. Notre équipe vous répond très rapidement — merci !"},{"key":"ct.fErr","default":"Veuillez renseigner au minimum votre nom, un moyen de contact et votre message."},{"key":"ct.badge","default":"Contactez-nous"},{"key":"ct.h1Html","default":"Nous sommes là<br><span>24h/24, 7j/7</span>"},{"key":"ct.lead","default":"Une question, une demande spéciale, un devis longue durée ? Réponse en moins de 15 minutes sur WhatsApp."},{"key":"ct.coords","default":"Nos coordonnées"},{"key":"ct.waTag","default":"WhatsApp (recommandé)"},{"key":"ct.waText","default":"Réponse en moins de 15 minutes, 24h/7j. Idéal pour réserver, demander un devis ou poser une question."},{"key":"ct.waBtn","default":"Ouvrir WhatsApp"},{"key":"ct.telTag","default":"Téléphone"},{"key":"ct.telText","default":"Appelez-nous directement pour toute urgence ou assistance pendant votre location."},{"key":"ct.telBtn","default":"Appeler maintenant"},{"key":"ct.mailTag","default":"Email"},{"key":"ct.mailText","default":"Pour les demandes de devis détaillés, les locations longue durée et les partenariats."},{"key":"ct.mailBtn","default":"Écrire un email"},{"key":"ct.agTag","default":"Agence"},{"key":"ct.agTitle","default":"29 Rue Yougoslavie, Guéliz"},{"key":"ct.agText","default":"Marrakech 40000, Maroc. Ouvert tous les jours. Parking à proximité."},{"key":"ct.agBtn","default":"Voir sur Google Maps"},{"key":"ct.serv","default":"Services sur demande"},{"key":"ct.servIntro","default":"En plus de la location classique, contactez-nous pour :"},{"key":"ct.s1Html","default":"<strong>Livraison à votre hôtel ou riad</strong> à Marrakech — nous amenons la voiture directement à votre hébergement."},{"key":"ct.s2Html","default":"<strong>Location avec chauffeur</strong> — excursions, transferts d'affaires, mariages et événements."},{"key":"ct.s3Html","default":"<strong>Transfert privé</strong> — aéroport ↔ hôtel, Marrakech ↔ Essaouira, Agadir, Casablanca…"},{"key":"ct.s4Html","default":"<strong>Location longue durée</strong> — tarifs dégressifs au mois pour expatriés et professionnels (<a href=\"lld.html\">en savoir plus</a>)."}],"Lieux":[{"key":"loc.airport","default":"Aéroport Marrakech (RAK)"},{"key":"loc.center","default":"Centre-Ville Marrakech"},{"key":"loc.station","default":"Gare Marrakech"},{"key":"loc.hotel","default":"Votre Hôtel"}],"Calendrier":[{"key":"cal.hintStart","default":"Sélectionnez votre date de départ"},{"key":"cal.hintEnd","default":"Sélectionnez votre date de retour"},{"key":"cal.aria","default":"Calendrier de réservation"},{"key":"cal.prevM","default":"Mois précédent"},{"key":"cal.nextM","default":"Mois suivant"},{"key":"cal.ariaStart","default":"Choisir la date de départ"},{"key":"cal.ariaEnd","default":"Choisir la date de retour"}],"Confiance":[{"key":"trust.t1","default":"Livraison Aéroport Gratuite"},{"key":"trust.t2","default":"Assurance Incluse"},{"key":"trust.t3","default":"Service 24h/7j"},{"key":"trust.t4","default":"Prix Sans Frais Cachés"},{"key":"trust.t5","default":"Kilométrage Illimité"}],"Filtres":[{"key":"filt.all","default":"Toutes"},{"key":"filt.city","default":"Citadines"},{"key":"filt.eco","default":"Économiques"},{"key":"filt.suv","default":"SUV"},{"key":"filt.fam","default":"Familiales"}],"Cartes véhicules":[{"key":"car.seats","default":"{n} places"},{"key":"car.unl","default":"Illimité"},{"key":"car.tierHint","default":"Tarif selon durée sélectionnée"},{"key":"car.book","default":"Réserver maintenant"}],"VEH":[{"key":"veh.Automatique","default":"Automatique"},{"key":"veh.Manuelle","default":"Manuelle"},{"key":"veh.Diesel","default":"Diesel"},{"key":"veh.Essence","default":"Essence"}],"Pourquoi nous":[{"key":"why.badge","default":"Pourquoi Nous"},{"key":"why.titleHtml","default":"Pourquoi Choisir<br><span>ALL STAR LOC ?</span>"},{"key":"why.t1","default":"Livraison Aéroport"},{"key":"why.d1","default":"Prise en charge et retour gratuits à l'aéroport Ménara RAK, quelle que soit l'heure d'arrivée."},{"key":"why.t2","default":"Assurance Complète"},{"key":"why.d2","default":"Tous nos véhicules sont couverts par une assurance tous risques pour votre tranquillité d'esprit."},{"key":"why.t3","default":"Disponible 24h/7j"},{"key":"why.d3","default":"Notre équipe est joignable à toute heure par téléphone ou WhatsApp pour vous assister."},{"key":"why.t4","default":"Paiement Flexible"},{"key":"why.d4","default":"Payez en ligne, en acompte ou sur place. Plusieurs devises acceptées : MAD, EUR, USD, GBP."},{"key":"why.t5","default":"Livraison à Domicile"},{"key":"why.d5","default":"Nous livrons votre voiture directement à votre hôtel, riad ou adresse à Marrakech."},{"key":"why.t6","default":"17 Ans d'Expérience"},{"key":"why.d6","default":"Plus de 500 clients satisfaits et une note de 4.8/5 sur Google confirment notre sérieux."}],"Avis":[{"key":"rev.badge","default":"Avis Clients"},{"key":"rev.titleHtml","default":"Ce que Disent<br><span>Nos Clients</span>"}],"Pied de page":[{"key":"ft.tag","default":"Location de Voiture Marrakech"},{"key":"ft.desc","default":"Votre agence de confiance depuis 2009. Flotte moderne, service premium, disponible 24h/7j. Livraison gratuite aéroport et hôtel."},{"key":"ft.wa247","default":"WhatsApp 24h/7j"},{"key":"ft.colServices","default":"Nos Services"},{"key":"ft.s1","default":"Location Courte Durée"},{"key":"ft.s2","default":"Location Longue Durée"},{"key":"ft.s3","default":"Livraison Aéroport"},{"key":"ft.s4","default":"Livraison Hôtel"},{"key":"ft.s5","default":"Location avec Chauffeur"},{"key":"ft.s6","default":"Transfert Privé"},{"key":"ft.colQuick","default":"Liens Rapides"},{"key":"ft.qAdmin","default":"Espace Admin"},{"key":"ft.colLegal","default":"Légal"},{"key":"ft.lCgv","default":"Conditions Générales"},{"key":"ft.lPriv","default":"Politique de Confidentialité"},{"key":"ft.lLegal","default":"Mentions Légales"},{"key":"ft.colCur","default":"Devises"},{"key":"ft.copy","default":"© 2025 All Star Loc — Location de Voitures à Marrakech. Tous droits réservés."},{"key":"ft.bCgv","default":"CGV"},{"key":"ft.bPriv","default":"Confidentialité"},{"key":"ft.bLegal","default":"Mentions légales"}],"Profil":[{"key":"pf.blog","default":"Blog"},{"key":"pf.faq","default":"FAQ"},{"key":"pf.copy","default":"© 2026 ALL STAR LOC — Location de voiture à Marrakech depuis 2009"}],"WA":[{"key":"wa.tooltip","default":"Besoin d'aide ?"}],"Tunnel réservation":[{"key":"dr.step","default":"ÉTAPE {n} / 5"},{"key":"dr.done","default":"RÉSERVATION CONFIRMÉE"},{"key":"dr.s1","default":"Protection"},{"key":"dr.s2","default":"Options"},{"key":"dr.s3","default":"Résumé"},{"key":"dr.s4","default":"Vos Informations"},{"key":"dr.s5","default":"Paiement"},{"key":"dr.s6","default":"Confirmation"},{"key":"dr.p1","default":"Protection"},{"key":"dr.p2","default":"Options"},{"key":"dr.p3","default":"Résumé"},{"key":"dr.p4","default":"Infos"},{"key":"dr.p5","default":"Paiement"},{"key":"dr.p6","default":"Confirmation"},{"key":"dr.total","default":"Total estimé"},{"key":"dr.next","default":"Continuer"}],"Récapitulatif":[{"key":"recap.edit","default":"Modifier"},{"key":"recap.timerHtml","default":"Session expire dans <strong id=\"timer-display\">05:00</strong>. Réservez maintenant pour garantir ce tarif."}],"Assurances":[{"key":"prot.title","default":"Sélectionnez votre protection"},{"key":"prot.free","default":"Gratuit"},{"key":"prot.basic.name","default":"Protection Basique"},{"key":"prot.basic.desc","default":"Incluse dans la location. Franchise standard en cas de sinistre."},{"key":"prot.premium.name","default":"Protection Premium"},{"key":"prot.premium.desc","default":"Assurance Tous Risques avec franchise réduite."},{"key":"prot.full.name","default":"Protection Tout Risque"},{"key":"prot.full.desc","default":"Couverture totale, zéro franchise, tranquillité absolue."}],"Options":[{"key":"opt.title","default":"Ajoutez vos options (optionnel)"},{"key":"opt.add","default":"Ajouter"},{"key":"opt.added","default":"Ajouté"},{"key":"opt.booster","default":"Réhausseur Enfant"},{"key":"opt.gps","default":"GPS Portable"},{"key":"opt.wifi","default":"Wifi Portable"},{"key":"opt.charger","default":"Cable Chargeur"},{"key":"opt.fuel","default":"Option Plein Carburant"},{"key":"opt.fridge","default":"Réfrigérateur Portable"},{"key":"opt.roadside","default":"Assistance Dépannage+"}],"Résumé":[{"key":"sum.rentTier","default":"Location · {n} j · {p}/jour"},{"key":"sum.tierApplied","default":"Tarif appliqué : {b}"},{"key":"sum.degressive","default":"Tarifs dégressifs selon la durée : le prix journalier baisse quand la durée augmente."},{"key":"sum.deposit","default":"Caution (restituée au retour)"},{"key":"sum.rent","default":"Location véhicule ({n}j × {p})"},{"key":"sum.total","default":"TOTAL"},{"key":"sum.fullDisc","default":"Réduction paiement complet"},{"key":"sum.promo","default":"Code promo"}],"Champs formulaire":[{"key":"ph.first","default":"Entrez votre prénom"},{"key":"ph.last","default":"Entrez votre nom"},{"key":"ph.email","default":"email@exemple.com"},{"key":"ph.phone","default":"6XXXXXXXX"},{"key":"ph.addr","default":"Votre adresse complète"},{"key":"ph.flight","default":"AT234, RAM203..."},{"key":"ph.notes","default":"Heure d'arrivée, numéro de porte, demandes spéciales..."},{"key":"ph.lic","default":"Ex: AB123456"},{"key":"ph.pass","default":"Ex: XX1234567"},{"key":"ph.promo","default":"Entrez votre code promo"}],"Contact":[{"key":"c.ma","default":"Maroc"},{"key":"c.fr","default":"France"},{"key":"c.es","default":"Espagne"},{"key":"c.uk","default":"Royaume-Uni"},{"key":"c.us","default":"États-Unis"},{"key":"c.de","default":"Allemagne"},{"key":"c.it","default":"Italie"},{"key":"c.be","default":"Belgique"},{"key":"c.nl","default":"Pays-Bas"},{"key":"c.other","default":"Autre"}],"Paiement":[{"key":"pay.agency","default":"Paiement à l'agence"},{"key":"pay.agencyDesc","default":"Réglez sur place lors du retrait de votre véhicule à notre agence de Guéliz."},{"key":"pay.delivery","default":"Paiement à la livraison"},{"key":"pay.deliveryDesc","default":"Réglez au moment de la remise des clés (aéroport, hôtel ou adresse)."},{"key":"pay.transfer","default":"Paiement par virement bancaire"},{"key":"pay.transferDesc","default":"Nos coordonnées bancaires vous seront envoyées après validation de la demande."},{"key":"pay.wa","default":"Paiement via WhatsApp après validation"},{"key":"pay.waDesc","default":"Notre équipe vous envoie un lien ou les modalités de paiement sur WhatsApp."},{"key":"pay.confirmBtn","default":"Confirmer la réservation"},{"key":"pay.awaiting","default":"En attente de paiement"},{"key":"pay.title","default":"Choisissez votre mode de paiement"},{"key":"pay.full","default":"Paiement Complet"},{"key":"pay.fullPromo","default":"Meilleure offre — Réduction de 5% appliquée"},{"key":"pay.fullDesc","default":"Payez la totalité maintenant et économisez."},{"key":"pay.adv","default":"Paiement par Avance (40%)"},{"key":"pay.advDesc","default":"Payez 40% maintenant, le reste à la livraison."},{"key":"pay.onsite","default":"Paiement à l'Agence"},{"key":"pay.onsiteDesc","default":"Réservation gratuite, paiement sur place à la livraison."},{"key":"pay.promoLabel","default":"Code Promo (optionnel)"},{"key":"pay.apply","default":"Appliquer"},{"key":"pay.applied","default":"Code appliqué — {n}% de réduction"},{"key":"pay.invalid","default":"Code promo invalide"},{"key":"pay.termsHtml","default":"J'ai lu et j'accepte les <a href=\"pages/cgv.html\" target=\"_blank\" rel=\"noopener\" onclick=\"event.stopPropagation(); return openLegalModal('cgv');\">conditions générales de location</a> et la <a href=\"pages/privacy.html\" target=\"_blank\" rel=\"noopener\" onclick=\"event.stopPropagation(); return openLegalModal('privacy');\">politique de confidentialité</a> d'ALL STAR LOC."},{"key":"pay.acceptAlert","default":"Veuillez accepter les conditions générales."}],"Confirmation":[{"key":"cf.statusLabel","default":"Statut"},{"key":"cf.title","default":"Réservation Confirmée !"},{"key":"cf.sub","default":"Merci {name} ! Votre demande de réservation a été envoyée avec succès. Notre équipe vous contactera rapidement pour confirmer la disponibilité et finaliser le paiement."},{"key":"cf.refLabel","default":"Numéro de réservation"},{"key":"cf.recap","default":"Récapitulatif"},{"key":"cf.total","default":"Total"},{"key":"cf.payFull","default":"Paiement complet"},{"key":"cf.payAdv","default":"Acompte 40%"},{"key":"cf.payOnsite","default":"Paiement sur place"},{"key":"cf.waBtn","default":"Confirmer ma réservation sur WhatsApp"}],"Légal":[{"key":"legal.close","default":"Fermer"},{"key":"legal.read","default":"J'ai lu et compris"},{"key":"legal.loading","default":"Chargement du document…"}],"PG":[{"key":"pg.back","default":"Retour à l'accueil"}],"Appels à action":[{"key":"cta.h3","default":"Prêt à prendre la route ?"},{"key":"cta.p","default":"Réservez votre voiture en 2 minutes, livraison gratuite à l'aéroport de Marrakech."},{"key":"cta.btn","default":"Voir nos véhicules"}],"À propos":[{"key":"ab.badge","default":"Notre Histoire"},{"key":"ab.h1Html","default":"ALL STAR LOC"},{"key":"ab.lead","default":"Une agence familiale de location de voiture, fondée sur la confiance, la transparence et le service."},{"key":"ab.who","default":"Qui sommes-nous ?"},{"key":"ab.p1Html","default":"<strong>ALL STAR LOC</strong> est une agence de location de voitures basée à Marrakech, au 29 Rue Yougoslavie, en plein cœur de Guéliz. Depuis 2009, nous accompagnons voyageurs, familles et professionnels dans leurs déplacements à Marrakech et partout au Maroc."},{"key":"ab.p2","default":"Notre conviction est simple : louer une voiture en vacances ne devrait jamais être une source de stress. Pas de frais cachés, pas de mauvaises surprises à la restitution, pas d'attente interminable au comptoir. Juste une voiture propre, récente, et une équipe joignable à toute heure."},{"key":"ab.commit","default":"Nos engagements"},{"key":"ab.c1Html","default":"<strong>Livraison gratuite à l'aéroport Ménara (RAK)</strong> — nous vous attendons à votre arrivée, quelle que soit l'heure, panneau à la main."},{"key":"ab.c2Html","default":"<strong>Disponibilité 24h/7j</strong> — un numéro WhatsApp unique pour toute question, avant, pendant et après la location."},{"key":"ab.c3Html","default":"<strong>Kilométrage illimité</strong> — explorez Essaouira, l'Atlas, Ouarzazate ou Agadir sans compter."},{"key":"ab.c4Html","default":"<strong>Flotte récente et entretenue</strong> — chaque véhicule est contrôlé, nettoyé et désinfecté entre deux locations."},{"key":"ab.c5Html","default":"<strong>Transparence totale</strong> — le prix affiché est le prix payé. Assurance responsabilité civile toujours incluse."},{"key":"ab.nums","default":"Quelques chiffres"},{"key":"ab.numsHtml","default":"<strong>+500</strong> clients satisfaits · <strong>4.8/5</strong> sur Google · <strong>17 ans</strong> d'expérience · <strong>11+</strong> véhicules en flotte · Clients de <strong>15+ nationalités</strong>"},{"key":"ab.where","default":"Où nous trouver"},{"key":"ab.callNote","default":"(appel & WhatsApp)"}]};
 
-function loadAllTexts() {
-  const overrides = load(K.content) || {};
-  const container = document.getElementById('alltexts-container');
-  if (!container) return;
-  let html = '';
-  Object.keys(ALL_TEXTS_DATA).forEach(function(section) {
-    const items = ALL_TEXTS_DATA[section];
-    html += '<div class="at-section" style="margin-bottom:22px;">';
-    html += '<div style="font-size:14px;font-weight:800;color:var(--red);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid rgba(196,30,58,.15);">' + section + '</div>';
-    items.forEach(function(it) {
-      var ovVal = overrides[it.key];
-      // Support multilingue : si l'override est un objet {fr,en,...}, afficher le FR
-      if (ovVal && typeof ovVal === 'object') ovVal = ovVal.fr;
-      const current = ovVal !== undefined && ovVal !== null ? ovVal : it.default;
-      const isLong = (it.default || '').length > 60;
-      const safeCurrent = String(current).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-      const safeDefault = String(it.default).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-      html += '<div class="at-field" data-key="' + it.key + '" data-search="' + safeDefault.toLowerCase() + '" style="margin-bottom:12px;">';
-      html += '<label style="display:block;font-size:11px;color:var(--t3);margin-bottom:3px;font-family:monospace;">' + it.key + '</label>';
-      if (isLong) {
-        html += '<textarea class="fi at-input" data-key="' + it.key + '" rows="2" style="width:100%;resize:vertical;">' + safeCurrent + '</textarea>';
-      } else {
-        html += '<input class="fi at-input" data-key="' + it.key + '" value="' + safeCurrent + '" style="width:100%;">';
-      }
-      html += '</div>';
-    });
-    html += '</div>';
-  });
-  container.innerHTML = html;
-}
 
-function filterAllTexts() {
-  const q = (document.getElementById('alltexts-search').value || '').toLowerCase().trim();
-  document.querySelectorAll('#alltexts-container .at-field').forEach(function(f) {
-    const key = (f.getAttribute('data-key') || '').toLowerCase();
-    const txt = (f.getAttribute('data-search') || '');
-    const match = !q || key.indexOf(q) > -1 || txt.indexOf(q) > -1;
-    f.style.display = match ? 'block' : 'none';
-  });
-  document.querySelectorAll('#alltexts-container .at-section').forEach(function(s) {
-    const visible = Array.from(s.querySelectorAll('.at-field')).some(function(f){ return f.style.display !== 'none'; });
-    s.style.display = visible ? 'block' : 'none';
-  });
-}
 
-async function saveAllTexts() {
-  const overrides = load(K.content) || {};
-  const defaults = {};
-  Object.keys(ALL_TEXTS_DATA).forEach(function(sec){
-    ALL_TEXTS_DATA[sec].forEach(function(it){ defaults[it.key] = it.default; });
-  });
 
-  const box = document.getElementById('alltexts-saved');
 
-  // Collecter les textes modifiés (en français)
-  const changedKeys = [];
-  document.querySelectorAll('#alltexts-container .at-input').forEach(function(el) {
-    const key = el.getAttribute('data-key');
-    const val = el.value;
-    if (val !== undefined && val !== defaults[key] && val.trim() !== '') {
-      changedKeys.push({ key: key, fr: val });
-    } else if (val === defaults[key] || val.trim() === '') {
-      delete overrides[key];
-    }
-  });
 
-  // Traduire automatiquement chaque texte FR → EN / ES / AR
-  if (changedKeys.length && box) {
-    box.style.display = 'block'; box.style.background = '#f1f5f9'; box.style.color = '#334155';
-    box.innerHTML = '🌍 Traduction automatique en cours (EN, ES, AR)…';
-  }
-  for (var i = 0; i < changedKeys.length; i++) {
-    var item = changedKeys[i];
-    var translations = await translateText(item.fr);
-    // Stocker en multilingue : {fr, en, es, ar}
-    overrides[item.key] = {
-      fr: item.fr,
-      en: translations.en || item.fr,
-      es: translations.es || item.fr,
-      ar: translations.ar || item.fr
-    };
-  }
-  save(K.content, overrides);
-
-  if (box) { box.innerHTML = '⏳ Envoi au serveur…'; }
-
-  // Construire l'objet complet ET l'envoyer DIRECTEMENT (sans dépendre d'une autre fonction)
-  const fullData = getMktData();
-  fullData.content = overrides; // garantir que nos overrides sont inclus
-
-  try {
-    const headers = { 'Content-Type': 'application/json' };
-    let adminKey = ''; try { adminKey = localStorage.getItem('asl_admin_key') || ''; } catch(e) {}
-    if (adminKey) headers['X-ASL-Key'] = adminKey;
-
-    const resp = await fetch('/api/marketing', { method: 'PUT', headers: headers, body: JSON.stringify(fullData) });
-    const result = await resp.json().catch(function(){ return {}; });
-
-    if (resp.ok && result.saved) {
-      // Vérifier en relisant
-      const back = await fetch('/api/marketing', { headers: { 'Cache-Control': 'no-cache' } });
-      const bd = await back.json();
-      const ok = bd && bd.data && bd.data.content && JSON.stringify(bd.data.content) === JSON.stringify(overrides);
-      if (box) {
-        box.style.background = '#f0fdf4'; box.style.color = '#15803d';
-        box.innerHTML = '✅ ' + Object.keys(overrides).length + ' texte(s) enregistré(s) ET confirmé(s) sur le serveur (' + (result.bytes||0) + ' octets). Rafraîchissez le site public avec Ctrl+F5.';
-      }
-    } else if (resp.ok) {
-      if (box) { box.style.background = '#fffbeb'; box.style.color = '#b45309'; box.innerHTML = '⚠ Le serveur a répondu mais sans confirmer l\'écriture. Réessayez.'; }
-    } else if (resp.status === 403) {
-      if (box) { box.style.background = '#fef2f2'; box.style.color = '#b91c1c'; box.innerHTML = '❌ Écriture refusée (403). Déconnectez-vous et reconnectez-vous à l\'admin.'; }
-    } else {
-      if (box) { box.style.background = '#fef2f2'; box.style.color = '#b91c1c'; box.innerHTML = '❌ Erreur serveur ' + resp.status + ' : ' + (result.error || 'inconnue'); }
-    }
-  } catch(e) {
-    if (box) {
-      box.style.background = '#fef2f2'; box.style.color = '#b91c1c';
-      box.innerHTML = '❌ Serveur injoignable. Si tu testes en local (file://), c\'est normal : la sync ne marche QUE sur le site déployé Cloudflare.';
-    }
-  }
-  setTimeout(function(){ if (box) box.style.display = 'none'; }, 12000);
-}
 
 
 // ================================================================
@@ -2547,30 +2643,146 @@ async function testSyncConnection() {
 // ================================================================
 // TRADUCTION AUTOMATIQUE FR → EN / ES / AR
 // ================================================================
-async function translateText(frText) {
-  const result = { en: '', es: '', ar: '' };
-  if (!frText || !frText.trim()) return result;
-  // On passe par NOTRE serveur (/api/translate) → pas de blocage CORS du navigateur
-  try {
-    const resp = await fetch('/api/translate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: frText })
-    });
-    if (resp.ok) {
-      const data = await resp.json();
-      if (data && data.translations) {
-        result.en = data.translations.en || frText;
-        result.es = data.translations.es || frText;
-        result.ar = data.translations.ar || frText;
-        return result;
-      }
-    }
-  } catch (e) { /* repli ci-dessous */ }
-  // Repli : si le serveur ne répond pas, on garde le FR partout
-  result.en = frText; result.es = frText; result.ar = frText;
-  return result;
+
+
+
+// ================================================================
+// EDITEUR UNIVERSEL MULTILINGUE — 4 langues (FR/EN/ES/AR)
+// ================================================================
+const ALL_TEXTS_4L = {"Navigation":[{"key":"nav.home","fr":"Accueil","en":"Home","es":"Inicio","ar":"الرئيسية"},{"key":"nav.fleet","fr":"Nos Véhicules","en":"Our Vehicles","es":"Nuestros Vehículos","ar":"سياراتنا"},{"key":"nav.about","fr":"À propos","en":"About","es":"Quiénes somos","ar":"من نحن"},{"key":"nav.contact","fr":"Contact","en":"Contact","es":"Contacto","ar":"اتصل بنا"},{"key":"nav.book","fr":"Réserver","en":"Book Now","es":"Reservar","ar":"احجز الآن"},{"key":"nav.wa247","fr":"WhatsApp 24h/7j","en":"WhatsApp 24/7","es":"WhatsApp 24/7","ar":"واتساب 24/7"}],"Accueil — Bandeau principal":[{"key":"hero.badge","fr":"Agence à Marrakech · Depuis 2009","en":"Marrakech Agency · Since 2009","es":"Agencia en Marrakech · Desde 2009","ar":"وكالة في مراكش · منذ 2009"},{"key":"hero.titleHtml","fr":"Location de Voiture<br>à Marrakech <span>Sans Surprise</span>","en":"Car Rental<br>in Marrakech <span>With No Surprises</span>","es":"Alquiler de Coches<br>en Marrakech <span>Sin Sorpresas</span>","ar":"كراء السيارات<br>في مراكش <span>بدون مفاجآت</span>"},{"key":"hero.sub","fr":"Livraison gratuite à l'aéroport Ménara (RAK), au centre-ville et à votre hôtel. Flotte récente, assurance incluse, kilométrage illimité et prix transparents.","en":"Free delivery at Menara Airport (RAK), in the city centre and at your hotel. Recent fleet, insurance included, unlimited mileage and transparent prices.","es":"Entrega gratuita en el aeropuerto de Menara (RAK), en el centro y en su hotel. Flota reciente, seguro incluido, kilometraje ilimitado y precios transparentes.","ar":"توصيل مجاني إلى مطار المنارة (RAK)، وسط المدينة وفندقكم. أسطول حديث، تأمين شامل، كيلومترات غير محدودة وأسعار شفافة."},{"key":"hero.bookCta","fr":"Réserver maintenant","en":"Book now","es":"Reservar ahora","ar":"احجز الآن"},{"key":"hero.f1","fr":"Livraison aéroport gratuite","en":"Free airport delivery","es":"Entrega gratuita en el aeropuerto","ar":"توصيل مجاني إلى المطار"},{"key":"hero.f2","fr":"Disponible 24h/24, 7j/7","en":"Available 24/7","es":"Disponible 24h/7","ar":"متوفرون 24/7"},{"key":"hero.f3","fr":"Service premium","en":"Premium service","es":"Servicio premium","ar":"خدمة راقية"},{"key":"hero.f4","fr":"Assistance personnalisée","en":"Personalised assistance","es":"Asistencia personalizada","ar":"مساعدة شخصية"}],"Recherche / Réservation":[{"key":"bk.title","fr":"Réservez votre voiture","en":"Book your car","es":"Reserve su coche","ar":"احجز سيارتك"},{"key":"bk.pickup","fr":"Lieu de prise en charge","en":"Pick-up location","es":"Lugar de recogida","ar":"مكان الاستلام"},{"key":"bk.return","fr":"Lieu de retour","en":"Return location","es":"Lugar de devolución","ar":"مكان الإرجاع"},{"key":"bk.dep","fr":"Départ","en":"Pick-up","es":"Salida","ar":"الانطلاق"},{"key":"bk.ret","fr":"Retour","en":"Return","es":"Devolución","ar":"الإرجاع"},{"key":"bk.stepHint","fr":"1. Choisissez vos dates · 2. Trouvez votre voiture","en":"1. Pick your dates · 2. Find your car","es":"1. Elija sus fechas · 2. Encuentre su coche","ar":"1. اختاروا تواريخكم · 2. جدوا سيارتكم"},{"key":"bk.needDates","fr":"Veuillez d'abord sélectionner vos dates de location.","en":"Please select your rental dates first.","es":"Seleccione primero sus fechas de alquiler.","ar":"المرجو اختيار تواريخ الكراء أولاً."},{"key":"bk.depSub","fr":"Date de départ","en":"Pick-up date","es":"Fecha de salida","ar":"تاريخ الانطلاق"},{"key":"bk.retSub","fr":"Date de retour","en":"Return date","es":"Fecha de devolución","ar":"تاريخ الإرجاع"},{"key":"bk.find","fr":"Trouver une voiture","en":"Find a car","es":"Buscar un coche","ar":"ابحث عن سيارة"},{"key":"bk.dur","fr":"Durée : {n} {d}","en":"Duration: {n} {d}","es":"Duración: {n} {d}","ar":"المدة : {n} {d}"}],"Section Flotte":[{"key":"fleet.unavail","fr":"Indisponible sur ces dates","en":"Unavailable on these dates","es":"No disponible en estas fechas","ar":"غير متوفرة في هذه التواريخ"},{"key":"fleet.availFrom","fr":"Disponible à partir du {d}","en":"Available from {d}","es":"Disponible a partir del {d}","ar":"متوفرة ابتداء من {d}"},{"key":"fleet.editDates","fr":"Modifier mes dates","en":"Change my dates","es":"Cambiar mis fechas","ar":"تغيير التواريخ"},{"key":"fleet.badge","fr":"Notre Flotte","en":"Our Fleet","es":"Nuestra Flota","ar":"أسطولنا"},{"key":"fleet.titleHtml","fr":"Choisissez le Véhicule<br><span>Idéal pour Marrakech</span>","en":"Choose the Ideal<br><span>Vehicle for Marrakech</span>","es":"Elija el Vehículo<br><span>Ideal para Marrakech</span>","ar":"اختر السيارة<br><span>المثالية لمراكش</span>"},{"key":"fleet.sub","fr":"Tous nos véhicules sont récents, propres et régulièrement entretenus.","en":"All our vehicles are recent, clean and regularly serviced.","es":"Todos nuestros vehículos son recientes, limpios y con mantenimiento regular.","ar":"جميع سياراتنا حديثة ونظيفة وتخضع لصيانة منتظمة."},{"key":"fleet.emptyHtml","fr":"Aucun véhicule disponible dans cette catégorie pour le moment.<br>Contactez-nous sur WhatsApp pour connaître nos disponibilités.","en":"No vehicle available in this category at the moment.<br>Contact us on WhatsApp to check availability.","es":"No hay vehículos disponibles en esta categoría por el momento.<br>Contáctenos por WhatsApp para conocer la disponibilidad.","ar":"لا توجد سيارات متاحة في هذه الفئة حاليًا.<br>تواصلوا معنا عبر واتساب لمعرفة التوفر."}],"Caractéristiques véhicules":[{"key":"f.missing","fr":"Veuillez renseigner les champs obligatoires : nom complet, téléphone et numéro de permis.","en":"Please fill in the required fields: full name, phone and driving licence number.","es":"Complete los campos obligatorios: nombre completo, teléfono y número de permiso de conducir.","ar":"المرجو ملء الحقول الإجبارية: الاسم الكامل، الهاتف ورقم رخصة السياقة."},{"key":"f.first","fr":"Prénom","en":"First name","es":"Nombre","ar":"الاسم الشخصي"},{"key":"f.last","fr":"Nom","en":"Last name","es":"Apellido","ar":"الاسم العائلي"},{"key":"f.email","fr":"Email","en":"Email","es":"Email","ar":"البريد الإلكتروني"},{"key":"f.phone","fr":"Téléphone","en":"Phone","es":"Teléfono","ar":"الهاتف"},{"key":"f.wa","fr":"WhatsApp","en":"WhatsApp","es":"WhatsApp","ar":"واتساب"},{"key":"f.addr","fr":"Adresse","en":"Address","es":"Dirección","ar":"العنوان"},{"key":"f.country","fr":"Pays / Nationalité","en":"Country / Nationality","es":"País / Nacionalidad","ar":"البلد / الجنسية"},{"key":"f.countryPh","fr":"Sélectionner votre pays","en":"Select your country","es":"Seleccione su país","ar":"اختر بلدك"},{"key":"f.flight","fr":"Numéro de vol (optionnel)","en":"Flight number (optional)","es":"Número de vuelo (opcional)","ar":"رقم الرحلة (اختياري)"},{"key":"f.notes","fr":"Détails supplémentaires (optionnel)","en":"Additional details (optional)","es":"Detalles adicionales (opcional)","ar":"تفاصيل إضافية (اختياري)"},{"key":"f.docs","fr":"Documents","en":"Documents","es":"Documentos","ar":"الوثائق"},{"key":"f.lic","fr":"N° Permis de conduire","en":"Driving licence no.","es":"N° Permiso de conducir","ar":"رقم رخصة السياقة"},{"key":"f.pass","fr":"N° Passeport / CIN","en":"Passport / ID no.","es":"N° Pasaporte / DNI","ar":"رقم جواز السفر / البطاقة الوطنية"},{"key":"f.docsNote","fr":"Documents vérifiés lors de la remise des clés. Upload possible en agence.","en":"Documents checked at key handover. Upload possible at the agency.","es":"Documentos verificados en la entrega de llaves. Posible subirlos en la agencia.","ar":"يتم التحقق من الوثائق عند تسليم المفاتيح. يمكن رفعها في الوكالة."}],"Spécifications":[{"key":"sp.ac","fr":"Climatisation","en":"Air conditioning","es":"Aire acondicionado","ar":"مكيف الهواء"},{"key":"sp.cam","fr":"Caméra de recul","en":"Reversing camera","es":"Cámara trasera","ar":"كاميرا خلفية"},{"key":"sp.doors","fr":"{n} portes","en":"{n} doors","es":"{n} puertas","ar":"{n} أبواب"},{"key":"sp.trunk","fr":"Coffre : {v}","en":"Boot: {v}","es":"Maletero: {v}","ar":"الصندوق: {v}"},{"key":"sp.insur","fr":"Assurance incluse","en":"Insurance included","es":"Seguro incluido","ar":"التأمين مشمول"},{"key":"sp.airport","fr":"Livraison aéroport","en":"Airport delivery","es":"Entrega aeropuerto","ar":"التوصيل للمطار"},{"key":"sp.deposit","fr":"Caution : {v}","en":"Deposit: {v}","es":"Fianza: {v}","ar":"الضمان: {v}"}],"Page Véhicules":[{"key":"vp.h1","fr":"Notre flotte de location à Marrakech","en":"Our rental fleet in Marrakech","es":"Nuestra flota de alquiler en Marrakech","ar":"أسطولنا للكراء في مراكش"},{"key":"vp.lead","fr":"Citadines, berlines et SUV récents — assurance incluse, kilométrage illimité et tarifs dégressifs selon la durée.","en":"Recent city cars, sedans and SUVs — insurance included, unlimited mileage and tiered pricing.","es":"Utilitarios, berlinas y SUV recientes — seguro incluido, kilometraje ilimitado y tarifas decrecientes.","ar":"سيارات مدينة وسيدان وسيارات SUV حديثة — التأمين مشمول، مسافة غير محدودة وأسعار تنازلية."},{"key":"vp.degressive","fr":"Tarifs dégressifs selon la durée de location.","en":"Tiered pricing by rental duration.","es":"Tarifas decrecientes según la duración del alquiler.","ar":"أسعار تنازلية حسب مدة الكراء."},{"key":"vp.ctaTitle","fr":"Prêt à réserver ?","en":"Ready to book?","es":"¿Listo para reservar?","ar":"مستعد للحجز؟"},{"key":"vp.ctaText","fr":"La réservation se fait sur la page d'accueil : choisissez vos dates, puis votre véhicule.","en":"Booking is done on the home page: choose your dates, then your vehicle.","es":"La reserva se realiza en la página principal: elija sus fechas y luego su vehículo.","ar":"يتم الحجز من الصفحة الرئيسية: اختاروا تواريخكم ثم سيارتكم."},{"key":"vp.ctaBtn","fr":"Choisir mes dates et réserver","en":"Choose my dates and book","es":"Elegir mis fechas y reservar","ar":"اختيار تواريخي والحجز"},{"key":"vp.empty","fr":"Aucun véhicule dans cette catégorie pour le moment.","en":"No vehicles in this category at the moment.","es":"No hay vehículos en esta categoría por el momento.","ar":"لا توجد سيارات في هذه الفئة حالياً."}],"Divers":[{"key":"u.seats","fr":"places","en":"seats","es":"plazas","ar":"مقاعد"},{"key":"u.day","fr":"jour","en":"day","es":"día","ar":"يوم"},{"key":"u.days","fr":"jours","en":"days","es":"días","ar":"أيام"},{"key":"u.perDay","fr":"/j","en":"/day","es":"/día","ar":"/يوم"},{"key":"u.perDayLong","fr":"/ jour","en":"/ day","es":"/ día","ar":"/ يوم"},{"key":"ct.fTitle","fr":"Envoyez-nous un message","en":"Send us a message","es":"Envíenos un mensaje","ar":"أرسلوا لنا رسالة"},{"key":"ct.fIntro","fr":"Remplissez ce formulaire : votre demande nous est transmise immédiatement et nous vous répondons en moins de 15 minutes.","en":"Fill in this form: your request is sent to us immediately and we reply within 15 minutes.","es":"Rellene este formulario: su solicitud nos llega de inmediato y respondemos en menos de 15 minutos.","ar":"املؤوا هذا النموذج: يصلنا طلبكم فوراً ونرد عليكم في أقل من 15 دقيقة."},{"key":"ct.fName","fr":"Nom complet","en":"Full name","es":"Nombre completo","ar":"الاسم الكامل"},{"key":"ct.fNamePh","fr":"Votre nom et prénom","en":"Your first and last name","es":"Su nombre y apellido","ar":"اسمكم الشخصي والعائلي"},{"key":"ct.fPhone","fr":"Téléphone","en":"Phone","es":"Teléfono","ar":"الهاتف"},{"key":"ct.fPhonePh","fr":"+212 6 XX XX XX XX","en":"+212 6 XX XX XX XX","es":"+212 6 XX XX XX XX","ar":"+212 6 XX XX XX XX"},{"key":"ct.fEmail","fr":"Email","en":"Email","es":"Email","ar":"البريد الإلكتروني"},{"key":"ct.fEmailPh","fr":"email@exemple.com","en":"email@example.com","es":"email@ejemplo.com","ar":"email@example.com"},{"key":"ct.fSubject","fr":"Sujet","en":"Subject","es":"Asunto","ar":"الموضوع"},{"key":"ct.fSubjectPh","fr":"Réservation, devis, question…","en":"Booking, quote, question…","es":"Reserva, presupuesto, pregunta…","ar":"حجز، عرض سعر، سؤال…"},{"key":"ct.fMsg","fr":"Message","en":"Message","es":"Mensaje","ar":"الرسالة"},{"key":"ct.fMsgPh","fr":"Décrivez votre demande (dates, véhicule souhaité, lieu…)","en":"Describe your request (dates, desired vehicle, location…)","es":"Describa su solicitud (fechas, vehículo deseado, lugar…)","ar":"صفوا طلبكم (التواريخ، السيارة المطلوبة، المكان…)"},{"key":"ct.fSend","fr":"Envoyer la demande","en":"Send request","es":"Enviar la solicitud","ar":"إرسال الطلب"},{"key":"ct.fNote","fr":"Envoi via WhatsApp — réponse en moins de 15 minutes, 24h/7j.","en":"Sent via WhatsApp — reply within 15 minutes, 24/7.","es":"Envío por WhatsApp — respuesta en menos de 15 minutos, 24h/7.","ar":"الإرسال عبر واتساب — رد في أقل من 15 دقيقة، على مدار الساعة."},{"key":"ct.fOk","fr":"Votre demande a été préparée et transmise. Notre équipe vous répond très rapidement — merci !","en":"Your request has been prepared and sent. Our team will get back to you very quickly — thank you!","es":"Su solicitud ha sido preparada y enviada. Nuestro equipo le responderá muy rápidamente — ¡gracias!","ar":"تم تجهيز طلبكم وإرساله. سيرد عليكم فريقنا بسرعة — شكراً لكم!"},{"key":"ct.fErr","fr":"Veuillez renseigner au minimum votre nom, un moyen de contact et votre message.","en":"Please provide at least your name, one way to contact you and your message.","es":"Indique al menos su nombre, un medio de contacto y su mensaje.","ar":"المرجو إدخال الاسم ووسيلة تواصل واحدة على الأقل ورسالتكم."},{"key":"ct.badge","fr":"Contactez-nous","en":"Contact us","es":"Contáctenos","ar":"اتصلوا بنا"},{"key":"ct.h1Html","fr":"Nous sommes là<br><span>24h/24, 7j/7</span>","en":"We are here<br><span>24/7</span>","es":"Estamos aquí<br><span>24h/24, 7d/7</span>","ar":"نحن هنا<br><span>24/7</span>"},{"key":"ct.lead","fr":"Une question, une demande spéciale, un devis longue durée ? Réponse en moins de 15 minutes sur WhatsApp.","en":"A question, a special request, a long-term quote? Answer within 15 minutes on WhatsApp.","es":"¿Una pregunta, una petición especial, un presupuesto de larga duración? Respuesta en menos de 15 minutos por WhatsApp.","ar":"سؤال، طلب خاص، عرض سعر طويل المدة ؟ جواب في أقل من 15 دقيقة عبر واتساب."},{"key":"ct.coords","fr":"Nos coordonnées","en":"Our contact details","es":"Nuestros datos de contacto","ar":"بيانات الاتصال"},{"key":"ct.waTag","fr":"WhatsApp (recommandé)","en":"WhatsApp (recommended)","es":"WhatsApp (recomendado)","ar":"واتساب (موصى به)"},{"key":"ct.waText","fr":"Réponse en moins de 15 minutes, 24h/7j. Idéal pour réserver, demander un devis ou poser une question.","en":"Answer within 15 minutes, 24/7. Ideal to book, request a quote or ask a question.","es":"Respuesta en menos de 15 minutos, 24h/7. Ideal para reservar, pedir un presupuesto o hacer una pregunta.","ar":"جواب في أقل من 15 دقيقة، 24/7. مثالي للحجز أو طلب عرض سعر أو طرح سؤال."},{"key":"ct.waBtn","fr":"Ouvrir WhatsApp","en":"Open WhatsApp","es":"Abrir WhatsApp","ar":"فتح واتساب"},{"key":"ct.telTag","fr":"Téléphone","en":"Phone","es":"Teléfono","ar":"الهاتف"},{"key":"ct.telText","fr":"Appelez-nous directement pour toute urgence ou assistance pendant votre location.","en":"Call us directly for any emergency or assistance during your rental.","es":"Llámenos directamente para cualquier urgencia o asistencia durante su alquiler.","ar":"اتصلوا بنا مباشرة لأي حالة طارئة أو مساعدة خلال فترة الكراء."},{"key":"ct.telBtn","fr":"Appeler maintenant","en":"Call now","es":"Llamar ahora","ar":"اتصلوا الآن"},{"key":"ct.mailTag","fr":"Email","en":"Email","es":"Email","ar":"البريد الإلكتروني"},{"key":"ct.mailText","fr":"Pour les demandes de devis détaillés, les locations longue durée et les partenariats.","en":"For detailed quotes, long-term rentals and partnerships.","es":"Para solicitudes de presupuestos detallados, alquileres de larga duración y colaboraciones.","ar":"لطلبات عروض الأسعار المفصلة والكراء طويل المدة والشراكات."},{"key":"ct.mailBtn","fr":"Écrire un email","en":"Write an email","es":"Escribir un email","ar":"إرسال بريد إلكتروني"},{"key":"ct.agTag","fr":"Agence","en":"Agency","es":"Agencia","ar":"الوكالة"},{"key":"ct.agTitle","fr":"29 Rue Yougoslavie, Guéliz","en":"29 Rue Yougoslavie, Guéliz","es":"29 Rue Yougoslavie, Guéliz","ar":"29 شارع يوغوسلافيا، گيليز"},{"key":"ct.agText","fr":"Marrakech 40000, Maroc. Ouvert tous les jours. Parking à proximité.","en":"Marrakech 40000, Morocco. Open every day. Parking nearby.","es":"Marrakech 40000, Marruecos. Abierto todos los días. Aparcamiento cercano.","ar":"مراكش 40000، المغرب. مفتوح كل الأيام. موقف سيارات قريب."},{"key":"ct.agBtn","fr":"Voir sur Google Maps","en":"View on Google Maps","es":"Ver en Google Maps","ar":"عرض على خرائط غوغل"},{"key":"ct.serv","fr":"Services sur demande","en":"Services on request","es":"Servicios bajo demanda","ar":"خدمات عند الطلب"},{"key":"ct.servIntro","fr":"En plus de la location classique, contactez-nous pour :","en":"In addition to classic rental, contact us for:","es":"Además del alquiler clásico, contáctenos para:","ar":"بالإضافة إلى الكراء الكلاسيكي، اتصلوا بنا من أجل:"},{"key":"ct.s1Html","fr":"<strong>Livraison à votre hôtel ou riad</strong> à Marrakech — nous amenons la voiture directement à votre hébergement.","en":"<strong>Delivery to your hotel or riad</strong> in Marrakech — we bring the car directly to your accommodation.","es":"<strong>Entrega en su hotel o riad</strong> en Marrakech — llevamos el coche directamente a su alojamiento.","ar":"<strong>التوصيل إلى فندقكم أو رياضكم</strong> في مراكش — نحضر السيارة مباشرة إلى مقر إقامتكم."},{"key":"ct.s2Html","fr":"<strong>Location avec chauffeur</strong> — excursions, transferts d'affaires, mariages et événements.","en":"<strong>Rental with driver</strong> — excursions, business transfers, weddings and events.","es":"<strong>Alquiler con conductor</strong> — excursiones, traslados de negocios, bodas y eventos.","ar":"<strong>كراء مع سائق</strong> — رحلات، تنقلات مهنية، أعراس ومناسبات."},{"key":"ct.s3Html","fr":"<strong>Transfert privé</strong> — aéroport ↔ hôtel, Marrakech ↔ Essaouira, Agadir, Casablanca…","en":"<strong>Private transfer</strong> — airport ↔ hotel, Marrakech ↔ Essaouira, Agadir, Casablanca…","es":"<strong>Traslado privado</strong> — aeropuerto ↔ hotel, Marrakech ↔ Essaouira, Agadir, Casablanca…","ar":"<strong>نقل خاص</strong> — المطار ↔ الفندق، مراكش ↔ الصويرة، أكادير، الدار البيضاء…"},{"key":"ct.s4Html","fr":"<strong>Location longue durée</strong> — tarifs dégressifs au mois pour expatriés et professionnels (<a href=\"lld.html\">en savoir plus</a>).","en":"<strong>Long-term rental</strong> — decreasing monthly rates for expats and professionals (<a href=\"lld.html\">learn more</a>).","es":"<strong>Alquiler de larga duración</strong> — tarifas decrecientes al mes para expatriados y profesionales (<a href=\"lld.html\">saber más</a>).","ar":"<strong>كراء طويل المدة</strong> — أسعار تنازلية شهرية للمقيمين والمهنيين (<a href=\"lld.html\">المزيد</a>)."}],"Lieux":[{"key":"loc.airport","fr":"Aéroport Marrakech (RAK)","en":"Marrakech Airport (RAK)","es":"Aeropuerto de Marrakech (RAK)","ar":"مطار مراكش (RAK)"},{"key":"loc.center","fr":"Centre-Ville Marrakech","en":"Marrakech City Centre","es":"Centro de Marrakech","ar":"وسط مدينة مراكش"},{"key":"loc.station","fr":"Gare Marrakech","en":"Marrakech Train Station","es":"Estación de Marrakech","ar":"محطة قطار مراكش"},{"key":"loc.hotel","fr":"Votre Hôtel","en":"Your Hotel","es":"Su Hotel","ar":"فندقكم"}],"Calendrier":[{"key":"cal.hintStart","fr":"Sélectionnez votre date de départ","en":"Select your pick-up date","es":"Seleccione su fecha de salida","ar":"اختر تاريخ الانطلاق"},{"key":"cal.hintEnd","fr":"Sélectionnez votre date de retour","en":"Select your return date","es":"Seleccione su fecha de devolución","ar":"اختر تاريخ الإرجاع"},{"key":"cal.aria","fr":"Calendrier de réservation","en":"Booking calendar","es":"Calendario de reserva","ar":"تقويم الحجز"},{"key":"cal.prevM","fr":"Mois précédent","en":"Previous month","es":"Mes anterior","ar":"الشهر السابق"},{"key":"cal.nextM","fr":"Mois suivant","en":"Next month","es":"Mes siguiente","ar":"الشهر الموالي"},{"key":"cal.ariaStart","fr":"Choisir la date de départ","en":"Choose the pick-up date","es":"Elegir la fecha de salida","ar":"اختيار تاريخ الانطلاق"},{"key":"cal.ariaEnd","fr":"Choisir la date de retour","en":"Choose the return date","es":"Elegir la fecha de devolución","ar":"اختيار تاريخ الإرجاع"}],"Confiance":[{"key":"trust.t1","fr":"Livraison Aéroport Gratuite","en":"Free Airport Delivery","es":"Entrega Gratuita en el Aeropuerto","ar":"توصيل مجاني إلى المطار"},{"key":"trust.t2","fr":"Assurance Incluse","en":"Insurance Included","es":"Seguro Incluido","ar":"تأمين شامل"},{"key":"trust.t3","fr":"Service 24h/7j","en":"24/7 Service","es":"Servicio 24h/7","ar":"خدمة 24/7"},{"key":"trust.t4","fr":"Prix Sans Frais Cachés","en":"No Hidden Fees","es":"Sin Costes Ocultos","ar":"بدون رسوم خفية"},{"key":"trust.t5","fr":"Kilométrage Illimité","en":"Unlimited Mileage","es":"Kilometraje Ilimitado","ar":"كيلومترات غير محدودة"}],"Filtres":[{"key":"filt.all","fr":"Toutes","en":"All","es":"Todos","ar":"الكل"},{"key":"filt.city","fr":"Citadines","en":"City Cars","es":"Urbanos","ar":"مدينية"},{"key":"filt.eco","fr":"Économiques","en":"Economy","es":"Económicos","ar":"اقتصادية"},{"key":"filt.suv","fr":"SUV","en":"SUV","es":"SUV","ar":"دفع رباعي"},{"key":"filt.fam","fr":"Familiales","en":"Family","es":"Familiares","ar":"عائلية"}],"Cartes véhicules":[{"key":"car.seats","fr":"{n} places","en":"{n} seats","es":"{n} plazas","ar":"{n} مقاعد"},{"key":"car.unl","fr":"Illimité","en":"Unlimited","es":"Ilimitado","ar":"غير محدود"},{"key":"car.tierHint","fr":"Tarif selon durée sélectionnée","en":"Price based on selected duration","es":"Precio según duración seleccionada","ar":"السعر حسب المدة المختارة"},{"key":"car.book","fr":"Réserver maintenant","en":"Book now","es":"Reservar ahora","ar":"احجز الآن"}],"VEH":[{"key":"veh.Automatique","fr":"Automatique","en":"Automatic","es":"Automático","ar":"أوتوماتيكية"},{"key":"veh.Manuelle","fr":"Manuelle","en":"Manual","es":"Manual","ar":"يدوية"},{"key":"veh.Diesel","fr":"Diesel","en":"Diesel","es":"Diésel","ar":"ديزل"},{"key":"veh.Essence","fr":"Essence","en":"Petrol","es":"Gasolina","ar":"بنزين"}],"Pourquoi nous":[{"key":"why.badge","fr":"Pourquoi Nous","en":"Why Us","es":"Por Qué Nosotros","ar":"لماذا نحن"},{"key":"why.titleHtml","fr":"Pourquoi Choisir<br><span>ALL STAR LOC ?</span>","en":"Why Choose<br><span>ALL STAR LOC?</span>","es":"Por Qué Elegir<br><span>ALL STAR LOC?</span>","ar":"لماذا تختار<br><span>ALL STAR LOC ؟</span>"},{"key":"why.t1","fr":"Livraison Aéroport","en":"Airport Delivery","es":"Entrega en el Aeropuerto","ar":"توصيل إلى المطار"},{"key":"why.d1","fr":"Prise en charge et retour gratuits à l'aéroport Ménara RAK, quelle que soit l'heure d'arrivée.","en":"Free pick-up and return at Menara RAK airport, whatever your arrival time.","es":"Recogida y devolución gratuitas en el aeropuerto Menara RAK, sea cual sea la hora de llegada.","ar":"استلام وإرجاع مجاني في مطار المنارة RAK، مهما كان وقت وصولكم."},{"key":"why.t2","fr":"Assurance Complète","en":"Full Insurance","es":"Seguro Completo","ar":"تأمين شامل"},{"key":"why.d2","fr":"Tous nos véhicules sont couverts par une assurance tous risques pour votre tranquillité d'esprit.","en":"All our vehicles are covered by comprehensive insurance for your peace of mind.","es":"Todos nuestros vehículos están cubiertos por un seguro a todo riesgo para su tranquilidad.","ar":"جميع سياراتنا مغطاة بتأمين شامل من أجل راحة بالكم."},{"key":"why.t3","fr":"Disponible 24h/7j","en":"Available 24/7","es":"Disponible 24h/7","ar":"متوفرون 24/7"},{"key":"why.d3","fr":"Notre équipe est joignable à toute heure par téléphone ou WhatsApp pour vous assister.","en":"Our team can be reached at any time by phone or WhatsApp to assist you.","es":"Nuestro equipo está localizable a cualquier hora por teléfono o WhatsApp para asistirle.","ar":"فريقنا متاح في أي وقت عبر الهاتف أو واتساب لمساعدتكم."},{"key":"why.t4","fr":"Paiement Flexible","en":"Flexible Payment","es":"Pago Flexible","ar":"دفع مرن"},{"key":"why.d4","fr":"Payez en ligne, en acompte ou sur place. Plusieurs devises acceptées : MAD, EUR, USD, GBP.","en":"Pay online, by deposit or on site. Several currencies accepted: MAD, EUR, USD, GBP.","es":"Pague en línea, con anticipo o en el lugar. Varias divisas aceptadas: MAD, EUR, USD, GBP.","ar":"ادفعوا عبر الإنترنت، بتسبيق أو في عين المكان. عدة عملات مقبولة: MAD، EUR، USD، GBP."},{"key":"why.t5","fr":"Livraison à Domicile","en":"Hotel Delivery","es":"Entrega a Domicilio","ar":"توصيل إلى مقر إقامتكم"},{"key":"why.d5","fr":"Nous livrons votre voiture directement à votre hôtel, riad ou adresse à Marrakech.","en":"We deliver your car directly to your hotel, riad or address in Marrakech.","es":"Entregamos su coche directamente en su hotel, riad o dirección en Marrakech.","ar":"نوصل سيارتكم مباشرة إلى فندقكم أو رياضكم أو عنوانكم في مراكش."},{"key":"why.t6","fr":"17 Ans d'Expérience","en":"17 Years of Experience","es":"17 Años de Experiencia","ar":"17 سنة من الخبرة"},{"key":"why.d6","fr":"Plus de 500 clients satisfaits et une note de 4.8/5 sur Google confirment notre sérieux.","en":"Over 500 satisfied customers and a 4.8/5 rating on Google confirm our reliability.","es":"Más de 500 clientes satisfechos y una nota de 4.8/5 en Google confirman nuestra seriedad.","ar":"أكثر من 500 زبون راضٍ وتقييم 4.8/5 على غوغل يؤكدان جديتنا."}],"Avis":[{"key":"rev.badge","fr":"Avis Clients","en":"Customer Reviews","es":"Opiniones de Clientes","ar":"آراء الزبناء"},{"key":"rev.titleHtml","fr":"Ce que Disent<br><span>Nos Clients</span>","en":"What Our<br><span>Customers Say</span>","es":"Lo que Dicen<br><span>Nuestros Clientes</span>","ar":"ماذا يقول<br><span>زبناؤنا</span>"}],"Pied de page":[{"key":"ft.tag","fr":"Location de Voiture Marrakech","en":"Car Rental Marrakech","es":"Alquiler de Coches Marrakech","ar":"كراء السيارات مراكش"},{"key":"ft.desc","fr":"Votre agence de confiance depuis 2009. Flotte moderne, service premium, disponible 24h/7j. Livraison gratuite aéroport et hôtel.","en":"Your trusted agency since 2009. Modern fleet, premium service, available 24/7. Free airport and hotel delivery.","es":"Su agencia de confianza desde 2009. Flota moderna, servicio premium, disponible 24h/7. Entrega gratuita en aeropuerto y hotel.","ar":"وكالتكم الموثوقة منذ 2009. أسطول حديث، خدمة راقية، متوفرون 24/7. توصيل مجاني إلى المطار والفندق."},{"key":"ft.wa247","fr":"WhatsApp 24h/7j","en":"WhatsApp 24/7","es":"WhatsApp 24h/7","ar":"واتساب 24/7"},{"key":"ft.colServices","fr":"Nos Services","en":"Our Services","es":"Nuestros Servicios","ar":"خدماتنا"},{"key":"ft.s1","fr":"Location Courte Durée","en":"Short-Term Rental","es":"Alquiler de Corta Duración","ar":"كراء قصير المدة"},{"key":"ft.s2","fr":"Location Longue Durée","en":"Long-Term Rental","es":"Alquiler de Larga Duración","ar":"كراء طويل المدة"},{"key":"ft.s3","fr":"Livraison Aéroport","en":"Airport Delivery","es":"Entrega en el Aeropuerto","ar":"توصيل إلى المطار"},{"key":"ft.s4","fr":"Livraison Hôtel","en":"Hotel Delivery","es":"Entrega en el Hotel","ar":"توصيل إلى الفندق"},{"key":"ft.s5","fr":"Location avec Chauffeur","en":"Chauffeur Service","es":"Alquiler con Conductor","ar":"كراء مع سائق"},{"key":"ft.s6","fr":"Transfert Privé","en":"Private Transfer","es":"Traslado Privado","ar":"نقل خاص"},{"key":"ft.colQuick","fr":"Liens Rapides","en":"Quick Links","es":"Enlaces Rápidos","ar":"روابط سريعة"},{"key":"ft.qAdmin","fr":"Espace Admin","en":"Admin Area","es":"Área Admin","ar":"فضاء الإدارة"},{"key":"ft.colLegal","fr":"Légal","en":"Legal","es":"Legal","ar":"قانوني"},{"key":"ft.lCgv","fr":"Conditions Générales","en":"Terms & Conditions","es":"Condiciones Generales","ar":"الشروط العامة"},{"key":"ft.lPriv","fr":"Politique de Confidentialité","en":"Privacy Policy","es":"Política de Privacidad","ar":"سياسة الخصوصية"},{"key":"ft.lLegal","fr":"Mentions Légales","en":"Legal Notice","es":"Aviso Legal","ar":"إشعار قانوني"},{"key":"ft.colCur","fr":"Devises","en":"Currencies","es":"Divisas","ar":"العملات"},{"key":"ft.copy","fr":"© 2025 All Star Loc — Location de Voitures à Marrakech. Tous droits réservés.","en":"© 2025 All Star Loc — Car Rental in Marrakech. All rights reserved.","es":"© 2025 All Star Loc — Alquiler de Coches en Marrakech. Todos los derechos reservados.","ar":"© 2025 All Star Loc — كراء السيارات في مراكش. جميع الحقوق محفوظة."},{"key":"ft.bCgv","fr":"CGV","en":"Terms","es":"Condiciones","ar":"الشروط"},{"key":"ft.bPriv","fr":"Confidentialité","en":"Privacy","es":"Privacidad","ar":"الخصوصية"},{"key":"ft.bLegal","fr":"Mentions légales","en":"Legal notice","es":"Aviso legal","ar":"إشعار قانوني"}],"Profil":[{"key":"pf.blog","fr":"Blog","en":"Blog","es":"Blog","ar":"المدونة"},{"key":"pf.faq","fr":"FAQ","en":"FAQ","es":"FAQ","ar":"الأسئلة الشائعة"},{"key":"pf.copy","fr":"© 2026 ALL STAR LOC — Location de voiture à Marrakech depuis 2009","en":"© 2026 ALL STAR LOC — Car rental in Marrakech since 2009","es":"© 2026 ALL STAR LOC — Alquiler de coches en Marrakech desde 2009","ar":"© 2026 ALL STAR LOC — كراء السيارات في مراكش منذ 2009"}],"WA":[{"key":"wa.tooltip","fr":"Besoin d'aide ?","en":"Need help?","es":"¿Necesita ayuda?","ar":"هل تحتاجون مساعدة؟"}],"Tunnel réservation":[{"key":"dr.step","fr":"ÉTAPE {n} / 5","en":"STEP {n} / 5","es":"PASO {n} / 5","ar":"الخطوة {n} / 5"},{"key":"dr.done","fr":"RÉSERVATION CONFIRMÉE","en":"BOOKING CONFIRMED","es":"RESERVA CONFIRMADA","ar":"تم تأكيد الحجز"},{"key":"dr.s1","fr":"Protection","en":"Protection","es":"Protección","ar":"الحماية"},{"key":"dr.s2","fr":"Options","en":"Options","es":"Opciones","ar":"الخيارات"},{"key":"dr.s3","fr":"Résumé","en":"Summary","es":"Resumen","ar":"الملخص"},{"key":"dr.s4","fr":"Vos Informations","en":"Your Details","es":"Sus Datos","ar":"معلوماتكم"},{"key":"dr.s5","fr":"Paiement","en":"Payment","es":"Pago","ar":"الدفع"},{"key":"dr.s6","fr":"Confirmation","en":"Confirmation","es":"Confirmación","ar":"التأكيد"},{"key":"dr.p1","fr":"Protection","en":"Protection","es":"Protección","ar":"الحماية"},{"key":"dr.p2","fr":"Options","en":"Options","es":"Opciones","ar":"الخيارات"},{"key":"dr.p3","fr":"Résumé","en":"Summary","es":"Resumen","ar":"الملخص"},{"key":"dr.p4","fr":"Infos","en":"Details","es":"Datos","ar":"معلومات"},{"key":"dr.p5","fr":"Paiement","en":"Payment","es":"Pago","ar":"الدفع"},{"key":"dr.p6","fr":"Confirmation","en":"Confirmation","es":"Confirmación","ar":"التأكيد"},{"key":"dr.total","fr":"Total estimé","en":"Estimated total","es":"Total estimado","ar":"المجموع التقديري"},{"key":"dr.next","fr":"Continuer","en":"Continue","es":"Continuar","ar":"متابعة"}],"Récapitulatif":[{"key":"recap.edit","fr":"Modifier","en":"Edit","es":"Modificar","ar":"تعديل"},{"key":"recap.timerHtml","fr":"Session expire dans <strong id=\"timer-display\">05:00</strong>. Réservez maintenant pour garantir ce tarif.","en":"Session expires in <strong id=\"timer-display\">05:00</strong>. Book now to lock in this rate.","es":"La sesión expira en <strong id=\"timer-display\">05:00</strong>. Reserve ahora para garantizar esta tarifa.","ar":"تنتهي الجلسة خلال <strong id=\"timer-display\">05:00</strong>. احجزوا الآن لضمان هذا السعر."}],"Assurances":[{"key":"prot.title","fr":"Sélectionnez votre protection","en":"Select your protection","es":"Seleccione su protección","ar":"اختر نوع الحماية"},{"key":"prot.free","fr":"Gratuit","en":"Free","es":"Gratis","ar":"مجاني"},{"key":"prot.basic.name","fr":"Protection Basique","en":"Basic Protection","es":"Protección Básica","ar":"حماية أساسية"},{"key":"prot.basic.desc","fr":"Incluse dans la location. Franchise standard en cas de sinistre.","en":"Included in the rental. Standard excess in case of damage.","es":"Incluida en el alquiler. Franquicia estándar en caso de siniestro.","ar":"مشمولة في الكراء. تحمل قياسي في حالة حادث."},{"key":"prot.premium.name","fr":"Protection Premium","en":"Premium Protection","es":"Protección Premium","ar":"حماية بريميوم"},{"key":"prot.premium.desc","fr":"Assurance Tous Risques avec franchise réduite.","en":"Comprehensive insurance with reduced excess.","es":"Seguro a todo riesgo con franquicia reducida.","ar":"تأمين شامل مع تحمل مخفض."},{"key":"prot.full.name","fr":"Protection Tout Risque","en":"Full Cover Protection","es":"Protección Total","ar":"حماية كاملة"},{"key":"prot.full.desc","fr":"Couverture totale, zéro franchise, tranquillité absolue.","en":"Total coverage, zero excess, absolute peace of mind.","es":"Cobertura total, cero franquicia, tranquilidad absoluta.","ar":"تغطية كاملة، بدون تحمل، راحة بال مطلقة."}],"Options":[{"key":"opt.title","fr":"Ajoutez vos options (optionnel)","en":"Add your options (optional)","es":"Añada sus opciones (opcional)","ar":"أضيفوا خياراتكم (اختياري)"},{"key":"opt.add","fr":"Ajouter","en":"Add","es":"Añadir","ar":"إضافة"},{"key":"opt.added","fr":"Ajouté","en":"Added","es":"Añadido","ar":"تمت الإضافة"},{"key":"opt.booster","fr":"Réhausseur Enfant","en":"Child Booster Seat","es":"Elevador Infantil","ar":"مقعد رافع للأطفال"},{"key":"opt.gps","fr":"GPS Portable","en":"Portable GPS","es":"GPS Portátil","ar":"GPS محمول"},{"key":"opt.wifi","fr":"Wifi Portable","en":"Portable WiFi","es":"WiFi Portátil","ar":"واي فاي محمول"},{"key":"opt.charger","fr":"Cable Chargeur","en":"Charging Cable","es":"Cable Cargador","ar":"كابل شاحن"},{"key":"opt.fuel","fr":"Option Plein Carburant","en":"Full Tank Option","es":"Opción Depósito Lleno","ar":"خيار خزان ممتلئ"},{"key":"opt.fridge","fr":"Réfrigérateur Portable","en":"Portable Fridge","es":"Nevera Portátil","ar":"ثلاجة محمولة"},{"key":"opt.roadside","fr":"Assistance Dépannage+","en":"Roadside Assistance+","es":"Asistencia en Carretera+","ar":"مساعدة على الطريق+"}],"Résumé":[{"key":"sum.rentTier","fr":"Location · {n} j · {p}/jour","en":"Rental · {n} d · {p}/day","es":"Alquiler · {n} d · {p}/día","ar":"الكراء · {n} ي · {p}/يوم"},{"key":"sum.tierApplied","fr":"Tarif appliqué : {b}","en":"Rate applied: {b}","es":"Tarifa aplicada: {b}","ar":"التعريفة المطبقة: {b}"},{"key":"sum.degressive","fr":"Tarifs dégressifs selon la durée : le prix journalier baisse quand la durée augmente.","en":"Tiered pricing by duration: the daily price drops as the rental gets longer.","es":"Tarifas decrecientes según la duración: el precio diario baja cuanto más largo es el alquiler.","ar":"أسعار تنازلية حسب المدة: ينخفض السعر اليومي كلما طالت مدة الكراء."},{"key":"sum.deposit","fr":"Caution (restituée au retour)","en":"Deposit (refunded on return)","es":"Fianza (devuelta a la entrega)","ar":"الضمان (يُسترجع عند الإرجاع)"},{"key":"sum.rent","fr":"Location véhicule ({n}j × {p})","en":"Vehicle rental ({n}d × {p})","es":"Alquiler del vehículo ({n}d × {p})","ar":"كراء السيارة ({n} أيام × {p})"},{"key":"sum.total","fr":"TOTAL","en":"TOTAL","es":"TOTAL","ar":"المجموع"},{"key":"sum.fullDisc","fr":"Réduction paiement complet","en":"Full payment discount","es":"Descuento pago completo","ar":"خصم الدفع الكامل"},{"key":"sum.promo","fr":"Code promo","en":"Promo code","es":"Código promocional","ar":"رمز ترويجي"}],"Champs formulaire":[{"key":"ph.first","fr":"Entrez votre prénom","en":"Enter your first name","es":"Introduzca su nombre","ar":"أدخلوا اسمكم الشخصي"},{"key":"ph.last","fr":"Entrez votre nom","en":"Enter your last name","es":"Introduzca sus apellidos","ar":"أدخلوا اسمكم العائلي"},{"key":"ph.email","fr":"email@exemple.com","en":"email@example.com","es":"email@ejemplo.com","ar":"email@example.com"},{"key":"ph.phone","fr":"6XXXXXXXX","en":"6XXXXXXXX","es":"6XXXXXXXX","ar":"6XXXXXXXX"},{"key":"ph.addr","fr":"Votre adresse complète","en":"Your full address","es":"Su dirección completa","ar":"عنوانكم الكامل"},{"key":"ph.flight","fr":"AT234, RAM203...","en":"AT234, RAM203...","es":"AT234, RAM203...","ar":"AT234, RAM203..."},{"key":"ph.notes","fr":"Heure d'arrivée, numéro de porte, demandes spéciales...","en":"Arrival time, gate number, special requests...","es":"Hora de llegada, número de puerta, peticiones especiales...","ar":"وقت الوصول، رقم البوابة، طلبات خاصة..."},{"key":"ph.lic","fr":"Ex: AB123456","en":"E.g. AB123456","es":"Ej: AB123456","ar":"مثال: AB123456"},{"key":"ph.pass","fr":"Ex: XX1234567","en":"E.g. XX1234567","es":"Ej: XX1234567","ar":"مثال: XX1234567"},{"key":"ph.promo","fr":"Entrez votre code promo","en":"Enter your promo code","es":"Introduzca su código promocional","ar":"أدخلوا الرمز الترويجي"}],"Contact":[{"key":"c.ma","fr":"Maroc","en":"Morocco","es":"Marruecos","ar":"المغرب"},{"key":"c.fr","fr":"France","en":"France","es":"Francia","ar":"فرنسا"},{"key":"c.es","fr":"Espagne","en":"Spain","es":"España","ar":"إسبانيا"},{"key":"c.uk","fr":"Royaume-Uni","en":"United Kingdom","es":"Reino Unido","ar":"المملكة المتحدة"},{"key":"c.us","fr":"États-Unis","en":"United States","es":"Estados Unidos","ar":"الولايات المتحدة"},{"key":"c.de","fr":"Allemagne","en":"Germany","es":"Alemania","ar":"ألمانيا"},{"key":"c.it","fr":"Italie","en":"Italy","es":"Italia","ar":"إيطاليا"},{"key":"c.be","fr":"Belgique","en":"Belgium","es":"Bélgica","ar":"بلجيكا"},{"key":"c.nl","fr":"Pays-Bas","en":"Netherlands","es":"Países Bajos","ar":"هولندا"},{"key":"c.other","fr":"Autre","en":"Other","es":"Otro","ar":"آخر"}],"Paiement":[{"key":"pay.agency","fr":"Paiement à l'agence","en":"Pay at the agency","es":"Pago en la agencia","ar":"الدفع في الوكالة"},{"key":"pay.agencyDesc","fr":"Réglez sur place lors du retrait de votre véhicule à notre agence de Guéliz.","en":"Pay on site when collecting your vehicle at our Guéliz agency.","es":"Pague en el lugar al recoger su vehículo en nuestra agencia de Guéliz.","ar":"ادفعوا في عين المكان عند استلام سيارتكم في وكالتنا بحي گيليز."},{"key":"pay.delivery","fr":"Paiement à la livraison","en":"Pay on delivery","es":"Pago a la entrega","ar":"الدفع عند التسليم"},{"key":"pay.deliveryDesc","fr":"Réglez au moment de la remise des clés (aéroport, hôtel ou adresse).","en":"Pay at key handover (airport, hotel or address).","es":"Pague en la entrega de llaves (aeropuerto, hotel o dirección).","ar":"ادفعوا عند تسليم المفاتيح (المطار، الفندق أو عنوانكم)."},{"key":"pay.transfer","fr":"Paiement par virement bancaire","en":"Pay by bank transfer","es":"Pago por transferencia bancaria","ar":"الدفع عبر تحويل بنكي"},{"key":"pay.transferDesc","fr":"Nos coordonnées bancaires vous seront envoyées après validation de la demande.","en":"Our bank details will be sent to you once the request is validated.","es":"Le enviaremos nuestros datos bancarios tras validar la solicitud.","ar":"سنرسل لكم المعلومات البنكية بعد التحقق من الطلب."},{"key":"pay.wa","fr":"Paiement via WhatsApp après validation","en":"Pay via WhatsApp after validation","es":"Pago por WhatsApp tras validación","ar":"الدفع عبر واتساب بعد التأكيد"},{"key":"pay.waDesc","fr":"Notre équipe vous envoie un lien ou les modalités de paiement sur WhatsApp.","en":"Our team sends you a payment link or instructions on WhatsApp.","es":"Nuestro equipo le envía un enlace o las instrucciones de pago por WhatsApp.","ar":"يرسل لكم فريقنا رابط الدفع أو التعليمات عبر واتساب."},{"key":"pay.confirmBtn","fr":"Confirmer la réservation","en":"Confirm booking","es":"Confirmar la reserva","ar":"تأكيد الحجز"},{"key":"pay.awaiting","fr":"En attente de paiement","en":"Awaiting payment","es":"Pendiente de pago","ar":"في انتظار الدفع"},{"key":"pay.title","fr":"Choisissez votre mode de paiement","en":"Choose your payment method","es":"Elija su método de pago","ar":"اختر طريقة الدفع"},{"key":"pay.full","fr":"Paiement Complet","en":"Full Payment","es":"Pago Completo","ar":"الدفع الكامل"},{"key":"pay.fullPromo","fr":"Meilleure offre — Réduction de 5% appliquée","en":"Best offer — 5% discount applied","es":"Mejor oferta — 5% de descuento aplicado","ar":"أفضل عرض — خصم 5% مطبق"},{"key":"pay.fullDesc","fr":"Payez la totalité maintenant et économisez.","en":"Pay the full amount now and save.","es":"Pague la totalidad ahora y ahorre.","ar":"ادفعوا المبلغ كاملاً الآن ووفروا."},{"key":"pay.adv","fr":"Paiement par Avance (40%)","en":"Advance Payment (40%)","es":"Pago por Adelantado (40%)","ar":"الدفع بتسبيق (40%)"},{"key":"pay.advDesc","fr":"Payez 40% maintenant, le reste à la livraison.","en":"Pay 40% now, the rest on delivery.","es":"Pague el 40% ahora, el resto en la entrega.","ar":"ادفعوا 40% الآن، والباقي عند التسليم."},{"key":"pay.onsite","fr":"Paiement à l'Agence","en":"Pay at the Agency","es":"Pago en la Agencia","ar":"الدفع في الوكالة"},{"key":"pay.onsiteDesc","fr":"Réservation gratuite, paiement sur place à la livraison.","en":"Free booking, payment on site at delivery.","es":"Reserva gratuita, pago en el lugar en la entrega.","ar":"حجز مجاني، الدفع في عين المكان عند التسليم."},{"key":"pay.promoLabel","fr":"Code Promo (optionnel)","en":"Promo Code (optional)","es":"Código Promocional (opcional)","ar":"رمز ترويجي (اختياري)"},{"key":"pay.apply","fr":"Appliquer","en":"Apply","es":"Aplicar","ar":"تطبيق"},{"key":"pay.applied","fr":"Code appliqué — {n}% de réduction","en":"Code applied — {n}% discount","es":"Código aplicado — {n}% de descuento","ar":"تم تطبيق الرمز — خصم {n}%"},{"key":"pay.invalid","fr":"Code promo invalide","en":"Invalid promo code","es":"Código promocional no válido","ar":"رمز ترويجي غير صالح"},{"key":"pay.termsHtml","fr":"J'ai lu et j'accepte les <a href=\"pages/cgv.html\" target=\"_blank\" rel=\"noopener\" onclick=\"event.stopPropagation(); return openLegalModal('cgv');\">conditions générales de location</a> et la <a href=\"pages/privacy.html\" target=\"_blank\" rel=\"noopener\" onclick=\"event.stopPropagation(); return openLegalModal('privacy');\">politique de confidentialité</a> d'ALL STAR LOC.","en":"I have read and accept ALL STAR LOC's <a href=\"pages/cgv.html\" target=\"_blank\" rel=\"noopener\" onclick=\"event.stopPropagation(); return openLegalModal('cgv');\">rental terms and conditions</a> and <a href=\"pages/privacy.html\" target=\"_blank\" rel=\"noopener\" onclick=\"event.stopPropagation(); return openLegalModal('privacy');\">privacy policy</a>.","es":"He leído y acepto las <a href=\"pages/cgv.html\" target=\"_blank\" rel=\"noopener\" onclick=\"event.stopPropagation(); return openLegalModal('cgv');\">condiciones generales de alquiler</a> y la <a href=\"pages/privacy.html\" target=\"_blank\" rel=\"noopener\" onclick=\"event.stopPropagation(); return openLegalModal('privacy');\">política de privacidad</a> de ALL STAR LOC.","ar":"قرأت وأوافق على <a href=\"pages/cgv.html\" target=\"_blank\" rel=\"noopener\" onclick=\"event.stopPropagation(); return openLegalModal('cgv');\">الشروط العامة للكراء</a> و<a href=\"pages/privacy.html\" target=\"_blank\" rel=\"noopener\" onclick=\"event.stopPropagation(); return openLegalModal('privacy');\">سياسة الخصوصية</a> الخاصة بـ ALL STAR LOC."},{"key":"pay.acceptAlert","fr":"Veuillez accepter les conditions générales.","en":"Please accept the terms and conditions.","es":"Por favor, acepte las condiciones generales.","ar":"المرجو الموافقة على الشروط العامة."}],"Confirmation":[{"key":"cf.statusLabel","fr":"Statut","en":"Status","es":"Estado","ar":"الحالة"},{"key":"cf.title","fr":"Réservation Confirmée !","en":"Booking Confirmed!","es":"¡Reserva Confirmada!","ar":"تم تأكيد الحجز !"},{"key":"cf.sub","fr":"Merci {name} ! Votre demande de réservation a été envoyée avec succès. Notre équipe vous contactera rapidement pour confirmer la disponibilité et finaliser le paiement.","en":"Thank you {name}! Your booking request has been sent successfully. Our team will contact you shortly to confirm availability and finalise the payment.","es":"¡Gracias {name}! Su solicitud de reserva se ha enviado correctamente. Nuestro equipo le contactará rápidamente para confirmar la disponibilidad y finalizar el pago.","ar":"شكراً {name} ! تم إرسال طلب حجزكم بنجاح. سيتواصل معكم فريقنا قريباً لتأكيد التوفر وإتمام الدفع."},{"key":"cf.refLabel","fr":"Numéro de réservation","en":"Booking reference","es":"Número de reserva","ar":"رقم الحجز"},{"key":"cf.recap","fr":"Récapitulatif","en":"Summary","es":"Resumen","ar":"الملخص"},{"key":"cf.total","fr":"Total","en":"Total","es":"Total","ar":"المجموع"},{"key":"cf.payFull","fr":"Paiement complet","en":"Full payment","es":"Pago completo","ar":"دفع كامل"},{"key":"cf.payAdv","fr":"Acompte 40%","en":"40% deposit","es":"Anticipo 40%","ar":"تسبيق 40%"},{"key":"cf.payOnsite","fr":"Paiement sur place","en":"Pay on site","es":"Pago en el lugar","ar":"الدفع في عين المكان"},{"key":"cf.waBtn","fr":"Confirmer ma réservation sur WhatsApp","en":"Confirm my booking on WhatsApp","es":"Confirmar mi reserva por WhatsApp","ar":"تأكيد حجزي عبر واتساب"}],"Légal":[{"key":"legal.close","fr":"Fermer","en":"Close","es":"Cerrar","ar":"إغلاق"},{"key":"legal.read","fr":"J'ai lu et compris","en":"I have read and understood","es":"He leído y comprendido","ar":"قرأت وفهمت"},{"key":"legal.loading","fr":"Chargement du document…","en":"Loading document…","es":"Cargando documento…","ar":"جارٍ تحميل الوثيقة…"}],"PG":[{"key":"pg.back","fr":"Retour à l'accueil","en":"Back to home","es":"Volver al inicio","ar":"العودة إلى الرئيسية"}],"Appels à action":[{"key":"cta.h3","fr":"Prêt à prendre la route ?","en":"Ready to hit the road?","es":"¿Listo para salir a la carretera?","ar":"مستعدون للانطلاق ؟"},{"key":"cta.p","fr":"Réservez votre voiture en 2 minutes, livraison gratuite à l'aéroport de Marrakech.","en":"Book your car in 2 minutes, free delivery at Marrakech airport.","es":"Reserve su coche en 2 minutos, entrega gratuita en el aeropuerto de Marrakech.","ar":"احجزوا سيارتكم في دقيقتين، توصيل مجاني إلى مطار مراكش."},{"key":"cta.btn","fr":"Voir nos véhicules","en":"See our vehicles","es":"Ver nuestros vehículos","ar":"شاهدوا سياراتنا"}],"À propos":[{"key":"ab.badge","fr":"Notre Histoire","en":"Our Story","es":"Nuestra Historia","ar":"قصتنا"},{"key":"ab.h1Html","fr":"ALL STAR LOC","en":"ALL STAR LOC","es":"ALL STAR LOC","ar":"ALL STAR LOC"},{"key":"ab.lead","fr":"Une agence familiale de location de voiture, fondée sur la confiance, la transparence et le service.","en":"A family-run car rental agency built on trust, transparency and service.","es":"Una agencia familiar de alquiler de coches, fundada en la confianza, la transparencia y el servicio.","ar":"وكالة عائلية لكراء السيارات، مبنية على الثقة والشفافية والخدمة."},{"key":"ab.who","fr":"Qui sommes-nous ?","en":"Who are we?","es":"¿Quiénes somos?","ar":"من نحن ؟"},{"key":"ab.p1Html","fr":"<strong>ALL STAR LOC</strong> est une agence de location de voitures basée à Marrakech, au 29 Rue Yougoslavie, en plein cœur de Guéliz. Depuis 2009, nous accompagnons voyageurs, familles et professionnels dans leurs déplacements à Marrakech et partout au Maroc.","en":"<strong>ALL STAR LOC</strong> is a car rental agency based in Marrakech, at 29 Rue Yougoslavie, in the heart of Guéliz. Since 2009, we have been supporting travellers, families and professionals in their journeys around Marrakech and throughout Morocco.","es":"<strong>ALL STAR LOC</strong> es una agencia de alquiler de coches con sede en Marrakech, en el 29 Rue Yougoslavie, en pleno corazón de Guéliz. Desde 2009, acompañamos a viajeros, familias y profesionales en sus desplazamientos por Marrakech y todo Marruecos.","ar":"<strong>ALL STAR LOC</strong> وكالة لكراء السيارات مقرها مراكش، في 29 شارع يوغوسلافيا، في قلب حي گيليز. منذ 2009، نرافق المسافرين والعائلات والمهنيين في تنقلاتهم بمراكش وفي جميع أنحاء المغرب."},{"key":"ab.p2","fr":"Notre conviction est simple : louer une voiture en vacances ne devrait jamais être une source de stress. Pas de frais cachés, pas de mauvaises surprises à la restitution, pas d'attente interminable au comptoir. Juste une voiture propre, récente, et une équipe joignable à toute heure.","en":"Our belief is simple: renting a car on holiday should never be a source of stress. No hidden fees, no nasty surprises at return, no endless queuing at the counter. Just a clean, recent car and a team you can reach at any time.","es":"Nuestra convicción es simple: alquilar un coche en vacaciones nunca debería ser una fuente de estrés. Sin costes ocultos, sin sorpresas desagradables en la devolución, sin esperas interminables en el mostrador. Solo un coche limpio, reciente y un equipo localizable a cualquier hora.","ar":"قناعتنا بسيطة: كراء سيارة خلال العطلة لا ينبغي أبداً أن يكون مصدر توتر. لا رسوم خفية، لا مفاجآت سيئة عند الإرجاع، لا انتظار طويل أمام المكتب. فقط سيارة نظيفة وحديثة وفريق متاح في أي وقت."},{"key":"ab.commit","fr":"Nos engagements","en":"Our commitments","es":"Nuestros compromisos","ar":"التزاماتنا"},{"key":"ab.c1Html","fr":"<strong>Livraison gratuite à l'aéroport Ménara (RAK)</strong> — nous vous attendons à votre arrivée, quelle que soit l'heure, panneau à la main.","en":"<strong>Free delivery at Menara Airport (RAK)</strong> — we wait for you on arrival, whatever the time, sign in hand.","es":"<strong>Entrega gratuita en el aeropuerto de Menara (RAK)</strong> — le esperamos a su llegada, sea cual sea la hora, con cartel en mano.","ar":"<strong>توصيل مجاني إلى مطار المنارة (RAK)</strong> — ننتظركم عند وصولكم، مهما كان الوقت، ولافتة في اليد."},{"key":"ab.c2Html","fr":"<strong>Disponibilité 24h/7j</strong> — un numéro WhatsApp unique pour toute question, avant, pendant et après la location.","en":"<strong>24/7 availability</strong> — a single WhatsApp number for any question, before, during and after the rental.","es":"<strong>Disponibilidad 24h/7</strong> — un único número de WhatsApp para cualquier pregunta, antes, durante y después del alquiler.","ar":"<strong>متوفرون 24/7</strong> — رقم واتساب واحد لأي سؤال، قبل وأثناء وبعد الكراء."},{"key":"ab.c3Html","fr":"<strong>Kilométrage illimité</strong> — explorez Essaouira, l'Atlas, Ouarzazate ou Agadir sans compter.","en":"<strong>Unlimited mileage</strong> — explore Essaouira, the Atlas, Ouarzazate or Agadir without counting kilometres.","es":"<strong>Kilometraje ilimitado</strong> — explore Essaouira, el Atlas, Ouarzazate o Agadir sin contar kilómetros.","ar":"<strong>كيلومترات غير محدودة</strong> — استكشفوا الصويرة والأطلس وورزازات وأكادير دون حساب."},{"key":"ab.c4Html","fr":"<strong>Flotte récente et entretenue</strong> — chaque véhicule est contrôlé, nettoyé et désinfecté entre deux locations.","en":"<strong>Recent, well-maintained fleet</strong> — every vehicle is checked, cleaned and disinfected between rentals.","es":"<strong>Flota reciente y mantenida</strong> — cada vehículo se revisa, limpia y desinfecta entre dos alquileres.","ar":"<strong>أسطول حديث ومصان</strong> — كل سيارة تُفحص وتُنظف وتُعقم بين كرائين."},{"key":"ab.c5Html","fr":"<strong>Transparence totale</strong> — le prix affiché est le prix payé. Assurance responsabilité civile toujours incluse.","en":"<strong>Total transparency</strong> — the price shown is the price paid. Third-party insurance always included.","es":"<strong>Transparencia total</strong> — el precio mostrado es el precio pagado. Seguro de responsabilidad civil siempre incluido.","ar":"<strong>شفافية تامة</strong> — السعر المعروض هو السعر المدفوع. تأمين المسؤولية المدنية مشمول دائماً."},{"key":"ab.nums","fr":"Quelques chiffres","en":"A few numbers","es":"Algunas cifras","ar":"بعض الأرقام"},{"key":"ab.numsHtml","fr":"<strong>+500</strong> clients satisfaits · <strong>4.8/5</strong> sur Google · <strong>17 ans</strong> d'expérience · <strong>11+</strong> véhicules en flotte · Clients de <strong>15+ nationalités</strong>","en":"<strong>+500</strong> satisfied customers · <strong>4.8/5</strong> on Google · <strong>17 years</strong> of experience · <strong>11+</strong> vehicles in the fleet · Customers from <strong>15+ nationalities</strong>","es":"<strong>+500</strong> clientes satisfechos · <strong>4.8/5</strong> en Google · <strong>17 años</strong> de experiencia · <strong>11+</strong> vehículos en flota · Clientes de <strong>15+ nacionalidades</strong>","ar":"<strong>+500</strong> زبون راضٍ · <strong>4.8/5</strong> على غوغل · <strong>17 سنة</strong> من الخبرة · <strong>+11</strong> سيارة في الأسطول · زبناء من <strong>+15 جنسية</strong>"},{"key":"ab.where","fr":"Où nous trouver","en":"Where to find us","es":"Dónde encontrarnos","ar":"أين تجدوننا"},{"key":"ab.callNote","fr":"(appel & WhatsApp)","en":"(call & WhatsApp)","es":"(llamada y WhatsApp)","ar":"(اتصال وواتساب)"}]};
+let _currentTextLang = 'fr';
+
+function switchTextLang(lang, btn) {
+  _currentTextLang = lang;
+  document.querySelectorAll('#alltexts-langtabs .lang-tab').forEach(function(b){ b.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  loadAllTexts();
 }
+
+function loadAllTexts() {
+  const overrides = load(K.content) || {};
+  const container = document.getElementById('alltexts-container');
+  if (!container) return;
+  const lang = _currentTextLang;
+  const isRTL = (lang === 'ar');
+  let html = '';
+  Object.keys(ALL_TEXTS_4L).forEach(function(section) {
+    const items = ALL_TEXTS_4L[section];
+    html += '<div class="at-section" style="margin-bottom:22px;">';
+    html += '<div style="font-size:14px;font-weight:800;color:var(--red);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid rgba(196,30,58,.15);">' + section + '</div>';
+    items.forEach(function(it) {
+      // Valeur actuelle : override multilingue si présent, sinon défaut de la langue
+      let current = it[lang] || it.fr || '';
+      const ov = overrides[it.key];
+      if (ov && typeof ov === 'object' && ov[lang] !== undefined) current = ov[lang];
+      else if (ov && typeof ov === 'string' && lang === 'fr') current = ov;
+      const isLong = (it.fr || '').length > 60;
+      const safe = String(current).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      const searchTxt = (it.key + ' ' + (it.fr||'')).toLowerCase().replace(/"/g,'');
+      html += '<div class="at-field-ml" data-key="' + it.key + '" data-search="' + searchTxt + '"' + (isRTL?' dir="rtl"':'') + '>';
+      html += '<label>' + it.key + '</label>';
+      if (isLong) {
+        html += '<textarea class="fi at-input" data-key="' + it.key + '" rows="2" style="width:100%;resize:vertical;">' + safe + '</textarea>';
+      } else {
+        html += '<input class="fi at-input" data-key="' + it.key + '" value="' + safe + '" style="width:100%;">';
+      }
+      html += '</div>';
+    });
+    html += '</div>';
+  });
+  container.innerHTML = html;
+}
+
+function filterAllTexts() {
+  const q = (document.getElementById('alltexts-search').value || '').toLowerCase().trim();
+  document.querySelectorAll('#alltexts-container .at-field-ml').forEach(function(f) {
+    const txt = (f.getAttribute('data-search') || '');
+    f.style.display = (!q || txt.indexOf(q) > -1) ? 'block' : 'none';
+  });
+  document.querySelectorAll('#alltexts-container .at-section').forEach(function(s) {
+    const visible = Array.from(s.querySelectorAll('.at-field-ml')).some(function(f){ return f.style.display !== 'none'; });
+    s.style.display = visible ? 'block' : 'none';
+  });
+}
+
+async function saveAllTexts() {
+  const overrides = load(K.content) || {};
+  const lang = _currentTextLang;
+  // Index des valeurs par défaut de la langue courante
+  const defaults = {};
+  Object.keys(ALL_TEXTS_4L).forEach(function(sec){
+    ALL_TEXTS_4L[sec].forEach(function(it){ defaults[it.key] = { def: it[lang] || it.fr, all: it }; });
+  });
+
+  document.querySelectorAll('#alltexts-container .at-input').forEach(function(el) {
+    const key = el.getAttribute('data-key');
+    const val = el.value;
+    const info = defaults[key];
+    if (!info) return;
+    // Récupérer ou créer l'objet multilingue pour cette clé
+    let obj = overrides[key];
+    if (!obj || typeof obj !== 'object') {
+      // Initialiser avec les valeurs d'origine des 4 langues
+      obj = { fr: info.all.fr, en: info.all.en, es: info.all.es, ar: info.all.ar };
+    }
+    // Mettre à jour seulement la langue courante
+    if (val.trim() !== '') obj[lang] = val;
+    // Si AUCUNE langue ne diffère du défaut, on supprime l'override (revenir à l'origine)
+    const allDefault = ['fr','en','es','ar'].every(function(l){ return obj[l] === info.all[l]; });
+    if (allDefault) delete overrides[key];
+    else overrides[key] = obj;
+  });
+  save(K.content, overrides);
+
+  const box = document.getElementById('alltexts-saved');
+  const langName = { fr:'Français', en:'English', es:'Español', ar:'العربية' }[lang];
+  if (box) { box.style.display='block'; box.style.background='#f1f5f9'; box.style.color='#334155'; box.textContent='⏳ Envoi au serveur…'; }
+
+  // Envoyer DIRECTEMENT au serveur (fiable, avec confirmation)
+  const fullData = getMktData();
+  fullData.content = overrides;
+  try {
+    const headers = { 'Content-Type':'application/json' };
+    let adminKey = ''; try { adminKey = localStorage.getItem('asl_admin_key')||''; } catch(e){}
+    if (adminKey) headers['X-ASL-Key'] = adminKey;
+    const resp = await fetch('/api/marketing', { method:'PUT', headers:headers, body:JSON.stringify(fullData) });
+    const result = await resp.json().catch(function(){ return {}; });
+    if (resp.ok && result.saved) {
+      if (box) { box.style.background='#f0fdf4'; box.style.color='#15803d';
+        box.textContent='✅ Textes en ' + langName + ' enregistrés et confirmés sur le serveur. Rafraîchissez le site (Ctrl+F5).'; }
+    } else if (resp.status === 403) {
+      if (box) { box.style.background='#fef2f2'; box.style.color='#b91c1c'; box.textContent='❌ Écriture refusée (403). Reconnectez-vous à l\'admin.'; }
+    } else {
+      if (box) { box.style.background='#fef2f2'; box.style.color='#b91c1c'; box.textContent='❌ Erreur serveur '+resp.status+'.'; }
+    }
+  } catch(e) {
+    if (box) { box.style.background='#fef2f2'; box.style.color='#b91c1c'; box.textContent='❌ Serveur injoignable (normal en local file://, marche sur le site déployé).'; }
+  }
+  if (box) setTimeout(function(){ box.style.display='none'; }, 12000);
+}
+
+
+// ===== Ouverture / fermeture de l'éditeur de textes plein écran =====
+function openTextEditor() {
+  const ov = document.getElementById('text-editor-overlay');
+  if (!ov) return;
+  ov.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  if (typeof loadAllTexts === 'function') loadAllTexts();
+}
+function closeTextEditor() {
+  const ov = document.getElementById('text-editor-overlay');
+  if (!ov) return;
+  ov.style.display = 'none';
+  document.body.style.overflow = '';
+}
+// Fermer avec la touche Echap
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape') {
+    const ov = document.getElementById('text-editor-overlay');
+    if (ov && ov.style.display === 'flex') closeTextEditor();
+  }
+});
 
 </script>
 </body>
