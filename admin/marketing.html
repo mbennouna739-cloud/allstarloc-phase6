@@ -262,19 +262,14 @@ body.sb-is-collapsed .content { max-width: 100%; }
     <span>Tableau de bord</span>
   </div>
 
-  <div class="sb-group">Contenu & SEO</div>
-  
-  <div class="sb-item" onclick="nav('editor',this)">
+  <div class="sb-group">Contenu du site (synchronisé)</div>
+  <div class="sb-item" onclick="nav('alltexts',this)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>
+    <span>Tous les textes du site</span>
+  </div>
+  <div class="sb-item" onclick="nav('seo',this)">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-    <span>Éditeur contenu</span>
-  </div>
-  <div class="sb-item" onclick="nav('ia',this)">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-    <span>IA Marketing</span>
-  </div>
-  <div class="sb-item" onclick="nav('blog',this)">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
-    <span>Blog</span>
+    <span>SEO par page</span>
   </div>
   <div class="sb-item" onclick="nav('faq',this)">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
@@ -283,25 +278,6 @@ body.sb-is-collapsed .content { max-width: 100%; }
   <div class="sb-item" onclick="nav('popup',this)">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg>
     <span>Popup &amp; CTA</span>
-  </div>
-
-  <div class="sb-group">Acquisition</div>
-  <div class="sb-item" onclick="nav('newsletter',this)">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-    <span>Newsletter</span>
-  </div>
-  <div class="sb-item" onclick="nav('ads',this)">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-    <span>Google Ads</span>
-  </div>
-  
-  <div class="sb-item" onclick="nav('email',this)">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-    <span>Configuration Email</span>
-  </div>
-  <div class="sb-item" onclick="nav('alltexts',this)">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>
-    <span>Tous les textes du site</span>
   </div>
   <div class="sb-item" onclick="nav('social',this)">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
@@ -2206,12 +2182,28 @@ async function saveSocialConfig() {
   };
   // Sauvegarder sous la BONNE clé (celle lue par getMktData → KV → content-bridge)
   save(K.social, cfg);
-  try {
-    await syncToKV('Réseaux Sociaux');
-  } catch(e) {}
+
   const msg = document.getElementById('social-saved-msg');
-  if (msg) { msg.style.display = 'block'; setTimeout(() => { msg.style.display = 'none'; }, 4000); }
-  if (typeof toast === 'function') toast('Réseaux sociaux enregistrés', 'g');
+  if (msg) { msg.style.display = 'block'; msg.style.color = '#334155'; msg.textContent = '⏳ Envoi au serveur…'; }
+
+  // Envoyer DIRECTEMENT au serveur (méthode fiable, avec confirmation)
+  const fullData = getMktData();
+  fullData.social = cfg;
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    let adminKey = ''; try { adminKey = localStorage.getItem('asl_admin_key') || ''; } catch(e){}
+    if (adminKey) headers['X-ASL-Key'] = adminKey;
+    const resp = await fetch('/api/marketing', { method: 'PUT', headers: headers, body: JSON.stringify(fullData) });
+    const result = await resp.json().catch(function(){ return {}; });
+    if (resp.ok && result.saved) {
+      if (msg) { msg.style.color = '#15803d'; msg.textContent = '✅ Liens réseaux sociaux enregistrés et confirmés sur le serveur. Rafraîchissez le site (Ctrl+F5).'; }
+    } else {
+      if (msg) { msg.style.color = '#b91c1c'; msg.textContent = '❌ Erreur serveur (' + resp.status + '). ' + (result.error || ''); }
+    }
+  } catch(e) {
+    if (msg) { msg.style.color = '#b91c1c'; msg.textContent = '❌ Serveur injoignable (normal en local file://, marche sur le site déployé).'; }
+  }
+  if (msg) setTimeout(() => { msg.style.display = 'none'; }, 10000);
 }
 
 
@@ -2368,7 +2360,10 @@ function loadAllTexts() {
     html += '<div class="at-section" style="margin-bottom:22px;">';
     html += '<div style="font-size:14px;font-weight:800;color:var(--red);margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid rgba(196,30,58,.15);">' + section + '</div>';
     items.forEach(function(it) {
-      const current = overrides[it.key] !== undefined ? overrides[it.key] : it.default;
+      var ovVal = overrides[it.key];
+      // Support multilingue : si l'override est un objet {fr,en,...}, afficher le FR
+      if (ovVal && typeof ovVal === 'object') ovVal = ovVal.fr;
+      const current = ovVal !== undefined && ovVal !== null ? ovVal : it.default;
       const isLong = (it.default || '').length > 60;
       const safeCurrent = String(current).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
       const safeDefault = String(it.default).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -2406,19 +2401,40 @@ async function saveAllTexts() {
   Object.keys(ALL_TEXTS_DATA).forEach(function(sec){
     ALL_TEXTS_DATA[sec].forEach(function(it){ defaults[it.key] = it.default; });
   });
+
+  const box = document.getElementById('alltexts-saved');
+
+  // Collecter les textes modifiés (en français)
+  const changedKeys = [];
   document.querySelectorAll('#alltexts-container .at-input').forEach(function(el) {
     const key = el.getAttribute('data-key');
     const val = el.value;
     if (val !== undefined && val !== defaults[key] && val.trim() !== '') {
-      overrides[key] = val;
+      changedKeys.push({ key: key, fr: val });
     } else if (val === defaults[key] || val.trim() === '') {
       delete overrides[key];
     }
   });
+
+  // Traduire automatiquement chaque texte FR → EN / ES / AR
+  if (changedKeys.length && box) {
+    box.style.display = 'block'; box.style.background = '#f1f5f9'; box.style.color = '#334155';
+    box.innerHTML = '🌍 Traduction automatique en cours (EN, ES, AR)…';
+  }
+  for (var i = 0; i < changedKeys.length; i++) {
+    var item = changedKeys[i];
+    var translations = await translateText(item.fr);
+    // Stocker en multilingue : {fr, en, es, ar}
+    overrides[item.key] = {
+      fr: item.fr,
+      en: translations.en || item.fr,
+      es: translations.es || item.fr,
+      ar: translations.ar || item.fr
+    };
+  }
   save(K.content, overrides);
 
-  const box = document.getElementById('alltexts-saved');
-  if (box) { box.style.display = 'block'; box.style.background = '#f1f5f9'; box.style.color = '#334155'; box.innerHTML = '⏳ Envoi au serveur…'; }
+  if (box) { box.innerHTML = '⏳ Envoi au serveur…'; }
 
   // Construire l'objet complet ET l'envoyer DIRECTEMENT (sans dépendre d'une autre fonction)
   const fullData = getMktData();
@@ -2525,6 +2541,32 @@ async function testSyncConnection() {
   }
 
   box.innerHTML = report.join('<br>');
+}
+
+
+// ================================================================
+// TRADUCTION AUTOMATIQUE FR → EN / ES / AR
+// ================================================================
+async function translateText(frText) {
+  const result = { en: '', es: '', ar: '' };
+  if (!frText || !frText.trim()) return result;
+  const targets = { en: 'en', es: 'es', ar: 'ar' };
+  // On essaie un service de traduction gratuit. Si indisponible, on garde le FR.
+  for (const lang of Object.keys(targets)) {
+    try {
+      const url = 'https://api.mymemory.translated.net/get?q=' + encodeURIComponent(frText) + '&langpair=fr|' + targets[lang];
+      const resp = await fetch(url);
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data && data.responseData && data.responseData.translatedText) {
+          result[lang] = data.responseData.translatedText;
+        }
+      }
+    } catch (e) {
+      // Échec → on laissera le texte FR en repli (géré par l'appelant)
+    }
+  }
+  return result;
 }
 
 </script>

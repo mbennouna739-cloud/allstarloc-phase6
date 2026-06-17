@@ -18,11 +18,23 @@
   function applyMarketing(data) {
     if (!data) return;
 
-    /* 1. Overrides textes i18n */
+    /* 1. Overrides textes i18n — supporte le multilingue.
+       Format possible pour ov[k] :
+       - une chaîne simple  → appliquée à toutes les langues (ancien format)
+       - un objet {fr,en,es,ar} → chaque langue reçoit sa traduction */
     var ov = data.content || {};
     if (typeof I18N !== 'undefined' && I18N.fr && Object.keys(ov).length) {
       Object.keys(ov).forEach(function (k) {
-        if (ov[k]) { ['fr','en','es','ar'].forEach(function(l){ if(I18N[l]) I18N[l][k] = ov[k]; }); }
+        var val = ov[k];
+        if (val && typeof val === 'object') {
+          /* Multilingue : appliquer chaque langue si présente, sinon garder l'originale */
+          ['fr','en','es','ar'].forEach(function(l){
+            if (I18N[l] && val[l]) I18N[l][k] = val[l];
+          });
+        } else if (val) {
+          /* Ancien format (chaîne) : appliquer à toutes les langues */
+          ['fr','en','es','ar'].forEach(function(l){ if(I18N[l]) I18N[l][k] = val; });
+        }
       });
     }
 
