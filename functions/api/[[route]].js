@@ -88,6 +88,30 @@ export async function onRequest(context) {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: JSON_HEADERS });
 
   /* ---- Diagnostic ---- */
+  /* ---- Traduction serveur (évite les blocages CORS du navigateur) ---- */
+  if (path === 'translate' && request.method === 'POST') {
+    let body;
+    try { body = await request.json(); } catch (e) { return err(400, 'JSON invalide'); }
+    const text = String(body.text || '');
+    const targets = ['en', 'es', 'ar'];
+    const out = { fr: text };
+    if (!text.trim()) return json({ ok: true, translations: out });
+    for (const lang of targets) {
+      out[lang] = text; // repli par défaut = texte FR
+      try {
+        const url = 'https://api.mymemory.translated.net/get?q=' + encodeURIComponent(text) + '&langpair=fr|' + lang;
+        const r = await fetch(url);
+        if (r.ok) {
+          const d = await r.json();
+          if (d && d.responseData && d.responseData.translatedText) {
+            out[lang] = d.responseData.translatedText;
+          }
+        }
+      } catch (e) { /* garde le repli FR */ }
+    }
+    return json({ ok: true, translations: out });
+  }
+
   if (path === 'health') {
     return json({
       ok: !!env.ASL_DB,

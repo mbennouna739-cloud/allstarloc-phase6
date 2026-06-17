@@ -2550,22 +2550,25 @@ async function testSyncConnection() {
 async function translateText(frText) {
   const result = { en: '', es: '', ar: '' };
   if (!frText || !frText.trim()) return result;
-  const targets = { en: 'en', es: 'es', ar: 'ar' };
-  // On essaie un service de traduction gratuit. Si indisponible, on garde le FR.
-  for (const lang of Object.keys(targets)) {
-    try {
-      const url = 'https://api.mymemory.translated.net/get?q=' + encodeURIComponent(frText) + '&langpair=fr|' + targets[lang];
-      const resp = await fetch(url);
-      if (resp.ok) {
-        const data = await resp.json();
-        if (data && data.responseData && data.responseData.translatedText) {
-          result[lang] = data.responseData.translatedText;
-        }
+  // On passe par NOTRE serveur (/api/translate) → pas de blocage CORS du navigateur
+  try {
+    const resp = await fetch('/api/translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: frText })
+    });
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data && data.translations) {
+        result.en = data.translations.en || frText;
+        result.es = data.translations.es || frText;
+        result.ar = data.translations.ar || frText;
+        return result;
       }
-    } catch (e) {
-      // Échec → on laissera le texte FR en repli (géré par l'appelant)
     }
-  }
+  } catch (e) { /* repli ci-dessous */ }
+  // Repli : si le serveur ne répond pas, on garde le FR partout
+  result.en = frText; result.es = frText; result.ar = frText;
   return result;
 }
 
