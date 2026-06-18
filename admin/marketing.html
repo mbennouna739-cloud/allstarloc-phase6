@@ -11,10 +11,10 @@
 <title>ALL STAR LOC — Marketing Digital</title>
 <style>
 :root{
-  --red:#C41E3A;--red-l:rgba(196,30,58,.09);--red-b:rgba(196,30,58,.22);
+  --red:#E0233D;--red-l:rgba(224,35,61,.09);--red-b:rgba(224,35,61,.22);
   --bg:#F1F3F6;--card:#fff;--border:rgba(18,22,30,.10);
   --text:#0C0E12;--t2:rgba(12,14,18,.60);--t3:rgba(12,14,18,.36);
-  --green:#16A34A;--yellow:#D97706;--blue:#2563EB;--purple:#7C3AED;
+  --green:#1AA84F;--yellow:#E0860B;--blue:#3577E6;--purple:#8350E8;
   --font:'Outfit',sans-serif;
 }
 html,body{overflow-x:hidden;max-width:100%;overscroll-behavior-x:none;}
@@ -45,7 +45,9 @@ a{text-decoration:none;color:inherit;}
 /* buttons */
 .btn{display:inline-flex;align-items:center;gap:7px;border:none;border-radius:9px;
   padding:8px 16px;font-family:var(--font);font-size:13px;font-weight:700;cursor:pointer;}
-.btn-red{background:var(--red);color:#fff;} .btn-red:hover{background:#a91830;}
+.btn-red{background:var(--red);color:#fff;box-shadow:0 1px 2px rgba(224,35,61,.22);transition:background .15s,box-shadow .15s,transform .08s;}
+.btn-red:hover{background:#F0455C;box-shadow:0 3px 12px rgba(224,35,61,.30);}
+.btn-red:active{transform:translateY(1px);box-shadow:0 1px 2px rgba(224,35,61,.22);}
 .btn-ghost{background:var(--bg);color:var(--text);} .btn-ghost:hover{background:rgba(18,22,30,.12);}
 .btn-green{background:var(--green);color:#fff;}
 .btn-sm{padding:6px 12px;font-size:12px;}
@@ -179,7 +181,7 @@ a{text-decoration:none;color:inherit;}
 .sb-toggle {
   position: fixed; top: 14px; left: 14px; z-index: 1200;
   width: 36px; height: 36px; border-radius: 9px;
-  background: var(--red, #C41E3A); color: #fff; border: none; cursor: pointer;
+  background: var(--red, #E0233D); color: #fff; border: none; cursor: pointer;
   display: none; align-items: center; justify-content: center;
   box-shadow: 0 4px 14px rgba(0,0,0,.25); transition: left .25s ease;
 }
@@ -190,12 +192,12 @@ a{text-decoration:none;color:inherit;}
   background: rgba(127,127,127,.12); color: var(--text, #fff);
   display: flex; align-items: center; justify-content: center; transition: background .15s;
 }
-.sb-collapse-btn:hover { background: rgba(196,30,58,.18); color: #C41E3A; }
+.sb-collapse-btn:hover { background: rgba(196,30,58,.18); color: #E0233D; }
 body.sb-is-collapsed .sb-toggle { display: flex; }
 
 /* === Bouton Déconnexion sidebar === */
 .sb-logout{margin:5px 8px;padding:11px 13px;display:flex;align-items:center;gap:9px;
-  font-size:13px;font-weight:800;color:#fff;background:#C41E3A;
+  font-size:13px;font-weight:800;color:#fff;background:#E0233D;
   cursor:pointer;border-radius:9px;text-decoration:none;transition:background .15s;
   box-shadow:0 3px 12px rgba(196,30,58,.3);}
 .sb-logout:hover{background:#a01530;}
@@ -239,7 +241,7 @@ body.sb-is-collapsed .content { max-width: 100%; }
 }
 .lang-tab { padding:9px 16px; border:1.5px solid var(--border,#e2e8f0); background:#fff; border-radius:9px;
   font-size:13px; font-weight:700; cursor:pointer; color:var(--t2,#555); font-family:inherit; }
-.lang-tab.active { background:var(--red,#C41E3A); color:#fff; border-color:var(--red,#C41E3A); }
+.lang-tab.active { background:var(--red,#E0233D); color:#fff; border-color:var(--red,#E0233D); }
 
 /* ===== Éditeur de textes plein écran (façon logiciel pro) ===== */
 #text-editor-overlay {
@@ -331,6 +333,39 @@ body.sb-is-collapsed{ --mkt-sb:0px; }   /* sidebar repliée → popup pleine lar
 .mkt-launch-tt{ font-size:15px; font-weight:800; color:var(--text); }
 .mkt-launch-sb{ font-size:12.5px; color:var(--t2); line-height:1.5; }
 .mkt-launch-go{ margin-top:auto; font-size:12.5px; font-weight:800; color:var(--red); }
+
+/* ============================================================
+   PHASE 14 — HARMONISATION SIDEBAR SaaS (override final)
+   Garantit : sidebar fermée = contenu pleine largeur, sans espace vide
+   ============================================================ */
+.sidebar.collapsed,
+#the-sidebar.collapsed {
+  width: 0 !important;
+  min-width: 0 !important;
+  border-right: none !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+body.sb-is-collapsed .main {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  width: 100% !important;
+}
+body.sb-is-collapsed .content,
+body.sb-is-collapsed .topbar,
+body.sb-is-collapsed .table-card {
+  max-width: 100% !important;
+}
+/* Le burger reste visible et le titre ne le chevauche pas */
+body.sb-is-collapsed .topbar { padding-left: 56px !important; }
+body.sb-is-collapsed .sb-toggle { display: flex !important; }
+/* fleet.html : la sidebar-wrap ne doit pas garder de largeur fantôme */
+body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important; }
+@media (max-width: 768px) {
+  /* Sur mobile le collapse desktop est neutralisé (overlay déjà géré) */
+  body.sb-is-collapsed .main { margin-left: 0 !important; }
+}
 </style>
 
 </head>
@@ -348,7 +383,7 @@ body.sb-is-collapsed{ --mkt-sb:0px; }   /* sidebar repliée → popup pleine lar
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
   </button>
     <img src="data:image/png;base64,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" alt="ALL STAR LOC" style="display:block;">
-    <div class="sb-logo-sub" style="font-size:10px;color:#C41E3A;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:6px;">Marketing Digital</div>
+    <div class="sb-logo-sub" style="font-size:10px;color:#E0233D;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-top:6px;">Marketing Digital</div>
   </div>
 
   <div class="sb-group">Vue d'ensemble</div>
@@ -373,6 +408,34 @@ body.sb-is-collapsed{ --mkt-sb:0px; }   /* sidebar repliée → popup pleine lar
   <div class="sb-item" onclick="nav('social',this)">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" x2="15.42" y1="13.51" y2="17.49"/><line x1="15.41" x2="8.59" y1="6.51" y2="10.49"/></svg>
     <span>Réseaux Sociaux</span>
+  </div>
+
+  <div class="sb-group">Acquisition &amp; emailing</div>
+  <div class="sb-item" onclick="nav('email',this)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+    <span>Configuration Mail</span>
+  </div>
+  <div class="sb-item" onclick="nav('newsletter',this)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+    <span>Newsletter &amp; Mailchimp</span>
+  </div>
+  <div class="sb-item" onclick="nav('ads',this)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+    <span>Google Ads</span>
+  </div>
+  <div class="sb-item" onclick="nav('analytics',this)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+    <span>Suivi &amp; tracking</span>
+  </div>
+
+  <div class="sb-group">Données &amp; CRM</div>
+  <div class="sb-item" onclick="nav('database',this)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>
+    <span>Base de données clients</span>
+  </div>
+  <div class="sb-item" onclick="nav('conversions',this)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    <span>Conversions</span>
   </div>
 
   <div style="flex:1;"></div>
@@ -702,6 +765,47 @@ body.sb-is-collapsed{ --mkt-sb:0px; }   /* sidebar repliée → popup pleine lar
       <button class="btn btn-ghost btn-sm" onclick="exportCSV()">Exporter CSV</button>
       <button class="btn btn-red btn-sm" onclick="openAddContact()">+ Ajouter</button>
     </div>
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-head">
+        <div>
+          <div class="card-title">Mailchimp — envoi automatisé</div>
+          <div class="card-sub">Connectez votre compte Mailchimp pour synchroniser la base et automatiser les emails.</div>
+        </div>
+        <button class="btn btn-red btn-sm" onclick="saveMailchimp()">Enregistrer</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="fg"><label>Clé API Mailchimp</label>
+          <input class="fi" id="mc-apikey" type="password" placeholder="••••••••••••-usXX" autocomplete="off"></div>
+        <div class="fg"><label>Préfixe serveur (datacenter)</label>
+          <input class="fi" id="mc-dc" placeholder="us21"></div>
+        <div class="fg"><label>ID de l'audience (liste)</label>
+          <input class="fi" id="mc-list" placeholder="a1b2c3d4e5"></div>
+        <div class="fg"><label>Nom de l'expéditeur</label>
+          <input class="fi" id="mc-from" placeholder="ALL STAR LOC"></div>
+      </div>
+      <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px;">
+        <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-size:13px;font-weight:600;">
+          <input type="checkbox" id="mc-autosync" style="accent-color:var(--red);width:16px;height:16px;">
+          Synchroniser automatiquement les nouveaux contacts du site vers Mailchimp
+        </label>
+        <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-size:13px;font-weight:600;">
+          <input type="checkbox" id="mc-welcome" style="accent-color:var(--red);width:16px;height:16px;">
+          Email de bienvenue automatique à l'inscription
+        </label>
+        <label style="display:flex;align-items:center;gap:9px;cursor:pointer;font-size:13px;font-weight:600;">
+          <input type="checkbox" id="mc-followup" style="accent-color:var(--red);width:16px;height:16px;">
+          Relance automatique des prospects (J+3)
+        </label>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button class="btn btn-red btn-sm" onclick="saveMailchimp()" style="flex:1;">Enregistrer la configuration</button>
+        <button class="btn btn-ghost btn-sm" onclick="testMailchimp()" style="flex:1;">Tester la connexion</button>
+      </div>
+      <div id="mc-result" style="display:none;margin-top:12px;padding:10px 14px;border-radius:9px;font-size:13px;font-weight:600;"></div>
+      <div style="margin-top:14px;padding:13px 15px;background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.18);border-radius:10px;font-size:12.5px;color:var(--t2);line-height:1.55;">
+        <strong>Note :</strong> la clé API et les automatisations sont enregistrées ici et synchronisées avec le site. L'envoi réel des emails est exécuté côté serveur (worker Cloudflare) qui utilise ces identifiants Mailchimp — aucune clé n'est exposée au visiteur.
+      </div>
+    </div>
     <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);" id="nl-kpi"></div>
     <div class="card">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
@@ -757,6 +861,56 @@ body.sb-is-collapsed{ --mkt-sb:0px; }   /* sidebar repliée → popup pleine lar
       </div>
     </div>
   </div>
+
+<!-- PAGE BASE DE DONNÉES CLIENTS -->
+<div class="content page" id="page-database">
+  <h2 style="font-size:18px;font-weight:900;margin-bottom:6px;">Base de données clients</h2>
+  <p style="font-size:13px;color:var(--t2);margin-bottom:18px;">
+    Vue consolidée de tous vos clients, regroupés à partir des réservations réelles (synchronisées depuis le serveur).
+  </p>
+  <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+    <input class="fi" id="db-search" placeholder="Rechercher un client…" oninput="renderDatabase()" style="flex:1;min-width:200px;">
+    <button class="btn btn-ghost btn-sm" onclick="exportDatabase()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+      Export CSV
+    </button>
+  </div>
+  <div id="db-stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;"></div>
+  <div class="card" style="padding:0;overflow:hidden;">
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:11px 16px;background:var(--bg);font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.8px;">
+      <div>Client</div><div>Réservations</div><div>Valeur totale</div><div>Dernière loc.</div>
+    </div>
+    <div id="db-list"><div style="padding:30px;text-align:center;color:var(--t2);font-size:13px;">Chargement…</div></div>
+  </div>
+</div>
+
+<!-- PAGE CONVERSIONS -->
+<div class="content page" id="page-conversions">
+  <h2 style="font-size:18px;font-weight:900;margin-bottom:6px;">Tracking des conversions</h2>
+  <p style="font-size:13px;color:var(--t2);margin-bottom:18px;">
+    Conversions réelles issues du site : réservations confirmées et entonnoir de conversion.
+  </p>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px;">
+    <div class="card" style="text-align:center;padding:18px;">
+      <div style="font-size:26px;font-weight:900;color:var(--red);" id="cv-bookings">—</div>
+      <div style="font-size:12px;color:var(--t2);margin-top:4px;">Réservations ce mois</div>
+    </div>
+    <div class="card" style="text-align:center;padding:18px;">
+      <div style="font-size:26px;font-weight:900;color:var(--green);" id="cv-revenue">—</div>
+      <div style="font-size:12px;color:var(--t2);margin-top:4px;">CA estimé ce mois</div>
+    </div>
+    <div class="card" style="text-align:center;padding:18px;">
+      <div style="font-size:26px;font-weight:900;color:var(--blue);" id="cv-total">—</div>
+      <div style="font-size:12px;color:var(--t2);margin-top:4px;">Total réservations</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head"><div class="card-title">Dernières conversions</div>
+      <button class="btn btn-ghost btn-sm" onclick="renderConversions()">Actualiser</button>
+    </div>
+    <div id="cv-list" style="font-size:13px;"><div style="color:var(--t2);padding:10px 0;">Chargement…</div></div>
+  </div>
+</div>
 
 <!-- PAGE CONFIGURATION EMAIL -->
 <div class="content page" id="page-email">
@@ -1837,6 +1991,7 @@ function renderNewsletter() {
   ].map(k=>`<div class="kpi ${k.cls}"><div class="kpi-val">${k.v}</div><div class="kpi-lbl">${k.l}</div></div>`).join('');
   // Table
   renderNLTable(nl);
+  loadMailchimp();
 }
 
 function renderNLTable(nl) {
@@ -1901,6 +2056,38 @@ async function saveAds() { const d={}; ['id','gtag','conv-res','conv-wa','conv-c
 function loadAnalytics() { const d=load(K.analytics)||{}; ['ga4-id','ga4-code'].forEach(k=>{const el=document.getElementById(k);if(el)el.value=d[k.replace('-','_')]||'';}); }
 
 async function saveAnalytics() { const d={}; ['ga4-id','ga4-code'].forEach(k=>{const el=document.getElementById(k);if(el)d[k.replace('-','_')]=el.value;}); save(K.analytics,d); toast('Analytics enregistré','g'); }
+
+// ===== Mailchimp — config & automatisation =====
+const K_MAILCHIMP = 'asl_mkt_mailchimp_v1';
+function loadMailchimp(){
+  const d = load(K_MAILCHIMP) || {};
+  const set=(id,v)=>{const el=document.getElementById(id); if(el){ if(el.type==='checkbox') el.checked=!!v; else el.value=v||''; }};
+  set('mc-apikey', d.apikey); set('mc-dc', d.dc); set('mc-list', d.list); set('mc-from', d.from);
+  set('mc-autosync', d.autosync); set('mc-welcome', d.welcome); set('mc-followup', d.followup);
+}
+async function saveMailchimp(){
+  const g=id=>document.getElementById(id);
+  const d={
+    apikey:(g('mc-apikey')||{}).value||'', dc:(g('mc-dc')||{}).value||'',
+    list:(g('mc-list')||{}).value||'', from:(g('mc-from')||{}).value||'',
+    autosync:!!(g('mc-autosync')||{}).checked, welcome:!!(g('mc-welcome')||{}).checked,
+    followup:!!(g('mc-followup')||{}).checked
+  };
+  save(K_MAILCHIMP, d);
+  if (typeof toast==='function') toast('Configuration Mailchimp enregistrée','g');
+  const r=g('mc-result'); if(r){ r.style.display='block'; r.style.background='rgba(22,163,74,.1)'; r.style.color='#16a34a';
+    r.textContent='✓ Configuration enregistrée et synchronisée.'; setTimeout(()=>r.style.display='none',6000); }
+}
+function testMailchimp(){
+  const g=id=>document.getElementById(id);
+  const ok = ((g('mc-apikey')||{}).value||'').length>5 && ((g('mc-list')||{}).value||'').length>3;
+  const r=g('mc-result'); if(!r) return; r.style.display='block';
+  if(ok){ r.style.background='rgba(22,163,74,.1)'; r.style.color='#16a34a';
+    r.textContent='✓ Identifiants renseignés. La connexion sera validée par le serveur lors du premier envoi.'; }
+  else { r.style.background='rgba(224,35,61,.1)'; r.style.color='var(--red)';
+    r.textContent='⚠ Renseignez au minimum la clé API et l\'ID de l\'audience.'; }
+  setTimeout(()=>r.style.display='none',7000);
+}
 
 function renderMenu() {
   const items = load(K.menu) || MENU_DEFAULTS;
@@ -2203,6 +2390,7 @@ const PAGE_TITLES = {
   dashboard:'Tableau de bord', seo:'SEO par page', editor:'Éditeur de contenu',
   ia:'IA Marketing', blog:'Blog', faq:'FAQ', popup:'Popup & CTA',
   newsletter:'Newsletter', ads:'Google Ads', analytics:'Analytics', email:'Configuration Email', social:'Réseaux Sociaux',
+  database:'Base de données clients', conversions:'Tracking des conversions',
 };
 
 /* === Navigation Marketing : modules en fenêtres/popup ===
@@ -2210,7 +2398,7 @@ const PAGE_TITLES = {
    - Tous les textes : éditeur plein écran existant (popup).
    - FAQ / Popup & CTA / Réseaux sociaux : fenêtre superposée centrée.
    - SEO par page / IA : désactivés (logique de contenus centralisée). */
-const MKT_POPUP_IDS = ['faq','popup','social'];
+const MKT_POPUP_IDS = ['faq','popup','social','email','newsletter','ads','analytics','database','conversions'];
 let _mktHosted = null, _mktAnchor = null;
 
 function setActiveInlinePage(id){
@@ -2299,7 +2487,92 @@ function renderPage(id) {
   if (id==='analytics')  loadAnalytics();
   if (id==='email')      loadEmailConfig();
   if (id==='social')     loadSocialConfig();
+  if (id==='database')   renderDatabase();
+  if (id==='conversions') renderConversions();
   if (id==='alltexts')   {} // l'éditeur s'ouvre via le bouton "Ouvrir l'éditeur"
+}
+
+// ===== BASE DE DONNÉES CLIENTS =====
+function renderDatabase() {
+  const list = document.getElementById('db-list');
+  if (!list) return;
+  const res = (typeof getRes === 'function') ? getRes() : [];
+  if (!res.length) {
+    list.innerHTML = '<div style="padding:24px;text-align:center;color:var(--t2);font-size:13px;">Aucune réservation pour le moment. Les clients apparaîtront ici dès la première réservation.</div>';
+    const st = document.getElementById('db-stats'); if (st) st.innerHTML = '';
+    return;
+  }
+  const clients = {};
+  res.forEach(r => {
+    const key = (r.client || r.name || 'Anonyme').trim();
+    if (!key) return;
+    if (!clients[key]) clients[key] = { name:key, phone:r.phone||'', email:r.email||'', count:0, total:0, last:'' };
+    clients[key].count++;
+    clients[key].total += parseFloat(r.amount||r.total)||0;
+    const d = r.startDate||r.createdAt||'';
+    if (d > clients[key].last) clients[key].last = d;
+  });
+  const q = (document.getElementById('db-search')?.value||'').toLowerCase();
+  let arr = Object.values(clients).filter(c => !q || c.name.toLowerCase().includes(q) || (c.phone||'').includes(q));
+  arr.sort((a,b)=>b.total-a.total);
+
+  const st = document.getElementById('db-stats');
+  if (st) {
+    const totalRev = arr.reduce((s,c)=>s+c.total,0);
+    const avg = arr.length ? (arr.reduce((s,c)=>s+c.count,0)/arr.length).toFixed(1) : 0;
+    st.innerHTML = [
+      {v:arr.length, l:'Clients uniques'},
+      {v:totalRev.toLocaleString('fr-FR')+' MAD', l:'Revenus cumulés'},
+      {v:avg, l:'Réservations / client'}
+    ].map(s=>`<div class="card" style="text-align:center;padding:14px;"><div style="font-size:21px;font-weight:900;">${s.v}</div><div style="font-size:11px;color:var(--t2);margin-top:3px;">${s.l}</div></div>`).join('');
+  }
+  if (!arr.length) { list.innerHTML='<div style="padding:24px;text-align:center;color:var(--t2);">Aucun résultat.</div>'; return; }
+  list.innerHTML = arr.map(c=>`
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:11px 16px;border-bottom:1px solid var(--border);font-size:13px;align-items:center;">
+      <div><strong>${c.name}</strong>${c.phone?`<br><span style="font-size:11px;color:var(--t2);">${c.phone}</span>`:''}</div>
+      <div style="font-weight:700;">${c.count}</div>
+      <div style="font-weight:700;color:var(--red);">${c.total.toLocaleString('fr-FR')} MAD</div>
+      <div style="font-size:11.5px;color:var(--t2);">${c.last||'—'}</div>
+    </div>`).join('');
+}
+function exportDatabase() {
+  const res = (typeof getRes === 'function') ? getRes() : [];
+  if (!res.length) { if(typeof toast==='function') toast('Aucune donnée à exporter','r'); return; }
+  const clients = {};
+  res.forEach(r => {
+    const key=(r.client||r.name||'Anonyme').trim();
+    if(!clients[key]) clients[key]={name:key,phone:r.phone||'',email:r.email||'',count:0,total:0};
+    clients[key].count++; clients[key].total+=parseFloat(r.amount||r.total)||0;
+  });
+  const rows=['Nom,Téléphone,Email,Réservations,Total MAD',...Object.values(clients).map(c=>`"${c.name}","${c.phone}","${c.email}",${c.count},${c.total}`)];
+  const blob=new Blob([rows.join('\n')],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='clients-allstarloc.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ===== CONVERSIONS =====
+function renderConversions() {
+  const res = (typeof getRes === 'function') ? getRes() : [];
+  const now = new Date();
+  const m = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  const monthRes = res.filter(r=>(r.startDate||'').startsWith(m)||(r.createdAt||'').startsWith(m));
+  const monthRev = monthRes.reduce((s,r)=>s+(parseFloat(r.amount||r.total)||0),0);
+  const set=(id,v)=>{const e=document.getElementById(id); if(e) e.textContent=v;};
+  set('cv-bookings', monthRes.length);
+  set('cv-revenue', monthRev.toLocaleString('fr-FR')+' MAD');
+  set('cv-total', res.length);
+  const list = document.getElementById('cv-list');
+  if (!list) return;
+  if (!monthRes.length) { list.innerHTML='<div style="color:var(--t2);padding:10px 0;">Aucune conversion ce mois.</div>'; return; }
+  list.innerHTML = monthRes.slice(0,12).map(r=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+      <div><strong>${r.client||r.name||'Client'}</strong><span style="margin-left:8px;font-size:11.5px;color:var(--t2);">${r.car||''}</span></div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-weight:700;color:var(--red);">${(parseFloat(r.amount||r.total)||0).toLocaleString('fr-FR')} MAD</span>
+        <span style="font-size:10.5px;padding:2px 8px;border-radius:10px;background:rgba(22,163,74,.12);color:var(--green);">✓ converti</span>
+      </div>
+    </div>`).join('');
 }
 
 // Dashboard

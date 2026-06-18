@@ -151,6 +151,24 @@ tr:hover td{background:rgba(18,22,30,0.025);}
 .cal-event.reserved{background:rgba(59,130,246,0.2);color:var(--blue);}
 .cal-event.maintenance{background:rgba(245,158,11,0.2);color:var(--yellow);}
 .cal-event.offroad{background:rgba(239,68,68,0.15);color:#EF4444;}
+.cal-event.active{background:rgba(22,163,74,0.2);color:#16A34A;}
+.cal-event.return{background:rgba(245,158,11,0.22);color:#b45309;}
+/* Filtres calendrier */
+.cal-filter-btn{display:inline-flex;align-items:center;padding:7px 16px;border-radius:20px;
+  border:1.5px solid var(--border);background:var(--dark2);color:var(--text2);
+  font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s;font-family:var(--font);}
+.cal-filter-btn:hover{background:rgba(18,22,30,0.05);color:var(--text);}
+.cal-filter-btn.active{background:var(--text);color:#fff;border-color:var(--text);}
+/* Résumé bas calendrier */
+.cal-sum-card{background:var(--dark2);border:1px solid var(--border);border-radius:12px;padding:13px 14px;text-align:center;}
+.cal-sum-val{font-size:21px;font-weight:900;line-height:1;}
+.cal-sum-lbl{font-size:11px;color:var(--text3);margin-top:4px;}
+@media(max-width:768px){
+  .cal-day{min-height:54px;padding:3px;}
+  .cal-day-num{font-size:11px;}
+  .cal-event{font-size:8.5px;}
+  .cal-sum-val{font-size:17px;}
+}
 
 /* FLEET GRID */
 .fleet-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
@@ -407,6 +425,39 @@ body.sb-is-collapsed .topbar { padding-left: 60px; }
   .md-confirm-btn { background: #16a34a; }
   .md-prolong-btn:active, .md-confirm-btn:active { opacity: .8; }
 }
+
+/* ============================================================
+   PHASE 14 — HARMONISATION SIDEBAR SaaS (override final)
+   Garantit : sidebar fermée = contenu pleine largeur, sans espace vide
+   ============================================================ */
+.sidebar.collapsed,
+#the-sidebar.collapsed {
+  width: 0 !important;
+  min-width: 0 !important;
+  border-right: none !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+body.sb-is-collapsed .main {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  width: 100% !important;
+}
+body.sb-is-collapsed .content,
+body.sb-is-collapsed .topbar,
+body.sb-is-collapsed .table-card {
+  max-width: 100% !important;
+}
+/* Le burger reste visible et le titre ne le chevauche pas */
+body.sb-is-collapsed .topbar { padding-left: 56px !important; }
+body.sb-is-collapsed .sb-toggle { display: flex !important; }
+/* fleet.html : la sidebar-wrap ne doit pas garder de largeur fantôme */
+body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important; }
+@media (max-width: 768px) {
+  /* Sur mobile le collapse desktop est neutralisé (overlay déjà géré) */
+  body.sb-is-collapsed .main { margin-left: 0 !important; }
+}
 </style>
 </head>
 <body>
@@ -646,6 +697,13 @@ body.sb-is-collapsed .topbar { padding-left: 60px; }
           </select>
         </div>
       </div>
+      <!-- Filtres dynamiques du calendrier -->
+      <div id="cal-filters" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+        <button class="cal-filter-btn active" data-filter="all" onclick="setCalFilter('all',this)">Tous</button>
+        <button class="cal-filter-btn" data-filter="rented" onclick="setCalFilter('rented',this)"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#16a34a;margin-right:5px;"></span>Loués</button>
+        <button class="cal-filter-btn" data-filter="reserved" onclick="setCalFilter('reserved',this)"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3b82f6;margin-right:5px;"></span>Réservés</button>
+        <button class="cal-filter-btn" data-filter="returns" onclick="setCalFilter('returns',this)"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;margin-right:5px;"></span>Retours</button>
+      </div>
       <div class="table-card" style="padding:16px;">
         <div class="cal-header-days">
           <div class="cal-day-name">Lun</div><div class="cal-day-name">Mar</div>
@@ -655,6 +713,8 @@ body.sb-is-collapsed .topbar { padding-left: 60px; }
         </div>
         <div class="cal-grid" id="cal-grid"></div>
       </div>
+      <!-- Résumé bas calendrier -->
+      <div id="cal-summary" style="margin-top:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;"></div>
     </div>
 
     <!-- ===== FLEET ===== -->
@@ -1050,9 +1110,17 @@ function viewRes(id) {
 
 // ==================== CALENDAR ====================
 let calYear = 2026, calMonth = 5; // June 2026 (0-indexed)
+let calFilter = 'all'; // 'all' | 'rented' | 'reserved' | 'returns'
 
 function prevMonth() { calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); }
 function nextMonth() { calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); }
+
+function setCalFilter(f, btn) {
+  calFilter = f;
+  document.querySelectorAll('.cal-filter-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderCalendar();
+}
 
 function renderCalendar() {
   const months = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
@@ -1060,18 +1128,20 @@ function renderCalendar() {
 
   // Populate car filter
   const sel = document.getElementById('cal-car-filter');
-  if(sel.options.length <= 1) {
+  if(sel && sel.options.length <= 1) {
     FLEET.forEach(c => {
       const o = document.createElement('option');
       o.value = c.id; o.textContent = c.name;
       sel.appendChild(o);
     });
   }
+  const carFilter = sel ? sel.value : 'all';
 
   const firstDay = new Date(calYear, calMonth, 1).getDay();
   const start = firstDay === 0 ? 6 : firstDay - 1; // Monday first
   const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
   const today = new Date();
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
 
   const grid = document.getElementById('cal-grid');
   let html = '';
@@ -1081,20 +1151,70 @@ function renderCalendar() {
     html += `<div class="cal-day" style="opacity:0.2;"></div>`;
   }
 
+  let countActive = 0, countReserved = 0, countReturns = 0;
+
   for(let d=1; d<=daysInMonth; d++) {
     const isToday = today.getFullYear()===calYear && today.getMonth()===calMonth && today.getDate()===d;
     const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    // Find reservations for this day
-    const dayRes = RESERVATIONS.filter(r => dateStr >= r.startDate && dateStr <= r.endDate);
-    const events = dayRes.map(r => `<div class="cal-event reserved" title="${r.client}: ${r.car}">${r.car.split(' ')[0]}</div>`).join('');
+
+    // Réservations couvrant ce jour
+    let dayRes = RESERVATIONS.filter(r => dateStr >= r.startDate && dateStr <= r.endDate);
+    // Retours = fin de réservation ce jour
+    const dayReturns = RESERVATIONS.filter(r => r.endDate === dateStr);
+
+    // Filtre véhicule
+    if (carFilter !== 'all') {
+      dayRes = dayRes.filter(r => String(r.carId) === String(carFilter) || (r.car && FLEET.find(c=>String(c.id)===String(carFilter) && r.car.includes(c.name.split(' ')[0]))));
+    }
+
+    // Filtre dynamique actif
+    let displayRes = dayRes;
+    if (calFilter === 'rented') {
+      displayRes = dayRes.filter(r => r.status === 'active' || r.status === 'confirmed');
+    } else if (calFilter === 'reserved') {
+      displayRes = dayRes.filter(r => r.status === 'confirmed' || r.status === 'pending');
+    } else if (calFilter === 'returns') {
+      displayRes = dayReturns.filter(r => carFilter === 'all' || String(r.carId) === String(carFilter));
+    }
+
+    // Compteurs (jour du mois courant)
+    if (dateStr === todayStr) {
+      countActive   = RESERVATIONS.filter(r => r.startDate <= dateStr && r.endDate >= dateStr && (r.status==='active'||r.status==='confirmed')).length;
+      countReserved = RESERVATIONS.filter(r => r.startDate <= dateStr && r.endDate >= dateStr && (r.status==='confirmed'||r.status==='pending')).length;
+      countReturns  = RESERVATIONS.filter(r => r.endDate === dateStr).length;
+    }
+
+    const events = displayRes.slice(0,3).map(r => {
+      let cls = 'reserved';
+      if (r.status === 'active') cls = 'active';
+      if (r.endDate === dateStr && calFilter === 'returns') cls = 'return';
+      if (r.status === 'maintenance') cls = 'maintenance';
+      const carName = (r.car || 'Véhicule').split(' ')[0];
+      return `<div class="cal-event ${cls}" title="${r.client||''}: ${r.car||''}">${carName}</div>`;
+    }).join('');
+    const more = displayRes.length > 3 ? `<div style="font-size:8.5px;color:var(--text3);">+${displayRes.length-3}</div>` : '';
+
     html += `
       <div class="cal-day${isToday?' today':''}" onclick="calDayClick(${d})">
         <div class="cal-day-num">${d}</div>
-        ${events}
+        ${events}${more}
       </div>
     `;
   }
   grid.innerHTML = html;
+
+  // Résumé bas de page
+  const sumEl = document.getElementById('cal-summary');
+  if (sumEl) {
+    const mStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}`;
+    const monthRes = RESERVATIONS.filter(r => (r.startDate||'').startsWith(mStr) || (r.endDate||'').startsWith(mStr));
+    const monthRevenue = monthRes.reduce((s,r) => s + (parseFloat(r.amount||r.total)||0), 0);
+    sumEl.innerHTML = [
+      { v: monthRes.length, l: 'Locations ce mois', c: 'var(--red)' },
+      { v: countActive, l: "Actives aujourd'hui", c: '#16a34a' },
+      { v: monthRevenue.toLocaleString('fr-FR') + ' MAD', l: 'Chiffre du mois', c: 'var(--blue)' }
+    ].map(s => `<div class="cal-sum-card"><div class="cal-sum-val" style="color:${s.c};">${s.v}</div><div class="cal-sum-lbl">${s.l}</div></div>`).join('');
+  }
 }
 
 function calDayClick(d) {

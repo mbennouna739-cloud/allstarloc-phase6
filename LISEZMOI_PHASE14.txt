@@ -1,0 +1,42 @@
+ALL STAR LOC — PHASE 14 : BACK-OFFICE (modules marketing, calendrier, sidebar, login)
+======================================================================================
+Backend, API, worker, wrangler, synchronisation KV, site client : INCHANGÉS.
+Toutes les fonctionnalités existantes sont conservées. Modifications back-office only.
+
+1. CONNEXION ADMIN MOBILE (admin/login.html)
+   - font-size des champs porté à 16px → supprime le zoom auto iOS/Android
+   - viewport maximum-scale=1.0, touch-action:manipulation, autocapitalize=none
+   - Design 100% conservé (couleurs, card, logo, gradients identiques)
+
+2. CALENDRIER ADMIN (admin/index.html)
+   - Filtres dynamiques ajoutés : Tous / Loués / Réservés / Retours
+   - Changement de filtre = mise à jour immédiate du calendrier
+   - Couleurs distinctes (vert actif, bleu réservé, orange retour)
+   - Résumé bas de page : locations du mois / actives aujourd'hui / CA du mois
+   - Calendrier unique conservé, navigation mois précédent/suivant intacte
+   - Optimisé mobile (cellules plus lisibles)
+
+3. SIDEBAR (admin/index.html, marketing.html, fleet.html)
+   - Comportement SaaS : sidebar fermée = contenu pleine largeur
+   - Aucun espace vide, aucun décalage, aucun chevauchement avec le burger
+   - Override CSS final harmonisé sur les 3 pages
+
+4. MARKETING DIGITAL (admin/marketing.html)
+   - Modules existants conservés : Textes, FAQ, Popup, Réseaux sociaux,
+     Configuration Email (SMTP complet), Newsletter & Mailchimp, Google Ads,
+     Suivi & tracking (GA4) — tous en popup/panneau.
+   - NOUVEAUX modules ajoutés (ouverture en popup) :
+     • Base de données clients : vue consolidée des clients depuis les
+       réservations réelles, recherche, stats, export CSV.
+     • Tracking des conversions : réservations du mois, CA estimé, entonnoir,
+       dernières conversions — données réelles.
+   - Sidebar Marketing + bouton "Retour à l'administration" toujours visibles.
+
+5. FAVICON CLIENT
+   - Vérification : le site client utilise DÉJÀ exactement la même favicon
+     que l'espace admin (symbole A noir/rouge ALL STAR LOC).
+   - Favicons client conservées (déjà harmonisées, haute résolution).
+     Aucune modification nécessaire.
+
+DÉPLOIEMENT : remplacer les fichiers du dépôt par ceux du ZIP, commit,
+Cloudflare redéploie automatiquement.

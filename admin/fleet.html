@@ -307,6 +307,39 @@ body.sb-is-collapsed .content { max-width: 100%; }
   .content table, .table-card { display:block; width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; }
   [class*="grid"] { grid-template-columns: 1fr !important; }
 }
+
+/* ============================================================
+   PHASE 14 — HARMONISATION SIDEBAR SaaS (override final)
+   Garantit : sidebar fermée = contenu pleine largeur, sans espace vide
+   ============================================================ */
+.sidebar.collapsed,
+#the-sidebar.collapsed {
+  width: 0 !important;
+  min-width: 0 !important;
+  border-right: none !important;
+  overflow: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+body.sb-is-collapsed .main {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+  width: 100% !important;
+}
+body.sb-is-collapsed .content,
+body.sb-is-collapsed .topbar,
+body.sb-is-collapsed .table-card {
+  max-width: 100% !important;
+}
+/* Le burger reste visible et le titre ne le chevauche pas */
+body.sb-is-collapsed .topbar { padding-left: 56px !important; }
+body.sb-is-collapsed .sb-toggle { display: flex !important; }
+/* fleet.html : la sidebar-wrap ne doit pas garder de largeur fantôme */
+body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important; }
+@media (max-width: 768px) {
+  /* Sur mobile le collapse desktop est neutralisé (overlay déjà géré) */
+  body.sb-is-collapsed .main { margin-left: 0 !important; }
+}
 </style>
 </head>
 <body>
