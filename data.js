@@ -425,11 +425,79 @@
     else mountBadge();
   }
 
+  /* ---------- Gestion des unités de stock ----------
+     Chaque modèle (1 fiche) possède N unités physiques.
+     unit = { plate, color, status }  (status: available|reserved|active|maintenance|offroad)
+     Rétrocompatible : si pas de units[], on les dérive de plate + stock. */
+  function normalizeUnits(car) {
+    if (!car) return [];
+    var stock = Math.max(1, parseInt(car.stock) || (Array.isArray(car.units) ? car.units.length : 1) || 1);
+    var units = Array.isArray(car.units) ? car.units.slice() : [];
+    // Compléter ou tronquer pour coller au stock
+    if (units.length < stock) {
+      for (var i = units.length; i < stock; i++) {
+        units.push({
+          plate: (i === 0 && car.plate) ? car.plate : '',
+          color: '',
+          status: (i === 0 && car.status) ? car.status : 'available'
+        });
+      }
+    } else if (units.length > stock) {
+      units = units.slice(0, stock);
+    }
+    return units;
+  }
+
+  // Renvoie l'état "agrégé" d'un modèle à partir de ses unités
+  function modelAvailability(car) {
+    var units = normalizeUnits(car);
+    var availableCount = units.filter(function (u) { return (u.status || 'available') === 'available'; }).length;
+    return {
+      total: units.length,
+      available: availableCount,
+      isAvailable: availableCount > 0
+    };
+  }
+
+  // Attribue automatiquement une unité disponible (lors d'une confirmation de réservation).
+  // Renvoie l'unité attribuée {plate,color,index} ou null si plus rien de dispo.
+  function assignUnit(carId, newStatus) {
+    var fleet = getFleet();
+    var car = fleet.find(function (c) { return c.id === carId; });
+    if (!car) return null;
+    car.units = normalizeUnits(car);
+    var idx = car.units.findIndex(function (u) { return (u.status || 'available') === 'available'; });
+    if (idx === -1) return null;
+    car.units[idx].status = newStatus || 'reserved';
+    // Statut agrégé de la fiche
+    car.status = modelAvailability(car).isAvailable ? 'available' : 'reserved';
+    saveFleet(fleet);
+    return { plate: car.units[idx].plate, color: car.units[idx].color, index: idx };
+  }
+
+  // Libère une unité (retour véhicule) en la repassant disponible.
+  function releaseUnit(carId, plate) {
+    var fleet = getFleet();
+    var car = fleet.find(function (c) { return c.id === carId; });
+    if (!car) return null;
+    car.units = normalizeUnits(car);
+    var idx = plate
+      ? car.units.findIndex(function (u) { return u.plate === plate && (u.status || '') !== 'available'; })
+      : car.units.findIndex(function (u) { return (u.status || '') !== 'available'; });
+    if (idx === -1) return null;
+    car.units[idx].status = 'available';
+    car.status = modelAvailability(car).isAvailable ? 'available' : car.status;
+    saveFleet(fleet);
+    return car.units[idx];
+  }
+
   global.ASLDB = {
     RATE_MAD,
     getFleet, saveFleet, addVehicle, updateVehicle, deleteVehicle,
     getReservations, addReservation, updateReservation,
     onChange,
+    // Gestion des unités de stock (couleur + immatriculation par unité)
+    normalizeUnits, modelAvailability, assignUnit, releaseUnit,
     // Nouveaux utilitaires de synchronisation et d'images
     syncNow, syncStatus, uploadImage,
   };

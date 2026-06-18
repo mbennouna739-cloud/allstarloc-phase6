@@ -1004,7 +1004,7 @@ function renderDashboard() {
     <tr>
       <td><strong>${r.id}</strong></td>
       <td>${r.client}</td>
-      <td>${r.car}</td>
+      <td>${r.car}${resUnitInfo(r)}</td>
       <td>${r.startDate} → ${r.endDate}</td>
       <td><strong>${r.amount} MAD</strong></td>
       <td><span class="badge ${STATUS_LABELS[r.status].class}">● ${STATUS_LABELS[r.status].label}</span></td>
@@ -1045,7 +1045,7 @@ function renderAllReservations(filter='all') {
         <div style="font-weight:600;">${r.client}</div>
         <div style="font-size:11px;color:var(--text3);">${r.nationality}</div>
       </td>
-      <td>${r.car}</td>
+      <td>${r.car}${resUnitInfo(r)}</td>
       <td><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg> ${r.pickup}<br><span style="font-size:11px;color:var(--text3);">${r.startDate} ${r.startTime||'10:00'}</span></td>
       <td><span style="font-size:12px;color:var(--text2);">${r.endDate}</span></td>
       <td>${r.days}j</td>
@@ -1064,16 +1064,34 @@ function renderAllReservations(filter='all') {
 function filterReservations(status) { renderAllReservations(status); }
 
 function confirmRes(id) {
-  ASLDB.updateReservation(id, { status: 'confirmed' });
+  // Attribution automatique d'une unité disponible (couleur + immatriculation)
+  var resv = (ASLDB.getReservations() || []).find(function(r){ return r.id === id; });
+  var patch = { status: 'confirmed' };
+  if (resv && resv.carId != null && typeof ASLDB.assignUnit === 'function') {
+    var unit = ASLDB.assignUnit(resv.carId, 'reserved');
+    if (unit) {
+      patch.assignedPlate = unit.plate || '';
+      patch.assignedColor = unit.color || '';
+      patch.assignedUnitIndex = unit.index;
+    }
+  }
+  ASLDB.updateReservation(id, patch);
   reloadData();
   renderAllReservations(); renderDashboard();
+  if (typeof renderFleetPage === 'function') renderFleetPage();
 }
 
 function cancelRes(id) {
   if(confirm('Annuler cette réservation ?')) {
+    // Libère l'unité attribuée (l'immatriculation redevient disponible)
+    var resv = (ASLDB.getReservations() || []).find(function(r){ return r.id === id; });
+    if (resv && resv.carId != null && resv.assignedPlate && typeof ASLDB.releaseUnit === 'function') {
+      ASLDB.releaseUnit(resv.carId, resv.assignedPlate);
+    }
     ASLDB.updateReservation(id, { status: 'cancelled' });
     reloadData();
     renderAllReservations(); renderDashboard();
+    if (typeof renderFleetPage === 'function') renderFleetPage();
   }
 }
 
@@ -1269,7 +1287,26 @@ function renderFleetPage() {
 
 function changeStatus(id, status) {
   if(!status) return;
-  ASLDB.updateVehicle(id, { status });
+  // Synchronise les unités : si on remet le modèle "disponible", toutes les unités
+  // non occupées par une réservation repassent disponibles. Pour maintenance/hors service,
+  // on applique le statut à toutes les unités.
+  var patch = { status: status };
+  if (typeof ASLDB.normalizeUnits === 'function') {
+    var car = (ASLDB.getFleet() || []).find(function(c){ return c.id === id; });
+    if (car) {
+      var units = ASLDB.normalizeUnits(car);
+      if (status === 'maintenance' || status === 'offroad') {
+        units = units.map(function(u){ return Object.assign({}, u, { status: status }); });
+      } else if (status === 'available') {
+        units = units.map(function(u){
+          return (u.status === 'maintenance' || u.status === 'offroad')
+            ? Object.assign({}, u, { status: 'available' }) : u;
+        });
+      }
+      patch.units = units;
+    }
+  }
+  ASLDB.updateVehicle(id, patch);
   reloadData();
   renderFleetPage(); renderAvailability(); renderDashboard();
 }
@@ -1294,7 +1331,10 @@ function editCar(id) {
       <div class="form-group"><label class="form-label">Prix / jour (MAD)</label><input class="form-input" type="number" value="${car.priceMAD}" id="edit-price-mad"></div>
       <div class="form-group"><label class="form-label">Prix site client (€)</label><input class="form-input" type="number" value="${car.priceEUR}" id="edit-price-eur"></div>
     </div>
-    <div class="form-group"><label class="form-label">Immatriculation</label><input class="form-input" value="${car.plate}" id="edit-plate"></div>
+    <div class="form-group" id="edit-units-wrap"><label class="form-label">Unités du stock (couleur + immatriculation)</label>
+      <div id="edit-units-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+      <input type="hidden" id="edit-plate" value="${car.plate||''}">
+    </div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">Transmission</label>
         <select class="form-select" id="edit-trans"><option ${car.transmission==='Automatique'||car.transmission==='Auto'?'selected':''}>Automatique</option><option ${car.transmission==='Manuelle'?'selected':''}>Manuelle</option></select>
@@ -1367,22 +1407,38 @@ function editCar(id) {
   });
   wireImageUpload('edit');
   setTimeout(() => seedTiers('edit', car.tiers), 0);
+  // Unités dynamiques : initialise puis régénère quand le stock change
+  (function(){
+    var initialUnits = ASLDB.normalizeUnits(car);
+    setTimeout(function(){ renderUnitsEditor('edit', initialUnits); }, 0);
+    var stockInput = document.getElementById('edit-stock');
+    if (stockInput) stockInput.addEventListener('input', function(){
+      var n = Math.max(1, Math.min(99, parseInt(this.value) || 1));
+      var current = collectUnits('edit');
+      renderUnitsEditor('edit', current, n);
+    });
+  })();
   document.getElementById('modal-save').onclick = () => {
 
       // Caractéristiques + tarifs par durée (synchronisés avec le site client)
       const fv = id => document.getElementById(id)?.value || '';
       const fc = id => !!document.getElementById(id)?.checked;
       const ft = id => { const n = parseInt(document.getElementById(id)?.value); return (n && n > 0) ? n : null; };
+      const _units = collectUnits('edit');
+      const _firstPlate = (_units[0] && _units[0].plate) ? _units[0].plate : (document.getElementById('edit-plate')?.value || car.plate);
+      const _agg = _units.some(u => (u.status||'available')==='available') ? 'available'
+                 : (_units.length ? _units[0].status : document.getElementById('edit-status').value);
     ASLDB.updateVehicle(id, {
       name: document.getElementById('edit-name').value,
       priceMAD: parseInt(document.getElementById('edit-price-mad').value) || car.priceMAD,
       priceEUR: parseInt(document.getElementById('edit-price-eur').value) || car.priceEUR,
-      plate: document.getElementById('edit-plate').value,
+      plate: _firstPlate,
+      units: _units,
       transmission: document.getElementById('edit-trans').value,
       fuel: document.getElementById('edit-fuel').value,
       category: document.getElementById('edit-cat').value,
       seats: parseInt(document.getElementById('edit-seats')?.value) || 5,
-      stock: parseInt(document.getElementById('edit-stock')?.value) || 1,
+      stock: _units.length || parseInt(document.getElementById('edit-stock')?.value) || 1,
       doors: parseInt(document.getElementById('edit-doors')?.value) || null,
       trunk: fv('edit-trunk'), consumption: fv('edit-cons'),
       deposit: parseInt(fv('edit-deposit')) || null, depositShow: fc('edit-deposit-show'), extras: fv('edit-extras'),
@@ -1390,7 +1446,7 @@ function editCar(id) {
                   camera: fc('edit-feat-cam'), insurance: fc('edit-feat-ins'), airport: fc('edit-feat-air') },
       tiers: collectTiers('edit'),
       img: document.getElementById('edit-img').value || car.img,
-      status: document.getElementById('edit-status').value,
+      status: _agg,
     });
     reloadData();
     renderFleetPage(); renderAvailability(); renderDashboard();
@@ -1590,7 +1646,10 @@ function openModal(type) {
         <div class="form-group"><label class="form-label">Prix / jour (MAD)</label><input class="form-input" type="number" placeholder="300" id="ac-price-mad"></div>
         <div class="form-group"><label class="form-label">Prix site client (€)</label><input class="form-input" type="number" placeholder="30" id="ac-price-eur"></div>
       </div>
-      <div class="form-group"><label class="form-label">Immatriculation</label><input class="form-input" placeholder="ABC-123-MK" id="ac-plate"></div>
+      <div class="form-group" id="ac-units-wrap" style="grid-column:1/-1;"><label class="form-label">Unités du stock (couleur + immatriculation)</label>
+        <div id="ac-units-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+        <input type="hidden" id="ac-plate">
+      </div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Transmission</label>
           <select class="form-select" id="ac-trans"><option>Automatique</option><option>Manuelle</option></select>
@@ -1652,6 +1711,15 @@ function openModal(type) {
       document.getElementById('ac-price-eur').value = Math.round(parseInt(e.target.value||0) / ASLDB.RATE_MAD);
     });
     wireImageUpload('ac');
+    // Unités dynamiques (ajout)
+    setTimeout(function(){ renderUnitsEditor('ac', [{plate:'',color:'',status:'available'}]); }, 0);
+    (function(){
+      var stockInput = document.getElementById('ac-stock');
+      if (stockInput) stockInput.addEventListener('input', function(){
+        var n = Math.max(1, Math.min(99, parseInt(this.value) || 1));
+        renderUnitsEditor('ac', collectUnits('ac'), n);
+      });
+    })();
     document.getElementById('modal-save').onclick = () => {
       const name = document.getElementById('ac-name')?.value;
       if(!name){ alert('Entrez le nom du véhicule'); return; }
@@ -1664,9 +1732,12 @@ function openModal(type) {
       const priceEUR = parseInt(document.getElementById('ac-price-eur')?.value) || Math.round(priceMAD / ASLDB.RATE_MAD);
       const cat = document.getElementById('ac-cat')?.value || 'economique';
       const catLabels = { citadine:'Citadine', economique:'Économique', familiale:'Familiale', suv:'SUV' };
+      const _acUnits = collectUnits('ac');
+      const _acPlate = (_acUnits[0] && _acUnits[0].plate) ? _acUnits[0].plate : (document.getElementById('ac-plate')?.value || '');
       ASLDB.addVehicle({
         name,
-        plate: document.getElementById('ac-plate')?.value || '',
+        plate: _acPlate,
+        units: _acUnits.length ? _acUnits : [{plate:'',color:'',status:'available'}],
         priceMAD, priceEUR,
         category: cat,
         badge: catLabels[cat],
@@ -1674,7 +1745,7 @@ function openModal(type) {
         fuel: document.getElementById('ac-fuel')?.value,
         transmission: document.getElementById('ac-trans')?.value,
         seats: parseInt(document.getElementById('ac-seats')?.value) || 5,
-        stock: parseInt(document.getElementById('ac-stock')?.value) || 1,
+        stock: _acUnits.length || parseInt(document.getElementById('ac-stock')?.value) || 1,
         doors: parseInt(document.getElementById('ac-doors')?.value) || null,
         trunk: fv('ac-trunk'), consumption: fv('ac-cons'),
         deposit: parseInt(fv('ac-deposit')) || null, depositShow: fc('ac-deposit-show'), extras: fv('ac-extras'),
@@ -1766,6 +1837,63 @@ function collectTiers(prefix) {
     const mx = rawMax ? parseInt(rawMax) : 9999;
     return (mn>0 && mx>=mn && pr>0) ? {min:mn, max:mx, price:pr} : null;
   }).filter(Boolean);
+}
+
+/* ===== ÉDITEUR D'UNITÉS DE STOCK (couleur + immatriculation par unité) ===== */
+const UNIT_STATUS_LABELS = {
+  available:'Disponible', reserved:'Réservée', active:'Louée',
+  maintenance:'Maintenance', offroad:'Hors service'
+};
+function renderUnitsEditor(prefix, units, forceCount) {
+  const list = document.getElementById(prefix+'-units-list');
+  if (!list) return;
+  units = Array.isArray(units) ? units.slice() : [];
+  // Ajuste le nombre de lignes au stock demandé
+  let count = forceCount != null ? forceCount : (units.length || 1);
+  count = Math.max(1, Math.min(99, count));
+  while (units.length < count) units.push({ plate:'', color:'', status:'available' });
+  if (units.length > count) units = units.slice(0, count);
+
+  const single = count === 1;
+  list.innerHTML = units.map((u, i) => `
+    <div class="unit-row" data-idx="${i}" style="border:1px solid var(--border,rgba(18,22,30,.14));border-radius:10px;padding:10px 12px;background:rgba(18,22,30,0.02);">
+      ${single ? '' : `<div style="font-size:12px;font-weight:800;color:var(--red,#C41E3A);margin-bottom:8px;">Unité #${i+1}</div>`}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div>
+          <label style="font-size:11px;color:var(--text3,#888);display:block;margin-bottom:3px;">Immatriculation</label>
+          <input class="form-input unit-plate" value="${(u.plate||'').replace(/"/g,'&quot;')}" placeholder="AA-123456" style="width:100%;">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text3,#888);display:block;margin-bottom:3px;">Couleur (gestion interne)</label>
+          <input class="form-input unit-color" value="${(u.color||'').replace(/"/g,'&quot;')}" placeholder="ex : Blanc" style="width:100%;">
+        </div>
+      </div>
+      <div style="margin-top:8px;">
+        <label style="font-size:11px;color:var(--text3,#888);display:block;margin-bottom:3px;">Statut de cette unité</label>
+        <select class="form-select unit-status" style="width:100%;">
+          ${Object.keys(UNIT_STATUS_LABELS).map(s => `<option value="${s}" ${(u.status||'available')===s?'selected':''}>${UNIT_STATUS_LABELS[s]}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+  `).join('');
+}
+function collectUnits(prefix) {
+  const list = document.getElementById(prefix+'-units-list');
+  if (!list) return [];
+  return Array.from(list.querySelectorAll('.unit-row')).map(row => ({
+    plate: (row.querySelector('.unit-plate')?.value || '').trim(),
+    color: (row.querySelector('.unit-color')?.value || '').trim(),
+    status: row.querySelector('.unit-status')?.value || 'available'
+  }));
+}
+// Affiche la couleur + immatriculation attribuées à une réservation (gestion interne)
+function resUnitInfo(r) {
+  if (!r) return '';
+  const bits = [];
+  if (r.assignedColor) bits.push(r.assignedColor);
+  if (r.assignedPlate) bits.push(r.assignedPlate);
+  if (!bits.length) return '';
+  return `<br><span style="font-size:11px;color:var(--text3,#888);">🚗 ${bits.join(' · ')}</span>`;
 }
 
 

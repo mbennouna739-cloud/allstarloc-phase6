@@ -695,6 +695,24 @@ function renderKPIs() {
 // ================================================================
 // TABLEAU FLOTTE (page principale)
 // ================================================================
+// Affiche les unités d'un modèle (plaque + couleur + statut) dans le tableau flotte
+const UNIT_ST_LABELS = { available:'Dispo', reserved:'Réservée', active:'Louée', maintenance:'Maint.', offroad:'H.S.' };
+function fleetUnitsCell(car) {
+  var units = (typeof ASLDB !== 'undefined' && ASLDB.normalizeUnits) ? ASLDB.normalizeUnits(car) : null;
+  if (!units || !units.length) return (car.plate || '—');
+  if (units.length === 1) {
+    var u0 = units[0];
+    return (u0.plate || car.plate || '—') + (u0.color ? `<div style="color:var(--t3);font-size:11px;">${u0.color}</div>` : '');
+  }
+  return units.map(function(u, i){
+    var st = UNIT_ST_LABELS[u.status || 'available'] || '';
+    return `<div style="padding:2px 0;${i>0?'border-top:1px solid var(--border);margin-top:2px;':''}">`
+      + `<span style="font-weight:700;">${u.plate || '—'}</span>`
+      + (u.color ? ` <span style="color:var(--t3);">· ${u.color}</span>` : '')
+      + ` <span style="color:var(--t3);font-size:10px;">(${st})</span></div>`;
+  }).join('');
+}
+
 function renderFleetTable() {
   const filter = document.getElementById('filter-status')?.value || '';
   const search = (document.getElementById('global-search')?.value || '').toLowerCase();
@@ -792,7 +810,7 @@ function renderFleetTable() {
           <span style="font-weight:700;font-size:13px;">${car.name}</span>
         </div>
       </td>
-      <td data-lbl="Plaque" style="font-family:monospace;font-size:12px;color:var(--t2);">${car.plate||'—'}</td>
+      <td data-lbl="Plaque" style="font-family:monospace;font-size:12px;color:var(--t2);">${fleetUnitsCell(car)}</td>
       <td data-lbl="Statut"><span class="badge ${s.cls}" style="font-size:11px;">${s.label}</span></td>
       <td data-lbl="Client">${r ? `<div style="font-weight:600;font-size:13px;">${r.client}</div>` : '<span style="color:var(--t3)">—</span>'}</td>
       <td data-lbl="Téléphone">${r ? `<a href="tel:${r.phone||''}" onclick="event.stopPropagation()" style="color:var(--blue);font-size:12px;white-space:nowrap;">${r.phone||'—'}</a>` : '—'}</td>

@@ -15,6 +15,31 @@
   function wr(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
 
   /* ---- Appliquer toutes les données marketing au site ---- */
+  /* Génère les cartes d'articles sur la page blog publique (même design que les cartes existantes) */
+  function renderBlogGrid(articles) {
+    var grid = document.querySelector('.cards-grid');
+    if (!grid || !articles || !articles.length) return;
+    function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function slugify(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''); }
+    var arrowSvg = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
+    var html = articles.map(function(a){
+      var img = a.img || 'https://images.unsplash.com/photo-1597212618440-806262de4f6b?w=600&q=80';
+      var cat = a.category || 'Article';
+      var excerpt = a.desc || (a.content ? String(a.content).replace(/<[^>]*>/g,'').slice(0,140) + '…' : '');
+      var href = a.slug ? (a.slug + '.html') : ('article-' + slugify(a.title) + '.html');
+      return '<div class="card">'
+        + '<div class="card-img"><img src="' + esc(img) + '" alt="' + esc(a.title) + '" loading="lazy"></div>'
+        + '<div class="card-body">'
+        + '<div class="card-tag">' + esc(cat) + '</div>'
+        + '<div class="card-title">' + esc(a.title) + '</div>'
+        + '<div class="card-text">' + esc(excerpt) + '</div>'
+        + '<a class="card-link" href="' + esc(href) + '">Lire l\'article ' + arrowSvg + '</a>'
+        + '</div></div>';
+    }).join('');
+    // Les articles publiés depuis l'admin viennent EN PREMIER, les cartes statiques existantes restent ensuite
+    grid.insertAdjacentHTML('afterbegin', html);
+  }
+
   function applyMarketing(data) {
     if (!data) return;
 
@@ -105,6 +130,19 @@
         s.type = 'application/ld+json';
         s.textContent = JSON.stringify(schema);
         document.head.appendChild(s);
+      }
+    }
+
+    /* 4bis. BLOG — exposer les articles publiés et les afficher sur la page blog */
+    var blog = data.blog;
+    if (blog && blog.length) {
+      window._ASL_BLOG = blog;
+      var publishedArticles = blog.filter(function(a){ return (a.status || 'draft') === 'published'; });
+      if (page === 'blog' && publishedArticles.length) {
+        document.addEventListener('DOMContentLoaded', function(){
+          renderBlogGrid(publishedArticles);
+        });
+        if (document.readyState !== 'loading') renderBlogGrid(publishedArticles);
       }
     }
 

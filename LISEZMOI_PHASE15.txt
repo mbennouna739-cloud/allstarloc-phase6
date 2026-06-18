@@ -1,0 +1,37 @@
+ALL STAR LOC — PHASE 15
+========================
+1) GESTION MULTI-UNITÉS DE STOCK (1 fiche = 1 modèle, N unités physiques)
+   - data.js : normalizeUnits, modelAvailability, assignUnit, releaseUnit (API ASLDB)
+   - Pop-up Ajouter/Modifier (admin) : le champ Stock génère dynamiquement
+     Unité #1, #2, #3… chacune avec Couleur + Immatriculation + Statut.
+   - Confirmation réservation : attribue automatiquement la 1ère unité disponible,
+     enregistre sa plaque + couleur dans la réservation.
+   - Annulation / changement de statut : libère l'unité automatiquement.
+   - Tableaux (flotte, réservations) : affichent couleur + immatriculation + statut.
+   - Côté client : INCHANGÉ — il ne voit qu'une fiche par modèle (jamais les plaques
+     ni couleurs internes). La disponibilité utilise déjà le stock (reste "Disponible"
+     tant qu'au moins 1 unité est libre, sinon "Complet").
+   - Rétrocompatible : les fiches existantes sans "units" génèrent leurs unités
+     automatiquement depuis plate + stock. Rien n'est cassé.
+
+2) BOUTON WHATSAPP MOBILE (site client)
+   - Masquage doux quand le client agit : drawer de réservation ouvert, ou champ
+     en focus (clavier). Réapparaît automatiquement ensuite. Desktop inchangé.
+   - Code autonome et protégé (en cas d'erreur, le bouton reste simplement visible).
+
+3) PAGE BLOG
+   - Correction : ajout de i18n.js (menu burger + scroll réparés, comme les autres pages).
+   - Ajout de content-bridge.js : les articles publiés depuis l'admin s'affichent
+     automatiquement sur la page blog, avec le MÊME design.
+   - 2 nouveaux articles publiés (référencement) :
+       • article-roadtrips-marrakech.html
+       • article-conduire-maroc.html
+     (ajoutés au sitemap.xml)
+
+4) BACK-OFFICE MARKETING DIGITAL
+   - Ajout de l'item "Blog & Articles" dans la barre latérale interne du Marketing
+     (la page et l'éditeur existaient déjà mais l'entrée manquait).
+   - Les articles ajoutés se synchronisent vers la page blog publique automatiquement.
+   - Le blog n'est PAS ajouté au menu de navigation principal (comme demandé).
+
+DÉPLOIEMENT : remplacer les fichiers, commit, Cloudflare redéploie.

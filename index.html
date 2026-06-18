@@ -924,6 +924,12 @@ html:has(#booking-drawer.open) { overflow: hidden; }
   padding: 8px 16px; border-radius: 10px; white-space: nowrap;
   box-shadow: var(--shadow);
 }
+/* Masquage intelligent du bouton WhatsApp (transition douce, mobile) */
+.wa-float { transition: opacity .25s ease, transform .25s ease, visibility .25s; }
+.wa-float.wa-dim { opacity: 0; visibility: hidden; transform: translateY(24px) scale(.85); pointer-events: none; }
+@media(min-width:1025px){
+  .wa-float.wa-dim { opacity: 1; visibility: visible; transform: none; pointer-events: auto; }
+}
 
 /* ==================== RESPONSIVE ==================== */
 @media(max-width:1024px){
@@ -2713,6 +2719,50 @@ document.addEventListener('DOMContentLoaded', () => {
     renderCars(); // ré-affiche avec le filtre courant (indépendant de la langue affichée)
   });
 });
+</script>
+<script>
+/* WhatsApp flottant : masquage doux quand le client agit (mobile).
+   100% autonome, ne modifie aucune autre logique. Si une erreur survient,
+   le bouton reste simplement visible (aucun risque pour le site). */
+(function(){
+  try {
+    var wa = document.querySelector('.wa-float');
+    if (!wa) return;
+    var isMobile = function(){ return window.innerWidth <= 1024; };
+
+    function overlayOpen(){
+      // Drawer de réservation ouvert, ou tout overlay visible plein écran
+      var d = document.querySelector('.drawer.open, .drawer-overlay.open, .booking-drawer.open, .modal.open, .lightbox.open');
+      return !!d;
+    }
+    function update(){
+      if (!isMobile()) { wa.classList.remove('wa-dim'); return; }
+      if (overlayOpen()) wa.classList.add('wa-dim');
+      else wa.classList.remove('wa-dim');
+    }
+
+    // Champ en focus (clavier ouvert) -> on masque ; perte de focus -> on réaffiche
+    document.addEventListener('focusin', function(e){
+      if (!isMobile()) return;
+      var t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT')) {
+        wa.classList.add('wa-dim');
+      }
+    });
+    document.addEventListener('focusout', function(){
+      setTimeout(update, 150);
+    });
+
+    // Suivre l'ouverture/fermeture des overlays
+    if (window.MutationObserver) {
+      new MutationObserver(update).observe(document.body, {
+        attributes:true, subtree:true, attributeFilter:['class','style']
+      });
+    }
+    window.addEventListener('resize', update);
+    update();
+  } catch(e) { /* en cas d'erreur, le bouton reste visible, rien n'est cassé */ }
+})();
 </script>
 </body>
 </html>
