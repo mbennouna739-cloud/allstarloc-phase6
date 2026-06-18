@@ -1,70 +1,42 @@
-ALL STAR LOC — PHASE 14 : BACK-OFFICE MOBILE + PERFORMANCE + WHATSAPP INTELLIGENT
-==================================================================================
-Backend, API, worker, wrangler, KV : INCHANGÉS. Site client visuellement identique.
+ALL STAR LOC — PHASE 14 : BACK-OFFICE (modules marketing, calendrier, sidebar, login)
+======================================================================================
+Backend, API, worker, wrangler, synchronisation KV, site client : INCHANGÉS.
+Toutes les fonctionnalités existantes sont conservées. Modifications back-office only.
 
-========================================================
-A. BACK-OFFICE MOBILE (panneaux stables) — admin/*.html
-========================================================
-- Anti-zoom : tous les champs passent à 16px sur mobile → plus de zoom auto
-  iOS/Android. Viewport maximum-scale=1.0 sur toutes les pages admin.
-- Chaque section de la barre latérale (Tableau de bord, Flotte, Véhicules,
-  Réservations, Loués, Réservés, Retours, Calendrier, Marketing, Réseaux,
-  Paramètres…) s'ouvre désormais en PANNEAU plein écran stable :
-    • en-tête fixe avec titre + bouton retour + croix de fermeture
-    • largeur = 100vw, jamais de débordement horizontal
-    • scroll vertical interne uniquement
-    • le panneau ne bouge pas pendant la saisie
-- Grilles passées en 1 colonne, tableaux en scroll horizontal interne propre.
-- Boutons : zone tactile minimum 44px.
-- Marketing : les modules utilisent déjà le système popup plein écran (conservé),
-  + anti-zoom et stabilité ajoutés.
+1. CONNEXION ADMIN MOBILE (admin/login.html)
+   - font-size des champs porté à 16px → supprime le zoom auto iOS/Android
+   - viewport maximum-scale=1.0, touch-action:manipulation, autocapitalize=none
+   - Design 100% conservé (couleurs, card, logo, gradients identiques)
 
-========================================================
-B. CALENDRIER MOBILE LISIBLE — admin/index.html
-========================================================
-- Un seul calendrier clair, cellules plus hautes (60px), dates lisibles (13px,
-  aujourd'hui en pastille rouge).
-- Filtres dynamiques pleine largeur : Tous / Loués / Réservés / Retours
-  (changement = mise à jour immédiate).
-- Navigation mois précédent / suivant en gros boutons tactiles.
-- Légende verbeuse masquée sur mobile (remplacée par les filtres colorés).
-- Sélecteur véhicule pleine largeur. Résumé du mois en bas (3 cartes).
+2. CALENDRIER ADMIN (admin/index.html)
+   - Filtres dynamiques ajoutés : Tous / Loués / Réservés / Retours
+   - Changement de filtre = mise à jour immédiate du calendrier
+   - Couleurs distinctes (vert actif, bleu réservé, orange retour)
+   - Résumé bas de page : locations du mois / actives aujourd'hui / CA du mois
+   - Calendrier unique conservé, navigation mois précédent/suivant intacte
+   - Optimisé mobile (cellules plus lisibles)
 
-========================================================
-C. WHATSAPP FLOTTANT INTELLIGENT (mobile) — index.html
-========================================================
-- Le bouton reste présent et accessible sur les pages normales.
-- Réservation ouverte / modale ouverte → bouton réduit & semi-transparent (discret).
-- Champ en focus (saisie) → bouton masqué temporairement.
-- Date picker / calendrier ouvert (champ date en focus) → masqué.
-- Fermeture / fin de saisie → réapparaît automatiquement.
-- Desktop inchangé.
+3. SIDEBAR (admin/index.html, marketing.html, fleet.html)
+   - Comportement SaaS : sidebar fermée = contenu pleine largeur
+   - Aucun espace vide, aucun décalage, aucun chevauchement avec le burger
+   - Override CSS final harmonisé sur les 3 pages
 
-========================================================
-D. PERFORMANCE / LIGHTHOUSE — site client
-========================================================
-1. IMAGE HERO : conversion WebP (227K → 36K, -85%) via <picture> + fallback PNG.
-   Preload du hero WebP en fetchpriority high → LCP mobile fortement amélioré.
-2. SCRIPTS : i18n.js, content-bridge.js, data.js passés en defer → ne bloquent
-   plus le rendu (ordre préservé, exécution avant DOMContentLoaded).
-3. POLICES : page d'accueil réduite aux poids réellement utilisés (400/600/700/800
-   Outfit, 400/500 DM Sans) + chargement non-bloquant (preload + media print/onload).
-   Pages secondaires : police rendue non-bloquante (poids inchangés).
-4. CLS : logo header + footer reçoivent width/height explicites (316x80).
-   Hero a déjà ses dimensions → pas de décalage.
-5. ACCESSIBILITÉ : aria-label ajoutés sur les boutons/liens icône (WhatsApp
-   flottant, réseaux sociaux, retour de tunnel). rel="noopener" sur liens externes.
+4. MARKETING DIGITAL (admin/marketing.html)
+   - Modules existants conservés : Textes, FAQ, Popup, Réseaux sociaux,
+     Configuration Email (SMTP complet), Newsletter & Mailchimp, Google Ads,
+     Suivi & tracking (GA4) — tous en popup/panneau.
+   - NOUVEAUX modules ajoutés (ouverture en popup) :
+     • Base de données clients : vue consolidée des clients depuis les
+       réservations réelles, recherche, stats, export CSV.
+     • Tracking des conversions : réservations du mois, CA estimé, entonnoir,
+       dernières conversions — données réelles.
+   - Sidebar Marketing + bouton "Retour à l'administration" toujours visibles.
 
-ATTENTION DÉPLOIEMENT : le nouveau fichier assets/hero-suv.webp DOIT être inclus
-dans le commit (il est dans ce ZIP). Si .assetsignore exclut les .webp, l'ajouter.
+5. FAVICON CLIENT
+   - Vérification : le site client utilise DÉJÀ exactement la même favicon
+     que l'espace admin (symbole A noir/rouge ALL STAR LOC).
+   - Favicons client conservées (déjà harmonisées, haute résolution).
+     Aucune modification nécessaire.
 
-========================================================
-E. RÉSULTATS ATTENDUS
-========================================================
-- LCP mobile : nette amélioration (hero 6× plus léger + preload).
-- Render-blocking : scripts et polices ne bloquent plus.
-- CLS : réduit (images dimensionnées).
-- Accessibilité : labels et contrastes améliorés.
-- Desktop : niveau conservé. Design client : identique.
-
-Vérifier avec un nouvel audit Lighthouse/PageSpeed après déploiement.
+DÉPLOIEMENT : remplacer les fichiers du dépôt par ceux du ZIP, commit,
+Cloudflare redéploie automatiquement.
