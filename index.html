@@ -569,12 +569,11 @@ footer { background: var(--dark); border-top: 1px solid rgba(255,255,255,0.06); 
 
 .footer-socials { display: flex; gap: 10px; margin-top: 8px; }
 .footer-social {
-  width: 42px; height: 42px; border-radius: 10px; background: rgba(255,255,255,0.06);
+  width: 36px; height: 36px; border-radius: 9px; background: rgba(255,255,255,0.06);
   display: flex; align-items: center; justify-content: center;
-  color: rgba(255,255,255,0.72); text-decoration: none; font-size: 19px;
+  color: rgba(255,255,255,0.72); text-decoration: none; font-size: 16px;
   transition: all 0.2s;
 }
-.footer-social svg { width: 19px; height: 19px; }
 .footer-social:hover { background: var(--red); color: white; }
 
 .footer-bottom {
@@ -924,16 +923,6 @@ html:has(#booking-drawer.open) { overflow: hidden; }
   background: var(--dark); color: white; font-size: 13px; font-weight: 600;
   padding: 8px 16px; border-radius: 10px; white-space: nowrap;
   box-shadow: var(--shadow);
-}
-/* Masquage intelligent du bouton WhatsApp flottant (mobile uniquement) */
-.wa-float { transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s ease; }
-@media(max-width:768px){
-  .wa-float.wa-hidden {
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(20px) scale(0.85);
-    pointer-events: none;
-  }
 }
 
 /* ==================== RESPONSIVE ==================== */
@@ -2724,48 +2713,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderCars(); // ré-affiche avec le filtre courant (indépendant de la langue affichée)
   });
 });
-</script>
-<script>
-/* ===== WhatsApp flottant : masquage intelligent sur mobile =====
-   - Se cache quand un overlay est ouvert (réservation, calendrier, menu)
-   - Se cache pendant le scroll, réapparaît à l'arrêt
-   - Aucun effet sur desktop. N'altère aucune autre logique. */
-(function(){
-  var wa = document.querySelector('.wa-float');
-  if(!wa) return;
-  var isMobile = function(){ return window.matchMedia('(max-width:768px)').matches; };
-  var scrollTimer = null;
-  var forcedHidden = false; // caché à cause d'un overlay ouvert
-
-  function overlayOpen(){
-    return !!document.querySelector(
-      '#booking-drawer.open, .drawer.open, .drawer-overlay.open, .asl-cal.open, .mobile-menu.open, .hdr-menu.open'
-    );
-  }
-  function refresh(){
-    if(!isMobile()){ wa.classList.remove('wa-hidden'); return; }
-    if(forcedHidden || overlayOpen()){ wa.classList.add('wa-hidden'); }
-    else { wa.classList.remove('wa-hidden'); }
-  }
-
-  // Masquer pendant le scroll, réafficher à l'arrêt
-  window.addEventListener('scroll', function(){
-    if(!isMobile()) return;
-    if(overlayOpen()) return; // déjà géré
-    wa.classList.add('wa-hidden');
-    if(scrollTimer) clearTimeout(scrollTimer);
-    scrollTimer = setTimeout(function(){ refresh(); }, 600);
-  }, { passive:true });
-
-  // Surveiller l'ouverture/fermeture des overlays (classes ajoutées ailleurs)
-  var mo = new MutationObserver(function(){ refresh(); });
-  mo.observe(document.documentElement, {
-    attributes:true, subtree:true, attributeFilter:['class','style']
-  });
-
-  window.addEventListener('resize', refresh);
-  refresh();
-})();
 </script>
 </body>
 </html>
