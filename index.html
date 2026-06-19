@@ -924,12 +924,10 @@ html:has(#booking-drawer.open) { overflow: hidden; }
   padding: 8px 16px; border-radius: 10px; white-space: nowrap;
   box-shadow: var(--shadow);
 }
-/* Masquage intelligent du bouton WhatsApp (transition douce, mobile) */
-.wa-float { transition: opacity .25s ease, transform .25s ease, visibility .25s; }
-.wa-float.wa-dim { opacity: 0; visibility: hidden; transform: translateY(24px) scale(.85); pointer-events: none; }
-@media(min-width:1025px){
-  .wa-float.wa-dim { opacity: 1; visibility: visible; transform: none; pointer-events: auto; }
-}
+/* Page d'accueil : le bouton WhatsApp flottant est masqué (mobile ET ordinateur)
+   pour ne pas gêner la réservation. Il reste présent sur les AUTRES pages
+   (Contact, À propos, Blog…) qui ont leur propre bouton. */
+.wa-float { display: none !important; }
 
 /* ==================== RESPONSIVE ==================== */
 @media(max-width:1024px){
@@ -1604,6 +1602,7 @@ function loadCars() {
       transmission: c.transmission,
       fuel: c.fuel,
       img: c.img,
+      imgAlt: c.imgAlt || '',
       badge: c.badge || c.category,
       featured: !!c.featured,
       services: c.services && c.services.length ? c.services : ['Clim'],
@@ -1725,7 +1724,7 @@ function renderCars(filter) {
     <div class="car-card ${av.available ? '' : 'unavailable'}" onclick="${av.available ? `selectCar(${car.id})` : 'scrollToDates()'}">
       <div class="car-card-img">
         ${av.available ? '' : `<div class="unavail-badge">${t('fleet.unavail')}</div>`}
-        <img src="${car.img}" alt="${car.name}" loading="lazy">
+        <img src="${car.img}" alt="${car.imgAlt || (car.name + ' location Marrakech ALL STAR LOC')}" loading="lazy">
         <div class="car-badge ${car.featured?'featured':''}">${car.badge}</div>
       </div>
       <div class="car-card-body">
@@ -1955,6 +1954,15 @@ function openCal(mode, fieldEl) {
   } else {
     cal.style.left = '';
     cal.style.top = '';
+    // Mobile : déplacer le calendrier + son fond directement dans <body>.
+    // Cela évite que l'animation/transform du parent (.booking-card) casse
+    // le position:fixed et fasse "bouger" le calendrier au scroll.
+    if (cal.parentElement !== document.body) {
+      if (!cal._origParent) { cal._origParent = cal.parentElement; cal._origNext = cal.nextSibling; }
+      var bd = document.getElementById('cal-backdrop');
+      if (bd && bd.parentElement !== document.body) document.body.appendChild(bd);
+      document.body.appendChild(cal);
+    }
   }
   document.querySelectorAll('.bk-control').forEach(c=>c.classList.remove('active'));
   fieldEl.classList.add('active');
@@ -2245,7 +2253,7 @@ function vehicleRecapHTML() {
   if (!state.car) return '';
   return `
     <div class="vehicle-recap">
-      <img src="${state.car.img}" alt="${state.car.name}">
+      <img src="${state.car.img}" alt="${state.car.imgAlt || (state.car.name + ' location Marrakech ALL STAR LOC')}">
       <div class="vehicle-recap-info">
         <div class="vehicle-recap-name">${state.car.name}</div>
         <div class="vehicle-recap-dates">${state.days} ${t(state.days>1?'u.days':'u.day')} · ${state.pickupLoc || 'Aéroport RAK'}</div>
@@ -2719,50 +2727,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderCars(); // ré-affiche avec le filtre courant (indépendant de la langue affichée)
   });
 });
-</script>
-<script>
-/* WhatsApp flottant : masquage doux quand le client agit (mobile).
-   100% autonome, ne modifie aucune autre logique. Si une erreur survient,
-   le bouton reste simplement visible (aucun risque pour le site). */
-(function(){
-  try {
-    var wa = document.querySelector('.wa-float');
-    if (!wa) return;
-    var isMobile = function(){ return window.innerWidth <= 1024; };
-
-    function overlayOpen(){
-      // Drawer de réservation ouvert, ou tout overlay visible plein écran
-      var d = document.querySelector('.drawer.open, .drawer-overlay.open, .booking-drawer.open, .modal.open, .lightbox.open');
-      return !!d;
-    }
-    function update(){
-      if (!isMobile()) { wa.classList.remove('wa-dim'); return; }
-      if (overlayOpen()) wa.classList.add('wa-dim');
-      else wa.classList.remove('wa-dim');
-    }
-
-    // Champ en focus (clavier ouvert) -> on masque ; perte de focus -> on réaffiche
-    document.addEventListener('focusin', function(e){
-      if (!isMobile()) return;
-      var t = e.target;
-      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT')) {
-        wa.classList.add('wa-dim');
-      }
-    });
-    document.addEventListener('focusout', function(){
-      setTimeout(update, 150);
-    });
-
-    // Suivre l'ouverture/fermeture des overlays
-    if (window.MutationObserver) {
-      new MutationObserver(update).observe(document.body, {
-        attributes:true, subtree:true, attributeFilter:['class','style']
-      });
-    }
-    window.addEventListener('resize', update);
-    update();
-  } catch(e) { /* en cas d'erreur, le bouton reste visible, rien n'est cassé */ }
-})();
 </script>
 </body>
 </html>

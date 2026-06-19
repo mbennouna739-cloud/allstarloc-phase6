@@ -1,0 +1,37 @@
+ALL STAR LOC — VERSION FINALE (prête à déployer)
+=================================================
+
+SÉCURITÉ ADMIN (IMPORTANT) :
+- En LIGNE (Cloudflare / ton domaine) : login + mot de passe OBLIGATOIRES.
+  Le mot de passe est celui configuré dans tes variables Cloudflare
+  (ADMIN_USER / ADMIN_PASS). Le design du login n'a pas été touché.
+- En LOCAL (fichier ouvert sur ton ordinateur) : accès direct pour tester,
+  sans mot de passe. C'est automatique et sans danger pour la prod.
+
+WHATSAPP :
+- Bouton flottant RETIRÉ de la page d'accueil (mobile ET ordinateur).
+- Toujours présent sur les autres pages (Contact, À propos, Blog…).
+
+CE QUI A ÉTÉ FAIT (récapitulatif complet) :
+1. Sidebar Flotte : bouton de réouverture corrigé définitivement (la vraie cause
+   était une 2e règle CSS "display:none"). Replie/rouvre sans souci.
+2. Menu burger (Tableau de bord + Flotte) mobile : réapparaît toujours.
+3. Calendrier de réservation (mobile) : ne bouge plus au scroll.
+4. Module Promotions : retiré de la barre latérale.
+5. Texte ALT images véhicules : champ réel, sauvegardé, appliqué sur le site
+   client (repli SEO automatique si vide).
+6. Gestion multi-unités de stock : 1 fiche = 1 modèle, N unités physiques,
+   chacune avec sa plaque + couleur + statut.
+7. Popups Nouvelle réservation ET Nouvelle location :
+   - Choix de la voiture par UNITÉ (plaque + couleur affichées), unités occupées grisées
+   - Prix journalier modifiable, total calculé automatiquement
+   - Bloc Paiement : total / reçu / reste à payer / statut (Non payé/Partiel/Complet)
+   - Réservation → unité "réservée" · Location → unité "louée" (active)
+8. Blog : page corrigée (menu + scroll), 2 articles publiés, item Blog ajouté
+   dans le back-office Marketing, synchro vers la page publique.
+
+DÉPLOIEMENT : remplace les fichiers du dépôt, commit, Cloudflare redéploie.
+Tous les fichiers ont été vérifiés (syntaxe JS OK partout).
+
+RESTE À FAIRE (prochaines fois, si tu veux) : colonne statut éditable dans
+Paiements, synchro complète Clients, notifications fonctionnelles.

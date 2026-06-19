@@ -1,0 +1,30 @@
+ALL STAR LOC — LOT 2
+=====================
+ACCÈS ADMIN LOCAL : ouvre admin/index.html → sans mot de passe. En ligne : sécurisé.
+
+CORRIGÉ DÉFINITIVEMENT :
+1. SIDEBAR FLOTTE — bouton de réouverture INVISIBLE : CAUSE RÉELLE TROUVÉE.
+   Il y avait une 2e définition CSS de .sb-toggle (copiée d'une autre page) avec
+   "display:none" qui cachait le bouton en permanence. Supprimée. Le bouton ◀
+   reste maintenant TOUJOURS visible à gauche quand la barre est repliée, et la
+   rouvre au clic. Les classes (.collapsed + sb-is-collapsed) sont synchronisées.
+
+NOUVEAU :
+2. PAIEMENT sur NOUVELLE RÉSERVATION (Tableau de bord) :
+   - Prix total calculé automatiquement selon véhicule + dates (modifiable à la main)
+   - Montant reçu → Reste à payer calculé automatiquement
+   - Statut : Non payé / Paiement partiel / Paiement complet
+   - Enregistré dans la réservation (amount, paid, paymentStatus)
+3. PAIEMENT sur NOUVELLE LOCATION (Flotte) : idem + le véhicule passe LOUÉ (active)
+   avec attribution automatique d'une unité de stock.
+
+RAPPEL des lots précédents (conservés) :
+- WhatsApp masqué accueil mobile, gardé ailleurs
+- Calendrier mobile ne bouge plus au scroll
+- Promotions retiré
+- Texte ALT images véhicules (réel, synchronisé site client)
+- Gestion multi-unités de stock (couleur + immatriculation par unité)
+
+À VENIR (prochains lots) : colonne statut éditable dans Paiements, synchro
+complète Clients (réservations + locations + paiements), notifications
+fonctionnelles, vérification blog. Toujours lot par lot, sans rien casser.

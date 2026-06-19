@@ -37,6 +37,9 @@ a{text-decoration:none;color:inherit;}
 .sidebar-wrap .sb-toggle{left:220px;}
 .sidebar-wrap .sidebar.collapsed ~ .sb-toggle,
 .sidebar-wrap:has(.sidebar.collapsed) .sb-toggle{left:0;}
+/* Le bouton de réouverture reste TOUJOURS visible et cliquable,
+   même quand la sidebar est repliée (sinon impossible de la rouvrir). */
+.sidebar-wrap .sb-toggle{ z-index:60 !important; opacity:1 !important; pointer-events:auto !important; visibility:visible !important; }
 .main{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
 .topbar{background:var(--card);border-bottom:1px solid var(--border);
   padding:14px 24px;display:flex;align-items:center;gap:16px;flex-shrink:0;}
@@ -246,14 +249,6 @@ a{text-decoration:none;color:inherit;}
 .sidebar { transition: width .25s ease, transform .25s ease; position: relative; }
 .sidebar.collapsed { width: 0 !important; min-width: 0 !important; overflow: hidden !important; border-right: none !important; }
 .sidebar.collapsed > * { opacity: 0; pointer-events: none; }
-.sb-toggle {
-  position: fixed; top: 14px; left: 14px; z-index: 1200;
-  width: 36px; height: 36px; border-radius: 9px;
-  background: var(--red, #C41E3A); color: #fff; border: none; cursor: pointer;
-  display: none; align-items: center; justify-content: center;
-  box-shadow: 0 4px 14px rgba(0,0,0,.25); transition: left .25s ease;
-}
-.sb-toggle svg { width: 18px; height: 18px; }
 .sb-collapse-btn {
   position: absolute; top: 12px; right: 10px; z-index: 50;
   width: 28px; height: 28px; border-radius: 8px; border: none; cursor: pointer;
@@ -261,7 +256,6 @@ a{text-decoration:none;color:inherit;}
   display: flex; align-items: center; justify-content: center; transition: background .15s;
 }
 .sb-collapse-btn:hover { background: rgba(196,30,58,.18); color: #C41E3A; }
-body.sb-is-collapsed .sb-toggle { display: flex; }
 
 /* === Bouton Déconnexion sidebar === */
 .sb-logout{margin:5px 8px;padding:11px 13px;display:flex;align-items:center;gap:9px;
@@ -336,6 +330,19 @@ body.sb-is-collapsed .topbar { padding-left: 56px !important; }
 body.sb-is-collapsed .sb-toggle { display: flex !important; }
 /* fleet.html : la sidebar-wrap ne doit pas garder de largeur fantôme */
 body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important; }
+/* CORRECTIF : même quand le wrapper est réduit à 0, le bouton de réouverture
+   doit DÉBORDER et rester visible + cliquable (sinon impossible de rouvrir la barre). */
+.sidebar-wrap { overflow: visible !important; }
+.sidebar-wrap .sb-toggle,
+body.sb-is-collapsed .sidebar-wrap .sb-toggle {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  position: absolute !important;
+  left: 0 !important;
+  z-index: 200 !important;
+}
 @media (max-width: 768px) {
   /* Sur mobile le collapse desktop est neutralisé (overlay déjà géré) */
   body.sb-is-collapsed .main { margin-left: 0 !important; }
@@ -385,6 +392,7 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
   </a>
 </aside>
 <button class="sb-toggle" id="sb-toggle-btn" onclick="toggleSidebar()" title="Masquer/Afficher le menu">◀</button>
+<div class="sb-mobile-backdrop" onclick="toggleSidebar()"></div>
 </div>
 
 <!-- ==================== MAIN ==================== -->
@@ -1446,13 +1454,29 @@ function renderMaintPage() {
 // QUICK RESERVATION
 // ================================================================
 function openQuickRes() {
-  const carOpts = FLEET.filter(c=>c.status==='available'||c.status==='reserved')
-    .map(c=>`<option value="${c.id}">${c.name} (${c.plate||''})</option>`).join('');
+  // Liste chaque UNITÉ disponible séparément (plaque + couleur), avec prix/jour
+  let carOpts = '';
+  FLEET.forEach(function(c){
+    var ppu = c.priceMAD || Math.round((c.priceEUR||0)*10.8);
+    var units = (typeof ASLDB.normalizeUnits === 'function') ? ASLDB.normalizeUnits(c) : null;
+    if (units && units.length) {
+      units.forEach(function(u, i){
+        var st = u.status || 'available';
+        if (st !== 'available') return; // on ne propose que les unités libres
+        var label = c.name + ' — ' + (u.plate || 'sans plaque') + (u.color ? ' · ' + u.color : '') + ' — ' + ppu + ' MAD/j';
+        carOpts += '<option value="'+c.id+'" data-unit="'+i+'" data-plate="'+(u.plate||'')+'" data-color="'+(u.color||'')+'" data-ppu="'+ppu+'">'+label+'</option>';
+      });
+    } else if (c.status==='available' || c.status==='reserved') {
+      carOpts += '<option value="'+c.id+'" data-ppu="'+ppu+'">'+c.name+' ('+(c.plate||'')+') — '+ppu+' MAD/j</option>';
+    }
+  });
+  if (!carOpts) carOpts = '<option value="">Aucun véhicule disponible</option>';
   const t = today();
   const t1 = new Date(); t1.setDate(t1.getDate()+1);
   openModal('Nouvelle location rapide', `
     <div class="maint-form">
-      <div class="form-g"><label>Véhicule *</label><select class="form-select" id="qr-car" onchange="qrPrice()">${carOpts}</select></div>
+      <div class="form-g"><label>Véhicule (plaque · couleur) *</label><select class="form-select" id="qr-car" onchange="qrCarChange()">${carOpts}</select></div>
+      <div class="form-g"><label>Prix journalier (MAD)</label><input class="form-input" type="number" id="qr-ppu" oninput="qrPrice()" placeholder="Prix / jour"></div>
       <div class="form-g"><label>Client *</label><input class="form-input" id="qr-client" placeholder="Nom complet"></div>
       <div class="form-g"><label>Téléphone *</label><input class="form-input" id="qr-phone" placeholder="+212 6…"></div>
       <div class="form-g"><label>Date départ *</label><input class="form-input" type="date" id="qr-start" value="${t}" onchange="qrPrice()"></div>
@@ -1460,8 +1484,49 @@ function openQuickRes() {
       <div class="form-g"><label>Lieu prise en charge</label><input class="form-input" id="qr-pickup" value="Agence"></div>
     </div>
     <div id="qr-price" style="margin-top:12px;padding:12px;background:var(--red-l);border:1px solid var(--red-b);border-radius:10px;font-weight:700;color:var(--red);display:none;"></div>
+    <div style="margin-top:14px;padding:14px;background:rgba(18,22,30,.03);border-radius:10px;">
+      <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--t3);margin-bottom:10px;">Paiement</div>
+      <div class="maint-form">
+        <div class="form-g"><label>Montant total (MAD)</label><input class="form-input" type="number" id="qr-total" oninput="this.dataset.manual='1';qrPayCalc()" placeholder="0"></div>
+        <div class="form-g"><label>Montant reçu (MAD)</label><input class="form-input" type="number" id="qr-paid" value="0" oninput="qrPayCalc()" placeholder="0"></div>
+      </div>
+      <div id="qr-rest" style="margin-top:8px;font-weight:700;font-size:14px;"></div>
+    </div>
   `, [{ label:'Créer la location', action:'saveQuickRes()', cls:'btn-red' }]);
-  setTimeout(qrPrice, 100);
+  setTimeout(function(){ qrInitPpu(); qrPrice(); qrPayCalc(); }, 100);
+}
+
+// Pré-remplit le prix journalier depuis l'unité sélectionnée
+function qrInitPpu() {
+  const sel = document.getElementById('qr-car');
+  const opt = sel?.options[sel.selectedIndex];
+  const ppuEl = document.getElementById('qr-ppu');
+  if (opt && ppuEl && !ppuEl.value) ppuEl.value = opt.getAttribute('data-ppu') || '';
+}
+
+// Changement de véhicule : on remet le prix journalier de la nouvelle unité, puis on recalcule
+function qrCarChange() {
+  const sel = document.getElementById('qr-car');
+  const opt = sel?.options[sel.selectedIndex];
+  const ppuEl = document.getElementById('qr-ppu');
+  if (opt && ppuEl) ppuEl.value = opt.getAttribute('data-ppu') || '';
+  const totalEl = document.getElementById('qr-total');
+  if (totalEl) delete totalEl.dataset.manual; // on autorise le recalcul auto
+  qrPrice();
+}
+
+// Calcul automatique du reste à payer + statut de paiement (location rapide)
+function qrPayCalc() {
+  const total = parseFloat(document.getElementById('qr-total')?.value) || 0;
+  const paid  = parseFloat(document.getElementById('qr-paid')?.value) || 0;
+  const reste = Math.max(0, total - paid);
+  const box = document.getElementById('qr-rest');
+  if (!box) return;
+  let statut, couleur;
+  if (paid <= 0)            { statut = 'Non payé';          couleur = 'var(--red)'; }
+  else if (paid >= total && total > 0) { statut = 'Paiement complet'; couleur = 'var(--green)'; }
+  else                     { statut = 'Paiement partiel';   couleur = 'var(--yellow,#d97706)'; }
+  box.innerHTML = `Reste à payer : <span style="color:${couleur}">${reste.toLocaleString('fr-FR')} MAD</span> · Statut : <span style="color:${couleur}">${statut}</span>`;
 }
 
 function qrPrice() {
@@ -1472,12 +1537,24 @@ function qrPrice() {
   if (!carId || !s || !e) return;
   const car = FLEET.find(c=>c.id==carId);
   const days = Math.max(1, Math.round((new Date(e)-new Date(s))/86400000));
-  const ppu  = car?.priceMAD || Math.round((car?.priceEUR||0)*10.8);
-  if (box) { box.style.display='block'; box.textContent = `${days} jour(s) × ${ppu} MAD = ${days*ppu} MAD`; }
+  // Prix journalier : champ modifiable en priorité, sinon prix du véhicule
+  const ppuEl = document.getElementById('qr-ppu');
+  let ppu = parseFloat(ppuEl?.value);
+  if (!ppu || isNaN(ppu)) {
+    ppu = car?.priceMAD || Math.round((car?.priceEUR||0)*10.8);
+    if (ppuEl && !ppuEl.value) ppuEl.value = ppu;
+  }
+  const total = days*ppu;
+  if (box) { box.style.display='block'; box.textContent = `${days} jour(s) × ${ppu} MAD = ${total} MAD`; }
+  // Pré-remplit le montant total du paiement (si pas saisi manuellement)
+  const totalEl = document.getElementById('qr-total');
+  if (totalEl && !totalEl.dataset.manual) { totalEl.value = total; if (typeof qrPayCalc==='function') qrPayCalc(); }
 }
 
 function saveQuickRes() {
-  const carId  = document.getElementById('qr-car')?.value;
+  const sel    = document.getElementById('qr-car');
+  const opt    = sel?.options[sel.selectedIndex];
+  const carId  = sel?.value;
   const client = document.getElementById('qr-client')?.value.trim();
   const phone  = document.getElementById('qr-phone')?.value.trim();
   const s      = document.getElementById('qr-start')?.value;
@@ -1485,18 +1562,46 @@ function saveQuickRes() {
   if (!carId||!client||!phone||!s||!e) { toast('Champs obligatoires manquants.','r'); return; }
   const car   = FLEET.find(c=>c.id==carId);
   const days  = Math.max(1, Math.round((new Date(e)-new Date(s))/86400000));
-  const ppu   = car?.priceMAD || Math.round((car?.priceEUR||0)*10.8);
+  // Prix journalier : champ modifiable en priorité
+  let ppu = parseFloat(document.getElementById('qr-ppu')?.value);
+  if (!ppu || isNaN(ppu)) ppu = car?.priceMAD || Math.round((car?.priceEUR||0)*10.8);
   const id    = 'ASL'+Date.now().toString().slice(-6);
+  // Unité choisie (plaque + couleur) issue de l'option sélectionnée
+  const chosenPlate = opt?.getAttribute('data-plate') || car?.plate || '';
+  const chosenColor = opt?.getAttribute('data-color') || '';
+  const unitIndex   = opt?.getAttribute('data-unit');
+  // Paiement
+  const totalSaisi = parseFloat(document.getElementById('qr-total')?.value) || (days*ppu);
+  const paid       = parseFloat(document.getElementById('qr-paid')?.value) || 0;
+  let payStatus;
+  if (paid <= 0) payStatus = 'Non payé';
+  else if (paid >= totalSaisi) payStatus = 'Soldé';
+  else payStatus = 'Partiel';
   ASLDB.addReservation({
     id, client, phone, car: car?.name||'', carId: car?.id,
-    startDate: s, endDate: e, days, amount: days*ppu, paid: 0,
+    pricePerDay: ppu,
+    assignedPlate: chosenPlate, assignedColor: chosenColor,
+    startDate: s, endDate: e, days, amount: totalSaisi, paid: paid,
+    paymentStatus: payStatus,
     pickup: document.getElementById('qr-pickup')?.value||'Agence',
-    status:'confirmed', source:'admin-quick', createdAt: new Date().toISOString(),
+    // LOCATION = véhicule immédiatement LOUÉ (active)
+    status:'active', type:'location', source:'admin-quick', createdAt: new Date().toISOString(),
   });
+  // Marquer l'unité choisie comme louée (par sa plaque), sinon la 1ère dispo
+  if (car && typeof ASLDB.assignUnit === 'function') {
+    if (chosenPlate && typeof ASLDB.setUnitStatusByPlate === 'function') {
+      ASLDB.setUnitStatusByPlate(car.id, chosenPlate, 'active');
+    } else {
+      ASLDB.assignUnit(car.id, 'active');
+    }
+  } else if (car) {
+    ASLDB.updateVehicle(car.id, { status:'rented' });
+  }
   RES = ASLDB.getReservations();
+  FLEET = ASLDB.getFleet();
   closeModal();
   renderPage(currentPage);
-  toast(`Location ${id} créée.`, 'g');
+  toast(`Location ${id} créée — ${car?.name||''} ${chosenPlate?('('+chosenPlate+')'):''} loué.`, 'g');
 }
 
 // ================================================================
@@ -1715,20 +1820,27 @@ function toggleSidebar() {
     sb.classList.toggle('mobile-open');
     let bd = document.querySelector('.sb-mobile-backdrop');
     if (bd) bd.classList.toggle('show', sb.classList.contains('mobile-open'));
+    if (btn) btn.style.removeProperty('left');
     return;
   }
+  // Desktop : repli/ouverture. La POSITION du bouton est gérée uniquement par
+  // le CSS. On synchronise les DEUX classes utilisées dans cette page
+  // (.sidebar.collapsed ET body.sb-is-collapsed) pour éviter tout état incohérent.
   _sidebarCollapsed = !_sidebarCollapsed;
   if (_sidebarCollapsed) {
     sb.classList.add('collapsed');
+    document.body.classList.add('sb-is-collapsed');
     btn.textContent = '▶';
     btn.title = 'Afficher le menu';
-    btn.style.left = '0';
   } else {
     sb.classList.remove('collapsed');
+    document.body.classList.remove('sb-is-collapsed');
     btn.textContent = '◀';
     btn.title = 'Masquer le menu';
-    btn.style.left = '220px';
   }
+  try { localStorage.setItem('asl_sb_collapsed', _sidebarCollapsed ? '1' : '0'); } catch(e){}
+  // Nettoyer tout style inline résiduel d'une version précédente
+  btn.style.removeProperty('left');
 }
 
 // ================================================================
@@ -1938,6 +2050,10 @@ function adminLogout() {
     if (localStorage.getItem('asl_sb_collapsed') === '1') {
       var sb = document.querySelector('.sidebar');
       if (sb) { sb.classList.add('collapsed'); document.body.classList.add('sb-is-collapsed'); }
+      // Synchroniser l'état interne ET le bouton pour que le 1er clic rouvre bien
+      if (typeof _sidebarCollapsed !== 'undefined') _sidebarCollapsed = true;
+      var btn = document.getElementById('sb-toggle-btn');
+      if (btn) { btn.textContent = '▶'; btn.title = 'Afficher le menu'; }
     }
   } catch(e){}
 })();

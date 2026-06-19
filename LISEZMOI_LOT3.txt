@@ -1,0 +1,22 @@
+ALL STAR LOC — LOT 3
+=====================
+ACCÈS ADMIN LOCAL : ouvre admin/index.html → sans mot de passe. En ligne : sécurisé.
+
+NOUVEAU DANS CE LOT :
+1. POPUP NOUVELLE LOCATION (Flotte) et NOUVELLE RÉSERVATION (Tableau de bord) :
+   - Choix de la voiture par UNITÉ précise : nom + PLAQUE + COULEUR affichés
+     dans la liste déroulante (ex : "Kia Picanto — AA-123456 · Bleu — 250 MAD/j").
+   - Seules les unités DISPONIBLES sont proposées (les occupées sont grisées).
+   - Champ PRIX JOURNALIER modifiable (pré-rempli depuis le véhicule, ajustable).
+   - Le total se calcule automatiquement (prix/jour × nb de jours), modifiable aussi.
+   - L'unité choisie est enregistrée dans la réservation (plaque + couleur) et son
+     statut est mis à jour : "réservée" (réservation) ou "louée" (location).
+
+RAPPEL (lots précédents conservés) :
+- Sidebar Flotte : bouton de réouverture corrigé (cause réelle = display:none).
+- Bloc Paiement (total / reçu / reste / statut) sur réservation ET location.
+- WhatsApp masqué accueil mobile, calendrier mobile stable, Promotions retiré,
+  texte ALT images, gestion multi-unités de stock.
+
+À VENIR : colonne statut éditable dans Paiements, synchro complète Clients,
+notifications fonctionnelles, vérification blog. Lot par lot.

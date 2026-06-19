@@ -523,9 +523,6 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
       <a class="sb-item" onclick="showPage('payments', this)">
         <span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg></span> Paiements
       </a>
-      <a class="sb-item" onclick="showPage('promos', this)">
-        <span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></svg></span> Promotions
-      </a>
       <a class="sb-item" onclick="showPage('options', this)">
         <span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></span> Options & Assurances
       </a>
@@ -925,7 +922,7 @@ function showPage(id, el) {
       var bd = document.querySelector('.sb-mobile-backdrop');
       if (bd) bd.classList.remove('show');
       var tog = document.querySelector('.sb-toggle');
-      if (tog) tog.style.display = 'flex';
+      if (tog) tog.style.removeProperty('display');
     }
   }
   const titles = {
@@ -1062,6 +1059,20 @@ function renderAllReservations(filter='all') {
 }
 
 function filterReservations(status) { renderAllReservations(status); }
+
+// Calcul auto du reste à payer + statut (modal Nouvelle réservation)
+function nrPayCalc() {
+  var total = parseFloat(document.getElementById('nr-total')?.value) || 0;
+  var paid  = parseFloat(document.getElementById('nr-paid')?.value) || 0;
+  var reste = Math.max(0, total - paid);
+  var box = document.getElementById('nr-rest');
+  if (!box) return;
+  var statut, couleur;
+  if (paid <= 0)                       { statut = 'Non payé';         couleur = 'var(--red)'; }
+  else if (paid >= total && total > 0) { statut = 'Paiement complet'; couleur = 'var(--green)'; }
+  else                                 { statut = 'Paiement partiel'; couleur = '#d97706'; }
+  box.innerHTML = 'Reste à payer : <span style="color:'+couleur+'">'+reste.toLocaleString('fr-FR')+' MAD</span> · <span style="color:'+couleur+'">'+statut+'</span>';
+}
 
 function confirmRes(id) {
   // Attribution automatique d'une unité disponible (couleur + immatriculation)
@@ -1392,6 +1403,7 @@ function editCar(id) {
     </div>
     </div>
     <div class="form-group"><label class="form-label">URL Photo (option secondaire)</label><input class="form-input" placeholder="https://..." value="${car.img||''}" id="edit-img"></div>
+    <div class="form-group" style="grid-column:1/-1;"><label class="form-label">Texte ALT de l'image (SEO)</label><input class="form-input" placeholder="Ex : Renault Clio 5 blanche location Marrakech" value="${(car.imgAlt||'').replace(/"/g,'&quot;')}" id="edit-imgalt"><div style="font-size:11px;color:var(--text3,#888);margin-top:4px;">Décrit l'image pour Google et l'accessibilité. Améliore le référencement.</div></div>
     <div class="form-group"><label class="form-label">Statut</label>
       <select class="form-select" id="edit-status">
         <option value="available" ${car.status==='available'?'selected':''}>Disponible</option>
@@ -1446,6 +1458,7 @@ function editCar(id) {
                   camera: fc('edit-feat-cam'), insurance: fc('edit-feat-ins'), airport: fc('edit-feat-air') },
       tiers: collectTiers('edit'),
       img: document.getElementById('edit-img').value || car.img,
+      imgAlt: document.getElementById('edit-imgalt')?.value || car.imgAlt || '',
       status: _agg,
     });
     reloadData();
@@ -1587,9 +1600,21 @@ function openModal(type) {
         <div class="form-group"><label class="form-label">Nom</label><input class="form-input" placeholder="Nom" id="nr-lastname"></div>
       </div>
       <div class="form-group"><label class="form-label">Téléphone / WhatsApp</label><input class="form-input" placeholder="+212 6..." id="nr-phone"></div>
-      <div class="form-group"><label class="form-label">Véhicule</label>
-        <select class="form-select" id="nr-car">${FLEET.map(c=>`<option value="${c.id}">${c.name} — ${c.priceMAD} MAD/j</option>`).join('')}</select>
+      <div class="form-group"><label class="form-label">Véhicule (plaque · couleur)</label>
+        <select class="form-select" id="nr-car">${FLEET.map(c=>{
+          var ppu = c.priceMAD || Math.round((c.priceEUR||0)*10.8);
+          var units = (typeof ASLDB!=='undefined' && ASLDB.normalizeUnits) ? ASLDB.normalizeUnits(c) : null;
+          if (units && units.length) {
+            return units.map((u,i)=>{
+              var av = (u.status||'available')==='available';
+              var lbl = c.name+' — '+(u.plate||'sans plaque')+(u.color?' · '+u.color:'')+' — '+ppu+' MAD/j'+(av?'':' (occupée)');
+              return `<option value="${c.id}" data-unit="${i}" data-plate="${u.plate||''}" data-color="${u.color||''}" data-ppu="${ppu}"${av?'':' disabled'}>${lbl}</option>`;
+            }).join('');
+          }
+          return `<option value="${c.id}" data-ppu="${ppu}">${c.name} (${c.plate||''}) — ${ppu} MAD/j</option>`;
+        }).join('')}</select>
       </div>
+      <div class="form-group"><label class="form-label">Prix journalier (MAD)</label><input class="form-input" type="number" id="nr-ppu" placeholder="Prix / jour"></div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Date départ</label><input type="date" class="form-input" id="nr-start"></div>
         <div class="form-group"><label class="form-label">Date retour</label><input type="date" class="form-input" id="nr-end"></div>
@@ -1606,12 +1631,48 @@ function openModal(type) {
       <div class="form-group"><label class="form-label">Source</label>
         <select class="form-select" id="nr-source"><option value="phone">Téléphone</option><option value="whatsapp">WhatsApp</option><option value="online">En ligne</option></select>
       </div>
+      <div class="form-group" style="background:rgba(18,22,30,.03);border-radius:10px;padding:14px;">
+        <label class="form-label" style="color:var(--red);">Paiement</label>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Montant total (MAD)</label><input class="form-input" type="number" id="nr-total" placeholder="Calculé auto" oninput="nrPayCalc()"></div>
+          <div class="form-group"><label class="form-label">Montant reçu (MAD)</label><input class="form-input" type="number" id="nr-paid" value="0" oninput="nrPayCalc()"></div>
+        </div>
+        <div id="nr-rest" style="font-weight:700;font-size:13.5px;margin-top:4px;"></div>
+      </div>
       <div class="form-group"><label class="form-label">Notes</label><textarea class="form-input form-textarea" rows="2" placeholder="Notes internes..." id="nr-notes"></textarea></div>
     `;
+    // Calcul auto du total à l'ouverture + à chaque changement de véhicule/dates
+    setTimeout(function(){
+      var carSel = document.getElementById('nr-car');
+      var sEl = document.getElementById('nr-start'), eEl = document.getElementById('nr-end');
+      var ppuEl = document.getElementById('nr-ppu');
+      function syncPpu(){
+        var opt = carSel?.options[carSel.selectedIndex];
+        if (opt && ppuEl) ppuEl.value = opt.getAttribute('data-ppu') || ppuEl.value || '';
+      }
+      function autoTotal(){
+        var s = sEl?.value, e = eEl?.value;
+        var ppu = parseFloat(ppuEl?.value) || 0;
+        if (ppu && s && e) {
+          var d = Math.max(1, Math.round((new Date(e)-new Date(s))/86400000));
+          var totalEl = document.getElementById('nr-total');
+          if (totalEl && !totalEl.dataset.manual) { totalEl.value = ppu*d; nrPayCalc(); }
+        }
+      }
+      if (carSel) carSel.addEventListener('change', function(){ syncPpu(); autoTotal(); });
+      [sEl, eEl].forEach(function(el){ if(el) el.addEventListener('change', autoTotal); });
+      if (ppuEl) ppuEl.addEventListener('input', autoTotal);
+      var totalEl = document.getElementById('nr-total');
+      if (totalEl) totalEl.addEventListener('input', function(){ this.dataset.manual = '1'; });
+      syncPpu();
+      autoTotal();
+    }, 60);
     document.getElementById('modal-save').onclick = () => {
       const fn = document.getElementById('nr-firstname')?.value;
       const ln = document.getElementById('nr-lastname')?.value;
-      const carId = parseInt(document.getElementById('nr-car')?.value);
+      const carSelEl = document.getElementById('nr-car');
+      const carOpt = carSelEl?.options[carSelEl.selectedIndex];
+      const carId = parseInt(carSelEl?.value);
       const car = FLEET.find(c=>c.id===carId);
       const start = document.getElementById('nr-start')?.value;
       const end = document.getElementById('nr-end')?.value;
@@ -1619,18 +1680,35 @@ function openModal(type) {
       const endTime = document.getElementById('nr-end-time')?.value || '10:00';
       if(!fn||!start||!end){ alert('Complétez les champs obligatoires'); return; }
       const days = Math.max(1, Math.round((new Date(end)-new Date(start))/(1000*60*60*24)));
+      const ppu = parseFloat(document.getElementById('nr-ppu')?.value) || car?.priceMAD || 0;
+      const totalEl = document.getElementById('nr-total');
+      const total = parseFloat(totalEl?.value) || ppu*days;
+      const paid = parseFloat(document.getElementById('nr-paid')?.value) || 0;
+      const chosenPlate = carOpt?.getAttribute('data-plate') || car?.plate || '';
+      const chosenColor = carOpt?.getAttribute('data-color') || '';
+      let payStatus;
+      if (paid <= 0) payStatus = 'Non payé';
+      else if (paid >= total) payStatus = 'Soldé';
+      else payStatus = 'Partiel';
       const newRes = ASLDB.addReservation({
         client: `${fn} ${ln||''}`.trim(),
         email: '', phone: document.getElementById('nr-phone')?.value||'',
         car: car?.name||'', carId,
-        days, amount: (car?.priceMAD||0)*days,
+        pricePerDay: ppu, assignedPlate: chosenPlate, assignedColor: chosenColor,
+        days, amount: total, paid: paid, paymentStatus: payStatus,
         startDate: start, endDate: end,
         startTime: startTime, endTime: endTime,
         pickup: document.getElementById('nr-pickup')?.value||'',
         source: document.getElementById('nr-source')?.value||'phone',
-        status: 'confirmed', payment: 'onsite', nationality: 'N/A',
+        status: 'confirmed', type: 'reservation', payment: 'onsite', nationality: 'N/A',
         notes: document.getElementById('nr-notes')?.value||'',
       });
+      // Réservation = unité passe en "réservée" (pas encore louée)
+      if (car && chosenPlate && typeof ASLDB.setUnitStatusByPlate === 'function') {
+        ASLDB.setUnitStatusByPlate(carId, chosenPlate, 'reserved');
+      } else if (car && typeof ASLDB.assignUnit === 'function') {
+        ASLDB.assignUnit(carId, 'reserved');
+      }
       reloadData();
       renderAllReservations(); renderDashboard();
       if (typeof renderMobileDash === 'function') renderMobileDash();
@@ -1706,6 +1784,7 @@ function openModal(type) {
       <button type="button" class="btn-sm" style="background:rgba(196,30,58,0.1);color:var(--red);border:1px solid rgba(196,30,58,0.25);border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;" onclick="addTierRow('ac')">+ Ajouter une tranche</button>
     </div>
     <div class="form-group"><label class="form-label">URL Photo (option secondaire)</label><input class="form-input" placeholder="https://..." id="ac-img"></div>
+    <div class="form-group" style="grid-column:1/-1;"><label class="form-label">Texte ALT de l'image (SEO)</label><input class="form-input" placeholder="Ex : Renault Clio 5 blanche location Marrakech" id="ac-imgalt"><div style="font-size:11px;color:var(--text3,#888);margin-top:4px;">Décrit l'image pour Google et l'accessibilité. Améliore le référencement.</div></div>
     `;
     document.getElementById('ac-price-mad').addEventListener('input', e => {
       document.getElementById('ac-price-eur').value = Math.round(parseInt(e.target.value||0) / ASLDB.RATE_MAD);
@@ -1754,7 +1833,8 @@ function openModal(type) {
         tiers: collectTiers('ac'),
         featured: false,
         services: ['Clim','Radio'],
-        img: document.getElementById('ac-img')?.value || 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=600&q=80'
+        img: document.getElementById('ac-img')?.value || 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=600&q=80',
+        imgAlt: document.getElementById('ac-imgalt')?.value || ''
       });
       reloadData();
       renderFleetPage(); renderAvailability(); renderDashboard();
@@ -1996,9 +2076,10 @@ function toggleSidebar() {
     var isOpen = sb.classList.contains('mobile-open');
     var bd = document.querySelector('.sb-mobile-backdrop');
     if (bd) bd.classList.toggle('show', isOpen);
-    // Masquer le burger quand la sidebar est ouverte (évite le chevauchement avec le logo)
+    // Le burger est géré uniquement par le CSS (:has). On retire tout style inline
+    // résiduel pour qu'il réapparaisse TOUJOURS à la fermeture.
     var tog = document.querySelector('.sb-toggle');
-    if (tog) tog.style.display = isOpen ? 'none' : 'flex';
+    if (tog) tog.style.removeProperty('display');
     return;
   }
   // Desktop : repli normal

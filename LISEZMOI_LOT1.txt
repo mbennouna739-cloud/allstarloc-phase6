@@ -1,0 +1,24 @@
+ALL STAR LOC — LOT 1 + corrections sidebar Flotte
+==================================================
+ACCÈS ADMIN EN LOCAL : ouvre admin/index.html sur ton ordinateur → entrée
+sans mot de passe (auto). En ligne (Cloudflare), connexion obligatoire.
+
+CORRIGÉ :
+1. WhatsApp flottant : masqué accueil mobile, gardé ailleurs + desktop. Bug supprimé.
+2. Calendrier réservation (mobile) : ne bouge plus au scroll.
+3. SIDEBAR FLOTTE (desktop) : quand tu la replies avec la flèche, le bouton ◀ pour
+   la ROUVRIR reste maintenant TOUJOURS visible et cliquable. Plus besoin du bouton
+   retour navigateur. (Cause : un style inline JS cachait le bouton — supprimé.)
+4. Menu burger (Tableau de bord + Flotte) mobile : réapparaît toujours.
+5. Module Promotions : retiré de la barre latérale.
+6. Texte ALT images véhicules : champ réel (non statique) — sauvegardé via
+   updateVehicle et appliqué sur le site client. Repli SEO auto si vide.
+
+NOUVEAU (début Lot 2) :
+7. "Nouvelle location" : le véhicule passe maintenant en LOUÉ (active) directement
+   (pas seulement réservé), avec attribution automatique d'une unité de stock.
+   + Bloc PAIEMENT : montant total, montant reçu, reste à payer calculé
+   automatiquement, statut (Non payé / Partiel / Complet).
+
+À VENIR : bloc paiement aussi sur Nouvelle réservation, colonne statut éditable
+dans Paiements, synchro complète clients, notifications. Lot par lot.
