@@ -1405,7 +1405,7 @@ function renderPayments() {
     const pct = r.amount ? Math.min(100, Math.round(((r.paid||0)/r.amount)*100)) : 0;
     const due2 = (r.amount||0)-(r.paid||0);
     return `<tr>
-      <td><strong>${r.id}</strong></td>
+      <td><strong>${r.contractRef || r.id}</strong></td>
       <td>${r.client}</td>
       <td>${r.car}</td>
       <td style="font-size:12px;">${fmtDate(r.startDate)}→${fmtDate(r.endDate)}</td>
@@ -1475,8 +1475,9 @@ function openQuickRes() {
   const t1 = new Date(); t1.setDate(t1.getDate()+1);
   openModal('Nouvelle location rapide', `
     <div class="maint-form">
+      <div class="form-g"><label>N° de contrat / Référence</label><input class="form-input" id="qr-ref" placeholder="LOC-2026-001"></div>
       <div class="form-g"><label>Véhicule (plaque · couleur) *</label><select class="form-select" id="qr-car" onchange="qrCarChange()">${carOpts}</select></div>
-      <div class="form-g"><label>Prix journalier (MAD)</label><input class="form-input" type="number" id="qr-ppu" oninput="qrPrice()" placeholder="Prix / jour"></div>
+      <div class="form-g"><label>Prix journalier (MAD)</label><input class="form-input" type="number" id="qr-ppu" oninput="this.dataset.manual='1';qrPrice()" placeholder="Prix / jour"></div>
       <div class="form-g"><label>Client *</label><input class="form-input" id="qr-client" placeholder="Nom complet"></div>
       <div class="form-g"><label>Téléphone *</label><input class="form-input" id="qr-phone" placeholder="+212 6…"></div>
       <div class="form-g"><label>Date départ *</label><input class="form-input" type="date" id="qr-start" value="${t}" onchange="qrPrice()"></div>
@@ -1490,10 +1491,30 @@ function openQuickRes() {
         <div class="form-g"><label>Montant total (MAD)</label><input class="form-input" type="number" id="qr-total" oninput="this.dataset.manual='1';qrPayCalc()" placeholder="0"></div>
         <div class="form-g"><label>Montant reçu (MAD)</label><input class="form-input" type="number" id="qr-paid" value="0" oninput="qrPayCalc()" placeholder="0"></div>
       </div>
+      <div class="maint-form" style="margin-top:8px;">
+        <div class="form-g"><label>Mode de paiement</label><select class="form-select" id="qr-mode"><option value="Espèces">Espèces</option><option value="Carte bancaire">Carte bancaire</option><option value="Virement">Virement</option><option value="Chèque">Chèque</option><option value="Autre">Autre</option></select></div>
+      </div>
       <div id="qr-rest" style="margin-top:8px;font-weight:700;font-size:14px;"></div>
     </div>
   `, [{ label:'Créer la location', action:'saveQuickRes()', cls:'btn-red' }]);
-  setTimeout(function(){ qrInitPpu(); qrPrice(); qrPayCalc(); }, 100);
+  setTimeout(function(){ qrInitRef(); qrInitPpu(); qrPrice(); qrPayCalc(); }, 100);
+}
+
+// Suggestion de numéro de contrat (modifiable) — LOC-AAAA-NNN pour les locations.
+function suggestContractRef(prefix) {
+  prefix = prefix || 'LOC';
+  var year = new Date().getFullYear();
+  var all = (typeof ASLDB !== 'undefined' && ASLDB.getReservations) ? ASLDB.getReservations() : [];
+  var max = 0, rx = new RegExp('^' + prefix + '-' + year + '-(\\d+)$');
+  all.forEach(function (r) {
+    var m = (r.contractRef || '').match(rx);
+    if (m) { var n = parseInt(m[1], 10); if (n > max) max = n; }
+  });
+  return prefix + '-' + year + '-' + String(max + 1).padStart(3, '0');
+}
+function qrInitRef() {
+  var el = document.getElementById('qr-ref');
+  if (el && !el.value) el.value = suggestContractRef('LOC');
 }
 
 // Pré-remplit le prix journalier depuis l'unité sélectionnée
@@ -1509,6 +1530,7 @@ function qrCarChange() {
   const sel = document.getElementById('qr-car');
   const opt = sel?.options[sel.selectedIndex];
   const ppuEl = document.getElementById('qr-ppu');
+  if (ppuEl) delete ppuEl.dataset.manual; // nouveau véhicule → on réautorise le tarif auto/saisonnier
   if (opt && ppuEl) ppuEl.value = opt.getAttribute('data-ppu') || '';
   const totalEl = document.getElementById('qr-total');
   if (totalEl) delete totalEl.dataset.manual; // on autorise le recalcul auto
@@ -1537,8 +1559,12 @@ function qrPrice() {
   if (!carId || !s || !e) return;
   const car = FLEET.find(c=>c.id==carId);
   const days = Math.max(1, Math.round((new Date(e)-new Date(s))/86400000));
-  // Prix journalier : champ modifiable en priorité, sinon prix du véhicule
+  // Prix journalier : champ modifiable en priorité, sinon tarif saisonnier (mois+durée), sinon prix véhicule
   const ppuEl = document.getElementById('qr-ppu');
+  if (ppuEl && !ppuEl.dataset.manual && car && typeof ASLDB!=='undefined' && ASLDB.dailyRate) {
+    var rate = ASLDB.dailyRate(car, days, s);
+    if (rate > 0) ppuEl.value = rate;
+  }
   let ppu = parseFloat(ppuEl?.value);
   if (!ppu || isNaN(ppu)) {
     ppu = car?.priceMAD || Math.round((car?.priceEUR||0)*10.8);
@@ -1562,9 +1588,9 @@ function saveQuickRes() {
   if (!carId||!client||!phone||!s||!e) { toast('Champs obligatoires manquants.','r'); return; }
   const car   = FLEET.find(c=>c.id==carId);
   const days  = Math.max(1, Math.round((new Date(e)-new Date(s))/86400000));
-  // Prix journalier : champ modifiable en priorité
+  // Prix journalier : champ modifiable en priorité, sinon tarif saisonnier (mois+durée)
   let ppu = parseFloat(document.getElementById('qr-ppu')?.value);
-  if (!ppu || isNaN(ppu)) ppu = car?.priceMAD || Math.round((car?.priceEUR||0)*10.8);
+  if (!ppu || isNaN(ppu)) ppu = (car && ASLDB.dailyRate) ? ASLDB.dailyRate(car, days, s) : (car?.priceMAD || Math.round((car?.priceEUR||0)*10.8));
   const id    = 'ASL'+Date.now().toString().slice(-6);
   // Unité choisie (plaque + couleur) issue de l'option sélectionnée
   const chosenPlate = opt?.getAttribute('data-plate') || car?.plate || '';
@@ -1573,16 +1599,18 @@ function saveQuickRes() {
   // Paiement
   const totalSaisi = parseFloat(document.getElementById('qr-total')?.value) || (days*ppu);
   const paid       = parseFloat(document.getElementById('qr-paid')?.value) || 0;
+  const contractRef = (document.getElementById('qr-ref')?.value || '').trim();
+  const paymentMode = document.getElementById('qr-mode')?.value || 'Espèces';
   let payStatus;
   if (paid <= 0) payStatus = 'Non payé';
-  else if (paid >= totalSaisi) payStatus = 'Soldé';
-  else payStatus = 'Partiel';
+  else if (paid >= totalSaisi) payStatus = 'Paiement complet';
+  else payStatus = 'Paiement partiel';
   ASLDB.addReservation({
-    id, client, phone, car: car?.name||'', carId: car?.id,
+    id, contractRef, client, phone, car: car?.name||'', carId: car?.id,
     pricePerDay: ppu,
     assignedPlate: chosenPlate, assignedColor: chosenColor,
     startDate: s, endDate: e, days, amount: totalSaisi, paid: paid,
-    paymentStatus: payStatus,
+    paymentStatus: payStatus, paymentMode: paymentMode,
     pickup: document.getElementById('qr-pickup')?.value||'Agence',
     // LOCATION = véhicule immédiatement LOUÉ (active)
     status:'active', type:'location', source:'admin-quick', createdAt: new Date().toISOString(),
@@ -1707,8 +1735,11 @@ function calcProlongation(resId, carId, val) {
   const r = RES.find(x => x.id === resId);
   if (!r) return;
 
-  // Prix par jour (depuis la réservation)
-  const ppu = Math.round((r.amount || 0) / Math.max(1, r.days || 1));
+  // Prix/jour du supplément : tarif saisonnier du mois de prolongation (début = retour actuel),
+  // sinon moyenne de la réservation. Le système actuel reste le repli.
+  const carP = FLEET.find(c => c.id == carId) || FLEET.find(c => c.name === r.car) || {};
+  let ppu = (carP && typeof ASLDB!=='undefined' && ASLDB.dailyRate) ? ASLDB.dailyRate(carP, days, r.endDate) : 0;
+  if (!ppu) ppu = Math.round((r.amount || 0) / Math.max(1, r.days || 1));
 
   // Nouvelle date de retour
   const newEnd = new Date(r.endDate + 'T00:00:00');
@@ -1771,12 +1802,12 @@ function applyProlongation(resId, carId) {
   }
 
   // ── Appliquer ──
-  const ppu     = Math.round((r.amount || 0) / Math.max(1, r.days || 1));
+  // Supplément au tarif saisonnier de la période prolongée (repli : moyenne de la résa).
+  let ppu = (car && typeof ASLDB!=='undefined' && ASLDB.dailyRate) ? ASLDB.dailyRate(car, days, r.endDate) : 0;
+  if (!ppu) ppu = Math.round((r.amount || 0) / Math.max(1, r.days || 1));
   const newDays = Math.max(1, Math.round((new Date(newEndISO) - new Date(r.startDate + 'T00:00:00')) / 86400000));
-  const newAmt  = ppu * newDays;
-
-  // Calculer et sauvegarder le supplément pour l'afficher jusqu'au paiement
-  const extSupplNew = ppu * days;   // supplément de CETTE prolongation
+  const extSupplNew = ppu * days;   // supplément de CETTE prolongation (tarif saisonnier)
+  const newAmt  = (r.amount || 0) + extSupplNew;  // total = ancien total + supplément (préserve le tarif initial)
   const extSupplCum = (r.extSuppl || 0) + extSupplNew;  // cumul total
   ASLDB.updateReservation(resId, {
     endDate:         newEndISO,

@@ -1599,6 +1599,7 @@ function loadCars() {
       extras: c.extras || '',
       features: c.features || {},
       tiers: c.tiers || [],   // tableau [{min,max,price}]
+      seasonalTiers: c.seasonalTiers || [],   // tarifs saisonniers [{month,minDays,maxDays,pricePerDay,active}]
       transmission: c.transmission,
       fuel: c.fuel,
       img: c.img,
@@ -1618,6 +1619,7 @@ function loadCars() {
       ex.stock = (ex.stock || 1) + 1;
       if (car.unitIds) ex.unitIds = ex.unitIds.concat(car.unitIds);
       if ((!ex.tiers || !ex.tiers.length) && car.tiers && car.tiers.length) ex.tiers = car.tiers;
+      if ((!ex.seasonalTiers || !ex.seasonalTiers.length) && car.seasonalTiers && car.seasonalTiers.length) ex.seasonalTiers = car.seasonalTiers;
       if (!ex.featured && car.featured) ex.featured = true;
     } else {
       _grouped.push(Object.assign({}, car));
@@ -1921,6 +1923,12 @@ function tierRecapLabel(car, days) {
 }
 function dailyRate(car, days) {
   if (!car) return 0;
+  // ★ Source unique : tarif saisonnier (selon la date de départ) → tranche durée → prix standard.
+  var startISO = (typeof state !== 'undefined' && state && state.startDate) ? state.startDate : '';
+  if (typeof ASLDB !== 'undefined' && ASLDB.dailyRate) {
+    return ASLDB.dailyRate(car, days, startISO);
+  }
+  // Repli (si data.js absent) : ancien comportement par tranches de durée.
   const tiers = normalizeTiers(car.tiers);
   if (!tiers.length) return car.price || 0;
   const b = activeTierBracket(tiers, days);

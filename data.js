@@ -509,6 +509,102 @@
     return car.units[idx];
   }
 
+  /* ============================================================
+     TARIFS — SOURCE UNIQUE DE VÉRITÉ DU PRIX/JOUR
+     Priorité : tarif saisonnier (mois + durée) → tranche par durée
+     → prix standard du véhicule. N'altère JAMAIS l'existant : si
+     aucune règle saisonnière ne correspond, on retombe exactement
+     sur l'ancien comportement (tranches par durée puis prix de base).
+     ============================================================ */
+
+  // Normalise les tranches "par durée" existantes (tableau ou ancien format objet {t1..t5}).
+  function normalizeDurationTiers(raw) {
+    if (!raw) return [];
+    if (Array.isArray(raw)) {
+      return raw
+        .filter(function (b) { return b && Number(b.price) > 0; })
+        .map(function (b) {
+          return { min: Number(b.min) || 1, max: (Number(b.max) > 0 ? Number(b.max) : 9999), price: Number(b.price) || 0 };
+        });
+    }
+    var MAP = [[1, 3, 't1'], [4, 7, 't2'], [8, 14, 't3'], [15, 20, 't4'], [21, 9999, 't5']];
+    return MAP.map(function (m) { return { min: m[0], max: m[1], price: Number(raw[m[2]] || 0) }; })
+              .filter(function (b) { return b.price > 0; });
+  }
+
+  // Tranche par durée applicable (avec repli sur la dernière tranche dont min ≤ jours).
+  function durationBracket(tiers, days) {
+    var d = Math.max(1, days || 1);
+    var sorted = tiers.slice().sort(function (a, b) { return a.min - b.min; });
+    var best = null;
+    for (var i = 0; i < sorted.length; i++) {
+      var b = sorted[i];
+      if (d >= b.min && d <= b.max) return b;
+      if (d >= b.min) best = b;
+    }
+    return best;
+  }
+
+  // Normalise les tarifs saisonniers d'un véhicule.
+  // règle = { month:1..12, minDays, maxDays, pricePerDay, active }
+  function normalizeSeasonalTiers(raw) {
+    if (!Array.isArray(raw)) return [];
+    return raw
+      .filter(function (r) { return r && Number(r.pricePerDay) > 0 && Number(r.month) >= 1 && Number(r.month) <= 12; })
+      .map(function (r) {
+        return {
+          month: Number(r.month),
+          minDays: Math.max(1, Number(r.minDays) || 1),
+          maxDays: (Number(r.maxDays) > 0 ? Number(r.maxDays) : 9999),
+          pricePerDay: Number(r.pricePerDay) || 0,
+          active: r.active !== false
+        };
+      });
+  }
+
+  // Mois (1..12) d'une date ISO 'YYYY-MM-DD'. 0 si invalide/absente.
+  function monthOfISO(iso) {
+    if (!iso || typeof iso !== 'string' || iso.length < 7) return 0;
+    var m = parseInt(iso.slice(5, 7), 10);
+    return (m >= 1 && m <= 12) ? m : 0;
+  }
+
+  // Tarif saisonnier applicable pour (véhicule, durée, date de départ), sinon null.
+  function seasonalRate(car, days, startISO) {
+    var month = monthOfISO(startISO);
+    if (!month) return null;
+    var rules = normalizeSeasonalTiers(car && car.seasonalTiers);
+    if (!rules.length) return null;
+    var d = Math.max(1, days || 1);
+    var matches = rules.filter(function (r) {
+      return r.active && r.month === month && d >= r.minDays && d <= r.maxDays;
+    });
+    if (!matches.length) return null;
+    // La tranche la plus spécifique (plus petit intervalle de jours) l'emporte.
+    matches.sort(function (a, b) { return (a.maxDays - a.minDays) - (b.maxDays - b.minDays); });
+    return matches[0].pricePerDay;
+  }
+
+  // Prix de base du véhicule (compatible côté client {price} ET admin {priceMAD}).
+  function basePrice(car) {
+    if (!car) return 0;
+    return Number(car.price) || Number(car.priceMAD) || Math.round((Number(car.priceEUR) || 0) * RATE_MAD) || 0;
+  }
+
+  // ★ SOURCE UNIQUE : prix journalier applicable partout (site, back-office, prolongations).
+  //   startISO facultatif : sans date, le tarif saisonnier est ignoré (repli durée/standard).
+  function dailyRate(car, days, startISO) {
+    if (!car) return 0;
+    var s = seasonalRate(car, days, startISO);
+    if (s != null) return s;
+    var tiers = normalizeDurationTiers(car.tiers);
+    if (tiers.length) {
+      var b = durationBracket(tiers, days);
+      if (b) return b.price;
+    }
+    return basePrice(car);
+  }
+
   global.ASLDB = {
     RATE_MAD,
     getFleet, saveFleet, addVehicle, updateVehicle, deleteVehicle,
@@ -518,5 +614,7 @@
     normalizeUnits, modelAvailability, assignUnit, releaseUnit, setUnitStatusByPlate,
     // Nouveaux utilitaires de synchronisation et d'images
     syncNow, syncStatus, uploadImage,
+    // ★ Tarification (source unique) : saison → durée → standard
+    dailyRate, seasonalRate, normalizeSeasonalTiers, normalizeDurationTiers, monthOfISO,
   };
 })(window);

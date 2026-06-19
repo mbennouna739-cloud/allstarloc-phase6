@@ -1,0 +1,69 @@
+ALL STAR LOC — LOT 4 : TARIFS SAISONNIERS · N° DE CONTRAT · PAIEMENTS
+======================================================================
+INCHANGÉS (rien cassé) : Cloudflare KV, worker, wrangler, API, structure
+de synchronisation, design des pop-up, réservations existantes, message
+WhatsApp, calcul existant des tranches par durée. Tout a été vérifié
+(syntaxe JS OK sur data.js + 3 fichiers HTML, 12 tests de prix passés).
+
+L'ANCIEN SYSTÈME DE PRIX N'EST PAS SUPPRIMÉ : il devient le repli.
+
+------------------------------------------------------------------
+1. MOTEUR DE PRIX UNIQUE (data.js)
+------------------------------------------------------------------
+Nouvelle fonction partagée ASLDB.dailyRate(vehicule, jours, dateDépart) :
+priorité TARIF SAISONNIER → TRANCHE PAR DURÉE → PRIX STANDARD.
+Utilisée PARTOUT (site client, back-office, locations, prolongations) =
+une seule source de vérité. Si aucune règle saisonnière ne correspond au
+mois de départ, le comportement est EXACTEMENT l'ancien (durée puis prix
+standard).
+
+------------------------------------------------------------------
+2. TARIFS SAISONNIERS PAR VÉHICULE (pop-up Ajouter / Modifier)
+------------------------------------------------------------------
+Nouvelle section « Tarifs saisonniers (mois · durée · prix/jour) ».
+Pour chaque tranche : Mois · Min jours · Max jours · Prix/jour · case
+Actif/Inactif. On peut Ajouter / Modifier / Supprimer une tranche,
+configurer plusieurs mois, et préparer toute l'année à l'avance.
+Enregistré avec le véhicule (champ seasonalTiers) → synchronisé KV →
+appliqué côté client ET back-office.
+
+Exemple (juillet, haute saison) : 1-3 j = 450 · 4-7 j = 400 ·
+8-15 j = 350 · 16 j+ = 300 MAD/jour. Septembre : 350/320/300/280.
+La tranche la plus précise (plus petit intervalle de jours) l'emporte.
+
+------------------------------------------------------------------
+3. CALCUL AUTOMATIQUE
+------------------------------------------------------------------
+Dès qu'une date de départ + une date de retour sont choisies, le système
+identifie le mois, la durée, applique la bonne tranche et calcule le
+total. Fonctionne sur :
+- Site client (carte véhicule, récapitulatif, total, WhatsApp).
+- Back-office : Nouvelle réservation, Nouvelle location, et le supplément
+  de Prolongation (au tarif saisonnier du mois prolongé).
+
+------------------------------------------------------------------
+4. NUMÉRO DE CONTRAT / RÉFÉRENCE
+------------------------------------------------------------------
+Champ « N° de contrat / Référence » dans Nouvelle réservation (ASL-AAAA-NNN)
+et Nouvelle location (LOC-AAAA-NNN). Pré-rempli automatiquement,
+MODIFIABLE à la main. Stocké sur la fiche (contractRef) → repris
+automatiquement dans Paiements, Clients, Tableau de bord, Calendrier.
+
+------------------------------------------------------------------
+5. PAIEMENTS = SUIVI / HISTORIQUE (lecture seule)
+------------------------------------------------------------------
+L'onglet Paiements ne sert plus de saisie : il REFLÈTE automatiquement les
+réservations ET les locations (source unique). Aucune double saisie.
+Colonnes : Réf. contrat · Client · Véhicule · Type (Réservation/Location)
+· Total · Reçu · Reste · Mode de paiement · Statut · Date.
+Recherche par réf / client / véhicule + filtre par statut.
+
+Saisie réelle du paiement = uniquement dans la fiche Réservation ou
+Location : Montant total · Montant reçu · (Reste calculé) · Mode de
+paiement (Espèces / Carte bancaire / Virement / Chèque / Autre) · Statut
+(Non payé / Paiement partiel / Paiement complet).
+
+------------------------------------------------------------------
+DÉPLOIEMENT : remplace les fichiers du dépôt, commit, Cloudflare
+redéploie. Aucune migration nécessaire : les véhicules sans tarif
+saisonnier gardent exactement leur prix actuel.

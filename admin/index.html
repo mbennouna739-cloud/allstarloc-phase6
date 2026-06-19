@@ -765,11 +765,25 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
         <div class="stat-card"><div class="stat-header"><div class="stat-icon" style="background:rgba(59,130,246,0.1);color:#3b82f6;"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg></div></div><div class="stat-val">73%</div><div class="stat-label">Taux paiement complet</div></div>
       </div>
       <div class="table-card">
-        <div class="table-header"><div class="table-title">Historique paiements</div></div>
+        <div class="table-header" style="gap:12px;flex-wrap:wrap;">
+          <div class="table-title">Historique paiements</div>
+          <div style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <input id="pay-search" class="form-input" placeholder="Réf, client, véhicule…" style="width:200px;padding:7px 10px;font-size:13px;" oninput="renderPayments()">
+            <select id="pay-filter-status" class="form-select" style="width:160px;padding:7px 10px;font-size:13px;" onchange="renderPayments()">
+              <option value="">Tous les statuts</option>
+              <option value="Non payé">Non payé</option>
+              <option value="Acompte reçu">Acompte reçu</option>
+              <option value="Paiement partiel">Paiement partiel</option>
+              <option value="Paiement complet">Paiement complet</option>
+            </select>
+          </div>
+        </div>
+        <div style="overflow-x:auto;">
         <table>
-          <thead><tr><th>Réf.</th><th>Client</th><th>Type</th><th>Montant</th><th>Mode</th><th>Date</th><th>Statut</th></tr></thead>
+          <thead><tr><th>Réf. contrat</th><th>Client</th><th>Véhicule</th><th>Type</th><th>Total</th><th>Reçu</th><th>Reste</th><th>Mode</th><th>Statut</th><th>Date</th></tr></thead>
           <tbody id="payments-table"></tbody>
         </table>
+        </div>
       </div>
     </div>
 
@@ -1059,6 +1073,20 @@ function renderAllReservations(filter='all') {
 }
 
 function filterReservations(status) { renderAllReservations(status); }
+
+// Suggestion de numéro de contrat (modifiable manuellement) — ASL-AAAA-NNN.
+// Séquence calculée sur les références existantes du même préfixe/année ; jamais imposée.
+function suggestContractRef(prefix) {
+  prefix = prefix || 'ASL';
+  var year = new Date().getFullYear();
+  var all = (typeof ASLDB !== 'undefined' && ASLDB.getReservations) ? ASLDB.getReservations() : [];
+  var max = 0, rx = new RegExp('^' + prefix + '-' + year + '-(\\d+)$');
+  all.forEach(function (r) {
+    var m = (r.contractRef || '').match(rx);
+    if (m) { var n = parseInt(m[1], 10); if (n > max) max = n; }
+  });
+  return prefix + '-' + year + '-' + String(max + 1).padStart(3, '0');
+}
 
 // Calcul auto du reste à payer + statut (modal Nouvelle réservation)
 function nrPayCalc() {
@@ -1401,6 +1429,12 @@ function editCar(id) {
       <div id="edit-tiers-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;"></div>
       <button type="button" class="btn-sm" style="background:rgba(196,30,58,0.1);color:var(--red);border:1px solid rgba(196,30,58,0.25);border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;" onclick="addTierRow('edit')">+ Ajouter une tranche</button>
     </div>
+    <div class="form-group" style="grid-column:1/-1;background:rgba(18,22,30,.03);border-radius:10px;padding:14px;">
+      <label class="form-label" style="color:var(--red);">Tarifs saisonniers (mois · durée · prix/jour)</label>
+      <div style="font-size:11px;color:var(--text3,#888);margin:-2px 0 8px;">Prioritaire sur les tarifs par durée. Si aucune règle ne correspond au mois de départ, le tarif par durée puis le prix standard s'appliquent automatiquement.</div>
+      <div id="edit-seasons-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;"></div>
+      <button type="button" class="btn-sm" style="background:rgba(196,30,58,0.1);color:var(--red);border:1px solid rgba(196,30,58,0.25);border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;" onclick="addSeasonRow('edit')">+ Ajouter une tranche saisonnière</button>
+    </div>
     </div>
     <div class="form-group"><label class="form-label">URL Photo (option secondaire)</label><input class="form-input" placeholder="https://..." value="${car.img||''}" id="edit-img"></div>
     <div class="form-group" style="grid-column:1/-1;"><label class="form-label">Texte ALT de l'image (SEO)</label><input class="form-input" placeholder="Ex : Renault Clio 5 blanche location Marrakech" value="${(car.imgAlt||'').replace(/"/g,'&quot;')}" id="edit-imgalt"><div style="font-size:11px;color:var(--text3,#888);margin-top:4px;">Décrit l'image pour Google et l'accessibilité. Améliore le référencement.</div></div>
@@ -1419,6 +1453,7 @@ function editCar(id) {
   });
   wireImageUpload('edit');
   setTimeout(() => seedTiers('edit', car.tiers), 0);
+  setTimeout(() => seedSeasons('edit', car.seasonalTiers), 0);
   // Unités dynamiques : initialise puis régénère quand le stock change
   (function(){
     var initialUnits = ASLDB.normalizeUnits(car);
@@ -1457,6 +1492,7 @@ function editCar(id) {
       features: { ac: fc('edit-feat-ac'), bluetooth: fc('edit-feat-bt'), gps: fc('edit-feat-gps'),
                   camera: fc('edit-feat-cam'), insurance: fc('edit-feat-ins'), airport: fc('edit-feat-air') },
       tiers: collectTiers('edit'),
+      seasonalTiers: collectSeasons('edit'),
       img: document.getElementById('edit-img').value || car.img,
       imgAlt: document.getElementById('edit-imgalt')?.value || car.imgAlt || '',
       status: _agg,
@@ -1566,17 +1602,58 @@ function renderCustomers() {
 }
 
 // ==================== PAYMENTS ====================
+// Onglet Paiements = HISTORIQUE AUTOMATIQUE, lecture seule.
+// Source unique : les réservations ET locations (ASLDB). Aucune double saisie :
+// le montant réel est géré dans la fiche Réservation/Location.
+function payStatusOf(r) {
+  const total = Number(r.amount) || 0, paid = Number(r.paid) || 0;
+  if (paid <= 0) return 'Non payé';
+  if (total > 0 && paid >= total) return 'Paiement complet';
+  return 'Paiement partiel';
+}
+function payStatusBadge(s) {
+  if (s === 'Paiement complet') return 'badge-green';
+  if (s === 'Non payé') return 'badge-red';
+  return 'badge-yellow';
+}
 function renderPayments() {
   const tbody = document.getElementById('payments-table');
-  tbody.innerHTML = RESERVATIONS.map(r => `
+  if (!tbody) return;
+  const q = (document.getElementById('pay-search')?.value || '').toLowerCase().trim();
+  const fStatus = document.getElementById('pay-filter-status')?.value || '';
+  let rows = (RESERVATIONS || []).filter(r => r.status !== 'cancelled');
+  rows = rows.map(r => {
+    const total = Number(r.amount) || 0, paid = Number(r.paid) || 0;
+    const reste = Math.max(0, total - paid);
+    const statut = payStatusOf(r);
+    const ref = r.contractRef || r.id || '';
+    const type = (r.type === 'location') ? 'Location' : 'Réservation';
+    const mode = r.paymentMode || '—';
+    return { r, total, paid, reste, statut, ref, type, mode };
+  });
+  if (fStatus) rows = rows.filter(x => x.statut === fStatus);
+  if (q) rows = rows.filter(x =>
+    (x.ref + ' ' + (x.r.client || '') + ' ' + (x.r.car || '') + ' ' + x.type + ' ' + x.mode).toLowerCase().includes(q)
+  );
+  // Plus récents d'abord
+  rows.sort((a, b) => String(b.r.createdAt || b.r.startDate || '').localeCompare(String(a.r.createdAt || a.r.startDate || '')));
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--text2);padding:24px;">Aucun paiement à afficher.</td></tr>';
+    return;
+  }
+  const fmt = n => (Number(n) || 0).toLocaleString('fr-FR') + ' MAD';
+  tbody.innerHTML = rows.map(x => `
     <tr>
-      <td><strong>${r.id}</strong></td>
-      <td>${r.client}</td>
-      <td>${r.payment==='full'?'Complet':r.payment==='advance'?'Acompte':'Sur place'}</td>
-      <td><strong>${r.payment==='advance'?Math.round(r.amount*0.4):r.payment==='full'?r.amount:0} MAD</strong></td>
-      <td><span class="badge badge-gray">${r.source==='online'?`<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg> CB`:`<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg> Espèces`}</span></td>
-      <td style="font-size:12px;color:var(--text2);">${r.startDate}</td>
-      <td><span class="badge ${r.status==='completed'||r.status==='active'||r.status==='confirmed'?'badge-green':'badge-yellow'}">● ${r.status==='completed'||r.status==='active'?'Payé':r.status==='pending'?'En attente':'Annulé'}</span></td>
+      <td><strong>${x.ref}</strong></td>
+      <td>${x.r.client || '—'}</td>
+      <td style="font-size:12px;color:var(--text2);">${x.r.car || '—'}</td>
+      <td><span class="badge badge-gray">${x.type}</span></td>
+      <td>${fmt(x.total)}</td>
+      <td style="color:var(--green);">${fmt(x.paid)}</td>
+      <td style="${x.reste>0?'color:var(--red);font-weight:700;':'color:var(--text2);'}">${x.reste>0?fmt(x.reste):'✓'}</td>
+      <td style="font-size:12px;">${x.mode}</td>
+      <td><span class="badge ${payStatusBadge(x.statut)}">● ${x.statut}</span></td>
+      <td style="font-size:12px;color:var(--text2);">${x.r.startDate || ''}</td>
     </tr>
   `).join('');
 }
@@ -1595,6 +1672,7 @@ function openModal(type) {
 
   if(type==='new-reservation') {
     document.getElementById('modal-body').innerHTML = `
+      <div class="form-group"><label class="form-label">N° de contrat / Référence</label><input class="form-input" id="nr-ref" placeholder="ASL-2026-001"><div style="font-size:11px;color:var(--text3,#888);margin-top:4px;">Pré-rempli automatiquement — modifiable. Se synchronise avec Paiements, Clients et le tableau de bord.</div></div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Prénom</label><input class="form-input" placeholder="Prénom" id="nr-firstname"></div>
         <div class="form-group"><label class="form-label">Nom</label><input class="form-input" placeholder="Nom" id="nr-lastname"></div>
@@ -1637,18 +1715,40 @@ function openModal(type) {
           <div class="form-group"><label class="form-label">Montant total (MAD)</label><input class="form-input" type="number" id="nr-total" placeholder="Calculé auto" oninput="nrPayCalc()"></div>
           <div class="form-group"><label class="form-label">Montant reçu (MAD)</label><input class="form-input" type="number" id="nr-paid" value="0" oninput="nrPayCalc()"></div>
         </div>
+        <div class="form-group"><label class="form-label">Mode de paiement</label>
+          <select class="form-select" id="nr-mode">
+            <option value="Espèces">Espèces</option><option value="Carte bancaire">Carte bancaire</option><option value="Virement">Virement</option><option value="Chèque">Chèque</option><option value="Autre">Autre</option>
+          </select>
+        </div>
         <div id="nr-rest" style="font-weight:700;font-size:13.5px;margin-top:4px;"></div>
       </div>
       <div class="form-group"><label class="form-label">Notes</label><textarea class="form-input form-textarea" rows="2" placeholder="Notes internes..." id="nr-notes"></textarea></div>
     `;
     // Calcul auto du total à l'ouverture + à chaque changement de véhicule/dates
     setTimeout(function(){
+      // Référence de contrat pré-remplie (modifiable)
+      var refEl = document.getElementById('nr-ref');
+      if (refEl && !refEl.value) refEl.value = suggestContractRef('ASL');
       var carSel = document.getElementById('nr-car');
       var sEl = document.getElementById('nr-start'), eEl = document.getElementById('nr-end');
       var ppuEl = document.getElementById('nr-ppu');
+      function selectedCar(){
+        var id = parseInt(carSel && carSel.value);
+        return FLEET.find(function(c){ return c.id === id; });
+      }
+      function baseOf(){
+        var opt = carSel && carSel.options[carSel.selectedIndex];
+        return opt ? (parseFloat(opt.getAttribute('data-ppu')) || 0) : 0;
+      }
+      // Prix/jour saisonnier (mois de départ + durée) — sauf si l'admin a saisi un prix manuel.
       function syncPpu(){
-        var opt = carSel?.options[carSel.selectedIndex];
-        if (opt && ppuEl) ppuEl.value = opt.getAttribute('data-ppu') || ppuEl.value || '';
+        if (!ppuEl) return;
+        if (ppuEl.dataset.manual) return;
+        var car = selectedCar();
+        var s = sEl && sEl.value;
+        var d = (s && eEl && eEl.value) ? Math.max(1, Math.round((new Date(eEl.value)-new Date(s))/86400000)) : 1;
+        var rate = (car && typeof ASLDB!=='undefined' && ASLDB.dailyRate) ? ASLDB.dailyRate(car, d, s) : 0;
+        ppuEl.value = rate || baseOf() || ppuEl.value || '';
       }
       function autoTotal(){
         var s = sEl?.value, e = eEl?.value;
@@ -1659,9 +1759,9 @@ function openModal(type) {
           if (totalEl && !totalEl.dataset.manual) { totalEl.value = ppu*d; nrPayCalc(); }
         }
       }
-      if (carSel) carSel.addEventListener('change', function(){ syncPpu(); autoTotal(); });
-      [sEl, eEl].forEach(function(el){ if(el) el.addEventListener('change', autoTotal); });
-      if (ppuEl) ppuEl.addEventListener('input', autoTotal);
+      if (carSel) carSel.addEventListener('change', function(){ if(ppuEl) delete ppuEl.dataset.manual; syncPpu(); autoTotal(); });
+      [sEl, eEl].forEach(function(el){ if(el) el.addEventListener('change', function(){ syncPpu(); autoTotal(); }); });
+      if (ppuEl) ppuEl.addEventListener('input', function(){ this.dataset.manual = '1'; autoTotal(); });
       var totalEl = document.getElementById('nr-total');
       if (totalEl) totalEl.addEventListener('input', function(){ this.dataset.manual = '1'; });
       syncPpu();
@@ -1680,22 +1780,26 @@ function openModal(type) {
       const endTime = document.getElementById('nr-end-time')?.value || '10:00';
       if(!fn||!start||!end){ alert('Complétez les champs obligatoires'); return; }
       const days = Math.max(1, Math.round((new Date(end)-new Date(start))/(1000*60*60*24)));
-      const ppu = parseFloat(document.getElementById('nr-ppu')?.value) || car?.priceMAD || 0;
+      let ppu = parseFloat(document.getElementById('nr-ppu')?.value);
+      if (!ppu || isNaN(ppu)) ppu = (car && ASLDB.dailyRate) ? ASLDB.dailyRate(car, days, start) : (car?.priceMAD || 0);
       const totalEl = document.getElementById('nr-total');
       const total = parseFloat(totalEl?.value) || ppu*days;
       const paid = parseFloat(document.getElementById('nr-paid')?.value) || 0;
       const chosenPlate = carOpt?.getAttribute('data-plate') || car?.plate || '';
       const chosenColor = carOpt?.getAttribute('data-color') || '';
+      const contractRef = (document.getElementById('nr-ref')?.value || '').trim();
       let payStatus;
       if (paid <= 0) payStatus = 'Non payé';
-      else if (paid >= total) payStatus = 'Soldé';
-      else payStatus = 'Partiel';
+      else if (paid >= total) payStatus = 'Paiement complet';
+      else payStatus = 'Paiement partiel';
+      const paymentMode = document.getElementById('nr-mode')?.value || 'Espèces';
       const newRes = ASLDB.addReservation({
         client: `${fn} ${ln||''}`.trim(),
+        contractRef: contractRef,
         email: '', phone: document.getElementById('nr-phone')?.value||'',
         car: car?.name||'', carId,
         pricePerDay: ppu, assignedPlate: chosenPlate, assignedColor: chosenColor,
-        days, amount: total, paid: paid, paymentStatus: payStatus,
+        days, amount: total, paid: paid, paymentStatus: payStatus, paymentMode: paymentMode,
         startDate: start, endDate: end,
         startTime: startTime, endTime: endTime,
         pickup: document.getElementById('nr-pickup')?.value||'',
@@ -1783,6 +1887,12 @@ function openModal(type) {
       <div id="ac-tiers-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;"></div>
       <button type="button" class="btn-sm" style="background:rgba(196,30,58,0.1);color:var(--red);border:1px solid rgba(196,30,58,0.25);border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;" onclick="addTierRow('ac')">+ Ajouter une tranche</button>
     </div>
+    <div class="form-group" style="grid-column:1/-1;background:rgba(18,22,30,.03);border-radius:10px;padding:14px;">
+      <label class="form-label" style="color:var(--red);">Tarifs saisonniers (mois · durée · prix/jour)</label>
+      <div style="font-size:11px;color:var(--text3,#888);margin:-2px 0 8px;">Prioritaire sur les tarifs par durée. Si aucune règle ne correspond au mois de départ, le tarif par durée puis le prix standard s'appliquent automatiquement.</div>
+      <div id="ac-seasons-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;"></div>
+      <button type="button" class="btn-sm" style="background:rgba(196,30,58,0.1);color:var(--red);border:1px solid rgba(196,30,58,0.25);border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;" onclick="addSeasonRow('ac')">+ Ajouter une tranche saisonnière</button>
+    </div>
     <div class="form-group"><label class="form-label">URL Photo (option secondaire)</label><input class="form-input" placeholder="https://..." id="ac-img"></div>
     <div class="form-group" style="grid-column:1/-1;"><label class="form-label">Texte ALT de l'image (SEO)</label><input class="form-input" placeholder="Ex : Renault Clio 5 blanche location Marrakech" id="ac-imgalt"><div style="font-size:11px;color:var(--text3,#888);margin-top:4px;">Décrit l'image pour Google et l'accessibilité. Améliore le référencement.</div></div>
     `;
@@ -1831,6 +1941,7 @@ function openModal(type) {
         features: { ac: fc('ac-feat-ac'), bluetooth: fc('ac-feat-bt'), gps: fc('ac-feat-gps'),
                     camera: fc('ac-feat-cam'), insurance: fc('ac-feat-ins'), airport: fc('ac-feat-air') },
         tiers: collectTiers('ac'),
+        seasonalTiers: collectSeasons('ac'),
         featured: false,
         services: ['Clim','Radio'],
         img: document.getElementById('ac-img')?.value || 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=600&q=80',
@@ -1916,6 +2027,47 @@ function collectTiers(prefix) {
     const mn=parseInt(ins[0]?.value), rawMax=ins[1]?.value.trim(), pr=parseInt(ins[2]?.value);
     const mx = rawMax ? parseInt(rawMax) : 9999;
     return (mn>0 && mx>=mn && pr>0) ? {min:mn, max:mx, price:pr} : null;
+  }).filter(Boolean);
+}
+
+/* ===== TARIFS SAISONNIERS (mois + durée + prix/jour, actif/inactif) =====
+   N'altère pas les tranches par durée : c'est une couche prioritaire.
+   Stocké sur le véhicule (seasonalTiers) → synchronisé KV → utilisé partout. */
+const SEASON_MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+function addSeasonRow(prefix, data) {
+  const list = document.getElementById(prefix+'-seasons-list');
+  if (!list) return;
+  const d = data || {month:'',minDays:'',maxDays:'',pricePerDay:'',active:true};
+  const monthOpts = SEASON_MONTHS.map((m,i)=>`<option value="${i+1}" ${Number(d.month)===i+1?'selected':''}>${m}</option>`).join('');
+  const row = document.createElement('div');
+  row.className = 'season-row';
+  row.style.cssText = 'display:grid;grid-template-columns:1.3fr .85fr .85fr 1fr auto auto;gap:6px;align-items:center;';
+  row.innerHTML = '<select class="form-select s-month" style="padding:8px 10px;" title="Mois concerné"><option value="">Mois…</option>'+monthOpts+'</select>'
+    +'<input class="form-input s-min" type="number" min="1" placeholder="Min j" value="'+(d.minDays||'')+'" style="padding:8px 10px;" title="Minimum de jours">'
+    +'<input class="form-input s-max" type="number" min="1" placeholder="Max j" value="'+((d.maxDays>=9999||!d.maxDays)?'':d.maxDays)+'" style="padding:8px 10px;" title="Maximum de jours (vide = illimité)">'
+    +'<input class="form-input s-price" type="number" min="1" placeholder="MAD/jour" value="'+(d.pricePerDay||'')+'" style="padding:8px 10px;" title="Prix par jour">'
+    +'<label style="display:flex;align-items:center;gap:4px;font-size:11px;white-space:nowrap;cursor:pointer;" title="Actif / inactif"><input type="checkbox" class="s-active" '+((d.active!==false)?'checked':'')+'> Actif</label>'
+    +'<button type="button" style="background:rgba(196,30,58,0.12);color:var(--red);border:none;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;" onclick="this.closest(\'.season-row\').remove()" title="Supprimer">×</button>';
+  list.appendChild(row);
+}
+function seedSeasons(prefix, seasons) {
+  const list = document.getElementById(prefix+'-seasons-list');
+  if (!list) return;
+  list.innerHTML = '';
+  (Array.isArray(seasons) ? seasons : []).forEach(s => addSeasonRow(prefix, s));
+}
+function collectSeasons(prefix) {
+  const list = document.getElementById(prefix+'-seasons-list');
+  if (!list) return [];
+  return Array.from(list.querySelectorAll('.season-row')).map(row => {
+    const month = parseInt(row.querySelector('.s-month')?.value);
+    const minDays = parseInt(row.querySelector('.s-min')?.value);
+    const rawMax = (row.querySelector('.s-max')?.value || '').trim();
+    const maxDays = rawMax ? parseInt(rawMax) : 9999;
+    const pricePerDay = parseInt(row.querySelector('.s-price')?.value);
+    const active = !!row.querySelector('.s-active')?.checked;
+    return (month>=1 && month<=12 && minDays>0 && maxDays>=minDays && pricePerDay>0)
+      ? {month, minDays, maxDays, pricePerDay, active} : null;
   }).filter(Boolean);
 }
 
