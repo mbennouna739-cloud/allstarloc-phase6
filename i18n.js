@@ -468,8 +468,34 @@
   };
 
   var LANG_LOCALES = { fr:'fr-FR', en:'en-GB', es:'es-ES', ar:'ar-MA' };
+
+  /* Détecte la langue préférée du navigateur parmi celles supportées (fr, en, es, ar).
+     Retourne le code à 2 lettres si compatible, sinon null. */
+  function detectBrowserLang() {
+    try {
+      var list = [];
+      if (navigator.languages && navigator.languages.length) list = navigator.languages.slice();
+      else if (navigator.language) list = [navigator.language];
+      else if (navigator.userLanguage) list = [navigator.userLanguage];
+      for (var i = 0; i < list.length; i++) {
+        var code = String(list[i] || '').toLowerCase().slice(0, 2);
+        if (I18N[code]) return code;
+      }
+    } catch (e) {}
+    return null;
+  }
+
+  /* Priorité : choix mémorisé > langue du navigateur (si supportée) > français (secours). */
   var lang = 'fr';
-  try { var saved = localStorage.getItem('asl_lang'); if (saved && I18N[saved]) lang = saved; } catch (e) {}
+  var _hadSavedLang = false;
+  try {
+    var saved = localStorage.getItem('asl_lang');
+    if (saved && I18N[saved]) { lang = saved; _hadSavedLang = true; }
+  } catch (e) {}
+  if (!_hadSavedLang) {
+    var auto = detectBrowserLang();
+    if (auto) lang = auto;   /* détecté mais NON mémorisé : le visiteur garde la main pour changer */
+  }
 
   function t(key, vars) {
     var s = I18N[lang] ? I18N[lang][key] : undefined;

@@ -1,0 +1,86 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — LOT 7 (derniers ajustements back-office)
+═══════════════════════════════════════════════════════════════
+
+Modifications back-office uniquement.
+Site client et Marketing Digital : NON touchés.
+Nouveau code isolé dans : admin/admin-lot7.js
+(+ légère mise à jour de admin/admin-lot6.js pour la colonne impayé)
+
+───────────────────────────────────────────────────────────────
+1. BASE CLIENTS — COLONNE « MONTANT IMPAYÉ »
+───────────────────────────────────────────────────────────────
+• Nouvelle colonne dans Clients / Base clients.
+• Si le client n'a aucun reste à payer → « — » (vide).
+• S'il a un reste → montant affiché EN ROUGE.
+• Calcul = somme des restes à payer (montant − payé) de toutes
+  ses réservations/locations non annulées.
+• Synchronisé avec réservations, locations et paiements
+  (même source de données ASLDB).
+• La recherche client et le filtre par mois continuent de
+  fonctionner normalement.
+
+───────────────────────────────────────────────────────────────
+2. NOTIFICATIONS EXTERNES (Paramètres système)
+───────────────────────────────────────────────────────────────
+• Nouvelle section « Notifications externes ».
+• Champs configurables :
+    - Numéro WhatsApp
+    - Numéro SMS
+    - Email
+• Activation / désactivation indépendante de chaque alerte :
+    - Retour véhicule aujourd'hui
+    - Véhicule en retard
+    - Vidange proche
+    - Visite technique proche
+    - Assurance proche expiration
+    - Impayé important (≥ 500 MAD)
+• Bouton « Enregistrer les notifications » → réglages persistants
+  (localStorage : asl_notif_ext_v1).
+• Bouton « Aperçu des alertes du jour » → liste en direct ce qui
+  serait envoyé, et rappelle les destinataires configurés.
+
+  ► Envoi réel : WhatsApp / SMS / Email hors connexion nécessite
+    un service serveur (worker Cloudflare + passerelle, ex.
+    Twilio/Resend/WhatsApp Business). Le front prépare et
+    déclenche ces envois ; le branchement passerelle se fait
+    au déploiement. Les réglages saisis ici sont prêts à être
+    consommés par ce service.
+
+───────────────────────────────────────────────────────────────
+3. RÉINITIALISATION OPÉRATIONNELLE — CLARIFIÉE
+───────────────────────────────────────────────────────────────
+JAMAIS supprimé :
+  • Véhicules / Ma flotte
+  • Clients (+ documents)
+  • Paiements
+  • Assurances
+  • Marketing Digital
+  • Tout l'historique (réservations & locations passées)
+
+Remis à zéro (exploitation courante uniquement) :
+  • Réservations actives        → archivées (status completed)
+  • Locations en cours          → archivées
+  • Statuts réservé / loué      → tous les véhicules repassent
+                                  DISPONIBLES (unités incluses)
+  • Alertes opérationnelles en cours
+  • Affichage disponibles / réservés / loués
+
+• Résultat : le parc redevient propre, comme si toutes les
+  voitures étaient de nouveau disponibles, l'historique restant
+  consultable.
+• Double confirmation de sécurité avant exécution.
+
+───────────────────────────────────────────────────────────────
+FICHIERS
+───────────────────────────────────────────────────────────────
+  admin/index.html      → colonne impayé (header), section
+                          Notifications externes, listes reset
+                          clarifiées (HTML seul)
+  admin/admin-lot6.js   → colonne « Montant impayé » dans la
+                          table clients (calcul + cellule rouge)
+  admin/admin-lot7.js   → NOUVEAU : notifications externes +
+                          réinitialisation parc-disponible
+  data.js / site client / marketing.html → INCHANGÉS
+
+Aucune régression : tous les modules précédents conservés.

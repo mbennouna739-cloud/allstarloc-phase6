@@ -1,0 +1,75 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — LOT 8
+  Détection automatique des langues + Revenus du tableau de bord
+═══════════════════════════════════════════════════════════════
+
+───────────────────────────────────────────────────────────────
+A. LANGUES DU SITE CLIENT — DÉTECTION AUTOMATIQUE
+───────────────────────────────────────────────────────────────
+ÉTAT AVANT : le site supportait déjà 4 langues (FR, EN, ES, AR)
+avec sélecteur visible, changement manuel et mémorisation du
+choix (localStorage). MAIS il manquait la détection automatique :
+un nouveau visiteur voyait toujours le FR à sa première visite.
+
+AJOUT : détection de la langue du navigateur (navigator.languages),
+appliquée uniquement si aucun choix n'a encore été mémorisé.
+
+Comportement final (priorité) :
+  1. Choix déjà mémorisé par le visiteur   → on le respecte
+  2. Sinon, langue du navigateur si compatible :
+       • navigateur français  → site en français
+       • navigateur espagnol  → site en espagnol
+       • navigateur anglais   → site en anglais
+       • navigateur arabe     → site en arabe (RTL auto)
+  3. Sinon (langue non supportée)          → français (secours)
+
+• Le sélecteur de langue reste visible.
+• Le visiteur peut toujours changer manuellement.
+• Son choix manuel est mémorisé pour les prochaines visites
+  (et prime alors sur la détection navigateur).
+• Détection NON mémorisée tant que le visiteur ne choisit pas :
+  il garde la main pour changer.
+
+Fichier modifié : i18n.js (site client) — fonction detectBrowserLang.
+Aucune autre fonctionnalité du site impactée.
+
+───────────────────────────────────────────────────────────────
+B. TABLEAU DE BORD — CARTE « REVENUS DU MOIS »
+───────────────────────────────────────────────────────────────
+• Nouvelle carte « Revenus du mois » (6e carte), cliquable.
+• Affiche automatiquement les revenus ENCAISSÉS du mois en cours.
+
+Au clic → panneau latéral avec UNIQUEMENT :
+  • Revenus de la semaine   (lundi → dimanche en cours)
+  • Revenus du mois          (mois calendaire)
+  • Revenus de l'année       (année en cours)
+  • Reste à payer global     (somme de tous les soldes dus)
+
+CALCUL :
+• Basé sur les montants RÉELLEMENT ENCAISSÉS (champ « payé »),
+  PAS sur les montants théoriques des contrats.
+• Source : locations + réservations confirmées/actives/terminées
+  (tout sauf annulées), via la même base ASLDB.
+
+SIMPLIFICATION (anti-doublons) — volontairement ABSENTS du
+tableau de bord :
+  • Total encaissé
+  • Paiements complets
+  • Paiements partiels
+  Ces infos restent dans Clients, Paiements, Réservations,
+  Locations en cours.
+
+Tableau de bord final = 6 indicateurs de pilotage, tous cliquables :
+  1. Véhicules disponibles   → liste
+  2. Véhicules loués         → liste
+  3. Retours aujourd'hui     → liste
+  4. En retard               → liste
+  5. Impayés                 → liste
+  6. Revenus du mois         → détail semaine / mois / année / dû
+
+Fichiers : admin/index.html (carte + drawer),
+           admin/admin-lot7.js (calculs revenus),
+           admin/admin-lot5.js (grille 6 colonnes responsive).
+
+Site client (hors i18n) et Marketing Digital : NON touchés.
+Aucune régression sur les lots précédents.

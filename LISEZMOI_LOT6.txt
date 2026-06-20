@@ -1,0 +1,111 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — LOT 6 (Corrections finales avant déploiement)
+═══════════════════════════════════════════════════════════════
+
+Cette mise à jour AJOUTE uniquement les éléments demandés.
+Aucun design modifié. Aucune fonctionnalité existante supprimée.
+Tout le nouveau code est isolé dans : admin/admin-lot6.js
+
+───────────────────────────────────────────────────────────────
+1. TARIFS SAISONNIERS GROUPÉS
+───────────────────────────────────────────────────────────────
+• Nouveau bouton « Gérer les tranches saisonnières » dans
+  Véhicules / Ma flotte, à côté de « Ajouter un véhicule ».
+• Fonctionnement :
+    1. Sélection d'un ou plusieurs mois (Janvier → Décembre)
+    2. Création de tranches de durée libres (1-3j, 4-7j, etc.)
+    3. Saisie du prix/jour de chaque tranche
+    4. Sélection des véhicules (1, plusieurs ou toute la flotte)
+    5. Application automatique
+• Le système ÉCRIT dans le champ « seasonalTiers » de chaque
+  véhicule — EXACTEMENT le même champ que la fiche véhicule.
+• Les tarifs personnalisés déjà saisis dans une fiche véhicule
+  sont CONSERVÉS (seuls les mois sélectionnés sont remplacés).
+• Le système par durée DÉJÀ présent dans la fiche véhicule
+  reste en place, inchangé.
+
+  ► SOURCE DE CALCUL UNIQUE : ASLDB.dailyRate()
+    (saison → durée → prix standard). Utilisée partout :
+    site client, fiche véhicule, réservation, location,
+    prolongation, WhatsApp, tableau de bord, historique.
+    Aucun second moteur de calcul n'a été créé.
+
+───────────────────────────────────────────────────────────────
+2. DOCUMENTS CLIENTS (en complément, fiche existante intacte)
+───────────────────────────────────────────────────────────────
+• Clic sur une ligne client → fiche latérale (drawer).
+• La fiche conserve TOUT l'existant : nom, téléphone, email,
+  nationalité, nb locations, total dépensé, payé, reste dû,
+  et l'historique complet des réservations avec statuts.
+• AJOUT d'une section « Documents d'identité » :
+    - Permis de conduire
+    - CIN (Carte d'identité nationale) OU Passeport
+      (le système demande le type au moment de l'upload)
+• Actions par document : Upload · Aperçu · Télécharger ·
+  Remplacer · Supprimer.
+• Formats acceptés : images (JPG/PNG) et PDF, max 3 Mo.
+• Les documents restent associés au client (par email) pour
+  toutes ses futures réservations.
+• Stockage : localStorage (clé asl_cust_docs_v1).
+
+───────────────────────────────────────────────────────────────
+3. FILTRE PAR MOIS DANS LES CLIENTS
+───────────────────────────────────────────────────────────────
+• Nouveau menu déroulant « Tous les mois / Janvier … Décembre »
+  dans le module Clients.
+• Affiche uniquement les clients ayant une location dont la
+  date de départ tombe dans le mois choisi.
+• Recherche texte (nom/email/téléphone) ajoutée également.
+
+───────────────────────────────────────────────────────────────
+4. SÉCURITÉ ADMINISTRATION (vérifiée — déjà conforme)
+───────────────────────────────────────────────────────────────
+• robots.txt : « Disallow: /admin/ » (+ Googlebot)         ✓
+• admin/index.html : <meta robots="noindex, nofollow">      ✓
+• auth-guard.js chargé en tête de l'admin                    ✓
+• login.html présent (authentification requise)             ✓
+  Aucune donnée sensible n'est exposée publiquement.
+
+  NOTE déploiement : pour une protection forte côté serveur,
+  garder en plus une règle d'accès (Cloudflare Access ou Auth
+  basique) sur /admin/. Le blocage robots empêche seulement
+  l'indexation, pas l'accès direct.
+
+───────────────────────────────────────────────────────────────
+5. VERSION MOBILE ADMINISTRATION (vérifiée)
+───────────────────────────────────────────────────────────────
+• Menu burger : présent et au-dessus de tout (z-index 1300)  ✓
+• Ouverture/fermeture sidebar mobile (.mobile-open)          ✓
+• Tableaux : conteneurs overflow-x sur les nouveaux modules
+  (Entretien, Locations) pour éviter tout débordement.       ✓
+• Pop-ups / drawers : largeur min(…, 100vw), pas de scroll
+  horizontal, fermeture par overlay.                         ✓
+
+───────────────────────────────────────────────────────────────
+6. NOTIFICATIONS
+───────────────────────────────────────────────────────────────
+• Notifications INTERNES fonctionnelles (cloche en haut) :
+  nouvelles réservations, retours du jour, retards, entretien
+  (vidange / visite technique / assurance), impayés.         ✓
+  Lecture + redirection vers le module concerné.
+
+• Notifications EXTERNES (email / téléphone hors connexion) :
+  nécessitent un service serveur (envoi d'emails / push).
+  L'infrastructure front est prête (les événements sont déjà
+  détectés). L'activation réelle se fait au déploiement via
+  un worker Cloudflare + service email (ex. Resend/SendGrid)
+  ou une passerelle WhatsApp. Ce branchement serveur n'est
+  pas inclus dans cette version front-end.
+
+───────────────────────────────────────────────────────────────
+FICHIERS MODIFIÉS / AJOUTÉS
+───────────────────────────────────────────────────────────────
+  admin/index.html        → boutons + conteneurs (HTML seul)
+  admin/admin-lot5.js     → modules LOT 5 (inchangé)
+  admin/admin-lot6.js     → NOUVEAU : saisons groupées, docs,
+                            filtre mois clients
+  data.js                 → INCHANGÉ (moteur dailyRate existant)
+  site client             → INCHANGÉ
+  marketing.html          → INCHANGÉ
+
+Aucune régression : tous les modules existants conservés.

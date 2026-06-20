@@ -477,68 +477,42 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
   </button>
 <img src="data:image/png;base64,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" alt="ALL STAR LOC" style="display:block;">
   </div>
-  <nav class="sb-nav">
+    <nav class="sb-nav">
     <div class="sb-section">
-      <div class="sb-section-label">Espaces</div>
-      <a class="sb-item" href="fleet.html" style="background:rgba(196,30,58,.07);color:var(--red);font-weight:700;text-decoration:none;">
-        <span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/></svg></span> Suivi Flotte
-      </a>
-      <a class="sb-item" href="marketing.html" style="text-decoration:none;background:rgba(124,58,237,.08);color:#7c3aed;font-weight:700;">
-        <span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span> Marketing Digital
-      </a>
-    </div>
-    <div class="sb-section">
-      <div class="sb-section-label">Administration</div>
-      <a class="sb-item active" onclick="showPage('dashboard', this)">
-        <span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg></span> Tableau de bord
-      </a>
-      <a class="sb-item" onclick="showPage('reservations', this)">
-        <span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg></span> Réservations
-        <span class="sb-badge" id="badge-res">0</span>
-      </a>
-      <a class="sb-item" onclick="showPage('calendar', this)">
-        <span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg></span> Calendrier
-      </a>
-    </div>
-    <div class="sb-section">
-      <div class="sb-section-label">Automatisation</div>
-      <a class="sb-item" href="automation.html" target="_blank" style="text-decoration:none;">
-        <span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg></span> Contrats & Dossiers
-      </a>
+      <div class="sb-section-label">Tableau de bord</div>
+<a class="sb-item active" onclick="showPage('dashboard',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg></span>Tableau de bord</a>
     </div>
     <div class="sb-section">
       <div class="sb-section-label">Flotte</div>
-      <a class="sb-item" onclick="showPage('fleet', this)">
-        <span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="m21 8-2 2-1.5-3.7A2 2 0 0 0 15.646 5H8.4a2 2 0 0 0-1.903 1.257L5 10 3 8"/><path d="M7 14h.01"/><path d="M17 14h.01"/><rect width="18" height="8" x="3" y="10" rx="2"/><path d="M5 18v2"/><path d="M19 18v2"/></svg></span> Mes Véhicules
-      </a>
-      <a class="sb-item" onclick="showPage('availability', this)">
-        <span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg></span> Disponibilités
-      </a>
+<a class="sb-item" onclick="showPage('fleet',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m21 8-2 2-1.5-3.7A2 2 0 0 0 15.646 5H8.4a2 2 0 0 0-1.903 1.257L5 10 3 8"/><path d="M7 14h.01"/><path d="M17 14h.01"/><rect width="18" height="8" x="3" y="10" rx="2"/><path d="M5 18v2"/><path d="M19 18v2"/></svg></span>Véhicules / Ma flotte</a>
+<a class="sb-item" onclick="showPage('maintenance',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span>Entretien véhicules<span class="sb-badge" id="badge-maint" style="background:#f59e0b;color:#fff;display:none;">0</span></a>
+    </div>
+    <div class="sb-section">
+      <div class="sb-section-label">Activité</div>
+<a class="sb-item" onclick="showPage('reservations',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg></span>Réservations<span class="sb-badge" id="badge-res" style="">0</span></a>
+<a class="sb-item" onclick="showPage('rentals',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>Locations en cours<span class="sb-badge" id="badge-rentals" style="background:#22c55e;color:#fff;display:none;">0</span></a>
     </div>
     <div class="sb-section">
       <div class="sb-section-label">Gestion</div>
-      <a class="sb-item" onclick="showPage('customers', this)">
-        <span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> Clients
-      </a>
-      <a class="sb-item" onclick="showPage('payments', this)">
-        <span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg></span> Paiements
-      </a>
-      <a class="sb-item" onclick="showPage('options', this)">
-        <span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></span> Options & Assurances
-      </a>
+<a class="sb-item" onclick="showPage('customers',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Clients</a>
+<a class="sb-item" onclick="showPage('payments',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg></span>Paiements</a>
+<a class="sb-item" onclick="showPage('options',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg></span>Assurances</a>
+    </div>
+    <div class="sb-section">
+      <div class="sb-section-label">Outils</div>
+<a class="sb-item" href="marketing.html" style="text-decoration:none;background:rgba(124,58,237,.08);font-weight:700;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span><span style="color:#7c3aed;">Marketing Digital</span></a>
+<a class="sb-item" onclick="showPage('settings',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></span>Paramètres système</a>
     </div>
     <div class="sb-section">
       <div class="sb-section-label">Site</div>
-      
-      <a class="sb-item" href="../index.html" target="_blank">
-        <span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></span> Voir le site
-      </a>
-      <a onclick="adminLogout()" class="sb-logout" title="Déconnexion">
+<a class="sb-item" href="../index.html" style="text-decoration:none;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></span>Voir le site</a>
+      <a onclick="adminLogout()" class="sb-logout" title="Déconnexion" style="cursor:pointer;">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
         <span>Déconnexion</span>
       </a>
     </div>
   </nav>
+
   <div class="sb-bottom">
     <div class="sb-user">
       <div class="sb-avatar">AS</div>
@@ -596,57 +570,96 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
 
     <!-- ===== DASHBOARD ===== -->
     <div id="page-dashboard" class="page active">
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-header">
-            <div class="stat-icon" style="background:rgba(196,30,58,0.1);color:#C41E3A;"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg></div>
-          </div>
-          <div class="stat-val" id="stat-total-res">0</div>
-          <div class="stat-label">Réservations ce mois</div>
+      <!-- 5 cartes cliquables -->
+      <div class="stats-grid" id="dash-cards-grid" style="grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:22px;">
+
+        <div class="stat-card" onclick="openDashDrawer('available')" style="cursor:pointer;border:2px solid transparent;transition:.2s;">
+          <div class="stat-header"><div class="stat-icon" style="background:rgba(34,197,94,.12);color:#22c55e;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m21 8-2 2-1.5-3.7A2 2 0 0 0 15.646 5H8.4a2 2 0 0 0-1.903 1.257L5 10 3 8"/><path d="M7 14h.01"/><path d="M17 14h.01"/><rect width="18" height="8" x="3" y="10" rx="2"/><path d="M5 18v2"/><path d="M19 18v2"/></svg>
+          </div></div>
+          <div class="stat-val" id="dash-available" style="color:#22c55e;">0</div>
+          <div class="stat-label">Disponibles</div>
+          <div style="font-size:10px;color:#22c55e;margin-top:4px;font-weight:600;">Voir la liste →</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-header">
-            <div class="stat-icon" style="background:rgba(34,197,94,0.1);color:#22c55e;"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg></div>
-          </div>
-          <div class="stat-val" id="stat-revenue">0 <span style="font-size:14px;color:var(--text2);">MAD</span></div>
-          <div class="stat-label">Revenus ce mois</div>
+
+        <div class="stat-card" onclick="openDashDrawer('rented')" style="cursor:pointer;border:2px solid transparent;transition:.2s;">
+          <div class="stat-header"><div class="stat-icon" style="background:rgba(59,130,246,.12);color:#3b82f6;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div></div>
+          <div class="stat-val" id="dash-rented" style="color:#3b82f6;">0</div>
+          <div class="stat-label">Loués</div>
+          <div style="font-size:10px;color:#3b82f6;margin-top:4px;font-weight:600;">Voir la liste →</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-header">
-            <div class="stat-icon" style="background:rgba(59,130,246,0.1);color:#3b82f6;"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg></div>
-          </div>
-          <div class="stat-val" id="stat-vehicles">0/0</div>
-          <div class="stat-label">Véhicules actifs</div>
+
+        <div class="stat-card" onclick="openDashDrawer('returns')" style="cursor:pointer;border:2px solid transparent;transition:.2s;">
+          <div class="stat-header"><div class="stat-icon" style="background:rgba(245,158,11,.12);color:#f59e0b;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>
+          </div></div>
+          <div class="stat-val" id="dash-returns" style="color:#f59e0b;">0</div>
+          <div class="stat-label">Retours aujourd'hui</div>
+          <div style="font-size:10px;color:#f59e0b;margin-top:4px;font-weight:600;">Voir la liste →</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-header">
-            <div class="stat-icon" style="background:rgba(245,158,11,0.1);">⏳</div>
-          </div>
-          <div class="stat-val" id="stat-pending">0</div>
-          <div class="stat-label">En attente de confirmation</div>
+
+        <div class="stat-card" onclick="openDashDrawer('late')" style="cursor:pointer;border:2px solid transparent;transition:.2s;">
+          <div class="stat-header"><div class="stat-icon" style="background:rgba(196,30,58,.12);color:var(--red);">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+          </div></div>
+          <div class="stat-val" id="dash-late">0</div>
+          <div class="stat-label">En retard</div>
+          <div style="font-size:10px;color:var(--red);margin-top:4px;font-weight:600;">Voir la liste →</div>
         </div>
+
+        <div class="stat-card" onclick="openDashDrawer('unpaid')" style="cursor:pointer;border:2px solid transparent;transition:.2s;">
+          <div class="stat-header"><div class="stat-icon" style="background:rgba(239,68,68,.12);color:#ef4444;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg>
+          </div></div>
+          <div class="stat-val" id="dash-unpaid">0</div>
+          <div class="stat-label">Impayés</div>
+          <div style="font-size:10px;color:#ef4444;margin-top:4px;font-weight:600;">Voir la liste →</div>
+        </div>
+
+        <div class="stat-card" onclick="openRevenueDrawer()" style="cursor:pointer;border:2px solid transparent;transition:.2s;">
+          <div class="stat-header"><div class="stat-icon" style="background:rgba(16,163,74,.12);color:#16a34a;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div></div>
+          <div class="stat-val" id="dash-revenue" style="color:#16a34a;font-size:21px;">0</div>
+          <div class="stat-label">Revenus du mois</div>
+          <div style="font-size:10px;color:#16a34a;margin-top:4px;font-weight:600;">Voir le détail →</div>
+        </div>
+
       </div>
 
-      <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:24px;">
-        <div class="table-card">
-          <div class="table-header">
-            <div class="table-title"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg> Réservations cette semaine</div>
-            <div id="weekly-chart" style="display:flex;align-items:flex-end;gap:6px;height:100px;"></div>
-          </div>
-          <table>
-            <thead><tr>
-              <th>Réf.</th><th>Client</th><th>Véhicule</th><th>Dates</th><th>Montant</th><th>Statut</th><th>Actions</th>
-            </tr></thead>
-            <tbody id="dashboard-reservations"></tbody>
-          </table>
+      <!-- DRAWER REVENUS -->
+      <div id="rev-drawer-bg" onclick="closeRevenueDrawer()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;"></div>
+      <div id="rev-drawer" style="display:none;position:fixed;top:0;right:0;bottom:0;width:min(460px,100vw);background:var(--dark2,#fff);box-shadow:-6px 0 32px rgba(0,0,0,.18);z-index:2001;flex-direction:column;transition:transform .28s;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);flex-shrink:0;">
+          <div style="font-size:16px;font-weight:800;">💰 Revenus encaissés</div>
+          <button onclick="closeRevenueDrawer()" style="background:none;border:none;cursor:pointer;font-size:22px;color:var(--text3);line-height:1;">&#10005;</button>
         </div>
-        <div class="table-card">
-          <div class="table-header"><div class="table-title"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg> État Flotte</div></div>
-          <div style="padding:16px;">
-            <div id="fleet-status-list"></div>
-          </div>
-        </div>
+        <div id="rev-drawer-body" style="overflow-y:auto;flex:1;padding:18px 22px;"></div>
       </div>
+
+      <!-- Activité récente -->
+      <div class="table-card">
+        <div class="table-header">
+          <div class="table-title">Activité récente</div>
+          <button class="btn-sm primary" onclick="showPage('reservations',document.querySelector('.sb-item[onclick*=reservations]'))">Voir toutes →</button>
+        </div>
+        <table>
+          <thead><tr><th>Réf.</th><th>Client</th><th>Véhicule</th><th>Dates</th><th>Montant</th><th>Statut</th><th></th></tr></thead>
+          <tbody id="dashboard-reservations"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- DRAWER TABLEAU DE BORD -->
+    <div id="dash-drawer-bg" onclick="closeDashDrawer()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;"></div>
+    <div id="dash-drawer" style="display:none;position:fixed;top:0;right:0;bottom:0;width:min(500px,100vw);background:var(--dark2,#fff);box-shadow:-6px 0 32px rgba(0,0,0,.18);z-index:2001;flex-direction:column;transition:transform .28s;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);flex-shrink:0;">
+        <div id="dash-drawer-title" style="font-size:16px;font-weight:800;"></div>
+        <button onclick="closeDashDrawer()" style="background:none;border:none;cursor:pointer;font-size:22px;color:var(--text3);line-height:1;">&#10005;</button>
+      </div>
+      <div id="dash-drawer-body" style="overflow-y:auto;flex:1;padding:18px 22px;"></div>
     </div>
 
     <!-- ===== RESERVATIONS ===== -->
@@ -679,80 +692,63 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
       </div>
     </div>
 
-    <!-- ===== CALENDAR ===== -->
-    <div id="page-calendar" class="page">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <button class="topbar-btn secondary" onclick="prevMonth()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg> Précédent</button>
-          <div style="font-size:16px;font-weight:700;" id="cal-month-label">Juin 2026</div>
-          <button class="topbar-btn secondary" onclick="nextMonth()">Suivant <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
-        </div>
-        <div style="display:flex;gap:10px;align-items:center;">
-          <span style="font-size:12px;color:var(--text2);"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#3b82f6;flex-shrink:0;"></span> Réservé</span>
-          <span style="font-size:12px;color:var(--text2);"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f59e0b;flex-shrink:0;"></span> Maintenance</span>
-          <span style="font-size:12px;color:var(--text2);"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ef4444;flex-shrink:0;"></span> Hors service</span>
-          <select class="form-select" style="width:180px;" id="cal-car-filter" onchange="renderCalendar()">
-            <option value="all">Tous les véhicules</option>
-          </select>
-        </div>
-      </div>
-      <!-- Filtres dynamiques du calendrier -->
-      <div id="cal-filters" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
-        <button class="cal-filter-btn active" data-filter="all" onclick="setCalFilter('all',this)">Tous</button>
-        <button class="cal-filter-btn" data-filter="rented" onclick="setCalFilter('rented',this)"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#16a34a;margin-right:5px;"></span>Loués</button>
-        <button class="cal-filter-btn" data-filter="reserved" onclick="setCalFilter('reserved',this)"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3b82f6;margin-right:5px;"></span>Réservés</button>
-        <button class="cal-filter-btn" data-filter="returns" onclick="setCalFilter('returns',this)"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;margin-right:5px;"></span>Retours</button>
-      </div>
-      <div class="table-card" style="padding:16px;">
-        <div class="cal-header-days">
-          <div class="cal-day-name">Lun</div><div class="cal-day-name">Mar</div>
-          <div class="cal-day-name">Mer</div><div class="cal-day-name">Jeu</div>
-          <div class="cal-day-name">Ven</div><div class="cal-day-name">Sam</div>
-          <div class="cal-day-name">Dim</div>
-        </div>
-        <div class="cal-grid" id="cal-grid"></div>
-      </div>
-      <!-- Résumé bas calendrier -->
-      <div id="cal-summary" style="margin-top:14px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;"></div>
-    </div>
-
-    <!-- ===== FLEET ===== -->
+        <!-- ===== FLEET ===== -->
     <div id="page-fleet" class="page">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
-        <div style="font-size:14px;color:var(--text2);">11 véhicules dans votre flotte</div>
-        <button class="topbar-btn primary" onclick="openModal('add-car')">+ Ajouter un véhicule</button>
+        <div style="font-size:14px;color:var(--text2);"><span id="fleet-label">Flotte</span></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="topbar-btn secondary" onclick="openSeasonalManager()" title="Configurer des tarifs saisonniers pour plusieurs véhicules">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/></svg>
+            Gérer les tranches saisonnières
+          </button>
+          <button class="topbar-btn primary" onclick="openModal('add-car')">+ Ajouter un véhicule</button>
+        </div>
       </div>
       <div class="fleet-grid" id="fleet-grid"></div>
-    </div>
 
-    <!-- ===== AVAILABILITY ===== -->
-    <div id="page-availability" class="page">
-      <div class="stats-grid" style="grid-template-columns:repeat(4,1fr);">
-        <div class="stat-card"><div class="stat-header"><div class="stat-icon" style="background:rgba(34,197,94,0.1);"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#22c55e;flex-shrink:0;"></span></div></div><div class="stat-val" id="avail-count">0</div><div class="stat-label">Disponibles</div></div>
-        <div class="stat-card"><div class="stat-header"><div class="stat-icon" style="background:rgba(59,130,246,0.1);"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#3b82f6;flex-shrink:0;"></span></div></div><div class="stat-val" id="reserved-count">0</div><div class="stat-label">Réservés</div></div>
-        <div class="stat-card"><div class="stat-header"><div class="stat-icon" style="background:rgba(245,158,11,0.1);"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#f59e0b;flex-shrink:0;"></span></div></div><div class="stat-val" id="maint-count">0</div><div class="stat-label">En maintenance</div></div>
-        <div class="stat-card"><div class="stat-header"><div class="stat-icon" style="background:rgba(239,68,68,0.1);"><span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:#ef4444;flex-shrink:0;"></span></div></div><div class="stat-val" id="offroad-count">0</div><div class="stat-label">Hors service</div></div>
-      </div>
-      <div class="table-card">
-        <div class="table-header"><div class="table-title">Statut en temps réel</div></div>
-        <table>
-          <thead><tr><th>Véhicule</th><th>Immatriculation</th><th>Statut</th><th>Prochaine dispo</th><th>Localisation</th><th>Actions</th></tr></thead>
-          <tbody id="availability-table"></tbody>
-        </table>
+      <!-- DRAWER TARIFS SAISONNIERS GROUPÉS -->
+      <div id="seasonal-bg" onclick="closeSeasonalManager()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;"></div>
+      <div id="seasonal-modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--dark2,#fff);border-radius:16px;width:min(620px,95vw);max-height:92vh;overflow-y:auto;box-shadow:0 8px 48px rgba(0,0,0,.22);z-index:2001;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--dark2,#fff);z-index:2;">
+          <div style="font-weight:800;font-size:16px;">Tarifs saisonniers groupés</div>
+          <button onclick="closeSeasonalManager()" style="background:none;border:none;cursor:pointer;font-size:22px;color:var(--text3);line-height:1;">&#10005;</button>
+        </div>
+        <div style="padding:22px;" id="seasonal-body"></div>
+        <div style="padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;position:sticky;bottom:0;background:var(--dark2,#fff);">
+          <button class="topbar-btn secondary" onclick="closeSeasonalManager()">Fermer</button>
+          <button class="topbar-btn primary" onclick="applySeasonalGroup()">Appliquer aux véhicules sélectionnés ✓</button>
+        </div>
       </div>
     </div>
 
-    <!-- ===== CUSTOMERS ===== -->
+        <!-- ===== CUSTOMERS ===== -->
     <div id="page-customers" class="page">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
-        <div class="search-bar" style="flex:1;"><span style="display:flex;align-items:center;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span><input placeholder="Rechercher un client..."></div>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+        <div class="search-bar" style="flex:1;min-width:180px;"><span style="display:flex;align-items:center;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span><input id="cust-search" placeholder="Rechercher un client..." oninput="renderCustomers()"></div>
+        <select class="form-select" id="cust-month-filter" style="width:190px;" onchange="renderCustomers()">
+          <option value="">Tous les mois</option>
+          <option value="1">Janvier</option><option value="2">Février</option><option value="3">Mars</option>
+          <option value="4">Avril</option><option value="5">Mai</option><option value="6">Juin</option>
+          <option value="7">Juillet</option><option value="8">Août</option><option value="9">Septembre</option>
+          <option value="10">Octobre</option><option value="11">Novembre</option><option value="12">Décembre</option>
+        </select>
       </div>
       <div class="table-card">
         <div class="table-header"><div class="table-title">Base clients</div><button class="btn-sm ghost"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg> Exporter</button></div>
         <table>
-          <thead><tr><th>Client</th><th>Email</th><th>Téléphone</th><th>Nationalité</th><th>Réservations</th><th>Total dépensé</th><th>Dernière résa</th></tr></thead>
+          <thead><tr><th>Client</th><th>Email</th><th>Téléphone</th><th>Nationalité</th><th>Réservations</th><th>Total dépensé</th><th>Montant impayé</th><th>Dernière résa</th></tr></thead>
           <tbody id="customers-table"></tbody>
         </table>
+      </div>
+
+      <!-- DRAWER FICHE CLIENT -->
+      <div id="cust-drawer-bg" onclick="closeCustomerDrawer()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;"></div>
+      <div id="cust-drawer" style="display:none;position:fixed;top:0;right:0;bottom:0;width:min(540px,100vw);background:var(--dark2,#fff);box-shadow:-6px 0 32px rgba(0,0,0,.18);z-index:2001;flex-direction:column;transition:transform .28s;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);flex-shrink:0;">
+          <div id="cust-drawer-title" style="font-size:16px;font-weight:800;"></div>
+          <button onclick="closeCustomerDrawer()" style="background:none;border:none;cursor:pointer;font-size:22px;color:var(--text3);line-height:1;">&#10005;</button>
+        </div>
+        <div id="cust-drawer-body" style="overflow-y:auto;flex:1;padding:18px 22px;"></div>
       </div>
     </div>
 
@@ -787,26 +783,7 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
       </div>
     </div>
 
-    <!-- ===== PROMOS ===== -->
-    <div id="page-promos" class="page">
-      <div style="display:flex;justify-content:flex-end;margin-bottom:20px;">
-        <button class="topbar-btn primary" onclick="openModal('add-promo')">+ Créer une promo</button>
-      </div>
-      <div class="table-card">
-        <div class="table-header"><div class="table-title">Codes Promotionnels</div></div>
-        <table>
-          <thead><tr><th>Code</th><th>Réduction</th><th>Type</th><th>Utilisations</th><th>Expire le</th><th>Statut</th><th>Actions</th></tr></thead>
-          <tbody>
-            <tr><td><strong>STAR10</strong></td><td>10%</td><td>Pourcentage</td><td>12 / ∞</td><td>31/12/2026</td><td><span class="badge badge-green">● Actif</span></td><td><button class="btn-sm ghost">Modifier</button></td></tr>
-            <tr><td><strong>STAR15</strong></td><td>15%</td><td>Pourcentage</td><td>5 / 20</td><td>30/09/2026</td><td><span class="badge badge-green">● Actif</span></td><td><button class="btn-sm ghost">Modifier</button></td></tr>
-            <tr><td><strong>WELCOME5</strong></td><td>5%</td><td>Pourcentage</td><td>8 / ∞</td><td>∞</td><td><span class="badge badge-green">● Actif</span></td><td><button class="btn-sm ghost">Modifier</button></td></tr>
-            <tr><td><strong>ETE2025</strong></td><td>20%</td><td>Pourcentage</td><td>43 / 50</td><td>31/08/2025</td><td><span class="badge badge-gray">● Expiré</span></td><td><button class="btn-sm ghost">Modifier</button></td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- ===== OPTIONS ===== -->
+        <!-- ===== OPTIONS ===== -->
     <div id="page-options" class="page">
       <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('options-tab','assurances')"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg> Assurances</button>
@@ -841,26 +818,160 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
       </div>
     </div>
 
-    <!-- ===== SEO ===== -->
-    <div id="page-seo" class="page">
-      <div class="stats-grid">
-        <div class="stat-card"><div class="stat-header"><div class="stat-icon" style="background:rgba(59,130,246,0.1);color:#3b82f6;"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></div></div><div class="stat-val">1 240</div><div class="stat-label">Visites ce mois</div></div>
-        <div class="stat-card"><div class="stat-header"><div class="stat-icon" style="background:rgba(34,197,94,0.1);color:#22c55e;"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div></div><div class="stat-val">8.4%</div><div class="stat-label">Taux de conversion</div></div>
-        <div class="stat-card"><div class="stat-header"><div class="stat-icon" style="background:rgba(245,158,11,0.1);color:#f59e0b;"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div></div><div class="stat-val">94</div><div class="stat-label">PageSpeed Score</div></div>
-        <div class="stat-card"><div class="stat-header"><div class="stat-icon" style="background:rgba(139,92,246,0.1);color:#8b5cf6;"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div></div><div class="stat-val">#3</div><div class="stat-label">Position Google "location voiture Marrakech"</div></div>
+      
+    <!-- ===== ENTRETIEN VEHICULES ===== -->
+    <div id="page-maintenance" class="page">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+        <div id="maint-alerts-bar" style="flex:1;min-width:280px;"></div>
+        <button class="topbar-btn primary" onclick="openMaintModal(null)">+ Mettre à jour entretien</button>
       </div>
       <div class="table-card">
-        <div class="table-header"><div class="table-title"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg> Mots-clés SEO</div></div>
+        <div class="table-header"><div class="table-title">Suivi entretien flotte</div></div>
+        <div style="overflow-x:auto;">
         <table>
-          <thead><tr><th>Mot-clé</th><th>Position</th><th>Volume</th><th>Clics</th><th>Tendance</th></tr></thead>
-          <tbody>
-            <tr><td>location voiture marrakech</td><td>#3</td><td>2 400/mois</td><td>89</td><td><span style="color:var(--green);"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span></td></tr>
-            <tr><td>louer voiture marrakech</td><td>#5</td><td>1 800/mois</td><td>62</td><td><span style="color:var(--green);"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span></td></tr>
-            <tr><td>location voiture aeroport marrakech</td><td>#4</td><td>1 200/mois</td><td>44</td><td><span style="color:var(--green);"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span></td></tr>
-            <tr><td>rent a car marrakech</td><td>#7</td><td>900/mois</td><td>28</td><td><span style="color:var(--yellow);"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M5 12h14"/></svg></span></td></tr>
-            <tr><td>dacia duster location marrakech</td><td>#2</td><td>600/mois</td><td>35</td><td><span style="color:var(--green);"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span></td></tr>
-          </tbody>
+          <thead><tr><th>Véhicule</th><th>Immatriculation</th><th>Km actuel</th><th>Prochaine vidange</th><th>Visite technique</th><th>Assurance</th><th>Statut</th><th>Actions</th></tr></thead>
+          <tbody id="maintenance-table"></tbody>
         </table>
+        </div>
+      </div>
+      <!-- Modal entretien -->
+      <div id="maint-overlay" onclick="closeMaintModal()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:3000;"></div>
+      <div id="maint-modal" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--dark2,#fff);border-radius:16px;width:min(480px,94vw);max-height:90vh;overflow-y:auto;box-shadow:0 8px 48px rgba(0,0,0,.22);z-index:3001;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);">
+          <div style="font-weight:800;font-size:16px;" id="maint-modal-title">Entretien véhicule</div>
+          <button onclick="closeMaintModal()" style="background:none;border:none;cursor:pointer;font-size:22px;color:var(--text3);line-height:1;">&#10005;</button>
+        </div>
+        <div style="padding:22px;" id="maint-modal-body"></div>
+        <div style="padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;">
+          <button class="topbar-btn secondary" onclick="closeMaintModal()">Annuler</button>
+          <button class="topbar-btn primary" onclick="saveMaintRecord()">Enregistrer ✓</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== LOCATIONS EN COURS ===== -->
+    <div id="page-rentals" class="page">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap;">
+        <div class="search-bar" style="flex:1;min-width:200px;">
+          <span style="display:flex;align-items:center;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span>
+          <input id="rentals-search" placeholder="Réf., client, véhicule..." oninput="renderRentals()">
+        </div>
+        <select class="form-select" id="rentals-filter" style="width:180px;" onchange="renderRentals()">
+          <option value="active">En cours</option>
+          <option value="all">Toutes</option>
+          <option value="completed">Terminées</option>
+        </select>
+        <button class="topbar-btn primary" onclick="openModal('new-location')">+ Nouvelle location</button>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><div class="table-title">Locations en cours</div></div>
+        <div style="overflow-x:auto;">
+        <table>
+          <thead><tr><th>N° Contrat</th><th>Client</th><th>Véhicule</th><th>Départ</th><th>Retour</th><th>Jours</th><th>Total</th><th>Paiement</th><th>Statut</th><th>Actions</th></tr></thead>
+          <tbody id="rentals-table"></tbody>
+        </table>
+        </div>
+      </div>
+      <!-- Drawer détail location -->
+      <div id="rental-drawer-bg" onclick="closeRentalDrawer()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;"></div>
+      <div id="rental-drawer" style="display:none;position:fixed;top:0;right:0;bottom:0;width:min(500px,100vw);background:var(--dark2,#fff);box-shadow:-6px 0 32px rgba(0,0,0,.18);z-index:2001;flex-direction:column;transition:transform .28s;">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);flex-shrink:0;">
+          <div id="rental-drawer-title" style="font-size:16px;font-weight:800;"></div>
+          <button onclick="closeRentalDrawer()" style="background:none;border:none;cursor:pointer;font-size:22px;color:var(--text3);line-height:1;">&#10005;</button>
+        </div>
+        <div id="rental-drawer-body" style="overflow-y:auto;flex:1;padding:18px 22px;"></div>
+        <div id="rental-drawer-footer" style="padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:10px;flex-wrap:wrap;"></div>
+      </div>
+    </div>
+
+    <!-- ===== PARAMETRES SYSTEME ===== -->
+    <div id="page-settings" class="page">
+      <div style="max-width:780px;display:grid;gap:20px;">
+        <div class="table-card">
+          <div class="table-header"><div class="table-title" style="color:var(--red);">&#9851; Réinitialisation opérationnelle</div></div>
+          <div style="padding:20px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:18px;">
+              <div>
+                <div style="font-size:13px;font-weight:700;color:#22c55e;margin-bottom:8px;">&#10003; Jamais supprimé (conservé)</div>
+                <ul style="list-style:none;font-size:13px;color:var(--text2);display:flex;flex-direction:column;gap:6px;">
+                  <li>&#128661; Véhicules / Ma flotte</li>
+                  <li>&#128101; Clients (base complète)</li>
+                  <li>&#128179; Paiements</li>
+                  <li>&#128737; Assurances</li>
+                  <li>&#128226; Marketing Digital</li>
+                  <li>&#128202; Historique (réservations &amp; locations passées)</li>
+                </ul>
+              </div>
+              <div>
+                <div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:8px;">&#9851; Remis à zéro (exploitation courante)</div>
+                <ul style="list-style:none;font-size:13px;color:var(--text2);display:flex;flex-direction:column;gap:6px;">
+                  <li>&#128197; Réservations actives</li>
+                  <li>&#128661; Locations en cours</li>
+                  <li>&#128280; Statuts réservé / loué des véhicules</li>
+                  <li>&#128276; Alertes opérationnelles en cours</li>
+                  <li>&#128065; Affichage disponibles / réservés / loués</li>
+                </ul>
+              </div>
+            </div>
+            <div style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:14px;margin-bottom:12px;font-size:13px;">
+              <strong style="color:#16a34a;">Objectif :</strong> après réinitialisation, tout le parc redevient <strong>disponible</strong>, comme si aucune voiture n'était louée — l'historique reste consultable.
+            </div>
+            <div style="background:rgba(196,30,58,.06);border:1px solid rgba(196,30,58,.2);border-radius:10px;padding:14px;margin-bottom:16px;font-size:13px;">
+              <strong style="color:var(--red);">&#9888; Important :</strong> Les données sont archivées, jamais supprimées. Consultables dans l'historique à tout moment.
+            </div>
+            <button class="topbar-btn" style="background:var(--red);color:#fff;" onclick="confirmReset()">&#9851; Lancer la réinitialisation opérationnelle</button>
+          </div>
+        </div>
+        <div class="table-card">
+          <div class="table-header"><div class="table-title">&#128241; Notifications externes</div></div>
+          <div style="padding:20px;">
+            <div style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.5;">
+              Configurez les coordonnées et choisissez les alertes à recevoir <strong>même hors connexion</strong> au back-office.
+              Ces réglages sont enregistrés et utilisés par le service d'envoi (WhatsApp / SMS / Email) au déploiement.
+            </div>
+            <div style="display:grid;gap:12px;margin-bottom:18px;">
+              <div class="form-group" style="margin:0;">
+                <label class="form-label">Numéro WhatsApp</label>
+                <input class="form-input" id="notif-wa" placeholder="+212 6 12 34 56 78">
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label class="form-label">Numéro SMS</label>
+                <input class="form-input" id="notif-sms" placeholder="+212 6 12 34 56 78">
+              </div>
+              <div class="form-group" style="margin:0;">
+                <label class="form-label">Email</label>
+                <input class="form-input" type="email" id="notif-email" placeholder="contact@allstarloc.ma">
+              </div>
+            </div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:10px;">Alertes à activer</div>
+            <div style="display:grid;gap:8px;margin-bottom:18px;" id="notif-toggles">
+              <label style="display:flex;align-items:center;gap:10px;font-size:13.5px;cursor:pointer;"><input type="checkbox" id="na-return" style="width:16px;height:16px;cursor:pointer;"> Retour véhicule aujourd'hui</label>
+              <label style="display:flex;align-items:center;gap:10px;font-size:13.5px;cursor:pointer;"><input type="checkbox" id="na-late" style="width:16px;height:16px;cursor:pointer;"> Véhicule en retard</label>
+              <label style="display:flex;align-items:center;gap:10px;font-size:13.5px;cursor:pointer;"><input type="checkbox" id="na-vidange" style="width:16px;height:16px;cursor:pointer;"> Vidange proche</label>
+              <label style="display:flex;align-items:center;gap:10px;font-size:13.5px;cursor:pointer;"><input type="checkbox" id="na-vt" style="width:16px;height:16px;cursor:pointer;"> Visite technique proche</label>
+              <label style="display:flex;align-items:center;gap:10px;font-size:13.5px;cursor:pointer;"><input type="checkbox" id="na-assur" style="width:16px;height:16px;cursor:pointer;"> Assurance proche expiration</label>
+              <label style="display:flex;align-items:center;gap:10px;font-size:13.5px;cursor:pointer;"><input type="checkbox" id="na-unpaid" style="width:16px;height:16px;cursor:pointer;"> Impayé important</label>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+              <button class="topbar-btn primary" onclick="saveNotifSettings()">Enregistrer les notifications ✓</button>
+              <button class="topbar-btn secondary" onclick="testNotifPreview()">Aperçu des alertes du jour</button>
+            </div>
+            <div style="font-size:11px;color:var(--text3);margin-top:12px;line-height:1.5;">
+              Note : l'envoi réel WhatsApp / SMS / Email nécessite un service serveur (worker + passerelle).
+              Ces réglages préparent et déclenchent ces envois une fois la passerelle branchée au déploiement.
+            </div>
+          </div>
+        </div>
+        <div class="table-card">
+          <div class="table-header"><div class="table-title">Informations système</div></div>
+          <div style="padding:20px;display:grid;gap:0;">
+            <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);font-size:13px;"><span style="color:var(--text2);">Version</span><strong>v7.0 — Final</strong></div>
+            <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);font-size:13px;"><span style="color:var(--text2);">Synchronisation</span><span id="sys-sync" style="color:#22c55e;font-weight:700;">&#10003; Active</span></div>
+            <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);font-size:13px;"><span style="color:var(--text2);">Véhicules flotte</span><span id="sys-fleet">—</span></div>
+            <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);font-size:13px;"><span style="color:var(--text2);">Réservations totales</span><span id="sys-res">—</span></div>
+            <div style="display:flex;justify-content:space-between;padding:11px 0;font-size:13px;"><span style="color:var(--text2);">Cache local</span><button class="btn-sm ghost" onclick="if(confirm('Vider le cache local et recharger ?')){localStorage.clear();location.reload();}">Vider</button></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -940,21 +1051,23 @@ function showPage(id, el) {
     }
   }
   const titles = {
-    dashboard:'Tableau de bord', reservations:'Réservations', calendar:'Calendrier',
-    fleet:'Gestion Flotte', availability:'Disponibilités', customers:'Clients',
-    payments:'Paiements', promos:'Promotions', options:'Options & Assurances', seo:'SEO & Analytics'
+    dashboard:'Tableau de bord', reservations:'Réservations',
+    fleet:'Véhicules / Ma flotte', maintenance:'Entretien véhicules',
+    rentals:'Locations en cours', customers:'Clients',
+    payments:'Paiements', options:'Assurances', settings:'Paramètres système'
   };
   document.getElementById('topbar-title').textContent = titles[id] || id;
   // Recharge les données partagées avant chaque affichage
   reloadData();
   // Render specific pages
   if(id==='reservations') renderAllReservations();
-  if(id==='calendar') renderCalendar();
-  if(id==='fleet') renderFleetPage();
-  if(id==='availability') renderAvailability();
+  if(id==='fleet'){ renderFleetPage(); var fl=document.getElementById('fleet-label'); if(fl) fl.textContent=FLEET.length+' véhicule(s)'; }
+  if(id==='maintenance') renderMaintenance();
+  if(id==='rentals') renderRentals();
   if(id==='customers') renderCustomers();
   if(id==='payments') renderPayments();
   if(id==='dashboard') renderDashboard();
+  if(id==='settings') renderSettings();
 }
 
 function switchTab(group, tab) {
@@ -1975,8 +2088,7 @@ function saveModal() { /* handled per modal */ }
 // ==================== INIT ====================
 document.addEventListener('DOMContentLoaded', () => {
   renderDashboard();
-  renderCalendar();
-  renderAvailability();
+  if(typeof updateBadges==='function') updateBadges();
 
   // Synchronisation : une réservation faite sur le site client (autre onglet)
   // apparaît ici automatiquement, sans recharger la page
@@ -1987,13 +2099,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const id = activePage.id.replace('page-','');
     if(id==='dashboard') renderDashboard();
     if(id==='reservations') renderAllReservations();
-    if(id==='calendar') renderCalendar();
     if(id==='fleet') renderFleetPage();
-    if(id==='availability') renderAvailability();
+    if(id==='maintenance') renderMaintenance();
+    if(id==='rentals') renderRentals();
     if(id==='customers') renderCustomers();
     if(id==='payments') renderPayments();
-    // Badge toujours à jour
-    document.getElementById('badge-res').textContent = RESERVATIONS.filter(r=>r.status==='pending').length;
+    if(typeof updateBadges==='function') updateBadges();
   });
 });
 
@@ -2408,5 +2519,8 @@ function confirmerReservation(resId) {
 window.addEventListener('resize', function(){ if (window.innerWidth <= 768) renderMobileDash(); });
 document.addEventListener('DOMContentLoaded', function(){ setTimeout(renderMobileDash, 300); });
 </script>
+<script src="admin-lot5.js"></script>
+<script src="admin-lot6.js"></script>
+<script src="admin-lot7.js"></script>
 </body>
 </html>
