@@ -1,0 +1,176 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — LOT 21
+  Corrections finales : CGV validées · FAQ sans double pop-up ·
+  Bloc CTA sur toutes les pages · Synchronisation multilingue
+═══════════════════════════════════════════════════════════════
+
+Ce lot applique les corrections demandées dans le cahier des
+charges « Corrections finales – Marketing digital, FAQ, pages
+légales et pages marketing ». Tous les lots précédents sont
+conservés.
+
+───────────────────────────────────────────────────────────────
+1. SYNCHRONISATION MULTILINGUE DES PAGES (FR / EN / ES / AR)
+───────────────────────────────────────────────────────────────
+Les 7 pages de contenu sont pré-remplies dans les 4 langues, sans
+aucun champ vide :
+  • Conditions Générales de Location
+  • Politique de Confidentialité
+  • Mentions Légales
+  • Location Courte Durée
+  • Location Longue Durée
+  • Livraison Aéroport
+  • Livraison Hôtel / Riad
+
+Pour chaque page et chaque langue : Badge, Sous-titre, Titre,
+Contenu HTML, Meta Title, Meta Description, Image de couverture
+(optionnelle) sont remplis et modifiables depuis le back-office
+(Marketing → Pages de contenu).
+
+  • Au changement de langue, tous les champs se remplissent
+    automatiquement (aucun champ vide).
+  • Repli automatique sur le français côté site si une langue est
+    momentanément vide — mais tous les champs restent visibles et
+    éditables dans le back-office.
+  • Le bouton « Enregistrer & Publier » sauvegarde CHAQUE langue
+    indépendamment : modifier l'anglais n'écrase jamais le français,
+    l'espagnol ou l'arabe (fusion champ par champ, par langue).
+  • Le contenu affiché côté site correspond exactement au contenu
+    enregistré dans le back-office (fusion seed + back-office via
+    content-bridge.js, l'admin prime, le seed complète).
+
+VÉRIFIÉ : audit automatique des 7 pages × 4 langues × 6 champs →
+0 champ vide.
+
+───────────────────────────────────────────────────────────────
+2. MODULE FAQ — DOUBLE POP-UP CORRIGÉ
+───────────────────────────────────────────────────────────────
+Problème : en ouvrant le module FAQ puis en cliquant sur
+« Ajouter » ou « Modifier », une 2ᵉ fenêtre s'ouvrait pendant que
+la première restait affichée derrière.
+
+Correction (admin/marketing.html) :
+  • À l'ouverture d'un éditeur (Ajouter / Modifier), la fenêtre
+    FAQ principale se FERME automatiquement. Une seule fenêtre est
+    visible à la fois.
+  • À la fermeture ou après « Enregistrer & Synchroniser », retour
+    automatique à la liste FAQ MISE À JOUR (la question apparaît
+    immédiatement avec son statut, sa position et sa langue).
+  • Plus aucun pop-up resté affiché derrière un autre (l'éditeur
+    passe au-dessus, z-index corrigé, et la fenêtre-module est
+    refermée au préalable).
+  • La touche Échap ferme d'abord l'éditeur (et revient à la liste),
+    puis la fenêtre-module.
+  • Naviguer vers une autre section ferme proprement éditeur ET
+    fenêtre-module.
+
+Le même comportement « une seule fenêtre à la fois » s'applique à
+tous les modules ouverts en fenêtre (FAQ, Popup, Réseaux…).
+
+Synchronisation FAQ (inchangée et vérifiée) : « Enregistrer &
+Synchroniser » met à jour le site client, les données FAQ et le
+Schema.org FAQPage. Les FAQ sont pré-remplies dans les 4 langues ;
+repli FR côté affichage si une langue est vide, mais tous les
+champs restent visibles dans le back-office.
+
+VÉRIFIÉ : simulation du parcours Ouvrir → Ajouter → Annuler →
+Modifier → Naviguer. Résultat : jamais deux fenêtres simultanées,
+retour systématique à la liste à jour.
+
+───────────────────────────────────────────────────────────────
+3. CONDITIONS GÉNÉRALES — VERSION VALIDÉE
+───────────────────────────────────────────────────────────────
+Le contenu des CGV a été remplacé par la version validée
+(11 articles), dans les 4 langues :
+  Art 1 Objet · Art 2 Conditions du conducteur (18 ans, permis ≥
+  1 an, CNI/Passeport + permis) · Art 3 Réservation et paiement ·
+  Art 4 Prise en charge et restitution (même niveau de carburant) ·
+  Art 5 Assurance et franchise · Art 6 Caution · Art 7 Utilisation
+  du véhicule · Art 8 Responsabilité du client · Art 9 Annulation
+  (délai 24 h) · Art 10 Pannes et assistance · Art 11 Litiges
+  (tribunaux de Marrakech, droit marocain).
+
+Mise à jour dans les deux sources de contenu pour cohérence
+totale : pages-seed.js (page universelle) ET legal-seed.js (pages
+clean-URL héritées). Une migration automatique (drapeau de version)
+rafraîchit les CGV dans les back-offices déjà initialisés, SANS
+écraser les autres pages ni les modifications faites sur celles-ci.
+
+───────────────────────────────────────────────────────────────
+4. PAGES VALIDÉES SANS MODIFICATION DE FOND
+───────────────────────────────────────────────────────────────
+Politique de Confidentialité, Mentions Légales, Location Courte
+Durée, Location Longue Durée, Livraison Aéroport, Livraison Hôtel /
+Riad : contenu conservé. Seules la synchronisation, les traductions
+et la sauvegarde ont été vérifiées (OK).
+
+───────────────────────────────────────────────────────────────
+5. BLOC CTA AJOUTÉ SUR TOUTES LES PAGES
+───────────────────────────────────────────────────────────────
+Un bloc CTA professionnel est ajouté à la fin de chacune des
+7 pages de contenu (page universelle, moteur page-render.js) :
+
+  Titre  : « Prêt à prendre la route à Marrakech ? »
+  Texte  : Réservez votre véhicule en quelques minutes et profitez
+           de nos meilleurs tarifs avec livraison à l'aéroport, à
+           votre hôtel ou partout à Marrakech.
+  Boutons:
+    • Réserver un véhicule  → section de réservation de l'accueil
+                              (index.html#booking-section)
+    • Contacter sur WhatsApp → WhatsApp officiel
+                              (wa.me/212675312453, message pré-rempli)
+
+  • Boutons reliés aux vraies fonctionnalités du site.
+  • Multilingue FR / EN / ES / AR (le CTA suit la langue active).
+  • Responsive mobile et desktop (boutons empilés < 520 px).
+  • Compatible RTL (passage automatique en arabe).
+  • Le clic WhatsApp est suivi par le tracking conversions existant.
+
+Toutes les pages légales et services étant désormais affichées via
+la page universelle (liens du footer migrés au LOT 20), le CTA est
+présent sur 100 % des pages réellement accessibles depuis le site.
+
+VÉRIFIÉ : rendu du CTA dans les 4 langues, liens Réserver +
+WhatsApp présents, direction RTL correcte pour l'arabe.
+
+───────────────────────────────────────────────────────────────
+6. VALIDATION FINALE
+───────────────────────────────────────────────────────────────
+Tests réalisés :
+  ✔ Audit des 7 pages × 4 langues × 6 champs : 0 champ vide.
+  ✔ CGV : version validée présente dans les 4 langues (FR/EN/ES/AR)
+    et dans les deux sources de contenu.
+  ✔ FAQ : aucun double pop-up ; une seule fenêtre à la fois ;
+    retour à la liste à jour après ajout / modification / annulation
+    et après navigation.
+  ✔ CTA : présent, multilingue, responsive, RTL, boutons Réserver
+    et WhatsApp fonctionnels sur les 7 pages.
+  ✔ Enregistrement par langue indépendant (aucune langue n'écrase
+    une autre).
+  ✔ Schema.org FAQPage et synchronisation FAQ conservés.
+  ✔ Contrôle de syntaxe de tous les scripts modifiés : OK.
+
+Points restants / notes :
+  • La synchronisation serveur passe par Cloudflare (/api/marketing
+    + KV). Pour valider en conditions réelles : tester sur le site
+    DÉPLOYÉ et rafraîchir (Ctrl/Cmd+F5). En local (fichiers ouverts
+    directement), le pré-remplissage s'affiche via le seed, mais la
+    synchro serveur n'est pas active.
+  • Les pages clean-URL héritées (/cgv, /privacy, /mentions, /lld)
+    ne sont plus liées depuis le site (remplacées par la page
+    universelle). Leur contenu CGV a tout de même été mis à jour
+    pour rester cohérent. Le bloc CTA est porté par la page
+    universelle, qui est la page réellement accessible.
+
+───────────────────────────────────────────────────────────────
+FICHIERS MODIFIÉS DANS CE LOT
+───────────────────────────────────────────────────────────────
+  pages-seed.js          → CGV remplacées (version validée, 4 langues)
+  legal-seed.js          → CGV synchronisées (pages héritées)
+  page-render.js         → bloc CTA multilingue + responsive + RTL
+  admin/marketing.html   → correction double pop-up FAQ
+                           (openModal/closeModal ↔ fenêtre-module,
+                           z-index, Échap, navigation, migration CGV)
+  pages/page.html        → suppression d'un import dupliqué
+
+Lots précédents : tous conservés.

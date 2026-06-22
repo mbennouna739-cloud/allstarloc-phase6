@@ -1,0 +1,202 @@
+/* ============================================================
+   ALL STAR LOC — Application mobile back-office
+   Conçue mobile-first : barre de navigation basse, écrans dédiés
+   en cartes, gros boutons, aucun tableau desktop. S'active sous
+   768px et prend toute la place. Lit les mêmes données (ASLDB).
+   ============================================================ */
+
+/* Masqué par défaut (desktop) */
+#asl-mobile-app { display: none; }
+#asl-mobile-tabbar { display: none; }
+
+@media (max-width: 768px) {
+  /* On masque entièrement l'ancien dashboard mobile et le contenu desktop */
+  #mobile-dash { display: none !important; }
+  .main > .content { display: none !important; }
+  .sidebar, #sidebar, .sb-backdrop { /* géré par l'app */ }
+
+  #asl-mobile-app {
+    display: block;
+    position: fixed; inset: 0; top: 0; bottom: 0;
+    background: #F4F5F7;
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
+    padding-bottom: 78px; /* place pour la tabbar */
+    z-index: 1500;
+  }
+  /* On masque la navigation desktop/mobile d'origine au profit de l'app */
+  .sb-toggle, .sb-mobile-backdrop, .sidebar, #sidebar { display: none !important; }
+  .main > .topbar { display: none !important; }
+  /* Quand l'utilisateur ouvre une vue desktop ponctuelle (Grand Livre,
+     paramètres…), on autorise l'affichage du contenu desktop. */
+  body.ma-desktop-view .main > .content { display: block !important; }
+  body.ma-desktop-view #asl-mobile-app,
+  body.ma-desktop-view #asl-mobile-tabbar { display: none !important; }
+
+  /* Les fiches/modales doivent s'afficher AU-DESSUS de l'app mobile. */
+  .modal-overlay { z-index: 2200 !important; }
+  #rental-drawer-bg { z-index: 2200 !important; }
+  #rental-drawer { z-index: 2201 !important; }
+  /* Le panneau "Retours" (openDashDrawer) au-dessus aussi */
+  #dash-drawer, #dash-drawer-bg { z-index: 2200 !important; }
+
+  /* En-tête d'écran */
+  .ma-head {
+    position: sticky; top: 0; z-index: 5;
+    background: #fff; padding: 16px 16px 14px;
+    border-bottom: 1px solid rgba(18,22,30,.07);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .ma-head h1 { font-size: 19px; font-weight: 900; color: #101216; margin: 0; flex: 1; }
+  .ma-head .ma-greet { font-size: 12.5px; color: #888; font-weight: 600; margin-top: 2px; }
+  .ma-head-btn {
+    width: 40px; height: 40px; border-radius: 11px; border: none;
+    background: #F4F5F7; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; position: relative; flex-shrink: 0;
+  }
+  .ma-head-btn .ma-dot {
+    position: absolute; top: 7px; right: 7px; width: 9px; height: 9px;
+    border-radius: 50%; background: #C41E3A; border: 2px solid #fff;
+  }
+
+  .ma-screen { padding: 16px; display: none; }
+  .ma-screen.active { display: block; animation: maFade .2s ease; }
+  @keyframes maFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  /* Cartes statistiques (tableau de bord) */
+  .ma-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+  .ma-stat {
+    background: #fff; border-radius: 16px; padding: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.05); border: 1px solid rgba(18,22,30,.06);
+    cursor: pointer; transition: transform .12s; position: relative; overflow: hidden;
+  }
+  .ma-stat:active { transform: scale(.97); }
+  .ma-stat-ico { width: 38px; height: 38px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 10px; }
+  .ma-stat-num { font-size: 26px; font-weight: 900; line-height: 1; color: #101216; }
+  .ma-stat-lbl { font-size: 12.5px; color: #667; font-weight: 600; margin-top: 4px; }
+  .ma-stat-num.green { color: #16a34a; } .ma-stat-ico.green { background: rgba(22,163,74,.12); color: #16a34a; }
+  .ma-stat-num.blue { color: #2563eb; } .ma-stat-ico.blue { background: rgba(37,99,235,.12); color: #2563eb; }
+  .ma-stat-num.orange { color: #d97706; } .ma-stat-ico.orange { background: rgba(217,119,6,.12); color: #d97706; }
+  .ma-stat-num.red { color: #C41E3A; } .ma-stat-ico.red { background: rgba(196,30,58,.12); color: #C41E3A; }
+  .ma-stat-num.purple { color: #7c3aed; } .ma-stat-ico.purple { background: rgba(124,58,237,.12); color: #7c3aed; }
+  .ma-stat-num.teal { color: #0d9488; } .ma-stat-ico.teal { background: rgba(13,148,136,.12); color: #0d9488; }
+
+  .ma-section-title { font-size: 13px; font-weight: 800; color: #444; margin: 22px 4px 10px; text-transform: uppercase; letter-spacing: .03em; }
+
+  /* Carte générique (véhicule, réservation, client…) */
+  .ma-card {
+    background: #fff; border-radius: 15px; padding: 14px; margin-bottom: 11px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.045); border: 1px solid rgba(18,22,30,.06);
+  }
+  .ma-card-top { display: flex; align-items: center; gap: 12px; }
+  .ma-card-photo {
+    width: 56px; height: 56px; border-radius: 12px; flex-shrink: 0; object-fit: cover;
+    background: #eef0f3 url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="%23aab" stroke-width="1.6" viewBox="0 0 24 24"><path d="m21 8-2 2-1.5-3.7A2 2 0 0 0 15.6 5H8.4a2 2 0 0 0-1.9 1.3L5 10 3 8"/><rect width="18" height="8" x="3" y="10" rx="2"/></svg>') center/24px no-repeat;
+  }
+  .ma-card-ava {
+    width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-weight: 800;
+    font-size: 17px; color: #fff; background: #C41E3A;
+  }
+  .ma-card-info { flex: 1; min-width: 0; }
+  .ma-card-name { font-size: 15px; font-weight: 800; color: #101216; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ma-card-sub { font-size: 12.5px; color: #778; margin-top: 2px; }
+  .ma-card-meta { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 11px; padding-top: 11px; border-top: 1px solid rgba(18,22,30,.06); }
+  .ma-meta { font-size: 12px; color: #556; }
+  .ma-meta b { color: #101216; font-weight: 700; display: block; font-size: 13px; }
+  .ma-badge { font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 50px; white-space: nowrap; }
+  .ma-badge.green { background: rgba(22,163,74,.12); color: #16a34a; }
+  .ma-badge.blue { background: rgba(37,99,235,.12); color: #2563eb; }
+  .ma-badge.orange { background: rgba(217,119,6,.12); color: #d97706; }
+  .ma-badge.red { background: rgba(196,30,58,.12); color: #C41E3A; }
+  .ma-badge.gray { background: rgba(100,116,139,.12); color: #64748b; }
+  .ma-card-btn {
+    display: block; width: 100%; margin-top: 12px; padding: 11px;
+    border: none; border-radius: 11px; background: #101216; color: #fff;
+    font-size: 13.5px; font-weight: 700; cursor: pointer; text-align: center;
+  }
+  .ma-card-btn:active { opacity: .85; }
+  .ma-card-btn.ghost { background: #F4F5F7; color: #101216; }
+
+  /* Boutons d'action gros */
+  .ma-action {
+    display: block; width: 100%; padding: 15px; border: none; border-radius: 13px;
+    background: #C41E3A; color: #fff; font-size: 15px; font-weight: 800; cursor: pointer;
+    margin-bottom: 12px; text-align: center;
+  }
+  .ma-action:active { opacity: .9; }
+  .ma-action.dark { background: #101216; }
+
+  /* Filtres (chips) */
+  .ma-chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 10px; -webkit-overflow-scrolling: touch; }
+  .ma-chips::-webkit-scrollbar { display: none; }
+  .ma-chip {
+    flex-shrink: 0; padding: 8px 16px; border-radius: 50px; border: 1px solid rgba(18,22,30,.12);
+    background: #fff; font-size: 13px; font-weight: 600; color: #556; cursor: pointer; white-space: nowrap;
+  }
+  .ma-chip.active { background: #101216; color: #fff; border-color: #101216; }
+
+  /* Recherche */
+  .ma-search {
+    width: 100%; padding: 12px 16px; border: 1px solid rgba(18,22,30,.1); border-radius: 12px;
+    font-size: 16px; background: #fff; margin-bottom: 14px; outline: none;
+  }
+
+  .ma-empty { text-align: center; padding: 40px 20px; color: #99a; font-size: 14px; }
+
+  /* Caisse mobile */
+  .ma-cash-card {
+    background: #fff; border-radius: 16px; padding: 18px; margin-bottom: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.05); border-left: 4px solid #16a34a;
+  }
+  .ma-cash-lbl { font-size: 13px; color: #667; }
+  .ma-cash-num { font-size: 24px; font-weight: 900; margin-top: 4px; }
+
+  /* Notifications */
+  .ma-notif {
+    display: flex; gap: 12px; background: #fff; border-radius: 13px; padding: 14px;
+    margin-bottom: 10px; border: 1px solid rgba(18,22,30,.06); cursor: pointer;
+  }
+  .ma-notif-ico { width: 40px; height: 40px; border-radius: 11px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .ma-notif-body { flex: 1; min-width: 0; }
+  .ma-notif-title { font-size: 14px; font-weight: 700; color: #101216; }
+  .ma-notif-sub { font-size: 12.5px; color: #778; margin-top: 2px; }
+
+  /* ===== Barre de navigation basse ===== */
+  #asl-mobile-tabbar {
+    display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 1600;
+    background: #fff; border-top: 1px solid rgba(18,22,30,.08);
+    padding: 7px 4px calc(7px + env(safe-area-inset-bottom, 0px)); justify-content: space-around;
+    box-shadow: 0 -3px 16px rgba(0,0,0,.05);
+  }
+  .ma-tab {
+    flex: 1; background: none; border: none; cursor: pointer; padding: 4px 0;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    color: #889; font-size: 10px; font-weight: 600; position: relative;
+  }
+  .ma-tab svg { width: 22px; height: 22px; }
+  .ma-tab.active { color: #C41E3A; }
+  .ma-tab .ma-tab-dot {
+    position: absolute; top: 0; right: 50%; margin-right: -16px;
+    min-width: 16px; height: 16px; padding: 0 4px; border-radius: 50px;
+    background: #C41E3A; color: #fff; font-size: 9px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* "Plus" : feuille d'options (paramètres essentiels, etc.) */
+  .ma-sheet {
+    position: fixed; inset: 0; z-index: 1700; background: rgba(10,12,18,.5);
+    display: flex; align-items: flex-end;
+  }
+  .ma-sheet-inner {
+    background: #fff; width: 100%; border-radius: 20px 20px 0 0; padding: 8px 16px 30px;
+    animation: maSheetUp .25s ease;
+  }
+  @keyframes maSheetUp { from { transform: translateY(100%); } to { transform: none; } }
+  .ma-sheet-handle { width: 40px; height: 4px; border-radius: 4px; background: #ddd; margin: 8px auto 16px; }
+  .ma-sheet-item {
+    display: flex; align-items: center; gap: 14px; padding: 15px 6px;
+    border-bottom: 1px solid rgba(18,22,30,.06); font-size: 15px; font-weight: 600; color: #101216; cursor: pointer;
+  }
+  .ma-sheet-item:last-child { border-bottom: none; }
+  .ma-sheet-item .ma-sheet-ico { font-size: 20px; width: 26px; text-align: center; }
+}

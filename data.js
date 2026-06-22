@@ -388,6 +388,132 @@
   }
   function saveReservations(list) { return write(KEY_RES, list); }
 
+  /* ============================================================
+     MOTEUR CENTRAL DE DISPONIBILITÉ & CONFLITS
+     Source unique utilisée par le site ET le back-office pour
+     garantir qu'un véhicule n'est jamais attribué à deux clients
+     sur une période incompatible.
+     ============================================================ */
+
+  /* Marge de sécurité (heures) après le retour prévu : contrôle +
+     préparation du véhicule + absorption d'un éventuel retard. */
+  const AVAIL_MARGIN_H = 3;
+
+  /* Convertit date ISO (YYYY-MM-DD) + heure (HH:MM) en objet Date.
+     Heure par défaut 12:00 si absente. */
+  function _toDateTime(dateISO, timeStr, defTime) {
+    if (!dateISO) return null;
+    var d = String(dateISO).slice(0, 10);
+    var tm = (timeStr && /^\d{1,2}:\d{2}$/.test(timeStr)) ? timeStr : (defTime || '12:00');
+    var p = tm.split(':');
+    var dt = new Date(d + 'T00:00:00');
+    dt.setHours(parseInt(p[0] || '12', 10), parseInt(p[1] || '0', 10), 0, 0);
+    return dt;
+  }
+
+  /* Fin d'occupation réelle d'une réservation = retour prévu + marge. */
+  function _occupiedUntil(r) {
+    var end = _toDateTime(r.endDate, r.endTime, '12:00');
+    if (!end) return null;
+    var withMargin = new Date(end.getTime());
+    withMargin.setHours(withMargin.getHours() + AVAIL_MARGIN_H);
+    return { end: end, withMargin: withMargin };
+  }
+
+  /* Deux intervalles datetime se chevauchent-ils ? */
+  function _dtOverlap(aStart, aEnd, bStart, bEnd) {
+    return aStart < bEnd && bStart < aEnd;
+  }
+
+  /* Réservations actives (confirmées/en cours/en attente) pour un véhicule donné. */
+  function _resForCar(car) {
+    var unitIds = (car && car.unitIds) || [car && car.id];
+    var name = car && car.name;
+    return read(KEY_RES, []).filter(function (r) {
+      if (!r.startDate || !r.endDate) return false;
+      if (r.status === 'cancelled' || r.status === 'completed') return false;
+      return (r.car === name) || (unitIds.indexOf(r.carId) >= 0);
+    });
+  }
+
+  /* ★ FONCTION CENTRALE : vérifie la disponibilité d'un véhicule
+     pour une période donnée, en tenant compte des réservations
+     existantes, locations en cours, retours prévus et marge.
+
+     Paramètres : car, startISO, endISO, startTime, endTime,
+                  opts = { excludeId } pour ignorer une résa (édition).
+     Retour : {
+       available: bool,
+       conflicts: [résa en conflit direct],
+       tightReturns: [résa qui revient juste avant, dans la marge],
+       nextFrom: Date|null  (prochaine dispo si indisponible)
+     }
+  */
+  function checkAvailability(car, startISO, endISO, startTime, endTime, opts) {
+    opts = opts || {};
+    var out = { available: true, conflicts: [], tightReturns: [], nextFrom: null };
+    if (!car || !startISO || !endISO) return out;
+
+    var reqStart = _toDateTime(startISO, startTime, '10:00');
+    var reqEnd = _toDateTime(endISO, endTime, '10:00');
+    if (!reqStart || !reqEnd) return out;
+
+    var stock = Math.max(1, car.stock || (car.unitIds ? car.unitIds.length : 1) || 1);
+    var list = _resForCar(car).filter(function (r) { return r.id !== opts.excludeId; });
+
+    var overlapCount = 0;
+    list.forEach(function (r) {
+      var occ = _occupiedUntil(r);
+      if (!occ) return;
+      var rStart = _toDateTime(r.startDate, r.startTime, '10:00');
+
+      /* Conflit DUR : la période demandée chevauche la réservation
+         elle-même (sans compter la marge). */
+      if (_dtOverlap(reqStart, reqEnd, rStart, occ.end)) {
+        overlapCount++;
+        out.conflicts.push(r);
+        return;
+      }
+      /* Conflit SOUPLE : la nouvelle réservation démarre APRÈS le
+         retour prévu mais dans la fenêtre de marge (≤ marge) → le
+         véhicule doit revenir juste avant. Alerte informative
+         (anticipation d'un éventuel retard). */
+      if (reqStart >= occ.end && reqStart <= occ.withMargin) {
+        out.tightReturns.push({
+          res: r,
+          returnAt: occ.end,
+          safeFrom: occ.withMargin
+        });
+      }
+    });
+
+    if (overlapCount >= stock) {
+      out.available = false;
+      /* Calcule la prochaine disponibilité (retour le plus tardif + marge) */
+      var latest = null;
+      out.conflicts.forEach(function (r) {
+        var occ = _occupiedUntil(r);
+        if (occ && (!latest || occ.withMargin > latest)) latest = occ.withMargin;
+      });
+      out.nextFrom = latest;
+    }
+    return out;
+  }
+
+  /* Vérifie un conflit AVANT d'enregistrer une réservation (manuelle
+     ou site). Renvoie le même objet que checkAvailability. */
+  function checkReservationConflict(resObj, opts) {
+    var fleet = read(KEY_FLEET, []);
+    var car = fleet.find(function (c) {
+      return c.id === resObj.carId || c.name === resObj.car;
+    });
+    if (!car) return { available: true, conflicts: [], tightReturns: [], nextFrom: null };
+    return checkAvailability(
+      car, resObj.startDate, resObj.endDate,
+      resObj.startTime, resObj.endTime, opts
+    );
+  }
+
   function addReservation(res) {
     const list = read(KEY_RES, []);
     if (!res.id) res.id = 'ASL' + Date.now().toString().slice(-6);
@@ -406,6 +532,92 @@
     saveReservations(list);
     queueResUpdate(id, patch); syncNow();
     return r;
+  }
+
+  /* ============================================================
+     CLÔTURE DE PÉRIODE AVEC ARCHIVAGE
+     Déplace toutes les données opérationnelles vers les archives
+     (consultables), vide les compteurs actifs, et préserve les
+     éléments permanents (véhicules, tarifs, paramètres, FAQ, blog,
+     marketing, entretien). Tout reste restaurable.
+     ============================================================ */
+  const KEY_ARCHIVES = 'asl_archives_v1';   // liste des clôtures
+  const KEY_CHARGES  = 'asl_charges_v1';     // charges (module Caisse)
+
+  function getArchives() { return readJSON(KEY_ARCHIVES, []) || []; }
+
+  function closePeriod(label) {
+    const now = new Date();
+    const reservations = read(KEY_RES, []);
+    let charges = [];
+    try { charges = JSON.parse(localStorage.getItem(KEY_CHARGES) || '[]'); } catch (e) { charges = []; }
+
+    // Snapshot complet de la période en cours
+    const snapshot = {
+      id: 'ARCH' + Date.now(),
+      label: label || ('Période clôturée le ' + now.toLocaleDateString('fr-FR')),
+      closedAt: now.toISOString(),
+      reservations: reservations,     // toutes les réservations/locations/paiements
+      charges: charges,               // toutes les charges
+      stats: {
+        totalReservations: reservations.length,
+        encaisse: reservations.reduce(function (s, r) { return s + (Number(r.paid) || 0); }, 0),
+        charges: charges.reduce(function (s, c) { return c.status === 'pending' ? s : s + (Number(c.amount) || 0); }, 0)
+      }
+    };
+
+    // Enregistrer dans les archives
+    const archives = getArchives();
+    archives.unshift(snapshot);
+    try { localStorage.setItem(KEY_ARCHIVES, JSON.stringify(archives)); } catch (e) {}
+
+    // Vider les données opérationnelles actives
+    saveReservations([]);                       // réservations / locations / paiements → 0
+    try { localStorage.setItem(KEY_CHARGES, '[]'); } catch (e) {}  // charges → 0
+
+    // Tous les véhicules redeviennent disponibles (élément permanent, jamais supprimé)
+    const fleet = read(KEY_FLEET, []);
+    fleet.forEach(function (c) {
+      if (c.status === 'rented' || c.status === 'active' || c.status === 'reserved') c.status = 'available';
+    });
+    write(KEY_FLEET, fleet);
+
+    emit(KEY_RES); emit(KEY_FLEET); syncNow();
+    return snapshot;
+  }
+
+  /* Restaure une période archivée : réinjecte ses réservations et charges
+     dans les données actives (fusion, sans doublon par id). */
+  function restoreArchive(archiveId) {
+    const archives = getArchives();
+    const arch = archives.find(function (a) { return a.id === archiveId; });
+    if (!arch) return false;
+
+    // Réservations : fusion
+    const current = read(KEY_RES, []);
+    const ids = current.map(function (r) { return r.id; });
+    (arch.reservations || []).forEach(function (r) {
+      if (ids.indexOf(r.id) < 0) current.push(r);
+    });
+    saveReservations(current);
+
+    // Charges : fusion
+    let charges = [];
+    try { charges = JSON.parse(localStorage.getItem(KEY_CHARGES) || '[]'); } catch (e) { charges = []; }
+    const cIds = charges.map(function (c) { return c.id; });
+    (arch.charges || []).forEach(function (c) {
+      if (cIds.indexOf(c.id) < 0) charges.push(c);
+    });
+    try { localStorage.setItem(KEY_CHARGES, JSON.stringify(charges)); } catch (e) {}
+
+    emit(KEY_RES); syncNow();
+    return true;
+  }
+
+  function deleteArchive(archiveId) {
+    const archives = getArchives().filter(function (a) { return a.id !== archiveId; });
+    try { localStorage.setItem(KEY_ARCHIVES, JSON.stringify(archives)); } catch (e) {}
+    return true;
   }
 
   /* ---------- Démarrage ---------- */
@@ -609,6 +821,7 @@
     RATE_MAD,
     getFleet, saveFleet, addVehicle, updateVehicle, deleteVehicle,
     getReservations, addReservation, updateReservation,
+    closePeriod, getArchives, restoreArchive, deleteArchive,
     onChange,
     // Gestion des unités de stock (couleur + immatriculation par unité)
     normalizeUnits, modelAvailability, assignUnit, releaseUnit, setUnitStatusByPlate,
@@ -616,5 +829,7 @@
     syncNow, syncStatus, uploadImage,
     // ★ Tarification (source unique) : saison → durée → standard
     dailyRate, seasonalRate, normalizeSeasonalTiers, normalizeDurationTiers, monthOfISO,
+    // ★ Moteur central de disponibilité & conflits (site + back-office)
+    checkAvailability, checkReservationConflict, AVAIL_MARGIN_H,
   };
 })(window);

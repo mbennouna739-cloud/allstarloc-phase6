@@ -1,0 +1,98 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — LOT 16
+  Options sous Assurances · Pages légales éditables · Avis clients
+═══════════════════════════════════════════════════════════════
+
+───────────────────────────────────────────────────────────────
+1. OPTIONS DE RÉSERVATION — DÉPLACÉES SOUS « ASSURANCES »
+───────────────────────────────────────────────────────────────
+La section « Options de réservation » est maintenant dans le MENU
+LATÉRAL PRINCIPAL du back-office, juste sous « Assurances ».
+Un clic dessus ouvre directement le gestionnaire (sans passer par
+le module Marketing).
+
+Vous y gérez sans toucher au code : siège bébé, deuxième
+conducteur, livraison, retour, protection pneus/crevaison,
+assistance, extension assurance, et toute autre option.
+Pour chaque option : ajouter / modifier / supprimer / activer /
+désactiver, prix (par jour, par réservation ou gratuit), et nom
+multilingue FR/EN/ES/AR.
+
+Synchronisation automatique avec le site (même stockage que le
+module Marketing → cohérence totale).
+
+───────────────────────────────────────────────────────────────
+2. PAGES LÉGALES — ÉDITABLES, TRADUISIBLES, PUBLIABLES
+───────────────────────────────────────────────────────────────
+Nouvelle section « Pages légales » dans le module Marketing.
+Vous pouvez modifier, traduire et publier le contenu de :
+  • Conditions générales (CGV)
+  • Politique de confidentialité
+  • Mentions légales
+  • Location longue durée
+
+Pour chaque page : onglets de langue FR/EN/ES/AR, titre + contenu
+(HTML simple : titres, paragraphes, listes, gras). Le contenu
+enregistré REMPLACE le texte par défaut sur le site (repli FR si
+une langue est vide ; si rien n'est saisi, le texte d'origine
+reste affiché — aucune page ne casse).
+
+Le site lit automatiquement ce contenu et l'affiche dans la bonne
+langue, avec passage en RTL pour l'arabe.
+
+───────────────────────────────────────────────────────────────
+3. AVIS CLIENTS — PLUS AUCUN AVIS CODÉ EN DUR
+───────────────────────────────────────────────────────────────
+Nouvelle section « Avis clients » dans le menu du module Marketing.
+
+Les 6 avis qui étaient codés en dur sur le site sont désormais
+RÉCUPÉRÉS comme avis par défaut, et entièrement gérables :
+  • Modifier / supprimer / activer / désactiver chaque avis.
+  • Nom du client, note (1 à 5 étoiles), source, texte.
+  • Photo (URL ou téléversement) — sinon initiales sur fond coloré.
+  • Texte multilingue FR/EN/ES/AR (repli FR si une langue vide).
+
+Ajout de nouveaux avis : bouton « + Ajouter un avis ».
+Les avis s'affichent automatiquement sur le site dans la langue
+active. Si tous les avis sont masqués, le site garde son contenu
+d'origine (sécurité).
+
+PRÉPARATION GOOGLE REVIEWS (architecture prête) :
+Un bloc « Google Reviews (préparation) » permet déjà de saisir :
+  • Activer / désactiver Google Reviews.
+  • Note moyenne Google.
+  • Nombre total d'avis.
+  • Place ID de la fiche Google Business Profile.
+Ces champs sont stockés et synchronisés. Quand vous développerez
+votre fiche Google, la connexion automatique pourra être branchée
+SANS refonte (la structure est en place).
+
+───────────────────────────────────────────────────────────────
+AUDIT DE COHÉRENCE SITE ↔ BACK-OFFICE (rappel)
+───────────────────────────────────────────────────────────────
+Tout le contenu visible est désormais modifiable depuis le
+back-office et synchronisé avec le site :
+  • FAQ ......................... ✓ multilingue, sync
+  • Blog / Articles ............. ✓ multilingue, sync, images
+  • Textes du site (H1/H2/SEO) .. ✓ éditeur ALL_TEXTS_4L + SEO
+  • Options de réservation ...... ✓ sous Assurances, sync
+  • Pages légales .............. ✓ éditables/traduisibles/publiables
+  • Avis clients ............... ✓ gérables, multilingues, sync
+  • Bannière cookies ........... (à venir — non incluse dans ce lot)
+
+───────────────────────────────────────────────────────────────
+FICHIERS
+───────────────────────────────────────────────────────────────
+  admin/index.html        → menu « Options de réservation » sous
+                            Assurances + page + lien script
+  admin/admin-bookopt.js  → NOUVEAU : gestionnaire d'options
+  admin/marketing.html    → éditeurs Pages légales + Avis clients
+                            (+ préparation Google Reviews)
+  content-bridge.js       → injection légale + rendu des avis
+  index.html              → #reviews-grid pour rendu dynamique
+
+Note déploiement : la synchronisation passe par le serveur
+Cloudflare (/api/marketing + KV). Tester sur le site déployé et
+rafraîchir (Ctrl+F5) après une modification.
+
+Lots précédents : conservés. Tous les fichiers validés.

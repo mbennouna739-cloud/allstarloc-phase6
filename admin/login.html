@@ -80,6 +80,7 @@ body{font-family:'Outfit',system-ui,sans-serif;background:#08080a;
     <div class="footer">ALL STAR LOC &copy; 2024 — Accès réservé</div>
   </div>
 </div>
+<script src="admin-users.js"></script>
 <script>
 const SK='asl_admin_session', LK='asl_login_lockout';
 const TTL=8*3600000, MAX=5, BAN=15*60000;
@@ -111,6 +112,29 @@ async function login(){
   if(!u||!p){showErr('Veuillez remplir tous les champs.');return;}
   const btn=document.getElementById('btn');
   if(btn)btn.disabled=true;
+
+  // 1) Comptes EMPLOYES d'abord (geres par l'admin principal)
+  try {
+    if (typeof ASLUsers !== 'undefined' && ASLUsers.authEmployee) {
+      const emp = ASLUsers.authEmployee(u, p);
+      if (emp && emp.blocked) {
+        showErr('Ce compte est desactive. Contactez l\'administrateur.');
+        document.getElementById('p').value=''; if(btn)btn.disabled=false;
+        return;
+      }
+      if (emp) {
+        const sess={ user: emp.name||emp.username, username: emp.username,
+          employee:true, perms: emp.perms||{}, userId: emp.id,
+          exp: Date.now()+TTL, token: Math.random().toString(36).slice(2) };
+        localStorage.setItem(SK, JSON.stringify(sess));
+        localStorage.removeItem(LK);
+        window.location.replace('index.html');
+        return;
+      }
+    }
+  } catch(e) {}
+
+  // 2) Sinon, admin principal cote serveur
   try{
     const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user:u,pass:p})});
     const d=await r.json();

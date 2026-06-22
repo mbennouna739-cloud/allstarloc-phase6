@@ -1,0 +1,75 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — LOT 9
+  FAQ mobile + Multilingue FAQ / Blog
+═══════════════════════════════════════════════════════════════
+
+───────────────────────────────────────────────────────────────
+1. FAQ — MENU MOBILE (corrigé)
+───────────────────────────────────────────────────────────────
+CAUSE TROUVÉE : la page faq.html ne chargeait PAS le script
+i18n.js. Or c'est ce script qui contient la fonction du menu
+mobile (toggleMobileMenu) ET les traductions. Sans lui :
+  • le menu burger ne réagissait pas,
+  • la page restait en français.
+
+CORRECTION : ajout de <script src="../i18n.js" defer> dans faq.html.
+La FAQ se comporte désormais EXACTEMENT comme Accueil, Véhicules,
+À propos et Contact :
+  • ouverture/fermeture du menu burger OK,
+  • fermeture auto au clic sur un lien et au scroll,
+  • aucun scroll horizontal, aucun décalage,
+  • même structure header/menu que les autres pages.
+
+(Même correctif appliqué à article-guide-location.html qui avait
+le même oubli.)
+
+───────────────────────────────────────────────────────────────
+2. TRADUCTION FAQ + BLOG (intégrées au multilingue)
+───────────────────────────────────────────────────────────────
+AVANT : le contenu FAQ et Blog n'avait aucun attribut de
+traduction → restait en français même en changeant de langue.
+
+AJOUT :
+  • 39 clés de traduction (fq.* / bl.* / cta.*) ajoutées au
+    dictionnaire i18n.js dans les 4 langues : FR, EN, ES, AR.
+  • Attributs data-i18n posés sur tout le contenu :
+      FAQ  : titre, intro, les 10 questions + 10 réponses, CTA.
+      Blog : titre, intro, 3 cartes (tag + titre + texte),
+             liens « Lire l'article », CTA.
+
+RÉSULTAT (vérifié) :
+  • Site en arabe   → FAQ et Blog en arabe (RTL automatique).
+  • Site en anglais → FAQ et Blog en anglais.
+  • Site en espagnol→ FAQ et Blog en espagnol.
+  • Site en français→ FAQ et Blog en français.
+  Titres, contenus, boutons et catégories suivent la langue.
+
+───────────────────────────────────────────────────────────────
+3. ARTICLES DE BLOG (3 articles longs) — état
+───────────────────────────────────────────────────────────────
+Les 3 articles chargent désormais i18n.js → leur MENU MOBILE,
+leur barre de navigation et leur pied de page sont traduits et
+le burger fonctionne.
+
+Le CORPS rédactionnel de chaque article (~60 paragraphes par
+article, soit ~180 textes × 4 langues) n'est pas encore traduit :
+il reste affiché dans sa langue d'origine (français).
+
+POURQUOI : il s'agit de longs textes éditoriaux. Une traduction
+automatique brute donnerait un rendu peu professionnel. Pour un
+résultat propre, ces 3 articles méritent une traduction soignée,
+à faire dans un lot dédié (je peux la préparer langue par langue).
+
+Dans l'immédiat, aucune régression : les articles fonctionnent,
+le menu et la navigation sont multilingues.
+
+───────────────────────────────────────────────────────────────
+FICHIERS MODIFIÉS
+───────────────────────────────────────────────────────────────
+  pages/faq.html                     → + i18n.js, + data-i18n contenu
+  pages/blog.html                    → + data-i18n contenu
+  pages/article-guide-location.html  → + i18n.js (menu réparé)
+  i18n.js                            → + 39 clés FAQ/Blog ×4 langues
+
+Aucune autre page ni fonctionnalité impactée.
+Back-office et Marketing Digital : NON touchés.

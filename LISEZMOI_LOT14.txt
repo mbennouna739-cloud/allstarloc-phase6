@@ -1,0 +1,77 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — LOT 14
+  Gestion des conflits & disponibilité (réservations/locations)
+═══════════════════════════════════════════════════════════════
+
+RÉPONSE À LA QUESTION : la logique de détection de conflit
+existait partiellement (affichage côté site) mais NE bloquait PAS
+au moment de réserver, et le back-office ne vérifiait RIEN.
+Tout cela est maintenant centralisé et appliqué partout.
+
+───────────────────────────────────────────────────────────────
+MOTEUR CENTRAL DE DISPONIBILITÉ (data.js)
+───────────────────────────────────────────────────────────────
+Une seule source de vérité (ASLDB.checkAvailability) utilisée par
+le site ET le back-office. Elle tient compte de :
+  • Réservations existantes (en attente / confirmées)
+  • Locations en cours
+  • Retours prévus (date + heure)
+  • Marge de sécurité de 3 h après chaque retour
+
+Elle distingue deux situations :
+  • CONFLIT DUR : la période demandée chevauche une réservation
+    existante → indisponible (bloqué).
+  • RETOUR SERRÉ : la nouvelle réservation démarre juste après un
+    retour prévu, dans la fenêtre de marge → alerte informative.
+
+───────────────────────────────────────────────────────────────
+1. RÉSERVATION REÇUE DEPUIS LE SITE
+───────────────────────────────────────────────────────────────
+• Notification « Nouvelle réservation reçue (site web) » avec :
+    - véhicule concerné
+    - dates ET heures (du … à … au … à …)
+    - client concerné
+• Vérification automatique du retour juste avant : si un véhicule
+  identique doit revenir dans la marge, une alerte s'affiche :
+    « Retour à vérifier avant cette réservation — doit revenir
+      le 15 août à 15h00. Vérifiez le retour ou contactez le
+      client actuel. »
+• Exemple validé : retour 15 août 15h00 + nouvelle résa 15 août
+  18h00 (marge 3h) → alerte déclenchée. ✓
+
+───────────────────────────────────────────────────────────────
+2. CONFLITS RÉSERVATION MANUELLE ↔ RÉSERVATION SITE
+───────────────────────────────────────────────────────────────
+Avant chaque enregistrement, le système détecte le conflit :
+  • Site (confirmBooking) : si le véhicule vient d'être pris, la
+    réservation est BLOQUÉE avec message + prochaine dispo.
+  • Location manuelle (back-office) : message
+    « ⛔ Conflit détecté : le véhicule est déjà réservé ou loué
+      sur cette période » + possibilité de forcer si besoin.
+  • Réservation manuelle (back-office) : même contrôle.
+
+───────────────────────────────────────────────────────────────
+3. VÉRIFICATION GLOBALE AVANT TOUTE VALIDATION
+───────────────────────────────────────────────────────────────
+Les 3 points d'entrée (résa site, résa manuelle, location
+manuelle) passent désormais par le MÊME moteur, qui vérifie :
+réservations existantes + locations en cours + retours prévus +
+marge de sécurité. Un véhicule ne peut plus être attribué à deux
+clients sur une période incompatible.
+
+Gestion du stock multiple : si un modèle a plusieurs exemplaires
+(stock > 1), le système n'alerte que lorsque TOUTES les unités
+sont prises.
+
+───────────────────────────────────────────────────────────────
+FICHIERS
+───────────────────────────────────────────────────────────────
+  data.js               → moteur central checkAvailability +
+                          checkReservationConflict + marge 3h
+  index.html            → blocage à la réservation site + endTime
+  admin/admin-lot5.js   → contrôle conflit location manuelle
+  admin/index.html      → contrôle conflit réservation manuelle
+  admin/admin-lot10.js  → notification détaillée + alerte retour serré
+  i18n.js               → message book.conflict ×4 langues
+
+Lots précédents : conservés. Tests E2E sur le vrai moteur : OK.

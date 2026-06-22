@@ -1,0 +1,172 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — LOT 23
+  Auto-traduction FAQ & Blog · affichage par langue · balises de
+  langue (anti-traduction navigateur) · sélecteur d'heure
+  personnalisé · calcul automatique des jours (Nouvelle location)
+═══════════════════════════════════════════════════════════════
+
+Tous les points ont été implémentés et testés (simulations réelles
+des parcours, hors appel réseau de traduction — voir note ★).
+
+───────────────────────────────────────────────────────────────
+1 + 3. FAQ — Auto-remplissage multilingue & édition par langue
+───────────────────────────────────────────────────────────────
+• L'éditeur FAQ possède 4 onglets de langue (FR/EN/ES/AR) : chaque
+  traduction est visible et modifiable séparément, comme pour les
+  Pages Légales.
+• Nouveau bouton « 🌐 Traduire automatiquement (FR → EN/ES/AR) » :
+  rédigez la question/réponse en français, cliquez, et les trois
+  autres langues sont générées. Vous pouvez ensuite relire et
+  ajuster chaque langue.
+• À l'enregistrement, toute langue laissée vide est complétée
+  automatiquement depuis le français. Aucune langue ne reste vide.
+• Les traductions déjà saisies à la main ne sont jamais écrasées
+  par l'auto-remplissage (le bouton permet de tout régénérer si
+  besoin après modification du français).
+
+TEST : FAQ créée en français seulement → après enregistrement,
+EN/ES/AR générées et stockées dans les 4 langues. ✔
+
+───────────────────────────────────────────────────────────────
+2. FAQ — Affichage par langue (site)
+───────────────────────────────────────────────────────────────
+Le site affiche chaque FAQ dans la langue active (FR→FR, EN→EN,
+ES→ES, AR→AR), avec repli français uniquement si une traduction
+est réellement absente. Les données étant désormais complètes dans
+les 4 langues (seed nettoyé au LOT 22 + auto-remplissage), il n'y
+a plus de mélange : le visiteur voit les mêmes questions, traduites.
+
+TEST : résolution par langue sur les 10 FAQ → 0 question dans le
+mauvais alphabet. ✔
+
+───────────────────────────────────────────────────────────────
+4 + 6. Blog — Auto-remplissage multilingue & édition par langue
+───────────────────────────────────────────────────────────────
+• L'éditeur d'article possède déjà 4 onglets de langue : titre,
+  contenu, méta-titre et méta-description sont éditables par langue.
+• Nouveau bouton « 🌐 Traduire automatiquement (FR → EN/ES/AR) » :
+  génère titre, contenu (en préservant la mise en forme HTML),
+  méta-titre et méta-description dans les trois langues.
+• À l'enregistrement, les langues vides sont complétées
+  automatiquement depuis le français.
+• Champs communs (non traduits, partagés) : catégorie, auteur,
+  statut, image de couverture, texte ALT, slug d'URL. Le slug reste
+  unique (une seule URL par article) — bonne pratique SEO.
+
+TEST : article créé en français → après enregistrement, EN/ES/AR
+générés ; les balises HTML du contenu sont préservées (seul le
+texte est traduit). ✔
+
+───────────────────────────────────────────────────────────────
+5. Blog — Affichage par langue (site)
+───────────────────────────────────────────────────────────────
+Chaque article s'affiche dans la langue active, sans mélange. Le
+seed des 3 articles existants est déjà entièrement traduit (FR/EN/
+ES/AR, 0 champ vide), et les nouveaux articles le sont via l'auto-
+remplissage.
+
+TEST : seed blog → 0 champ vide sur 4 langues × 4 champs ; pureté
+de langue vérifiée (EN en latin, AR en arabe). ✔
+
+★ NOTE SUR LA TRADUCTION AUTOMATIQUE
+La génération EN/ES/AR utilise un service de traduction en ligne
+(appel réseau). Elle nécessite donc une connexion Internet (elle
+fonctionne sur le site déployé et en local si le navigateur a accès
+au réseau). Si le service est momentanément indisponible, le texte
+français est conservé dans la langue concernée (aucun champ vide)
+et reste modifiable à la main. La logique d'orchestration (détection
+des langues vides, remplissage, sauvegarde, préservation du HTML) a
+été testée ; la qualité de la traduction dépend du service en ligne.
+
+───────────────────────────────────────────────────────────────
+7. Traduction automatique du navigateur (balises de langue)
+───────────────────────────────────────────────────────────────
+Chaque page publique reçoit, tout en haut du <head>, un script qui
+fixe immédiatement l'attribut « lang » et la direction (« dir ») de
+la page selon la langue choisie (mémorisée), AVANT l'affichage du
+contenu. Ainsi, quand vous passez le site en arabe ou en anglais,
+la page est correctement identifiée dès le chargement et le
+navigateur ne propose plus de la traduire inutilement.
+
+Appliqué à 16 pages (accueil + toutes les pages du dossier /pages).
+
+TEST : 16/16 pages contiennent le script d'identification de langue. ✔
+
+───────────────────────────────────────────────────────────────
+8. Product Search — Sélecteur d'heure personnalisé
+───────────────────────────────────────────────────────────────
+Les menus déroulants natifs d'heure (apparence « bleu Windows »,
+incohérente entre navigateurs) sont remplacés par un sélecteur
+personnalisé au design du site :
+• Heures de 00:00 à 23:00 (pas horaire).
+• Même apparence sur tous les navigateurs.
+• Position stable sous le champ, ouverture propre.
+• Défilement contenu À L'INTÉRIEUR du composant (overscroll
+  contenu, hauteur max).
+• Compatible mobile/desktop et RTL (arabe).
+• Un seul menu ouvert à la fois ; fermeture au clic extérieur / Échap.
+
+Les DATES utilisent déjà le calendrier premium personnalisé du site
+(identique sur tous les navigateurs, responsive). Champs couverts :
+date de départ, heure de départ, date de retour, heure de retour.
+
+TEST : génération de 24 créneaux (00:00…23:00) ; sélection met à
+jour la valeur, l'étiquette et l'état (durée recalculée). ✔
+
+───────────────────────────────────────────────────────────────
+9. Back-office — Nouvelle location : calcul automatique des jours
+───────────────────────────────────────────────────────────────
+Dans le pop-up « Nouvelle location » UNIQUEMENT (pas dans le pop-up
+Réservation), un champ « Nombre de jours » a été ajouté au-dessus
+des dates, avec des boutons rapides (1, 2, 3, 7, 15, 30, 60 jours)
+et une saisie libre.
+• Vous indiquez une durée → la date de retour est calculée
+  automatiquement à partir de la date de départ
+  (ex : 01/07/2026 + 30 jours = 31/07/2026).
+• Si vous changez la date de départ → la date de retour se
+  recalcule.
+• Si vous changez la date de retour → le nombre de jours se met à
+  jour automatiquement.
+• Le prix et le total se recalculent comme avant.
+
+TEST : 01/07 + 30 = 31/07 ; 01/07 + 60 = 30/08 ; passages de mois et
+d'année corrects ; retour→jours correct (31/07 = 30 j). ✔
+
+───────────────────────────────────────────────────────────────
+CORRECTION ANNEXE
+───────────────────────────────────────────────────────────────
+• Bug latent corrigé : la variable « blogFilter » du back-office
+  n'était pas déclarée et pouvait faire échouer l'affichage de la
+  liste d'articles. Elle est désormais initialisée proprement.
+
+───────────────────────────────────────────────────────────────
+VALIDATION FINALE — TESTS RÉELS
+───────────────────────────────────────────────────────────────
+  ✔ FAQ : création / modification / suppression / activation /
+    auto-remplissage / synchro / contenu éditable par langue.
+  ✔ Blog : création / modification / auto-remplissage (HTML
+    préservé) / affichage par langue / SEO / édition par langue.
+  ✔ Sélecteur d'heure (00:00–23:00) : init, sélection, état.
+  ✔ Nouvelle location : calcul automatique des jours et des dates.
+  ✔ Balises de langue présentes sur les 16 pages publiques.
+  ✔ Contrôle de syntaxe de tous les scripts : 0 erreur.
+
+Note déploiement : la synchro serveur passe par Cloudflare
+(/api/marketing + KV). La traduction automatique nécessite Internet.
+Sur le site déployé, rafraîchissez (Ctrl/Cmd+F5) après publication.
+
+───────────────────────────────────────────────────────────────
+FICHIERS MODIFIÉS / AJOUTÉS DANS CE LOT
+───────────────────────────────────────────────────────────────
+  asl-translate.js (NOUVEAU) → moteur de traduction FR→EN/ES/AR,
+                               avec préservation du HTML et repli FR.
+  admin/marketing.html       → boutons + auto-remplissage FAQ & Blog ;
+                               correction blogFilter ; inclusion du
+                               moteur de traduction.
+  admin/admin-lot5.js        → champ « Nombre de jours » + calcul
+                               automatique des dates (Nouvelle location).
+  index.html                 → sélecteur d'heure personnalisé
+                               (00:00–23:00) + script de langue précoce.
+  pages/*.html (15)          → script de langue précoce (anti-traduction).
+
+Lots précédents (1 → 22) : tous conservés.

@@ -1,0 +1,74 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — CAISSE : GRAND LIVRE DE CAISSE (onglet Rapports)
+═══════════════════════════════════════════════════════════════
+
+L'onglet Rapports est désormais un vrai Grand Livre de Caisse,
+exploitable directement par l'agence et le comptable.
+
+───────────────────────────────────────────────────────────────
+SOURCE DES DONNÉES (automatique, aucune ressaisie)
+───────────────────────────────────────────────────────────────
+ENTRÉES = paiements réellement encaissés (paid > 0) issus des :
+  • locations manuelles, réservations manuelles,
+  • réservations du site client, locations confirmées.
+  N'inclut JAMAIS : impayés, restes à payer, montants estimés,
+  réservations non payées, réservations annulées.
+
+SORTIES = charges PAYÉES (onglet Charges).
+  Une charge « En attente » n'entre PAS dans la caisse réelle.
+  Une charge « Payée » entre dans le Grand Livre.
+
+───────────────────────────────────────────────────────────────
+GRAND LIVRE GLOBAL
+───────────────────────────────────────────────────────────────
+Colonnes : Date · Type · Libellé · Client/Fournisseur · Véhicule
+· Catégorie · Mode de paiement · Entrée · Sortie · Solde.
+Types : Paiement / Charge.
+Solde progressif : Solde = Solde précédent + Entrée − Sortie.
+
+───────────────────────────────────────────────────────────────
+FILTRES
+───────────────────────────────────────────────────────────────
+  • Période : Aujourd'hui · Cette semaine · Ce mois · Tout ·
+    Personnalisée (du / au).
+  • Type : Paiement / Charge.
+  • Mode de paiement.
+  • Catégorie.
+  • Véhicule : Tous (global) ou un véhicule précis.
+
+───────────────────────────────────────────────────────────────
+FICHE FINANCIÈRE VÉHICULE
+───────────────────────────────────────────────────────────────
+En sélectionnant un véhicule, un résumé s'affiche en haut :
+nom, immatriculation, total encaissé, total charges, solde réel,
+montants à encaisser, nombre de locations — suivi du tableau des
+mouvements de ce véhicule uniquement.
+
+───────────────────────────────────────────────────────────────
+EXPORTS (respectent les filtres actifs)
+───────────────────────────────────────────────────────────────
+PDF et Excel. Le fichier contient : nom de l'agence, titre
+« Grand Livre de Caisse », période, filtres appliqués, tableau
+des mouvements, total entrées, total sorties, solde final, et les
+montants à encaisser SÉPARÉS (jamais inclus dans le solde réel).
+  • Aucun véhicule sélectionné → Grand Livre global de l'agence.
+  • Véhicule sélectionné → rapport financier de ce véhicule.
+
+───────────────────────────────────────────────────────────────
+TESTS EFFECTUÉS (tous validés)
+───────────────────────────────────────────────────────────────
+  • Charge payée → entre dans le livre.
+  • Charge en attente → exclue de la caisse réelle.
+  • Paiement depuis location manuelle → entrée.
+  • Paiement depuis réservation manuelle → entrée.
+  • Paiement depuis réservation site client → entrée.
+  • Impayés exclus du solde réel, affichés séparément.
+  • Grand Livre global : entrées 2300, sorties 250, solde 2050,
+    à encaisser 2200.
+  • Grand Livre filtré (Clio 5) : encaissé 300, charges 200,
+    solde réel 100, à encaisser 2200.
+  • Solde progressif correct.
+  • Export Excel (CSV) et PDF opérationnels.
+
+FICHIERS : admin/admin-caisse.js (moteur Grand Livre + exports),
+admin/index.html (onglet Rapports refondu).

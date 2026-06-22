@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<script>(function(){try{var l=localStorage.getItem("asl_lang")||"fr";if(["fr","en","es","ar"].indexOf(l)<0)l="fr";document.documentElement.lang=l;document.documentElement.dir=(l==="ar")?"rtl":"ltr";}catch(e){}})();</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/x-icon" href="assets/favicons/favicon.ico">
@@ -114,7 +115,8 @@ nav a:hover { color: white; background: rgba(255,255,255,0.08); }
 
 .menu-toggle {
   display: none; background: none; border: none; cursor: pointer;
-  color: white; padding: 8px;
+  color: white; padding: 10px; min-width: 44px; min-height: 44px;
+  align-items: center; justify-content: center;
 }
 
 /* Menu mobile */
@@ -133,6 +135,9 @@ nav a:hover { color: white; background: rgba(255,255,255,0.08); }
 /* ==================== HERO (Phase 3 — premium clair) ==================== */
 .hero {
   position: relative;
+  /* On masque uniquement les débordements horizontaux (cercles décoratifs)
+     sans rogner verticalement les éléments animés (voiture, titres). */
+  overflow-x: clip;
   background: linear-gradient(180deg, #FFFFFF 0%, #F6F7F9 60%, #F1F2F5 100%);
   padding: 108px 24px 56px;
 }
@@ -287,11 +292,36 @@ nav a:hover { color: white; background: rgba(255,255,255,0.08); }
 }
 .bk-date-display small { font-size: 10px; color: var(--gray3); font-weight: 600; }
 .bk-time {
-  appearance: none; border: none; border-left: 1.5px solid var(--gray2); outline: none;
-  background: transparent; font-family: var(--font); font-size: 13px; font-weight: 600;
-  color: var(--text); padding: 0 2px 0 10px; cursor: pointer; margin-left: 10px;
-  flex: 0 0 62px; width: 62px;
+  flex: 0 0 auto; margin-left: 10px; border-left: 1.5px solid var(--gray2); padding-left: 10px;
 }
+.asl-tp { position: relative; }
+.asl-tp-btn {
+  display: inline-flex; align-items: center; gap: 5px; background: transparent; border: none;
+  font-family: var(--font); font-size: 13px; font-weight: 700; color: var(--text);
+  cursor: pointer; padding: 4px 2px; outline: none; white-space: nowrap;
+}
+.asl-tp-btn svg { color: var(--gray3); transition: transform .2s; }
+.asl-tp.open .asl-tp-btn svg { transform: rotate(180deg); }
+.asl-tp-pop {
+  position: absolute; top: calc(100% + 8px); right: 0; z-index: 60;
+  width: 110px; max-height: 224px; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  background: #fff; border: 1px solid var(--gray2); border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(18,22,30,.16); padding: 6px;
+  display: none;
+}
+.asl-tp.open .asl-tp-pop { display: block; }
+.asl-tp.up .asl-tp-pop { top: auto; bottom: calc(100% + 8px); }
+.asl-tp-opt {
+  padding: 9px 12px; border-radius: 8px; font-size: 13.5px; font-weight: 600;
+  color: var(--text); cursor: pointer; text-align: center; transition: background .12s;
+}
+.asl-tp-opt:hover { background: rgba(196,30,58,.08); }
+.asl-tp-opt.sel { background: var(--red); color: #fff; }
+html[dir="rtl"] .asl-tp-pop { right: auto; left: 0; }
+html[dir="rtl"] .bk-time { border-left: none; border-right: 1.5px solid var(--gray2); margin-left: 0; margin-right: 10px; padding-left: 0; padding-right: 10px; }
+.asl-tp-pop::-webkit-scrollbar { width: 8px; }
+.asl-tp-pop::-webkit-scrollbar-thumb { background: var(--gray2); border-radius: 8px; }
 .bk-days {
   display: inline-flex; align-items: center; gap: 6px;
   font-size: 12px; font-weight: 700; color: var(--red); margin-top: 10px;
@@ -621,6 +651,10 @@ html:has(#booking-drawer.open) { overflow: hidden; }
   .drawer-footer { position: sticky; bottom: 0; }
   /* Les champs ne provoquent pas de zoom iOS (qui décale la mise en page) */
   .drawer input, .drawer select, .drawer textarea { font-size: 16px; }
+  /* Sécurité globale anti-zoom : TOUT champ de saisie >=16px sur mobile */
+  input, select, textarea, .form-input, .phone-prefix, .phone-number {
+    font-size: 16px !important;
+  }
 }
 
 .drawer-header {
@@ -1233,7 +1267,11 @@ body.scrolled .fade-in { animation: none !important; opacity: 1 !important; tran
             <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
             <div class="bk-datetime">
               <div class="bk-date-display"><span id="start-date-display">—</span><small id="start-date-sub" data-i18n="bk.depSub">Date de départ</small></div>
-              <select class="bk-time" id="start-time" onclick="event.stopPropagation()" aria-label="Heure de départ"></select>
+              <div class="bk-time asl-tp" id="start-tp" onclick="event.stopPropagation()">
+                <button type="button" class="asl-tp-btn" onclick="aslTimeToggle('start',event)" aria-haspopup="listbox" aria-label="Heure de départ"><span id="start-time-label">10:00</span><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+                <div class="asl-tp-pop" id="start-tp-pop" role="listbox"></div>
+                <input type="hidden" id="start-time" value="10:00">
+              </div>
             </div>
             <input type="hidden" id="start-date">
           </div>
@@ -1244,7 +1282,11 @@ body.scrolled .fade-in { animation: none !important; opacity: 1 !important; tran
             <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
             <div class="bk-datetime">
               <div class="bk-date-display"><span id="end-date-display">—</span><small id="end-date-sub" data-i18n="bk.retSub">Date de retour</small></div>
-              <select class="bk-time" id="end-time" onclick="event.stopPropagation()" aria-label="Heure de retour"></select>
+              <div class="bk-time asl-tp" id="end-tp" onclick="event.stopPropagation()">
+                <button type="button" class="asl-tp-btn" onclick="aslTimeToggle('end',event)" aria-haspopup="listbox" aria-label="Heure de retour"><span id="end-time-label">10:00</span><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+                <div class="asl-tp-pop" id="end-tp-pop" role="listbox"></div>
+                <input type="hidden" id="end-time" value="10:00">
+              </div>
             </div>
             <input type="hidden" id="end-date">
           </div>
@@ -1367,7 +1409,7 @@ body.scrolled .fade-in { animation: none !important; opacity: 1 !important; tran
       <div class="section-badge"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> <span data-i18n="rev.badge">Avis Clients</span></div>
       <h2 class="section-title" data-i18n-html="rev.titleHtml">Ce que Disent<br><span>Nos Clients</span></h2>
     </div>
-    <div class="reviews-grid">
+    <div class="reviews-grid" id="reviews-grid">
       <div class="review-card">
         <div class="review-header">
           <div class="review-avatar" style="background:#C41E3A;">YA</div>
@@ -1459,11 +1501,10 @@ body.scrolled .fade-in { animation: none !important; opacity: 1 !important; tran
     <div>
       <div class="footer-col-title" data-i18n="ft.colServices">Nos Services</div>
       <div class="footer-links">
-        <a href="#fleet" class="footer-link" data-i18n="ft.s1">Location Courte Durée</a>
-        <a href="pages/lld.html" class="footer-link" data-i18n="ft.s2">Location Longue Durée</a>
-        <a href="pages/aeroport.html" class="footer-link" data-i18n="ft.s3">Livraison Aéroport</a>
-        <a href="pages/contact.html" class="footer-link" data-i18n="ft.s4">Livraison Hôtel</a>
-        <a href="pages/contact.html" class="footer-link" data-i18n="ft.s6">Transfert Privé</a>
+        <a href="pages/page.html?slug=courte-duree" class="footer-link" data-i18n="ft.s1">Location Courte Durée</a>
+        <a href="pages/page.html?slug=lld" class="footer-link" data-i18n="ft.s2">Location Longue Durée</a>
+        <a href="pages/page.html?slug=aeroport" class="footer-link" data-i18n="ft.s3">Livraison Aéroport</a>
+        <a href="pages/page.html?slug=livraison-hotel" class="footer-link" data-i18n="ft.s4">Livraison Hôtel</a>
       </div>
     </div>
     <div>
@@ -1480,9 +1521,9 @@ body.scrolled .fade-in { animation: none !important; opacity: 1 !important; tran
     <div>
       <div class="footer-col-title" data-i18n="ft.colLegal">Légal</div>
       <div class="footer-links">
-        <a href="pages/cgv.html" class="footer-link" data-i18n="ft.lCgv">Conditions Générales</a>
-        <a href="pages/privacy.html" class="footer-link" data-i18n="ft.lPriv">Politique de Confidentialité</a>
-        <a href="pages/mentions.html" class="footer-link" data-i18n="ft.lLegal">Mentions Légales</a>
+        <a href="pages/page.html?slug=cgv" class="footer-link" data-i18n="ft.lCgv">Conditions Générales</a>
+        <a href="pages/page.html?slug=privacy" class="footer-link" data-i18n="ft.lPriv">Politique de Confidentialité</a>
+        <a href="pages/page.html?slug=mentions" class="footer-link" data-i18n="ft.lLegal">Mentions Légales</a>
       </div>
       <div class="footer-col-title" style="margin-top:24px;" data-i18n="ft.colCur">Devises</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -1496,9 +1537,9 @@ body.scrolled .fade-in { animation: none !important; opacity: 1 !important; tran
   <div class="footer-bottom">
     <div class="footer-copy" data-i18n="ft.copy">© 2025 All Star Loc — Location de Voitures à Marrakech. Tous droits réservés.</div>
     <div class="footer-legal">
-      <a href="pages/cgv.html" data-i18n="ft.bCgv">CGV</a>
-      <a href="pages/privacy.html" data-i18n="ft.bPriv">Confidentialité</a>
-      <a href="pages/mentions.html" data-i18n="ft.bLegal">Mentions légales</a>
+      <a href="pages/page.html?slug=cgv" data-i18n="ft.bCgv">CGV</a>
+      <a href="pages/page.html?slug=privacy" data-i18n="ft.bPriv">Confidentialité</a>
+      <a href="pages/page.html?slug=mentions" data-i18n="ft.bLegal">Mentions légales</a>
     </div>
   </div>
 </footer>
@@ -1574,7 +1615,9 @@ body.scrolled .fade-in { animation: none !important; opacity: 1 !important; tran
 </div>
 
 <script src="i18n.js"></script>
+<script src="pages-seed.js"></script>
 <script src="content-bridge.js"></script>
+<script src="cookie-consent.js"></script>
 <script src="data.js"></script>
 <script>
 // ==================== DATA (source unique partagée avec l'admin) ====================
@@ -1678,8 +1721,8 @@ function calcTotal() {
   const carCost = dailyRate(state.car, state.days) * state.days; // tranche tarifaire applicable
   const protCost = (PROTECTIONS.find(p=>p.id===state.protection)?.price || 0) * state.days;
   const optCost = state.options.reduce((s,oid) => {
-    const o = OPTIONS_LIST.find(x=>x.id===oid);
-    return s + (o ? o.price * state.days : 0);
+    const o = effectiveOptions().find(x=>x.id===oid);
+    return s + (o ? optionCost(o, state.days) : 0);
   }, 0);
   let total = carCost + protCost + optCost;
   if (state.payment === 'full') total *= 0.95;
@@ -1748,7 +1791,7 @@ function renderCars(filter) {
           </div>
         </div>
         ${extras.length ? `<div class="car-extras">${extras.map(x=>`<span class="car-extra">${x}</span>`).join('')}</div>` : ''}
-      ${av.available ? '' : `<div class="avail-from"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> ${av.from ? t('fleet.availFrom', { d: new Date(av.from + 'T00:00:00').toLocaleDateString(langLocale(), { day:'numeric', month:'short' }) }) : t('fleet.unavail')}</div>`}
+      ${av.available ? '' : `<div class="avail-from"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> ${availFromLabel(av)}</div>`}
       ${av.available
         ? `<button class="btn-book">${t('car.book')} <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>`
         : `<button class="btn-book btn-edit-dates" onclick="event.stopPropagation();scrollToDates()">${t('fleet.editDates')}</button>`}
@@ -1853,28 +1896,99 @@ function scrollToDates() { showDatesNotice(); }
 
 /* ---------- Disponibilités réelles (réservations synchronisées) ---------- */
 function datesOverlap(aS, aE, bS, bE) { return aS <= bE && bS <= aE; }
+/* Construit le texte de disponibilité précis (date + heure + marge). */
+function availFromLabel(av) {
+  if (!av) return t('fleet.unavail');
+  if (av.fromDateTime) {
+    const loc = langLocale();
+    const dStr = av.fromDateTime.toLocaleDateString(loc, { day:'numeric', month:'long', year:'numeric' });
+    const tStr = av.fromDateTime.toLocaleTimeString(loc, { hour:'2-digit', minute:'2-digit' });
+    return t('fleet.availFromTime', { d: dStr, h: tStr });
+  }
+  if (av.from) {
+    return t('fleet.availFrom', { d: new Date(av.from + 'T00:00:00').toLocaleDateString(langLocale(), { day:'numeric', month:'short' }) });
+  }
+  return t('fleet.unavail');
+}
+
 function carAvailability(car, startISO, endISO) {
   if (!startISO || !endISO) return { available: true };
+  /* SOURCE UNIQUE : on délègue au moteur central ASLDB.checkAvailability,
+     exactement le même que celui utilisé pour les réservations manuelles,
+     locations manuelles, réservations confirmées et locations en cours.
+     Il compte TOUTES les réservations non annulées / non clôturées,
+     quelle que soit leur origine (site ou back-office) et leur statut
+     (active, confirmed, pending, prolongation…). */
+  if (typeof ASLDB !== 'undefined' && ASLDB.checkAvailability) {
+    var chk = ASLDB.checkAvailability(car, startISO, endISO, state.startTime, state.endTime);
+    if (chk.available) return { available: true };
+    // Indisponible : nextFrom (Date) → affichage date + heure précise
+    if (chk.nextFrom) {
+      return {
+        available: false,
+        from: dToISO(chk.nextFrom),
+        fromDateTime: chk.nextFrom
+      };
+    }
+    return { available: false, from: null };
+  }
+  /* Repli (si ASLDB indisponible) : ancienne logique locale. */
   const unitIds = car.unitIds || [car.id];
   const res = ASLDB.getReservations().filter(r =>
-    r.status === 'confirmed' && r.startDate && r.endDate &&
+    r.status !== 'cancelled' && r.status !== 'completed' && r.startDate && r.endDate &&
     (r.car === car.name || unitIds.includes(r.carId)));
   const stock = Math.max(1, car.stock || 1);
   const blocked = res.filter(r => datesOverlap(startISO, endISO, r.startDate, r.endDate)).length;
-  if (blocked < stock) return { available: true };  // il reste des unités libres
-  // Toutes les unités sont prises : trouver la première date libre
+  if (blocked < stock) return { available: true };
   const days = Math.max(1, state.days || 1);
   let cand = new Date(startISO + 'T00:00:00');
   for (let i = 0; i < 60; i++) {
     const cS = dToISO(cand);
     const cE = dToISO(new Date(cand.getTime() + days * 86400000));
-    const blockedHere = res.filter(r => datesOverlap(cS, cE, r.startDate, r.endDate)).length;
-    if (blockedHere < stock) return { available: false, from: cS };
-    const latest = res.filter(r => datesOverlap(cS, cE, r.startDate, r.endDate))
-                      .sort((a,b) => b.endDate.localeCompare(a.endDate))[0];
+    const conflicts = res.filter(r => datesOverlap(cS, cE, r.startDate, r.endDate));
+    if (conflicts.length < stock) {
+      return availabilityWithMargin(cS, conflicts);
+    }
+    const latest = conflicts.sort((a,b) => b.endDate.localeCompare(a.endDate))[0];
     cand = new Date(new Date(latest.endDate + 'T00:00:00').getTime() + 86400000);
   }
   return { available: false, from: null };
+}
+
+/* Marge de sécurité (heures) ajoutée après le retour prévu pour le contrôle
+   et la préparation du véhicule, et pour absorber un éventuel retard. */
+const ASL_AVAIL_MARGIN_H = 3;
+
+/* À partir de la date libre trouvée et des réservations en conflit, calcule
+   la date + heure exacte de disponibilité (retour prévu + marge). */
+function availabilityWithMargin(freeDateISO, conflicts) {
+  // Retour le plus tardif parmi les réservations qui bloquaient
+  let returnDateISO = freeDateISO;
+  let returnTime = '12:00';
+  if (conflicts && conflicts.length) {
+    const lastRes = conflicts.slice().sort((a,b) => {
+      const ka = (b.endDate||'') + 'T' + (b.endTime||'12:00');
+      const kb = (a.endDate||'') + 'T' + (a.endTime||'12:00');
+      return ka.localeCompare(kb);
+    })[0];
+    if (lastRes) {
+      returnDateISO = lastRes.endDate || freeDateISO;
+      returnTime = lastRes.endTime || '12:00';
+    }
+  }
+  // Construire un Date avec l'heure de retour, puis ajouter la marge
+  const parts = returnTime.split(':');
+  const hh = parseInt(parts[0] || '12', 10);
+  const mm = parseInt(parts[1] || '0', 10);
+  const dt = new Date(returnDateISO + 'T00:00:00');
+  dt.setHours(hh, mm, 0, 0);
+  dt.setHours(dt.getHours() + ASL_AVAIL_MARGIN_H);   // + marge de sécurité
+  return {
+    available: false,
+    from: dToISO(dt),          // date (compat existant)
+    fromDateTime: dt,          // Date complète avec heure
+    marginH: ASL_AVAIL_MARGIN_H
+  };
 }
 
 function normalizeTiers(raw) {
@@ -1955,16 +2069,32 @@ function openCal(mode, fieldEl) {
   CAL.mode = mode;
   CAL.view = new Date((mode === 'end' && (CAL.end || CAL.start)) ? (CAL.end || CAL.start) : (CAL.start || today0()));
   const cal = document.getElementById('asl-cal');
-  // Desktop : positionné sous le champ cliqué. Mobile : feuille fixe en bas (CSS).
+  document.querySelectorAll('.bk-control').forEach(c=>c.classList.remove('active'));
+  fieldEl.classList.add('active');
+  cal.classList.add('open');
+  document.getElementById('cal-backdrop').classList.add('open');
+  document.getElementById('cal-hint').textContent = mode === 'start' ? t('cal.hintStart') : t('cal.hintEnd');
+  renderCal();
+  // Positionnement APRÈS ouverture (hauteur mesurable).
   if (window.matchMedia('(min-width: 641px)').matches) {
     cal.style.left = fieldEl.offsetLeft + 'px';
-    cal.style.top = (fieldEl.offsetTop + fieldEl.offsetHeight + 8) + 'px';
+    var calH = cal.offsetHeight || 360;
+    var rect = fieldEl.getBoundingClientRect();
+    var spaceBelow = window.innerHeight - rect.bottom;
+    var spaceAbove = rect.top;
+    // Ouvrir vers le HAUT si l'espace en dessous est insuffisant et qu'il y a
+    // plus de place au-dessus. Comportement stable desktop & mobile large.
+    if (spaceBelow < (calH + 16) && spaceAbove > spaceBelow) {
+      cal.style.top = (fieldEl.offsetTop - calH - 8) + 'px';
+      cal.classList.add('cal-above');
+    } else {
+      cal.style.top = (fieldEl.offsetTop + fieldEl.offsetHeight + 8) + 'px';
+      cal.classList.remove('cal-above');
+    }
   } else {
     cal.style.left = '';
     cal.style.top = '';
     // Mobile : déplacer le calendrier + son fond directement dans <body>.
-    // Cela évite que l'animation/transform du parent (.booking-card) casse
-    // le position:fixed et fasse "bouger" le calendrier au scroll.
     if (cal.parentElement !== document.body) {
       if (!cal._origParent) { cal._origParent = cal.parentElement; cal._origNext = cal.nextSibling; }
       var bd = document.getElementById('cal-backdrop');
@@ -1972,13 +2102,8 @@ function openCal(mode, fieldEl) {
       document.body.appendChild(cal);
     }
   }
-  document.querySelectorAll('.bk-control').forEach(c=>c.classList.remove('active'));
-  fieldEl.classList.add('active');
-  cal.classList.add('open');
-  document.getElementById('cal-backdrop').classList.add('open');
-  document.getElementById('cal-hint').textContent = mode === 'start' ? t('cal.hintStart') : t('cal.hintEnd');
-  renderCal();
 }
+
 
 function closeCal() {
   document.getElementById('asl-cal').classList.remove('open');
@@ -2077,13 +2202,79 @@ function syncDates() {
   }
 }
 
+/* ============ SÉLECTEUR D'HEURE PERSONNALISÉ (00:00 → 23:00) ============
+   Remplace le <select> natif (apparence Windows incohérente) par un menu
+   au design du site, à position stable, dont le défilement reste interne. */
+function aslTimeInit(which, def) {
+  var pop = document.getElementById(which + '-tp-pop');
+  var input = document.getElementById(which + '-time');
+  var label = document.getElementById(which + '-time-label');
+  if (!pop || !input) return;
+  var val = (input.value || def || '10:00');
+  var html = '';
+  for (var h = 0; h < 24; h++) {
+    var t = (h < 10 ? '0' + h : '' + h) + ':00';
+    html += '<div class="asl-tp-opt' + (t === val ? ' sel' : '') + '" role="option" data-t="' + t +
+            '" onclick="aslTimePick(\'' + which + '\',\'' + t + '\')">' + t + '</div>';
+  }
+  pop.innerHTML = html;
+  input.value = val;
+  if (label) label.textContent = val;
+}
+function aslTimeToggle(which, ev) {
+  if (ev) { ev.stopPropagation(); ev.preventDefault(); }
+  var wrap = document.getElementById(which + '-tp');
+  if (!wrap) return;
+  var other = document.getElementById((which === 'start' ? 'end' : 'start') + '-tp');
+  if (other) other.classList.remove('open');
+  var willOpen = !wrap.classList.contains('open');
+  wrap.classList.toggle('open', willOpen);
+  if (willOpen) {
+    // Ouvrir vers le haut si l'espace en dessous est insuffisant.
+    var btn = wrap.querySelector('.asl-tp-btn');
+    var pop = wrap.querySelector('.asl-tp-pop');
+    if (btn && pop) {
+      var rect = btn.getBoundingClientRect();
+      var popH = pop.offsetHeight || 224;
+      var spaceBelow = window.innerHeight - rect.bottom;
+      wrap.classList.toggle('up', spaceBelow < (popH + 16) && rect.top > spaceBelow);
+    }
+    // amener l'option sélectionnée dans la vue
+    var sel = wrap.querySelector('.asl-tp-opt.sel');
+    if (sel) { try { sel.scrollIntoView({ block: 'center' }); } catch (e) {} }
+  }
+}
+function aslTimePick(which, t) {
+  var input = document.getElementById(which + '-time');
+  var label = document.getElementById(which + '-time-label');
+  var pop = document.getElementById(which + '-tp-pop');
+  var wrap = document.getElementById(which + '-tp');
+  if (input) input.value = t;
+  if (label) label.textContent = t;
+  if (pop) pop.querySelectorAll('.asl-tp-opt').forEach(function (o) { o.classList.toggle('sel', o.getAttribute('data-t') === t); });
+  if (wrap) wrap.classList.remove('open');
+  // synchroniser l'état + recalcul de la durée
+  try {
+    if (typeof state !== 'undefined') {
+      if (which === 'start') state.startTime = t; else state.endTime = t;
+    }
+    if (typeof updateDaysCount === 'function') updateDaysCount();
+    else if (typeof syncDates === 'function') syncDates();
+  } catch (e) {}
+}
+// Fermer au clic extérieur / Échap
+document.addEventListener('click', function (e) {
+  if (e.target.closest('.asl-tp')) return;
+  document.querySelectorAll('.asl-tp.open').forEach(function (w) { w.classList.remove('open'); });
+});
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape') document.querySelectorAll('.asl-tp.open').forEach(function (w) { w.classList.remove('open'); });
+});
+
 function initBooking() {
-  // Heures (pas de 30 min, 07:00 → 22:00)
-  const times = [];
-  for (let h = 7; h <= 22; h++) { times.push(`${String(h).padStart(2,'0')}:00`); if (h < 22) times.push(`${String(h).padStart(2,'0')}:30`); }
-  const st = document.getElementById('start-time'), et = document.getElementById('end-time');
-  st.innerHTML = times.map(t=>`<option ${t==='10:00'?'selected':''}>${t}</option>`).join('');
-  et.innerHTML = times.map(t=>`<option ${t==='10:00'?'selected':''}>${t}</option>`).join('');
+  // Sélecteurs d'heure personnalisés (00:00 → 23:00, pas horaire)
+  aslTimeInit('start', '10:00');
+  aslTimeInit('end', '10:00');
   // PAS de dates par défaut : le client doit choisir lui-même ses dates.
   // Le calendrier s'ouvre sur le mois courant, mais aucune date n'est sélectionnée.
   CAL.start = null;
@@ -2219,6 +2410,16 @@ function prevStep() {
   else closeDrawer();
 }
 
+/* Quand les options de réservation arrivent du back-office (sync serveur),
+   ré-afficher l'étape Options si elle est actuellement ouverte. */
+window.onBookingOptionsLoaded = function() {
+  try {
+    if (typeof state !== 'undefined' && state.step === 2 && typeof renderStep === 'function') {
+      renderStep();
+    }
+  } catch(e) {}
+};
+
 function renderStep() {
   updateProgress();
   const labels = ['', t('dr.s1'), t('dr.s2'), t('dr.s3'), t('dr.s4'), t('dr.s5'), t('dr.s6')];
@@ -2300,12 +2501,10 @@ function renderProtection() {
 function insuranceCardHTML(id) {
   const sel = state.protection === id;
   const isBasic = id === 'basic';
-  const title = isBasic ? 'Assurance tous risques' : 'Assurance Premium';
-  const sub = isBasic ? 'Gratuite avec franchise de 5%' : 'Rachat de franchise — zéro franchise';
-  const badge = isBasic ? 'GRATUITE' : '110 MAD/j';
-  const explain = isBasic
-    ? "La franchise de 5% s'applique uniquement si le client est fautif et si les dégâts sont inférieurs à 5%. Si le client n'est pas fautif, il ne paie pas la franchise."
-    : "Avec l'assurance Premium, vous rachetez la franchise de 5%. Vous n'avez rien à payer en cas d'accident ou de dégâts, même si vous êtes fautif. Seulement 110 MAD/jour pour supprimer la franchise.";
+  const title = isBasic ? t('ins.basic.title') : t('ins.premium.title');
+  const sub = isBasic ? t('ins.basic.sub') : t('ins.premium.sub');
+  const badge = isBasic ? t('ins.basic.badge') : t('ins.premium.badge');
+  const explain = isBasic ? t('ins.basic.explain') : t('ins.premium.explain');
   return `
     <div class="ins-card ${sel?'selected':''}" data-pid="${id}" onclick="selectInsurance('${id}')">
       <div class="ins-card-top">
@@ -2315,7 +2514,7 @@ function insuranceCardHTML(id) {
           <div class="ins-card-sub">${sub}</div>
         </div>
         <div class="ins-card-badge ${isBasic?'free':'paid'}">${badge}</div>
-        ${sel?'<div class="ins-selected-tag">Sélectionnée</div>':''}
+        ${sel?`<div class="ins-selected-tag">${t('ins.selected')}</div>`:''}
       </div>
       <div class="ins-card-explain">
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
@@ -2337,16 +2536,58 @@ function attachProtectionEvents() {
   // Sélection gérée par selectInsurance() en inline — aucun re-render complet, pas de scroll.
 }
 
+/* Liste effective des options : priorité aux options gérées depuis le
+   back-office (window._ASL_BOOKING_OPTIONS), sinon les options par défaut. */
+function effectiveOptions() {
+  var dyn = window._ASL_BOOKING_OPTIONS;
+  if (dyn && dyn.length) {
+    return dyn.map(function(o){
+      return {
+        id: o.id,
+        price: Number(o.price) || 0,
+        priceType: o.priceType || 'day',
+        name: o.name || {},
+        icon: (OPTIONS_LIST.find(function(x){ return x.id===o.id; }) || {}).icon
+              || '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>'
+      };
+    });
+  }
+  return OPTIONS_LIST.map(function(o){ return { id:o.id, price:o.price, priceType:'day', name:null, icon:o.icon }; });
+}
+
+/* Nom d'une option dans la langue active (back-office) ou via i18n (défaut). */
+function optionName(o) {
+  if (o.name && typeof o.name === 'object') {
+    var lng = (typeof getLang === 'function') ? getLang() : 'fr';
+    return o.name[lng] || o.name.fr || o.id;
+  }
+  return t('opt.' + o.id);
+}
+
+/* Libellé de prix d'une option selon son type. */
+function optionPriceLabel(o) {
+  if (o.priceType === 'free') return t('prot.free') || 'Gratuit';
+  if (o.priceType === 'booking') return price(o.price);
+  return price(o.price) + t('u.perDay');
+}
+
+/* Coût d'une option selon son type (jour × durée, ou forfait, ou gratuit). */
+function optionCost(o, days) {
+  if (o.priceType === 'free') return 0;
+  if (o.priceType === 'booking') return o.price;
+  return o.price * days;
+}
+
 function renderOptions() {
   return vehicleRecapHTML() + `
     <div class="step-section">
       <div class="step-section-title">${t('opt.title')}</div>
       <div class="options-grid">
-        ${OPTIONS_LIST.map(o=>`
+        ${effectiveOptions().map(o=>`
           <div class="option-card ${state.options.includes(o.id)?'added':''}" data-oid="${o.id}">
             <div class="option-icon">${o.icon}</div>
-            <div class="option-name">${t('opt.'+o.id)}</div>
-            <div class="option-price">${price(o.price)}${t('u.perDay')}</div>
+            <div class="option-name">${optionName(o)}</div>
+            <div class="option-price">${optionPriceLabel(o)}</div>
             <button class="btn-add-option ${state.options.includes(o.id)?'added':''}" data-oid="${o.id}">
               ${state.options.includes(o.id)?`<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M20 6 9 17l-5-5"/></svg> ${t('opt.added')}`:t('opt.add')}
             </button>
@@ -2378,8 +2619,11 @@ function renderSummary() {
   const car = state.car;
   const prot = PROTECTIONS.find(p=>p.id===state.protection);
   const optRows = state.options.map(oid => {
-    const o = OPTIONS_LIST.find(x=>x.id===oid);
-    return o ? `<div class="summary-row"><div class="summary-row-label">${o.icon} ${t('opt.'+o.id)}</div><div class="summary-row-val">${price(o.price * state.days)}</div></div>` : '';
+    const o = effectiveOptions().find(x=>x.id===oid);
+    if (!o) return '';
+    const cost = optionCost(o, state.days);
+    const costLabel = (o.priceType === 'free') ? (t('prot.free')||'Gratuit') : price(cost);
+    return `<div class="summary-row"><div class="summary-row-label">${o.icon||''} ${optionName(o)}</div><div class="summary-row-val">${costLabel}</div></div>`;
   }).join('');
   const total = calcTotal();
   return `
@@ -2574,6 +2818,24 @@ function confirmBooking() {
   state.reservationRef = ref;
   const totalMAD = calcTotal(); // total calculé en MAD (base admin)
   const c = state.customer || {};
+
+  /* ★ VÉRIFICATION FINALE DE DISPONIBILITÉ avant d'enregistrer
+     (évite qu'un véhicule soit attribué à deux clients). */
+  if (typeof ASLDB !== 'undefined' && ASLDB.checkAvailability && state.car) {
+    const chk = ASLDB.checkAvailability(state.car, state.startDate, state.endDate, state.startTime, state.endTime);
+    if (!chk.available) {
+      let m = t('book.conflict') || 'Ce véhicule vient d\'être réservé sur cette période.';
+      if (chk.nextFrom) {
+        const dStr = chk.nextFrom.toLocaleDateString(langLocale(), { day:'numeric', month:'long', year:'numeric' });
+        const hStr = chk.nextFrom.toLocaleTimeString(langLocale(), { hour:'2-digit', minute:'2-digit' });
+        m += ' ' + t('fleet.availFromTime', { d: dStr, h: hStr });
+      }
+      alert(m);
+      scrollToDates();
+      return false;   // on bloque l'enregistrement
+    }
+  }
+
   ASLDB.addReservation({
     id: ref,
     client: `${c.firstname || ''} ${c.lastname || ''}`.trim() || 'Client en ligne',
@@ -2588,6 +2850,7 @@ function confirmBooking() {
     startDate: state.startDate,
     endDate: state.endDate,
     startTime: state.startTime,
+    endTime: state.endTime,
     pickup: state.pickupLoc || 'Aéroport Marrakech (RAK)',
     dropoff: state.returnLoc || 'Aéroport Marrakech (RAK)',
     source: 'online',
@@ -2716,11 +2979,20 @@ document.addEventListener('DOMContentLoaded', () => {
 // Fluidité : neutralise les animations d'entrée au tout premier défilement
 if (typeof window !== 'undefined' && window.addEventListener) {
   (function () {
-    function onFirstScroll() {
+    function freezeEntryAnims() {
       document.body.classList.add('scrolled');
-      window.removeEventListener('scroll', onFirstScroll);
+      window.removeEventListener('scroll', freezeEntryAnims);
     }
-    window.addEventListener('scroll', onFirstScroll, { passive: true, once: true });
+    window.addEventListener('scroll', freezeEntryAnims, { passive: true, once: true });
+    /* On fige aussi les animations dès qu'on ouvre le calendrier ou le
+       pop-up de réservation : évite tout clignotement / découpe du hero
+       lorsqu'on choisit les dates puis qu'on remonte la page. */
+    document.addEventListener('click', function (e) {
+      var t = e.target;
+      if (t && t.closest && (t.closest('#asl-cal') || t.closest('.bk-field') || t.closest('#booking-drawer') || t.closest('[onclick*="openCal"]') || t.closest('[onclick*="openBooking"]'))) {
+        freezeEntryAnims();
+      }
+    }, true);
   })();
 }
 

@@ -130,6 +130,17 @@ function renderDashboard() {
 
 /* ==================== DASHBOARD DRAWER ==================== */
 
+/* Filtres du panneau "Retours prévus" : aujourd'hui / demain / date choisie. */
+function setReturnsFilter(mode) {
+  var ts = todayStr();
+  window._returnsFilter = { mode: mode, date: (window._returnsFilter && window._returnsFilter.date) || ts };
+  openDashDrawer('returns');
+}
+function setReturnsDate(d) {
+  window._returnsFilter = { mode: 'date', date: d };
+  openDashDrawer('returns');
+}
+
 function openDashDrawer(type) {
   var fleet = aslFleet();
   var res = aslRes();
@@ -165,19 +176,42 @@ function openDashDrawer(type) {
     if (!rows.length) rows.push('<div style="color:var(--text3);text-align:center;padding:30px;">Aucune location active à ce jour</div>');
 
   } else if (type === 'returns') {
-    title = '🟡 Retours prévus aujourd\'hui';
-    res.filter(function(r) { return (r.endDate||'').slice(0,10)===ts && r.status!=='cancelled'; }).forEach(function(r) {
+    title = '🟡 Retours prévus';
+    // Filtres : aujourd'hui (défaut) / demain / date choisie
+    var rf = window._returnsFilter || { mode: 'today', date: ts };
+    var targetDate = ts;
+    if (rf.mode === 'tomorrow') {
+      var tm = new Date(today.getTime() + 86400000);
+      targetDate = tm.toISOString().slice(0, 10);
+    } else if (rf.mode === 'date' && rf.date) {
+      targetDate = rf.date;
+    }
+    // Barre de filtres
+    rows.push(
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;align-items:center;">' +
+      '<button class="btn-sm ' + (rf.mode==='today'?'primary':'ghost') + '" onclick="setReturnsFilter(\'today\')">Aujourd\'hui</button>' +
+      '<button class="btn-sm ' + (rf.mode==='tomorrow'?'primary':'ghost') + '" onclick="setReturnsFilter(\'tomorrow\')">Demain</button>' +
+      '<button class="btn-sm ' + (rf.mode==='date'?'primary':'ghost') + '" onclick="setReturnsFilter(\'date\')">Date choisie</button>' +
+      (rf.mode==='date' ? '<input type="date" value="' + (rf.date||ts) + '" onchange="setReturnsDate(this.value)" style="padding:6px 8px;border:1px solid var(--border);border-radius:7px;font-size:13px;">' : '') +
+      '</div>'
+    );
+    var matches = res.filter(function(r) { return (r.endDate||'').slice(0,10)===targetDate && r.status!=='cancelled' && r.status!=='completed'; });
+    matches.forEach(function(r) {
+      // Récupérer l'immatriculation depuis la flotte
+      var plate = '';
+      var fc = fleet.filter(function(c){ return c.name===r.car || c.id===r.carId; })[0];
+      if (fc) plate = fc.plate || '';
+      if (r.assignedPlate) plate = r.assignedPlate;
       rows.push(
-        '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);">' +
-        '<div><div style="font-weight:700;">' + (r.car||'') + '</div>' +
-        '<div style="font-size:12px;color:var(--text3);">' + (r.client||'') + ' · ' + (r.contractRef||r.id) + '</div></div>' +
-        '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
-        (r.phone ? '<a href="tel:' + r.phone + '" class="btn-sm primary" style="text-decoration:none;">📞 Appeler</a>' : '') +
-        '<button class="btn-sm ghost" data-rid="' + r.id + '" onclick="closeDashDrawer();viewRes(this.dataset.rid)">Gérer →</button>' +
-        '</div></div>'
+        '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);gap:10px;">' +
+        '<div style="min-width:0;"><div style="font-weight:700;">' + (r.car||'') + '</div>' +
+        '<div style="font-size:12px;color:var(--text3);">' + (plate ? '🚗 ' + plate + ' · ' : '') + (r.client||'') + '</div>' +
+        '<div style="font-size:12px;">Retour prévu : <strong>' + (r.endDate||'') + '</strong>' + (r.endTime ? ' à <strong>' + r.endTime + '</strong>' : '') + '</div></div>' +
+        '<div style="flex-shrink:0;"><button class="btn-sm primary" data-rid="' + r.id + '" onclick="closeDashDrawer();viewRes(this.dataset.rid)">Fiche →</button></div>' +
+        '</div>'
       );
     });
-    if (!rows.length) rows.push('<div style="color:#22c55e;text-align:center;padding:30px;">✓ Aucun retour prévu aujourd\'hui</div>');
+    if (!matches.length) rows.push('<div style="color:#22c55e;text-align:center;padding:30px;">✓ Aucun retour prévu pour cette date</div>');
 
   } else if (type === 'late') {
     title = '🔴 Retards (date de retour dépassée)';
@@ -566,7 +600,7 @@ function renderSettings() {
   el = document.getElementById('sys-res');   if(el) el.textContent = res.length + ' réservation(s)';
 }
 
-function confirmReset() {
+function _OLD_confirmReset_unused() {
   if (!confirm('⚠ RÉINITIALISATION OPÉRATIONNELLE\n\nCette action va archiver (sans supprimer) :\n• Réservations actives\n• Locations en cours\n• Alertes et notifications\n\nToutes les données restent consultables dans l\'historique.\n\nContinuer ?')) return;
   if (!confirm('⛔ CONFIRMATION FINALE\n\nCette action est irréversible sur les données actives.\n\nConfirmer la réinitialisation ?')) return;
   var res = aslRes();
@@ -597,6 +631,36 @@ function confirmReset() {
     if (typeof _orig === 'function') _orig(type);
   };
 })();
+
+/* ── Nouvelle location : calcul automatique du nombre de jours ──────────────
+   Le champ « Nombre de jours » calcule la date de retour à partir de la date
+   de départ. Si l'on change la date de retour, le nombre de jours se met à
+   jour. Présent UNIQUEMENT dans le pop-up Nouvelle location (pas Réservation). */
+function nlSetDays(d) {
+  var i = document.getElementById('nl-days');
+  if (i) { i.value = d; nlDaysToEnd(); }
+}
+function nlDaysToEnd() {
+  var s = document.getElementById('nl-start'),
+      e = document.getElementById('nl-end'),
+      dEl = document.getElementById('nl-days');
+  if (!s || !e || !dEl) return;
+  var days = parseInt(dEl.value, 10);
+  if (!s.value || !days || days < 1) return;
+  var d = new Date(s.value + 'T00:00:00');
+  d.setDate(d.getDate() + days);   // retour = départ + N jours (ex : 01/07 + 30 = 31/07)
+  var yyyy = d.getFullYear(), mm = String(d.getMonth() + 1).padStart(2, '0'), dd = String(d.getDate()).padStart(2, '0');
+  e.value = yyyy + '-' + mm + '-' + dd;
+  try { e.dispatchEvent(new Event('change')); } catch (_) {}
+}
+function nlEndToDays() {
+  var s = document.getElementById('nl-start'),
+      e = document.getElementById('nl-end'),
+      dEl = document.getElementById('nl-days');
+  if (!s || !e || !dEl || !s.value || !e.value) return;
+  var days = Math.round((new Date(e.value + 'T00:00:00') - new Date(s.value + 'T00:00:00')) / 86400000);
+  if (days >= 1) dEl.value = days;
+}
 
 function _buildNewLocationModal() {
   var fleet = aslFleet();
@@ -635,6 +699,8 @@ function _buildNewLocationModal() {
     '</div>' +
     '<div class="form-group"><label class="form-label">Véhicule</label><select class="form-select" id="nl-car">' + carOpts + '</select></div>' +
     '<div class="form-group"><label class="form-label">Prix / jour (MAD)</label><input class="form-input" type="number" id="nl-ppu" placeholder="Auto-calculé"></div>' +
+    '<div class="form-group"><label class="form-label">Nombre de jours</label>' +
+    '<input class="form-input" type="number" min="1" id="nl-days" placeholder="Nombre de jours"></div>' +
     '<div class="form-row">' +
     '<div class="form-group"><label class="form-label">Date départ</label><input type="date" class="form-input" id="nl-start"></div>' +
     '<div class="form-group"><label class="form-label">Date retour</label><input type="date" class="form-input" id="nl-end"></div>' +
@@ -682,6 +748,10 @@ function _buildNewLocationModal() {
       }
     }
     if (carSel) carSel.addEventListener('change', function(){ if(ppuEl) delete ppuEl.dataset.manual; syncPpu(); autoTotal(); });
+    if (sEl) sEl.addEventListener('change', function(){ nlDaysToEnd(); });
+    if (eEl) eEl.addEventListener('change', function(){ nlEndToDays(); });
+    var daysEl = document.getElementById('nl-days');
+    if (daysEl) daysEl.addEventListener('input', function(){ nlDaysToEnd(); });
     [sEl,eEl].forEach(function(el){ if(el) el.addEventListener('change', function(){ syncPpu(); autoTotal(); }); });
     if (ppuEl) ppuEl.addEventListener('input', function(){ this.dataset.manual='1'; autoTotal(); });
     var tEl = document.getElementById('nl-total');
@@ -731,6 +801,25 @@ function _saveNewLocation() {
   var ref   = (document.getElementById('nl-ref')&&document.getElementById('nl-ref').value||'').trim();
   var payStatus = paid<=0 ? 'Non payé' : (paid>=total ? 'Paiement complet' : 'Paiement partiel');
   var mode  = document.getElementById('nl-mode')&&document.getElementById('nl-mode').value || 'Espèces';
+
+  /* ★ VÉRIFICATION DE CONFLIT avant d'enregistrer (disponibilité réelle) */
+  if (typeof ASLDB !== 'undefined' && ASLDB.checkAvailability && car) {
+    var chk = ASLDB.checkAvailability(car, start, end, '10:00', '10:00');
+    if (!chk.available) {
+      var msg = '⛔ CONFLIT DÉTECTÉ\n\nLe véhicule « ' + car.name + ' » est déjà réservé ou loué sur cette période.';
+      if (chk.nextFrom) {
+        msg += '\n\nProchaine disponibilité : ' + chk.nextFrom.toLocaleDateString('fr-FR', {day:'numeric',month:'long',year:'numeric'}) + ' à ' + chk.nextFrom.toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'}) + ' (marge de sécurité incluse).';
+      }
+      msg += '\n\nVoulez-vous quand même forcer l\'enregistrement ?';
+      if (!confirm(msg)) return;
+    } else if (chk.tightReturns && chk.tightReturns.length) {
+      var tr = chk.tightReturns[0];
+      alert('⚠ ATTENTION — Retour serré\n\nUn autre véhicule identique doit revenir le ' +
+        tr.returnAt.toLocaleDateString('fr-FR',{day:'numeric',month:'long'}) + ' à ' + tr.returnAt.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) +
+        ', juste avant cette location.\n\nVérifiez le retour ou contactez le client actuel pour éviter tout retard.');
+    }
+  }
+
   var newLoc = null;
   if (typeof ASLDB!=='undefined' && ASLDB.addReservation) {
     newLoc = ASLDB.addReservation({
@@ -875,6 +964,19 @@ function vrPayCalc(total) {
 document.addEventListener('DOMContentLoaded', function() {
   updateBadges();
   renderDashboard();
+  /* Rafraîchissement en temps réel : dès que les données changent
+     (création/édition de réservation, sync depuis le site client,
+     paiement…), on met à jour le tableau de bord (dont "Retours
+     aujourd'hui", "Loués", "Impayés"…). */
+  if (typeof ASLDB !== 'undefined' && typeof ASLDB.onChange === 'function') {
+    ASLDB.onChange(function () {
+      setTimeout(function () {
+        try { renderDashboard(); } catch (e) {}
+        try { if (typeof updateBadges === 'function') updateBadges(); } catch (e) {}
+        try { if (typeof renderRentals === 'function') renderRentals(); } catch (e) {}
+      }, 50);
+    });
+  }
   /* Enregistrement auto → toast vert */
   document.addEventListener('click', function(e) {
     var btn = e.target && (e.target.tagName==='BUTTON' ? e.target : e.target.closest('button'));

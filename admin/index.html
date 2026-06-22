@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <script src="auth-guard.js"></script>
+<script src="admin-users.js"></script>
 <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAFGUlEQVR4nLWXW48UVRDHf3VOd+/srIBscJcdCLqAgFFMEIgCChIURVC5uwJCTHz3S5j4CXzw3Xff/QpGMEYTL6gR2GXvCzv3yznlQ3fPzuzOzowxVHKSntPnVP2r6l9VPUIHGd22Uzvt/1+ZmfxLVu+1bTwpw92ANB/6Nd6KOL0gsrLRrwcpCAEYzY33bdy3GgZQRVUTIIIxpvm7J4ipvyXoEzACOCACbBKHBgphSGgtiOAaDaq1GtbavkFIP94LUEMZFcvX4RYyCBuCgM/n/mHo/Gm++vILvHrK5QoXLk0wNfWQKIr6AmGUOKTdlgBFlHdNlgMywIhYxgioiFIqlhgb28q2XI7du3Zy8eKH5ItFjLU99Spgeh9RHMoGhHN2kAIeBzxWxyMLi3OzeO9xzqGqXJu4yqaNG2g06omP3XWbXvaNQlGV12SAlySihBIBZfWUjLC89JhqpYK1Fu89e/c8z8kTx8nnC1jT2z/TT/5VlfN2iEAERTEIefWUjKG4nOfR42UAvPcA3Lg+gSbPPTnQy3gFZZcJOWEzFNRjECzwSB01K1RKJZaWlmJlSQmefvsUL+zbR7lcRmRN82sH0IMglFR5z2bZIpZGcikG4KkLVKtVFhYWmwqdc2QyGS5fvkChDzJ2TVIdZZMI52yWimqcDsCIMK+OhkCjUWdmbg7SdyYO6scTVxge3ky9XutivgsJrUJRPcdMhn0moow282WABXWoCuo8MzOz8QtVjDF47xl/7lneOnWSQr6ANfa/k1ABUbhoh5qet8q8eoS4/c7OzrbfTRrQrU+us2rerZGOAFLy7TURx+wgRfXYlvcOeKgN6uqp1uvcvz8Z30sIl7biN0+8wf79L1IqlZqp6QCgc17K6jkXZNkspkm+FFxdFaPKDhuya/w5rDVtACAmYxRFTFy9lACQNXZAkS1bd7RFN514EcK3mTF2SEAVbQ+kCNV6HTP8NLnvvsE+vZGBMGyZy3FPMMbwYHKKV48ep1qtJmXaIwUGKKjnuM2w24SUVxtPZABhUITs4CADUbQ2tMbgnGP7thzvvP0Wy8sFjLFrz62OiipYFS7Yp5qDqJNoEinfR8e7dfM6gQ1Qr92rwABlPC/akCM2Q1F911ap0HXkpmR8/dhRDhx4mWKpmHChzWYLIVAqqnxgh9goBrdKoQcGxfCTq/B+fZorc3c5fvZDDhw8wvc/3InPrIqIcw5rLdc+vkqlXEmqoZXwiQhQB0bFciYYoqS6xnsFAmDKO372NX6vl/nl19/48fYd7t27lwBoj4i1cd4vX7pALjdGrVZrq5bmLBAgr56TQZadJqSyDvkMsIAjQsiIIZvNEmQyzM3Pt8BcERHBOcfoyAhnz57h8XIeY1eoZ1rJFxGTz9G9f817h1fi5T3eeaanZ7rciOXmjWsMRBHeaSsJ48ZTxPOyiThkB8hrnEffYTlgThtI0wePMTA9PYP3HlWNQbWsNAqHDx3k8KFXKBTyzcZkYKW7fRRuYItYIoTBDiuLEAKL6mhSScFYw/z8PMYYwjDEGLNmWWsJAstnn31KrVZrVkOwMPtANo9s11FjGZeQ265KfZ38Q/xJPqOOMCGSqhIGIQ8mp/jj7p+kDq0WVQUR9uzeTS6XI5/P82jhYaxleGS7pj2qnw+pTg1KVRFjOk7OFFT6LQHgvGdx9sFKPWx+ZpvGB9dT0apqfWjrdc90P43E0tzkyl+zVIYTEE9aFhPjawA8aSCthlP5Fy1ovp57ATNiAAAAAElFTkSuQmCC">
@@ -460,7 +461,13 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
   /* Sur mobile le collapse desktop est neutralisé (overlay déjà géré) */
   body.sb-is-collapsed .main { margin-left: 0 !important; }
 }
+.caisse-tab{background:none;border:none;padding:10px 18px;font-size:14px;font-weight:600;color:#667;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:.15s;}
+.caisse-tab:hover{color:#1a1a2e;}
+.caisse-tab.active{color:var(--red);border-bottom-color:var(--red);}
+.rep-period{background:#f3f4f6;border:1px solid var(--border);padding:7px 14px;font-size:13px;border-radius:8px;cursor:pointer;color:#444;transition:.15s;}
+.rep-period.active{background:var(--red);color:#fff;border-color:var(--red);}
 </style>
+<link rel="stylesheet" href="admin-mobile.css">
 </head>
 <body>
 <button class="sb-toggle" onclick="toggleSidebar()" title="Afficher le menu">
@@ -496,7 +503,9 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
       <div class="sb-section-label">Gestion</div>
 <a class="sb-item" onclick="showPage('customers',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Clients</a>
 <a class="sb-item" onclick="showPage('payments',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg></span>Paiements</a>
+<a class="sb-item" onclick="showPage('caisse',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg></span>Caisse</a>
 <a class="sb-item" onclick="showPage('options',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg></span>Assurances</a>
+<a class="sb-item" onclick="showPage('bookopt',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M7 12h10"/><path d="M10 18h4"/></svg></span>Options de réservation</a>
     </div>
     <div class="sb-section">
       <div class="sb-section-label">Outils</div>
@@ -591,7 +600,7 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
           <div style="font-size:10px;color:#3b82f6;margin-top:4px;font-weight:600;">Voir la liste →</div>
         </div>
 
-        <div class="stat-card" onclick="openDashDrawer('returns')" style="cursor:pointer;border:2px solid transparent;transition:.2s;">
+        <div class="stat-card" onclick="window._returnsFilter=null;openDashDrawer('returns')" style="cursor:pointer;border:2px solid transparent;transition:.2s;">
           <div class="stat-header"><div class="stat-icon" style="background:rgba(245,158,11,.12);color:#f59e0b;">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/></svg>
           </div></div>
@@ -818,6 +827,22 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
       </div>
     </div>
 
+    <!-- ===== OPTIONS DE RÉSERVATION (gérables, synchronisées avec le site) ===== -->
+    <div id="page-bookopt" class="page">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+        <div style="flex:1;min-width:260px;">
+          <div style="font-size:13px;color:#667;line-height:1.5;">Ces options s'affichent dans le pop-up de réservation du site. Modifiez-les à tout moment — la synchronisation est automatique.</div>
+        </div>
+        <button class="topbar-btn primary" onclick="openBookOptEditorMain()">+ Ajouter une option</button>
+      </div>
+      <div id="bookopt-sync-bar" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:8px;font-size:13px;"></div>
+      <div class="table-card">
+        <div class="table-header"><div class="table-title">Options de réservation</div></div>
+        <div id="bookopt-main-list" style="padding:4px 0;"></div>
+        <div id="bookopt-main-empty" style="text-align:center;padding:30px;color:#999;font-size:14px;">Aucune option. Cliquez sur « + Ajouter une option ».</div>
+      </div>
+    </div>
+
       
     <!-- ===== ENTRETIEN VEHICULES ===== -->
     <div id="page-maintenance" class="page">
@@ -884,9 +909,162 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
       </div>
     </div>
 
+    <!-- ===== CAISSE ===== -->
+    <div id="page-caisse" class="page">
+      <!-- Sous-onglets : Résumé / Charges / Rapports -->
+      <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;border-bottom:2px solid var(--border);padding-bottom:0;">
+        <button class="caisse-tab active" data-ctab="resume" onclick="caisseTab('resume',this)">Résumé</button>
+        <button class="caisse-tab" data-ctab="charges" onclick="caisseTab('charges',this)">Charges</button>
+        <button class="caisse-tab" data-ctab="rapports" onclick="caisseTab('rapports',this)">Rapports</button>
+      </div>
+
+      <!-- ===== RÉSUMÉ ===== -->
+      <div id="caisse-resume" class="caisse-sub">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:8px;">
+          <div class="table-card" style="padding:20px;border-left:4px solid #22c55e;">
+            <div style="font-size:13px;color:#667;margin-bottom:6px;">💰 Encaissements réels</div>
+            <div id="cs-encaisse" style="font-size:26px;font-weight:800;color:#16a34a;">0 MAD</div>
+            <div style="font-size:11.5px;color:#9aa;margin-top:4px;">Argent réellement reçu</div>
+          </div>
+          <div class="table-card" style="padding:20px;border-left:4px solid #ef4444;">
+            <div style="font-size:13px;color:#667;margin-bottom:6px;">🧾 Charges</div>
+            <div id="cs-charges" style="font-size:26px;font-weight:800;color:#dc2626;">0 MAD</div>
+            <div style="font-size:11.5px;color:#9aa;margin-top:4px;">Total des dépenses</div>
+          </div>
+          <div class="table-card" style="padding:20px;border-left:4px solid #1a1a2e;background:linear-gradient(135deg,#fafafa,#fff);">
+            <div style="font-size:13px;color:#667;margin-bottom:6px;">⚖️ Solde réel</div>
+            <div id="cs-solde-reel" style="font-size:26px;font-weight:800;color:#1a1a2e;">0 MAD</div>
+            <div style="font-size:11.5px;color:#9aa;margin-top:4px;">Encaissements − Charges</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:4px;">
+          <div class="table-card" style="padding:20px;border-left:4px solid #f59e0b;cursor:pointer;transition:.15s;" onclick="caisseOpenUnpaid()" onmouseover="this.style.background='#fffbeb'" onmouseout="this.style.background=''">
+            <div style="font-size:13px;color:#667;margin-bottom:6px;">⏳ Montants à encaisser</div>
+            <div id="cs-aencaisser" style="font-size:26px;font-weight:800;color:#d97706;">0 MAD</div>
+            <div style="font-size:11.5px;color:#2563eb;margin-top:4px;text-decoration:underline;">Voir les impayés →</div>
+          </div>
+          <div class="table-card" style="padding:20px;border-left:4px solid #6366f1;">
+            <div style="font-size:13px;color:#667;margin-bottom:6px;">📊 Solde estimé</div>
+            <div id="cs-solde-estime" style="font-size:26px;font-weight:800;color:#4f46e5;">0 MAD</div>
+            <div style="font-size:11.5px;color:#9aa;margin-top:4px;">Réel + à encaisser</div>
+          </div>
+        </div>
+
+        <div class="table-card" style="margin-top:18px;padding:16px 20px;">
+          <div style="font-size:13px;color:#667;line-height:1.7;">
+            <strong style="color:#1a1a2e;">Lecture rapide :</strong>
+            vous avez réellement encaissé <strong id="cs-inline-enc" style="color:#16a34a;">0 MAD</strong>,
+            dépensé <strong id="cs-inline-chg" style="color:#dc2626;">0 MAD</strong>,
+            il vous reste réellement <strong id="cs-inline-reel" style="color:#1a1a2e;">0 MAD</strong>
+            et les clients vous doivent encore <strong id="cs-inline-rest" style="color:#d97706;">0 MAD</strong>.
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== CHARGES ===== -->
+      <div id="caisse-charges" class="caisse-sub" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+          <div style="font-size:13px;color:#667;">Total des charges : <strong id="cs-charges-total" style="color:#dc2626;font-size:15px;">0 MAD</strong></div>
+          <button class="topbar-btn primary" onclick="openChargeModal()">+ Ajouter une charge</button>
+        </div>
+        <div class="table-card">
+          <div style="overflow-x:auto;">
+            <table class="data-table" style="width:100%;">
+              <thead><tr><th>Date</th><th>Véhicule</th><th>Catégorie</th><th>Description</th><th>Montant</th><th>Facture</th><th></th></tr></thead>
+              <tbody id="charges-tbody"></tbody>
+            </table>
+          </div>
+          <div id="charges-empty" style="text-align:center;padding:34px;color:#999;font-size:14px;">Aucune charge enregistrée. Cliquez sur « + Ajouter une charge ».</div>
+        </div>
+      </div>
+
+      <!-- ===== RAPPORTS — GRAND LIVRE DE CAISSE ===== -->
+      <div id="caisse-rapports" class="caisse-sub" style="display:none;">
+        <div style="margin-bottom:14px;">
+          <h3 style="font-size:16px;font-weight:800;color:#1a1a2e;margin-bottom:2px;">Grand Livre de Caisse</h3>
+          <p style="font-size:12.5px;color:#667;">Mouvements réels (paiements encaissés + charges payées). Exploitable directement par le comptable.</p>
+        </div>
+
+        <!-- Filtres -->
+        <div class="table-card" style="padding:16px;margin-bottom:16px;">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
+            <button class="rep-period active" data-period="today" onclick="glSetPeriod('today',this)">Aujourd'hui</button>
+            <button class="rep-period" data-period="week" onclick="glSetPeriod('week',this)">Cette semaine</button>
+            <button class="rep-period" data-period="month" onclick="glSetPeriod('month',this)">Ce mois</button>
+            <button class="rep-period" data-period="all" onclick="glSetPeriod('all',this)">Tout</button>
+            <button class="rep-period" data-period="custom" onclick="glSetPeriod('custom',this)">Personnalisée</button>
+          </div>
+          <div id="gl-custom-range" style="display:none;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px;">
+            <div><label style="font-size:11px;color:#667;display:block;">Du</label><input type="date" id="gl-from" class="form-input" style="padding:6px 8px;" onchange="renderGrandLivre()"></div>
+            <div><label style="font-size:11px;color:#667;display:block;">Au</label><input type="date" id="gl-to" class="form-input" style="padding:6px 8px;" onchange="renderGrandLivre()"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;">
+            <div><label style="font-size:11px;color:#667;display:block;margin-bottom:3px;">Type de mouvement</label>
+              <select id="gl-type" class="form-input" style="padding:7px 8px;" onchange="renderGrandLivre()">
+                <option value="">Tous</option><option value="Paiement">Paiement</option><option value="Charge">Charge</option>
+              </select></div>
+            <div><label style="font-size:11px;color:#667;display:block;margin-bottom:3px;">Mode de paiement</label>
+              <select id="gl-mode" class="form-input" style="padding:7px 8px;" onchange="renderGrandLivre()"><option value="">Tous</option></select></div>
+            <div><label style="font-size:11px;color:#667;display:block;margin-bottom:3px;">Catégorie</label>
+              <select id="gl-cat" class="form-input" style="padding:7px 8px;" onchange="renderGrandLivre()"><option value="">Toutes</option></select></div>
+            <div><label style="font-size:11px;color:#667;display:block;margin-bottom:3px;">Véhicule</label>
+              <select id="gl-vehicle" class="form-input" style="padding:7px 8px;" onchange="renderGrandLivre()"><option value="">Tous les véhicules</option></select></div>
+          </div>
+        </div>
+
+        <!-- Fiche financière véhicule (visible si un véhicule est filtré) -->
+        <div id="gl-vehicle-card" class="table-card" style="display:none;padding:18px;margin-bottom:16px;border-left:4px solid #C41E3A;"></div>
+
+        <!-- Totaux -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px;">
+          <div class="table-card" style="padding:14px;"><div style="font-size:11.5px;color:#667;">Total entrées</div><div id="gl-total-in" style="font-size:18px;font-weight:800;color:#16a34a;">0 MAD</div></div>
+          <div class="table-card" style="padding:14px;"><div style="font-size:11.5px;color:#667;">Total sorties</div><div id="gl-total-out" style="font-size:18px;font-weight:800;color:#dc2626;">0 MAD</div></div>
+          <div class="table-card" style="padding:14px;"><div style="font-size:11.5px;color:#667;">Solde final</div><div id="gl-total-solde" style="font-size:18px;font-weight:800;color:#1a1a2e;">0 MAD</div></div>
+          <div class="table-card" style="padding:14px;"><div style="font-size:11.5px;color:#667;">À encaisser (séparé)</div><div id="gl-total-rest" style="font-size:18px;font-weight:800;color:#d97706;">0 MAD</div></div>
+        </div>
+
+        <!-- Boutons export -->
+        <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+          <button class="topbar-btn" onclick="exportGrandLivrePDF()" style="border:1px solid var(--border);">📄 Export PDF</button>
+          <button class="topbar-btn" onclick="exportGrandLivreExcel()" style="border:1px solid var(--border);">📊 Export Excel</button>
+          <span id="gl-period-label" style="font-size:12px;color:#9aa;align-self:center;"></span>
+        </div>
+
+        <!-- Tableau Grand Livre -->
+        <div class="table-card">
+          <div style="overflow-x:auto;">
+            <table class="data-table" style="width:100%;font-size:12.5px;">
+              <thead><tr>
+                <th>Date</th><th>Type</th><th>Libellé</th><th>Client / Fourn.</th><th>Véhicule</th>
+                <th>Catégorie</th><th>Mode</th><th style="text-align:right;">Entrée</th><th style="text-align:right;">Sortie</th><th style="text-align:right;">Solde</th>
+              </tr></thead>
+              <tbody id="gl-tbody"></tbody>
+            </table>
+          </div>
+          <div id="gl-empty" style="text-align:center;padding:34px;color:#999;font-size:14px;">Aucun mouvement sur cette période.</div>
+        </div>
+      </div>
+    </div>
+
     <!-- ===== PARAMETRES SYSTEME ===== -->
     <div id="page-settings" class="page">
       <div style="max-width:780px;display:grid;gap:20px;">
+
+        <!-- ===== GESTION DES UTILISATEURS (admin principal uniquement) ===== -->
+        <div class="table-card" id="users-card">
+          <div class="table-header" style="display:flex;justify-content:space-between;align-items:center;">
+            <div class="table-title">&#128100; Utilisateurs &amp; accès employés</div>
+            <button class="topbar-btn primary" onclick="openUserModal()">+ Créer un accès</button>
+          </div>
+          <div style="padding:18px;">
+            <div style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.5;">
+              Créez des accès pour vos employés et choisissez précisément les sections auxquelles ils peuvent accéder. Un employé ne voit que ses menus autorisés ; toute section non autorisée est masquée et bloquée.
+            </div>
+            <div id="users-list"></div>
+          </div>
+        </div>
+
         <div class="table-card">
           <div class="table-header"><div class="table-title" style="color:var(--red);">&#9851; Réinitialisation opérationnelle</div></div>
           <div style="padding:20px;">
@@ -914,12 +1092,24 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
               </div>
             </div>
             <div style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:14px;margin-bottom:12px;font-size:13px;">
-              <strong style="color:#16a34a;">Objectif :</strong> après réinitialisation, tout le parc redevient <strong>disponible</strong>, comme si aucune voiture n'était louée — l'historique reste consultable.
+              <strong style="color:#16a34a;">Clôture de période :</strong> archive toutes les données opérationnelles terminées (réservations, locations, paiements, charges, activité, grand livre) puis remet le tableau de bord à zéro. Les véhicules, tarifs, paramètres, utilisateurs, FAQ, blog, marketing et l'historique d'entretien <strong>ne sont jamais touchés</strong>.
             </div>
             <div style="background:rgba(196,30,58,.06);border:1px solid rgba(196,30,58,.2);border-radius:10px;padding:14px;margin-bottom:16px;font-size:13px;">
-              <strong style="color:var(--red);">&#9888; Important :</strong> Les données sont archivées, jamais supprimées. Consultables dans l'historique à tout moment.
+              <strong style="color:var(--red);">&#9888; Important :</strong> Les données sont archivées, jamais supprimées. Consultables, exportables et restaurables dans les Archives ci-dessous.
             </div>
-            <button class="topbar-btn" style="background:var(--red);color:#fff;" onclick="confirmReset()">&#9851; Lancer la réinitialisation opérationnelle</button>
+            <button class="topbar-btn" style="background:var(--red);color:#fff;" onclick="confirmReset()">&#9851; Clôturer la période et archiver</button>
+          </div>
+        </div>
+
+        <!-- ===== ARCHIVES ===== -->
+        <div class="table-card">
+          <div class="table-header"><div class="table-title">&#128230; Archives des périodes clôturées</div></div>
+          <div style="padding:18px;">
+            <div style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.5;">
+              Chaque clôture crée une archive complète et consultable. Recherchez, consultez le détail, exportez en Excel ou restaurez une période si nécessaire.
+            </div>
+            <input type="text" id="archive-search" class="form-input" placeholder="🔍 Rechercher une archive (nom, client, véhicule…)" oninput="renderArchives()" style="margin-bottom:16px;">
+            <div id="archives-list"></div>
           </div>
         </div>
         <div class="table-card">
@@ -1054,7 +1244,7 @@ function showPage(id, el) {
     dashboard:'Tableau de bord', reservations:'Réservations',
     fleet:'Véhicules / Ma flotte', maintenance:'Entretien véhicules',
     rentals:'Locations en cours', customers:'Clients',
-    payments:'Paiements', options:'Assurances', settings:'Paramètres système'
+    payments:'Paiements', options:'Assurances', bookopt:'Options de réservation', caisse:'Caisse', settings:'Paramètres système'
   };
   document.getElementById('topbar-title').textContent = titles[id] || id;
   // Recharge les données partagées avant chaque affichage
@@ -1066,8 +1256,10 @@ function showPage(id, el) {
   if(id==='rentals') renderRentals();
   if(id==='customers') renderCustomers();
   if(id==='payments') renderPayments();
+  if(id==='bookopt') renderBookOptMain();
+  if(id==='caisse') renderCaisse();
   if(id==='dashboard') renderDashboard();
-  if(id==='settings') renderSettings();
+  if(id==='settings'){ renderSettings(); if(typeof renderArchives==='function') renderArchives(); if(typeof renderUsers==='function') renderUsers(); }
 }
 
 function switchTab(group, tab) {
@@ -1806,6 +1998,7 @@ function openModal(type) {
         }).join('')}</select>
       </div>
       <div class="form-group"><label class="form-label">Prix journalier (MAD)</label><input class="form-input" type="number" id="nr-ppu" placeholder="Prix / jour"></div>
+      <div class="form-group"><label class="form-label">Nombre de jours</label><input class="form-input" type="number" min="1" id="nr-days" placeholder="Nombre de jours"></div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Date départ</label><input type="date" class="form-input" id="nr-start"></div>
         <div class="form-group"><label class="form-label">Date retour</label><input type="date" class="form-input" id="nr-end"></div>
@@ -1873,6 +2066,24 @@ function openModal(type) {
         }
       }
       if (carSel) carSel.addEventListener('change', function(){ if(ppuEl) delete ppuEl.dataset.manual; syncPpu(); autoTotal(); });
+      // Nombre de jours → date de retour (et inverse), comme dans Nouvelle location.
+      var daysEl = document.getElementById('nr-days');
+      function nrDaysToEnd(){
+        if (!sEl || !eEl || !daysEl) return;
+        var days = parseInt(daysEl.value, 10);
+        if (!sEl.value || !days || days < 1) return;
+        var d = new Date(sEl.value + 'T00:00:00'); d.setDate(d.getDate() + days);
+        eEl.value = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+        syncPpu(); autoTotal();
+      }
+      function nrEndToDays(){
+        if (!sEl || !eEl || !daysEl || !sEl.value || !eEl.value) return;
+        var days = Math.round((new Date(eEl.value+'T00:00:00') - new Date(sEl.value+'T00:00:00'))/86400000);
+        if (days >= 1) daysEl.value = days;
+      }
+      if (daysEl) daysEl.addEventListener('input', nrDaysToEnd);
+      if (sEl) sEl.addEventListener('change', nrDaysToEnd);
+      if (eEl) eEl.addEventListener('change', nrEndToDays);
       [sEl, eEl].forEach(function(el){ if(el) el.addEventListener('change', function(){ syncPpu(); autoTotal(); }); });
       if (ppuEl) ppuEl.addEventListener('input', function(){ this.dataset.manual = '1'; autoTotal(); });
       var totalEl = document.getElementById('nr-total');
@@ -1906,6 +2117,25 @@ function openModal(type) {
       else if (paid >= total) payStatus = 'Paiement complet';
       else payStatus = 'Paiement partiel';
       const paymentMode = document.getElementById('nr-mode')?.value || 'Espèces';
+
+      /* ★ VÉRIFICATION DE CONFLIT avant d'enregistrer la réservation manuelle */
+      if (typeof ASLDB.checkAvailability === 'function' && car) {
+        const chk = ASLDB.checkAvailability(car, start, end, startTime, endTime);
+        if (!chk.available) {
+          let msg = '⛔ CONFLIT DÉTECTÉ\n\nLe véhicule « ' + car.name + ' » est déjà réservé ou loué sur cette période.';
+          if (chk.nextFrom) {
+            msg += '\n\nProchaine disponibilité : ' + chk.nextFrom.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}) + ' à ' + chk.nextFrom.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) + ' (marge incluse).';
+          }
+          msg += '\n\nForcer l\'enregistrement quand même ?';
+          if (!confirm(msg)) return;
+        } else if (chk.tightReturns && chk.tightReturns.length) {
+          const tr = chk.tightReturns[0];
+          alert('⚠ ATTENTION — Retour serré\n\nUn véhicule identique doit revenir le ' +
+            tr.returnAt.toLocaleDateString('fr-FR',{day:'numeric',month:'long'}) + ' à ' + tr.returnAt.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) +
+            ', juste avant cette réservation.\n\nVérifiez le retour ou contactez le client actuel.');
+        }
+      }
+
       const newRes = ASLDB.addReservation({
         client: `${fn} ${ln||''}`.trim(),
         contractRef: contractRef,
@@ -2522,5 +2752,11 @@ document.addEventListener('DOMContentLoaded', function(){ setTimeout(renderMobil
 <script src="admin-lot5.js"></script>
 <script src="admin-lot6.js"></script>
 <script src="admin-lot7.js"></script>
+<script src="admin-lot10.js"></script>
+<script src="admin-bookopt.js"></script>
+<script src="admin-caisse.js"></script>
+<script src="admin-archive.js"></script>
+<script src="admin-users-ui.js"></script>
+<script src="admin-mobile.js"></script>
 </body>
 </html>

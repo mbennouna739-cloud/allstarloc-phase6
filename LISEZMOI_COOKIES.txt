@@ -1,0 +1,55 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — Bannière Cookies & Confidentialité
+═══════════════════════════════════════════════════════════════
+
+VÉRIFICATION : le site ne disposait pas d'un vrai système de
+gestion des cookies fonctionnel. Il est désormais en place,
+professionnel, responsive et multilingue.
+
+───────────────────────────────────────────────────────────────
+BANNIÈRE CÔTÉ SITE (cookie-consent.js)
+───────────────────────────────────────────────────────────────
+• S'affiche en bas de page tant que le visiteur n'a pas choisi.
+• Trois actions :
+    - Accepter (active toutes les catégories)
+    - Refuser (désactive tout sauf l'essentiel)
+    - Personnaliser (modale avec un interrupteur par catégorie)
+• Trois catégories : Analytics, Marketing, Fonctionnels.
+• Responsive (mobile + desktop), multilingue FR/EN/ES/AR
+  (repli FR si une langue est vide), passage RTL pour l'arabe.
+• Le choix est mémorisé : la bannière ne réapparaît plus ensuite.
+• Lien « Gérer les cookies » possible dans le pied de page via
+  onclick="ASLCookies.open()".
+• Chargée sur TOUTES les pages du site (accueil + sous-pages).
+
+PRÊT POUR LE SUIVI SANS TOUCHER AU CODE :
+• Google Analytics 4, Google Ads et Meta Pixel ne se chargent
+  QUE si le visiteur a donné son consentement pour la bonne
+  catégorie (Analytics → GA4 ; Marketing → Google Ads + Meta).
+• Il suffit de renseigner les identifiants dans le back-office.
+
+───────────────────────────────────────────────────────────────
+GESTION DEPUIS LE BACK-OFFICE
+───────────────────────────────────────────────────────────────
+Module Marketing → « Cookies & Confidentialité » :
+• Activer / désactiver l'affichage de la bannière.
+• Modifier le texte affiché (multilingue FR/EN/ES/AR).
+• Activer / désactiver chaque catégorie (Analytics, Marketing,
+  Fonctionnels).
+• Renseigner les identifiants de suivi :
+    - Google Analytics 4 (G-XXXXXXXXXX)
+    - Google Ads (AW-XXXXXXXXX)
+    - Meta Pixel (ID numérique)
+• Enregistrement + synchronisation automatique avec le site.
+
+───────────────────────────────────────────────────────────────
+FICHIERS
+───────────────────────────────────────────────────────────────
+  cookie-consent.js     → bannière + modale + chargement des
+                          trackers selon le consentement
+  admin/marketing.html  → section « Cookies & Confidentialité »
+  content-bridge.js     → expose la config au site (_ASL_COOKIES)
+  (chargé sur index.html + toutes les pages /pages/*.html)
+
+Note déploiement : la synchronisation passe par le serveur
+Cloudflare. Tester sur le site déployé et rafraîchir (Ctrl+F5).

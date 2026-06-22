@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <script src="auth-guard.js"></script>
+<script src="admin-users.js"></script>
+<script src="../asl-translate.js"></script>
+<script src="../blog-seed.js"></script>
+<script src="../faq-seed.js"></script>
+<script src="../legal-seed.js"></script>
+<script src="../pages-seed.js"></script>
 <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAFGUlEQVR4nLWXW48UVRDHf3VOd+/srIBscJcdCLqAgFFMEIgCChIURVC5uwJCTHz3S5j4CXzw3Xff/QpGMEYTL6gR2GXvCzv3yznlQ3fPzuzOzowxVHKSntPnVP2r6l9VPUIHGd22Uzvt/1+ZmfxLVu+1bTwpw92ANB/6Nd6KOL0gsrLRrwcpCAEYzY33bdy3GgZQRVUTIIIxpvm7J4ipvyXoEzACOCACbBKHBgphSGgtiOAaDaq1GtbavkFIP94LUEMZFcvX4RYyCBuCgM/n/mHo/Gm++vILvHrK5QoXLk0wNfWQKIr6AmGUOKTdlgBFlHdNlgMywIhYxgioiFIqlhgb28q2XI7du3Zy8eKH5ItFjLU99Spgeh9RHMoGhHN2kAIeBzxWxyMLi3OzeO9xzqGqXJu4yqaNG2g06omP3XWbXvaNQlGV12SAlySihBIBZfWUjLC89JhqpYK1Fu89e/c8z8kTx8nnC1jT2z/TT/5VlfN2iEAERTEIefWUjKG4nOfR42UAvPcA3Lg+gSbPPTnQy3gFZZcJOWEzFNRjECzwSB01K1RKJZaWlmJlSQmefvsUL+zbR7lcRmRN82sH0IMglFR5z2bZIpZGcikG4KkLVKtVFhYWmwqdc2QyGS5fvkChDzJ2TVIdZZMI52yWimqcDsCIMK+OhkCjUWdmbg7SdyYO6scTVxge3ky9XutivgsJrUJRPcdMhn0moow282WABXWoCuo8MzOz8QtVjDF47xl/7lneOnWSQr6ANfa/k1ABUbhoh5qet8q8eoS4/c7OzrbfTRrQrU+us2rerZGOAFLy7TURx+wgRfXYlvcOeKgN6uqp1uvcvz8Z30sIl7biN0+8wf79L1IqlZqp6QCgc17K6jkXZNkspkm+FFxdFaPKDhuya/w5rDVtACAmYxRFTFy9lACQNXZAkS1bd7RFN514EcK3mTF2SEAVbQ+kCNV6HTP8NLnvvsE+vZGBMGyZy3FPMMbwYHKKV48ep1qtJmXaIwUGKKjnuM2w24SUVxtPZABhUITs4CADUbQ2tMbgnGP7thzvvP0Wy8sFjLFrz62OiipYFS7Yp5qDqJNoEinfR8e7dfM6gQ1Qr92rwABlPC/akCM2Q1F911ap0HXkpmR8/dhRDhx4mWKpmHChzWYLIVAqqnxgh9goBrdKoQcGxfCTq/B+fZorc3c5fvZDDhw8wvc/3InPrIqIcw5rLdc+vkqlXEmqoZXwiQhQB0bFciYYoqS6xnsFAmDKO372NX6vl/nl19/48fYd7t27lwBoj4i1cd4vX7pALjdGrVZrq5bmLBAgr56TQZadJqSyDvkMsIAjQsiIIZvNEmQyzM3Pt8BcERHBOcfoyAhnz57h8XIeY1eoZ1rJFxGTz9G9f817h1fi5T3eeaanZ7rciOXmjWsMRBHeaSsJ48ZTxPOyiThkB8hrnEffYTlgThtI0wePMTA9PYP3HlWNQbWsNAqHDx3k8KFXKBTyzcZkYKW7fRRuYItYIoTBDiuLEAKL6mhSScFYw/z8PMYYwjDEGLNmWWsJAstnn31KrVZrVkOwMPtANo9s11FjGZeQ265KfZ38Q/xJPqOOMCGSqhIGIQ8mp/jj7p+kDq0WVQUR9uzeTS6XI5/P82jhYaxleGS7pj2qnw+pTg1KVRFjOk7OFFT6LQHgvGdx9sFKPWx+ZpvGB9dT0apqfWjrdc90P43E0tzkyl+zVIYTEE9aFhPjawA8aSCthlP5Fy1ovp57ATNiAAAAAElFTkSuQmCC">
@@ -143,7 +149,7 @@ a{text-decoration:none;color:inherit;}
   display:flex;align-items:center;gap:8px;}
 .ai-trend-item:last-child{border-bottom:none;}
 /* modal */
-.modal-bd{position:fixed;inset:0;background:rgba(10,12,18,.45);z-index:100;
+.modal-bd{position:fixed;inset:0;background:rgba(10,12,18,.45);z-index:9500;
   display:none;align-items:center;justify-content:center;}
 .modal-bd.open{display:flex;}
 .modal{background:#fff;border-radius:18px;width:min(760px,95vw);max-height:90vh;
@@ -400,6 +406,22 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
   <div class="sb-item" onclick="nav('faq',this)">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
     <span>FAQ</span>
+  </div>
+  <div class="sb-item" onclick="nav('bookopt',this)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18"/><path d="M7 12h10"/><path d="M10 18h4"/></svg>
+    <span>Options de réservation</span>
+  </div>
+  <div class="sb-item" onclick="nav('legal',this)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h6"/></svg>
+    <span>Pages légales</span>
+  </div>
+  <div class="sb-item" onclick="nav('reviews',this)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    <span>Avis clients</span>
+  </div>
+  <div class="sb-item" onclick="nav('cookies',this)">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"/><path d="M8.5 8.5v.01M16 15.5v.01M12 12v.01M11 17v.01M7 14v.01"/></svg>
+    <span>Cookies &amp; Confidentialité</span>
   </div>
   <div class="sb-item" onclick="nav('popup',this)">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg>
@@ -715,6 +737,170 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
     <div id="sync-bar-faq" class="sync-bar"></div>
     <div class="card"><div id="faq-list"></div>
       <div id="faq-empty" style="text-align:center;padding:30px;color:var(--t3);">Aucune question. Cliquez sur + Ajouter.</div>
+    </div>
+  </div>
+
+  <!-- PAGE OPTIONS DE RÉSERVATION -->
+  <div class="content page" id="page-bookopt">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+      <div style="flex:1;">
+        <h2 style="font-size:18px;font-weight:900;">Options de réservation</h2>
+        <p style="font-size:13px;color:var(--t2);margin-top:2px;">Gérez les options proposées dans le pop-up de réservation du site. Synchronisées avec réservations, locations, paiements et clients.</p>
+      </div>
+      <button class="btn btn-red" onclick="openBookOptEditor()">+ Ajouter une option</button>
+    </div>
+    <div id="sync-bar-bookopt" class="sync-bar"></div>
+    <div class="card"><div id="bookopt-list"></div>
+      <div id="bookopt-empty" style="text-align:center;padding:30px;color:var(--t3);">Aucune option. Cliquez sur + Ajouter une option.</div>
+    </div>
+  </div>
+
+  <!-- PAGE PAGES LÉGALES -->
+  <div class="content page" id="page-legal">
+    <div style="margin-bottom:18px;">
+      <h2 style="font-size:18px;font-weight:900;">Pages de contenu</h2>
+      <p style="font-size:13px;color:var(--t2);margin-top:2px;">Modifiez, traduisez et publiez toutes les pages du site (légales et services) sans toucher au code. Pré-remplies dans les 4 langues. Le contenu enregistré s'affiche sur le site.</p>
+    </div>
+    <div id="sync-bar-legal" class="sync-bar"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+      <button class="btn btn-ghost btn-sm legal-page-tab active" data-lpage="cgv" onclick="selectLegalPage('cgv',this)">Conditions générales</button>
+      <button class="btn btn-ghost btn-sm legal-page-tab" data-lpage="privacy" onclick="selectLegalPage('privacy',this)">Politique de confidentialité</button>
+      <button class="btn btn-ghost btn-sm legal-page-tab" data-lpage="mentions" onclick="selectLegalPage('mentions',this)">Mentions légales</button>
+      <button class="btn btn-ghost btn-sm legal-page-tab" data-lpage="courte-duree" onclick="selectLegalPage('courte-duree',this)">Location courte durée</button>
+      <button class="btn btn-ghost btn-sm legal-page-tab" data-lpage="lld" onclick="selectLegalPage('lld',this)">Location longue durée</button>
+      <button class="btn btn-ghost btn-sm legal-page-tab" data-lpage="aeroport" onclick="selectLegalPage('aeroport',this)">Livraison aéroport</button>
+      <button class="btn btn-ghost btn-sm legal-page-tab" data-lpage="livraison-hotel" onclick="selectLegalPage('livraison-hotel',this)">Livraison hôtel / riad</button>
+    </div>
+    <div class="card" style="padding:18px;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center;">
+        <button type="button" class="lang-tab active" data-llang="fr" onclick="switchLegalLang('fr',this)">🇫🇷 Français</button>
+        <button type="button" class="lang-tab" data-llang="en" onclick="switchLegalLang('en',this)">🇬🇧 English</button>
+        <button type="button" class="lang-tab" data-llang="es" onclick="switchLegalLang('es',this)">🇪🇸 Español</button>
+        <button type="button" class="lang-tab" data-llang="ar" onclick="switchLegalLang('ar',this)">🇸🇦 العربية</button>
+        <span style="flex:1;"></span>
+        <label style="font-size:12.5px;display:flex;align-items:center;gap:6px;"><input type="checkbox" id="legal-status" checked style="accent-color:var(--red);"> Page publiée</label>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="fg"><label>Badge / étiquette (<span class="legal-lang-lbl">FR</span>)</label>
+          <input class="fi" id="legal-badge" placeholder="Ex : Document légal"></div>
+        <div class="fg"><label>Titre de la page (<span class="legal-lang-lbl">FR</span>)</label>
+          <input class="fi" id="legal-title" placeholder="Ex : Conditions générales de location"></div>
+      </div>
+      <div class="fg"><label>Sous-titre / accroche du hero (<span class="legal-lang-lbl">FR</span>)</label>
+        <input class="fi" id="legal-subtitle" placeholder="Une phrase d'introduction…"></div>
+      <div class="fg"><label>Contenu de la page (HTML simple : &lt;h2&gt;, &lt;p&gt;, &lt;ul&gt;&lt;li&gt;, &lt;strong&gt;)</label>
+        <textarea class="ft" id="legal-content" rows="14" placeholder="Rédigez ici le contenu de la page…"></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="fg"><label>Meta title SEO (<span class="legal-lang-lbl">FR</span>)</label>
+          <input class="fi" id="legal-metatitle" placeholder="Titre pour Google"></div>
+        <div class="fg"><label>Meta description SEO (<span class="legal-lang-lbl">FR</span>)</label>
+          <input class="fi" id="legal-metadesc" placeholder="Description pour Google"></div>
+      </div>
+      <div class="fg"><label>Image de couverture (URL, optionnel — commune à toutes les langues)</label>
+        <input class="fi" id="legal-image" placeholder="https://…"></div>
+      <div class="fg" style="background:rgba(196,30,58,.04);border:1px solid var(--border,#e2e8f0);border-radius:10px;padding:12px;">
+        <div style="font-size:12.5px;color:var(--t2,#555);margin-bottom:8px;">Rédigez la page en français, puis synchronisez : EN/ES/AR sont générés automatiquement (badge, titre, sous-titre, contenu, CTA, SEO). Chaque langue reste modifiable.</div>
+        <button type="button" class="btn btn-ghost btn-sm" id="legal-tr-btn" onclick="legalAutoTranslate()" style="border:1px solid var(--border,#e2e8f0);">🌐 Synchroniser les langues (FR → EN / ES / AR)</button>
+        <span id="legal-tr-status" style="font-size:11.5px;color:var(--t3,#888);margin-left:8px;"></span>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+        <button class="btn btn-red" onclick="saveLegalPage()">Enregistrer &amp; Publier</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE AVIS CLIENTS -->
+  <div class="content page" id="page-reviews">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+      <div style="flex:1;">
+        <h2 style="font-size:18px;font-weight:900;">Avis clients</h2>
+        <p style="font-size:13px;color:var(--t2);margin-top:2px;">Gérez les avis affichés sur le site. Multilingues, activables, synchronisés automatiquement.</p>
+      </div>
+      <button class="btn btn-red" onclick="openReviewEditor()">+ Ajouter un avis</button>
+    </div>
+    <div id="sync-bar-reviews" class="sync-bar"></div>
+
+    <!-- Bloc Google Reviews (architecture prête) -->
+    <div class="card" style="padding:16px;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--red)" stroke-width="1.8"><path d="M12 2v20M2 12h20"/></svg>
+        <strong style="font-size:14px;">Google Reviews (préparation)</strong>
+      </div>
+      <p style="font-size:12.5px;color:var(--t2);margin-bottom:12px;">Architecture prête pour connecter votre fiche Google Business Profile plus tard. Renseignez ces champs quand vous serez prêt — rien n'est obligatoire maintenant.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+        <div class="fg"><label>Activer Google Reviews</label>
+          <select class="fs" id="gr-enabled"><option value="no">Non (avis gérés manuellement)</option><option value="yes">Oui (afficher la note Google)</option></select></div>
+        <div class="fg"><label>Note moyenne Google</label><input class="fi" id="gr-rating" type="number" step="0.1" min="0" max="5" placeholder="4.8"></div>
+        <div class="fg"><label>Nombre total d'avis</label><input class="fi" id="gr-count" type="number" min="0" placeholder="127"></div>
+      </div>
+      <div class="fg"><label>ID de fiche Google (Place ID) <span class="opt">(pour la future synchronisation automatique)</span></label>
+        <input class="fi" id="gr-placeid" placeholder="Ex : ChIJ..."></div>
+      <div style="text-align:right;"><button class="btn btn-ghost btn-sm" onclick="saveGoogleReviews()">Enregistrer les paramètres Google</button></div>
+    </div>
+
+    <div class="card"><div id="reviews-list"></div>
+      <div id="reviews-empty" style="text-align:center;padding:30px;color:var(--t3);">Aucun avis. Cliquez sur + Ajouter un avis.</div>
+    </div>
+  </div>
+
+  <!-- PAGE COOKIES & CONFIDENTIALITÉ -->
+  <div class="content page" id="page-cookies">
+    <div style="margin-bottom:16px;">
+      <h2 style="font-size:18px;font-weight:900;">Cookies &amp; Confidentialité</h2>
+      <p style="font-size:13px;color:var(--t2);margin-top:2px;">Gérez la bannière de consentement aux cookies affichée sur le site. Prêt pour Google Analytics, Google Ads et Meta Pixel sans toucher au code.</p>
+    </div>
+    <div id="sync-bar-cookies" class="sync-bar"></div>
+
+    <div class="card" style="padding:18px;margin-bottom:16px;">
+      <div class="fg"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;font-weight:700;">
+        <input type="checkbox" id="ck-enabled" style="width:16px;height:16px;accent-color:var(--red);"> Afficher la bannière cookies sur le site
+      </label></div>
+      <div style="font-size:12px;color:var(--t3);margin-top:-4px;">Décochez pour masquer entièrement la bannière (déconseillé si vous utilisez des outils de suivi).</div>
+    </div>
+
+    <div class="card" style="padding:18px;margin-bottom:16px;">
+      <strong style="font-size:14px;display:block;margin-bottom:10px;">Texte de la bannière</strong>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+        <button type="button" class="lang-tab active" data-cklang="fr" onclick="switchCookieLang('fr',this)">🇫🇷 Français</button>
+        <button type="button" class="lang-tab" data-cklang="en" onclick="switchCookieLang('en',this)">🇬🇧 English</button>
+        <button type="button" class="lang-tab" data-cklang="es" onclick="switchCookieLang('es',this)">🇪🇸 Español</button>
+        <button type="button" class="lang-tab" data-cklang="ar" onclick="switchCookieLang('ar',this)">🇸🇦 العربية</button>
+      </div>
+      <div class="fg"><label>Message affiché (<span id="ck-lang-lbl">FR</span>)</label>
+        <textarea class="ft" id="ck-text" rows="3" placeholder="Nous utilisons des cookies pour…"></textarea>
+      </div>
+    </div>
+
+    <div class="card" style="padding:18px;margin-bottom:16px;">
+      <strong style="font-size:14px;display:block;margin-bottom:10px;">Catégories de cookies proposées</strong>
+      <label style="display:flex;align-items:center;gap:8px;padding:8px 0;cursor:default;font-size:13.5px;color:var(--t2);">
+        <input type="checkbox" checked disabled style="width:16px;height:16px;"> Nécessaires <span style="color:var(--t3);font-size:12px;">(toujours actifs, non désactivables)</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;padding:8px 0;cursor:pointer;font-size:13.5px;">
+        <input type="checkbox" id="ck-cat-analytics" style="width:16px;height:16px;accent-color:var(--red);"> Analytics <span style="color:var(--t3);font-size:12px;">(mesure d'audience)</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;padding:8px 0;cursor:pointer;font-size:13.5px;">
+        <input type="checkbox" id="ck-cat-marketing" style="width:16px;height:16px;accent-color:var(--red);"> Marketing <span style="color:var(--t3);font-size:12px;">(publicité, reciblage)</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;padding:8px 0;cursor:pointer;font-size:13.5px;">
+        <input type="checkbox" id="ck-cat-functional" style="width:16px;height:16px;accent-color:var(--red);"> Fonctionnels <span style="color:var(--t3);font-size:12px;">(préférences, confort)</span>
+      </label>
+    </div>
+
+    <div class="card" style="padding:18px;margin-bottom:16px;">
+      <strong style="font-size:14px;display:block;margin-bottom:4px;">Outils de suivi (chargés seulement après consentement)</strong>
+      <p style="font-size:12px;color:var(--t3);margin-bottom:12px;">Renseignez vos identifiants. Les scripts ne se chargent que si le visiteur accepte la catégorie correspondante.</p>
+      <div class="fg"><label>Google Analytics 4 — ID de mesure <span class="opt">(catégorie Analytics)</span></label>
+        <input class="fi" id="ck-ga4" placeholder="G-XXXXXXXXXX"></div>
+      <div class="fg"><label>Google Ads — ID de conversion <span class="opt">(catégorie Marketing)</span></label>
+        <input class="fi" id="ck-gads" placeholder="AW-XXXXXXXXX"></div>
+      <div class="fg"><label>Meta Pixel — ID <span class="opt">(catégorie Marketing)</span></label>
+        <input class="fi" id="ck-meta" placeholder="123456789012345"></div>
+    </div>
+
+    <div style="text-align:right;">
+      <button class="btn btn-red" onclick="saveCookieSettings()">Enregistrer &amp; Publier</button>
     </div>
   </div>
 
@@ -1132,6 +1318,10 @@ const K = {
   content:    'asl_mkt_content_v1',
   faq:        'asl_mkt_faq_v1',
   blog:       'asl_mkt_blog_v1',
+  bookingOptions: 'asl_mkt_bkopt_v1',
+  legalPages: 'asl_mkt_legal_v1',
+  reviews:    'asl_mkt_reviews_v1',
+  cookies:    'asl_mkt_cookies_v1',
   menu:       'asl_mkt_menu_v1',
   ads:        'asl_mkt_ads_v1',
   social:     'asl_mkt_social_v1',
@@ -1224,14 +1414,37 @@ function toast(msg, cls='') {
   setTimeout(()=>el.classList.remove('show'), 3200);
 }
 
+/* Quand un éditeur (modale) est ouvert depuis une fenêtre-module (FAQ, Popup,
+   Réseaux…), on FERME d'abord la fenêtre-module : une seule fenêtre visible à
+   la fois, aucun pop-up resté affiché derrière un autre. À la fermeture de la
+   modale, on rouvre la fenêtre-module pour revenir à la liste MISE À JOUR. */
+let _modalReturnPopupId = null;
+
 function openModal(title, body, actions=[]) {
+  // Si une fenêtre-module est ouverte, la fermer et mémoriser pour y revenir.
+  if (typeof _mktOpenPopupId !== 'undefined' && _mktOpenPopupId) {
+    _modalReturnPopupId = _mktOpenPopupId;
+    closeModulePopup(true);            // silencieux : on garde le scroll-lock du body
+  } else {
+    _modalReturnPopupId = null;
+  }
   document.getElementById('modal-title').textContent = title;
   document.getElementById('modal-body').innerHTML = body;
   document.getElementById('modal-foot').innerHTML = actions.map(a=>`<button class="btn ${a.cls}" onclick="${a.action}">${a.label}</button>`).join('');
   document.getElementById('modal-bd').classList.add('open');
 }
 
-function closeModal() { document.getElementById('modal-bd').classList.remove('open'); }
+function closeModal() {
+  document.getElementById('modal-bd').classList.remove('open');
+  // Retour automatique à la fenêtre-module d'origine, avec sa liste re-rendue.
+  if (_modalReturnPopupId) {
+    const back = _modalReturnPopupId;
+    _modalReturnPopupId = null;
+    if (typeof openModulePopup === 'function') openModulePopup(back);
+  } else {
+    document.body.style.overflow = '';
+  }
+}
 
 function showSyncStatus(msg, type) {
   const s = document.getElementById('sync-status');
@@ -1257,22 +1470,48 @@ async function syncToKV(label) {
     try { adminKey = localStorage.getItem('asl_admin_key') || ''; } catch(e) {}
     if (adminKey) headers['X-ASL-Key'] = adminKey;
 
+    /* ★ FUSION ANTI-PERTE : on lit d'abord le document du serveur et on
+       superpose nos sections locales. Ainsi, une section éditée depuis un
+       autre appareil n'est jamais écrasée par une version locale vide. */
+    let merged = data;
+    try {
+      const pre = await fetch('/api/marketing', { headers: { 'Cache-Control': 'no-cache' } });
+      if (pre.ok) {
+        const pd = await pre.json();
+        const remote = (pd && pd.data) ? pd.data : {};
+        merged = Object.assign({}, remote, data);  // nos modifs locales priment, le reste du serveur est conservé
+        merged.updatedAt = new Date().toISOString();
+      }
+    } catch(e) { /* serveur injoignable : on enverra la version locale */ }
+
     const resp = await fetch('/api/marketing', {
       method: 'PUT',
       headers: headers,
-      body: JSON.stringify(data),
+      body: JSON.stringify(merged),
     });
     if (resp.ok) {
-      // 3. VÉRIFICATION RÉELLE : relire depuis le serveur pour confirmer
+      // 3. VÉRIFICATION RÉELLE : relire depuis le serveur et confirmer
+      //    en contrôlant la SECTION réellement modifiée (pas seulement le H1).
       try {
         const check = await fetch('/api/marketing', { headers: { 'Cache-Control': 'no-cache' } });
         const cd = await check.json();
-        const savedH1 = cd && cd.data && cd.data.content ? cd.data.content['hero.titleHtml'] : null;
-        const localH1 = data.content ? data.content['hero.titleHtml'] : null;
-        if (savedH1 === localH1) {
-          showSyncStatus('✓ ' + (label || 'Données') + ' bien enregistrées sur le serveur. Rafraîchissez le site public (Ctrl+F5) pour voir le changement.');
+        const remote = (cd && cd.data) ? cd.data : {};
+        // Compteur fiable : on compare le contenu de la section concernée par "label".
+        const sectionKey = ({ 'Blog':'blog', 'FAQ':'faq', 'SEO':'seo', 'Contenu':'content', 'Popup':'popup', 'Options':'bookingOptions', 'Légal':'legalPages', 'Avis':'reviews', 'Cookies':'cookies' })[label] || null;
+        let ok = true;
+        if (sectionKey) {
+          // Comparaison robuste : même longueur sérialisée pour la section visée
+          const localSec = JSON.stringify(data[sectionKey] || (Array.isArray(data[sectionKey])?[]:{}));
+          const remoteSec = JSON.stringify(remote[sectionKey] || (Array.isArray(data[sectionKey])?[]:{}));
+          ok = (localSec === remoteSec);
         } else {
-          showSyncStatus('⚠ Envoyé au serveur mais la relecture ne correspond pas. La base KV est peut-être en cours de propagation (attendez 1 min).', 'warn');
+          // Fallback : vérifier que le serveur a bien renvoyé un document
+          ok = !!(cd && cd.data);
+        }
+        if (ok) {
+          showSyncStatus('✓ ' + (label || 'Données') + ' bien enregistré(es) sur le serveur (vérifié). Rafraîchissez le site public (Ctrl+F5) pour voir le changement.');
+        } else {
+          showSyncStatus('⚠ Envoyé au serveur mais la relecture de « ' + (label||'') + ' » ne correspond pas encore. La base KV se propage parfois en ~1 min — réessayez si besoin.', 'warn');
         }
       } catch(e) {
         showSyncStatus('✓ ' + (label || 'Données') + ' envoyées au serveur. Rafraîchissez le site public.');
@@ -1298,6 +1537,10 @@ function getMktData() {
     seo:      load(K.seo)        || {},
     faq:      load(K.faq)        || [],
     blog:     load(K.blog)       || [],
+    bookingOptions: load(K.bookingOptions) || [],
+    legalPages: load(K.legalPages) || {},
+    reviews:  load(K.reviews)     || null,
+    cookies:  load(K.cookies)     || null,
     popup:    load(K.popup)      || {},
     ab:       load(K.ab)         || {},
     keywords: load(K.keywords)   || [],
@@ -1432,6 +1675,10 @@ async function saveSEO() {
   }
   await syncToKV('SEO');
   toast('✅ SEO sauvegardé et synchronisé', 'g');
+  const _barSeo=document.getElementById('sync-bar-seo');
+  if(_barSeo){_barSeo.className='sync-bar ok';_barSeo.style.display='block';
+    _barSeo.innerHTML='✅ SEO enregistré. <a href="../index.html" target="_blank" style="color:var(--green);font-weight:700;">Voir le site →</a>';
+    setTimeout(()=>_barSeo.style.display='none',7000);}
 }
 
 function renderSEOSummary() {
@@ -1806,6 +2053,11 @@ async function savePopupConfig() {
   save(POPUP_KEY, pc);
   await syncToKV('Popup');
   toast('✅ Popup enregistré', 'g');
+  const _barPop=document.getElementById('sync-bar-popup');
+  if(_barPop){_barPop.className='sync-bar ok';_barPop.style.display='block';
+    const _pc=load(K.popup)||{};
+    _barPop.innerHTML='✅ Popup '+(_pc.active?'activé':'désactivé')+'. Rafraîchissez le site.';
+    setTimeout(()=>_barPop.style.display='none',7000);}
 }
 
 function updatePopupPreview() {
@@ -1817,7 +2069,29 @@ function updatePopupPreview() {
   if (document.getElementById('pp-cta'))   document.getElementById('pp-cta').textContent   = c;
 }
 
+/* Importe les articles existants du site (blog-seed.js) dans le store
+   du back-office s'ils n'y sont pas encore. Ainsi tous les articles
+   affichés sur le site sont visibles et modifiables ici. */
+function _importBlogSeed() {
+  if (typeof window._ASL_BLOG_SEED === 'undefined') return;
+  const articles = load(K.blog) || [];
+  const existingSlugs = articles.map(function(a){ return a.slug || ''; });
+  const existingIds = articles.map(function(a){ return a.id; });
+  let added = 0;
+  window._ASL_BLOG_SEED.forEach(function(seed){
+    var dup = existingSlugs.indexOf(seed.slug) >= 0 || existingIds.indexOf(seed.id) >= 0;
+    if (!dup) { articles.push(seed); added++; }
+  });
+  if (added > 0) {
+    save(K.blog, articles);
+    // Synchroniser pour que le site reçoive ces articles aussi
+    if (typeof syncToKV === 'function') { try { syncToKV('Blog'); } catch(e){} }
+  }
+}
+
+let blogFilter = 'all';
 function renderBlog() {
+  _importBlogSeed();
   const articles = load(K.blog) || [];
   const filtered = blogFilter === 'all' ? articles
     : articles.filter(a => a.status === blogFilter);
@@ -1848,19 +2122,61 @@ function filterBlog(f, el) {
 function openBlogEditor(id) {
   const articles = load(K.blog) || [];
   const a = id ? articles.find(x=>x.id===id) : null;
+  // Compat : si l'article n'a pas de structure multilingue, on initialise depuis les champs simples existants
+  const T = function(field, lang){
+    if (!a) return '';
+    // nouveau format : a.i18n[lang][field]
+    if (a.i18n && a.i18n[lang] && a.i18n[lang][field] != null) return a.i18n[lang][field];
+    // ancien format (FR seulement) : champs racine
+    if (lang === 'fr') {
+      if (field === 'title') return a.title || '';
+      if (field === 'content') return a.content || '';
+      if (field === 'desc') return a.desc || '';
+      if (field === 'metaTitle') return a.metaTitle || a.title || '';
+    }
+    return '';
+  };
+  const esc = function(s){ return String(s==null?'':s).replace(/"/g,'&quot;'); };
+  _blogEditLangBuf = null;
   openModal(a ? 'Modifier l\'article' : 'Nouvel article', `
     <div style="display:flex;flex-direction:column;gap:12px;">
-      <div class="fg"><label>Titre *</label><input class="fi" id="b-title" value="${a?.title||''}"></div>
+      <!-- Champs communs (non traduits) -->
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
-        <div class="fg"><label>Catégorie</label><input class="fi" id="b-cat" value="${a?.category||''}" placeholder="Conseils, Guides…"></div>
-        <div class="fg"><label>Auteur</label><input class="fi" id="b-author" value="${a?.author||'Admin'}"></div>
+        <div class="fg"><label>Catégorie</label><input class="fi" id="b-cat" value="${esc(a?.category)}" placeholder="Conseils, Guides…"></div>
+        <div class="fg"><label>Auteur</label><input class="fi" id="b-author" value="${esc(a?.author||'Admin')}"></div>
         <div class="fg"><label>Statut</label><select class="fs" id="b-status"><option value="draft" ${a?.status==='draft'?'selected':''}>Brouillon</option><option value="published" ${a?.status==='published'?'selected':''}>Publié</option><option value="hidden" ${a?.status==='hidden'?'selected':''}>Masqué</option></select></div>
       </div>
-      <div class="fg"><label>Tags <span class="opt">(séparés par virgules)</span></label><input class="fi" id="b-tags" value="${(a?.tags||[]).join(', ')}"></div>
-      <div class="fg"><label>Image de couverture (URL)</label><input class="fi" id="b-img" value="${a?.img||''}" placeholder="https://…"></div>
-      <div class="fg"><label>Contenu de l'article</label><textarea class="ft" id="b-content" rows="8">${a?.content||''}</textarea></div>
-      <div class="fg"><label>Titre SEO</label><input class="fi" id="b-seo-title" value="${a?.title||''}" oninput="updateBlogSEO()"></div>
-      <div class="fg"><label>Meta Description</label><input class="fi" id="b-seo-desc" value="${a?.desc||''}" oninput="updateBlogSEO()">
+      <div class="fg"><label>Image de couverture <span class="opt">(commune à toutes les langues)</span></label>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <input class="fi" id="b-img" value="${esc(a?.img)}" placeholder="https://… (ou téléversez ci-contre)" style="flex:1;min-width:200px;" oninput="updateBlogImgPreview()">
+          <input type="file" id="b-img-file" accept="image/*" style="display:none;" onchange="uploadBlogImage(this)">
+          <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('b-img-file').click()">📁 Téléverser une image</button>
+        </div>
+        <div id="b-img-preview-wrap" style="margin-top:8px;">
+          <img id="b-img-preview" src="${esc(a?.img)}" alt="" style="max-width:180px;max-height:110px;border-radius:8px;border:1px solid var(--border,#e2e8f0);object-fit:cover;${a?.img?'':'display:none;'}">
+        </div>
+      </div>
+      <div class="fg"><label>Texte ALT de l'image <span class="opt">(SEO — décrit l'image)</span></label>
+        <input class="fi" id="b-img-alt" value="${esc(a?.imgAlt)}" placeholder="ex : Location Renault Clio 5 à Marrakech">
+      </div>
+      <div class="fg"><label>Slug URL <span class="opt">(commun, ex : guide-location-2026)</span></label><input class="fi" id="b-slug" value="${esc(a?.slug)}" placeholder="laisser vide = auto depuis le titre FR"></div>
+
+      <!-- Onglets de langue -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--border,#e2e8f0);padding-top:12px;">
+        <button type="button" class="lang-tab active" data-blang="fr" onclick="switchBlogLang('fr',this)">🇫🇷 Français</button>
+        <button type="button" class="lang-tab" data-blang="en" onclick="switchBlogLang('en',this)">🇬🇧 English</button>
+        <button type="button" class="lang-tab" data-blang="es" onclick="switchBlogLang('es',this)">🇪🇸 Español</button>
+        <button type="button" class="lang-tab" data-blang="ar" onclick="switchBlogLang('ar',this)">🇸🇦 العربية</button>
+      </div>
+      <div style="font-size:11.5px;color:var(--t3,#888);margin-top:-4px;">Rédigez la version française, puis cliquez sur « Traduire automatiquement » pour générer EN/ES/AR (titre, contenu, SEO). Chaque langue reste modifiable.</div>
+      <div><button type="button" class="btn btn-ghost btn-sm" id="b-tr-btn" onclick="blogAutoTranslate()" style="border:1px solid var(--border,#e2e8f0);">🌐 Traduire automatiquement (FR → EN / ES / AR)</button>
+        <span id="b-tr-status" style="font-size:11.5px;color:var(--t3,#888);margin-left:8px;"></span></div>
+
+      <!-- Champs traduits (rechargés à chaque changement de langue) -->
+      <div class="fg"><label>Titre <span id="b-lang-lbl">FR</span> *</label><input class="fi" id="b-title" oninput="_blogMarkDirty()" value="${esc(T('title','fr'))}"></div>
+      <div class="fg"><label>Contenu de l'article</label><textarea class="ft" id="b-content" oninput="_blogMarkDirty()" rows="8">${T('content','fr')}</textarea></div>
+      <div class="fg"><label>Titre SEO (meta title)</label><input class="fi" id="b-seo-title" oninput="_blogMarkDirty()" value="${esc(T('metaTitle','fr'))}"></div>
+      <div class="fg"><label>Meta Description</label><input class="fi" id="b-seo-desc" value="${esc(T('desc','fr'))}" oninput="updateBlogSEO();_blogMarkDirty()">
         <div id="b-seo-count" class="char-count"></div>
       </div>
     </div>
@@ -1868,34 +2184,247 @@ function openBlogEditor(id) {
     { label: 'Enregistrer', action: `saveBlog('${id||''}')`, cls:'btn-red' },
     { label: 'Annuler', action:'closeModal()', cls:'btn-ghost' },
   ]);
+  // Buffer multilingue en cours d'édition, initialisé depuis l'article
+  _blogEditLang = 'fr';
+  _blogEditBuf = { fr:{}, en:{}, es:{}, ar:{} };
+  ['fr','en','es','ar'].forEach(function(l){
+    _blogEditBuf[l] = { title:T('title',l), content:T('content',l), desc:T('desc',l), metaTitle:T('metaTitle',l) };
+  });
+  _blogLangDirty = { en:false, es:false, ar:false };
+  _blogOrigFr = { title:T('title','fr'), content:T('content','fr'), desc:T('desc','fr'), metaTitle:T('metaTitle','fr') };
   setTimeout(updateBlogSEO, 50);
 }
 
+let _blogEditLang = 'fr';
+let _blogEditBuf = { fr:{}, en:{}, es:{}, ar:{} };
+let _blogEditLangBuf = null;
+let _blogLangDirty = { en:false, es:false, ar:false };
+let _blogOrigFr = { title:'', content:'', desc:'', metaTitle:'' };
+function _blogMarkDirty() { if (_blogEditLang !== 'fr') _blogLangDirty[_blogEditLang] = true; }
+
+function updateBlogImgPreview() {
+  var url = document.getElementById('b-img')?.value || '';
+  var img = document.getElementById('b-img-preview');
+  if (img) {
+    if (url) { img.src = url; img.style.display = 'block'; }
+    else { img.removeAttribute('src'); img.style.display = 'none'; }
+  }
+}
+
+async function uploadBlogImage(input) {
+  var file = input && input.files && input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { toast('Image trop lourde (max 5 Mo)', 'r'); input.value=''; return; }
+  toast('Téléversement de l\'image…', 'g');
+  // 1) Tenter l'upload serveur (production Cloudflare)
+  try {
+    var b64 = await _fileToDataURL(file);
+    var headers = { 'Content-Type': 'application/json' };
+    try { var k = localStorage.getItem('asl_admin_key') || ''; if (k) headers['X-ASL-Key'] = k; } catch(e) {}
+    var resp = await fetch('/api/upload', {
+      method: 'POST', headers: headers,
+      body: JSON.stringify({ name: file.name || 'blog', type: file.type || 'image/jpeg', data: b64.split(',')[1] })
+    });
+    if (resp.ok) {
+      var out = await resp.json();
+      if (out && out.url) {
+        document.getElementById('b-img').value = out.url;
+        updateBlogImgPreview();
+        // Pré-remplir l'ALT si vide
+        var altEl = document.getElementById('b-img-alt');
+        if (altEl && !altEl.value) altEl.value = '';
+        toast('✅ Image téléversée', 'g');
+        input.value='';
+        return;
+      }
+    }
+    throw new Error('upload serveur indisponible');
+  } catch(e) {
+    // 2) Repli LOCAL : stocker l'image en base64 directement dans l'article (mode dev / hors-ligne)
+    try {
+      var dataUrl = await _fileToDataURL(file);
+      document.getElementById('b-img').value = dataUrl;
+      updateBlogImgPreview();
+      toast('Image enregistrée localement (mode hors-ligne). En production, elle sera hébergée.', 'g');
+    } catch(e2) {
+      toast('Échec du téléversement', 'r');
+    }
+    input.value='';
+  }
+}
+
+function _fileToDataURL(file) {
+  return new Promise(function(resolve, reject) {
+    var r = new FileReader();
+    r.onload = function(){ resolve(r.result); };
+    r.onerror = function(){ reject(new Error('lecture fichier')); };
+    r.readAsDataURL(file);
+  });
+}
+
+function _readBlogFields() {
+  return {
+    title: document.getElementById('b-title')?.value || '',
+    content: document.getElementById('b-content')?.value || '',
+    desc: document.getElementById('b-seo-desc')?.value || '',
+    metaTitle: document.getElementById('b-seo-title')?.value || ''
+  };
+}
+
+function switchBlogLang(lang, btn) {
+  // Sauvegarder la langue courante dans le buffer
+  _blogEditBuf[_blogEditLang] = _readBlogFields();
+  // Activer le nouvel onglet
+  _blogEditLang = lang;
+  document.querySelectorAll('.lang-tab[data-blang]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-blang')===lang); });
+  var lbl = document.getElementById('b-lang-lbl'); if (lbl) lbl.textContent = lang.toUpperCase();
+  // Recharger les champs de la nouvelle langue
+  var d = _blogEditBuf[lang] || {};
+  var set = function(id,v){ var el=document.getElementById(id); if(el) el.value = v||''; };
+  set('b-title', d.title);
+  set('b-content', d.content);
+  set('b-seo-desc', d.desc);
+  set('b-seo-title', d.metaTitle);
+  // Direction RTL pour l'arabe dans les champs
+  ['b-title','b-content','b-seo-desc','b-seo-title'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.dir = (lang==='ar')?'rtl':'ltr';
+  });
+  updateBlogSEO();
+}
+
+/* Génère EN/ES/AR à partir du français (Blog). Le contenu (HTML) est traduit
+   en préservant les balises. Chaque langue reste éditable. */
+async function blogAutoTranslate() {
+  _blogEditBuf[_blogEditLang] = _readBlogFields();
+  const fr = _blogEditBuf.fr || {};
+  const status = document.getElementById('b-tr-status');
+  const btn = document.getElementById('b-tr-btn');
+  if (!String(fr.title||'').trim()) {
+    if (status) status.textContent = 'Saisissez d’abord le titre et le contenu en français.';
+    return;
+  }
+  if (typeof window.ASLTranslate === 'undefined') {
+    if (status) status.textContent = 'Module de traduction indisponible.';
+    return;
+  }
+  if (btn) btn.disabled = true;
+  if (status) status.textContent = 'Traduction en cours… (le contenu peut être long)';
+  try {
+    for (const l of ['en','es','ar']) {
+      _blogEditBuf[l] = {
+        title:     await window.ASLTranslate.one(fr.title, l),
+        content:   await window.ASLTranslate.html(fr.content, l),
+        desc:      await window.ASLTranslate.one(fr.desc, l),
+        metaTitle: await window.ASLTranslate.one(fr.metaTitle || fr.title, l)
+      };
+    }
+    const cur = _blogEditLang;
+    switchBlogLang(cur, document.querySelector('.lang-tab[data-blang="'+cur+'"]'));
+    if (status) status.textContent = '✓ Traductions générées (EN/ES/AR). Vérifiez puis enregistrez.';
+  } catch (e) {
+    if (status) status.textContent = '⚠ Traduction indisponible (vérifiez la connexion). Saisie manuelle possible.';
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+/* Auto-remplissage Blog : régénère EN/ES/AR depuis le FR.
+   Article nouveau OU contenu FR modifié → régénère les langues non éditées
+   manuellement ; sinon complète les langues vides. Le contenu (HTML) est
+   traduit en préservant les balises. */
+async function _blogAutoFillLangs(buf, isNew) {
+  const fr = buf.fr || {};
+  const frChanged = isNew ||
+    (String(fr.title||'')     !== String(_blogOrigFr.title||'')) ||
+    (String(fr.content||'')   !== String(_blogOrigFr.content||'')) ||
+    (String(fr.desc||'')      !== String(_blogOrigFr.desc||'')) ||
+    (String(fr.metaTitle||'') !== String(_blogOrigFr.metaTitle||''));
+  const hasTr = (typeof window.ASLTranslate !== 'undefined');
+  for (const l of ['en','es','ar']) {
+    const d = buf[l] || {};
+    const empty = !String(d.title||'').trim() || !String(d.content||'').trim();
+    const regen = !_blogLangDirty[l] && (frChanged || empty);
+    if (regen && hasTr) {
+      try {
+        d.title     = (await window.ASLTranslate.one(fr.title, l))            || d.title     || fr.title;
+        d.content   = (await window.ASLTranslate.html(fr.content, l))         || d.content   || fr.content;
+        d.desc      = (await window.ASLTranslate.one(fr.desc, l))             || d.desc      || fr.desc;
+        d.metaTitle = (await window.ASLTranslate.one(fr.metaTitle||fr.title, l)) || d.metaTitle || fr.metaTitle;
+      } catch (e) {
+        if (!String(d.title||'').trim())     d.title     = fr.title;
+        if (!String(d.content||'').trim())   d.content   = fr.content;
+        if (!String(d.desc||'').trim())      d.desc      = fr.desc;
+        if (!String(d.metaTitle||'').trim()) d.metaTitle = fr.metaTitle || fr.title;
+      }
+    } else {
+      if (!String(d.title||'').trim())     d.title     = fr.title;
+      if (!String(d.content||'').trim())   d.content   = fr.content;
+      if (!String(d.desc||'').trim())      d.desc      = fr.desc;
+      if (!String(d.metaTitle||'').trim()) d.metaTitle = fr.metaTitle || fr.title;
+    }
+    buf[l] = d;
+  }
+  return buf;
+}
+
 async function saveBlog(id) {
-  const title = document.getElementById('b-title')?.value.trim();
-  if (!title) { toast('Titre obligatoire','r'); return; }
+  // Sauver la langue courante dans le buffer
+  _blogEditBuf[_blogEditLang] = _readBlogFields();
+  const frTitle = (_blogEditBuf.fr.title||'').trim();
+  if (!frTitle) { toast('Le titre français est obligatoire','r'); return; }
+
+  // Auto-remplissage : génère ou met à jour EN/ES/AR depuis le FR.
+  await _blogAutoFillLangs(_blogEditBuf, !id);
+
   const articles = load(K.blog) || [];
+  // Construire l'objet i18n
+  const i18n = {};
+  ['fr','en','es','ar'].forEach(function(l){
+    var d = _blogEditBuf[l] || {};
+    i18n[l] = { title:(d.title||'').trim(), content:d.content||'', desc:d.desc||'', metaTitle:(d.metaTitle||'').trim() };
+  });
+  const common = {
+    category: document.getElementById('b-cat')?.value || '',
+    author: document.getElementById('b-author')?.value || 'Admin',
+    status: document.getElementById('b-status')?.value || 'draft',
+    img: document.getElementById('b-img')?.value || '',
+    imgAlt: document.getElementById('b-img-alt')?.value || '',
+    slug: (document.getElementById('b-slug')?.value || '').trim(),
+    // Champs racine = version FR (compat affichage ancien + fallback)
+    title: i18n.fr.title, content: i18n.fr.content, desc: i18n.fr.desc, metaTitle: i18n.fr.metaTitle,
+    i18n: i18n
+  };
+
   if (id) {
     const idx = articles.findIndex(a=>a.id===id);
-    if (idx>=0) articles[idx] = { ...articles[idx], title, category:document.getElementById('b-cat').value, author:document.getElementById('b-author').value, status:document.getElementById('b-status').value, tags:document.getElementById('b-tags').value.split(',').map(t=>t.trim()), img:document.getElementById('b-img').value, content:document.getElementById('b-content').value, desc:document.getElementById('b-seo-desc').value, updatedAt:new Date().toISOString() };
+    if (idx>=0) articles[idx] = { ...articles[idx], ...common, updatedAt:new Date().toISOString() };
   } else {
-    articles.unshift({ id:Date.now().toString(), title, category:document.getElementById('b-cat').value, author:document.getElementById('b-author').value, status:document.getElementById('b-status').value, tags:document.getElementById('b-tags').value.split(',').map(t=>t.trim()), img:document.getElementById('b-img').value, content:document.getElementById('b-content').value, desc:document.getElementById('b-seo-desc').value, date:new Date().toISOString(), createdAt:new Date().toISOString() });
+    articles.unshift({ id:Date.now().toString(), ...common, date:new Date().toISOString(), createdAt:new Date().toISOString() });
   }
   save(K.blog, articles);
   await syncToKV('Blog');
-  closeModal(); renderBlog(); toast('✅ Article enregistré et synchronisé', 'g');
+  closeModal(); renderBlog(); toast('✅ Article multilingue enregistré et synchronisé', 'g');
 }
 
-function toggleBlogStatus(id) {
+async function toggleBlogStatus(id) {
   const articles = load(K.blog)||[];
   const a = articles.find(x=>x.id===id);
-  if (a) { a.status = a.status==='published' ? 'draft' : 'published'; save(K.blog, articles); renderBlog(); toast('Statut mis à jour','g'); }
+  if (a) {
+    a.status = a.status==='published' ? 'draft' : 'published';
+    a.updatedAt = new Date().toISOString();
+    save(K.blog, articles);
+    renderBlog();
+    await syncToKV('Blog');
+    toast(a.status==='published' ? '✅ Article publié et synchronisé sur le site' : 'Article masqué et synchronisé', 'g');
+  }
 }
 
-function deleteArticle(id) {
+async function deleteArticle(id) {
   if (!confirm('Supprimer cet article ?')) return;
   save(K.blog, (load(K.blog)||[]).filter(a=>a.id!==id));
-  renderBlog(); toast('Article supprimé','g');
+  renderBlog();
+  await syncToKV('Blog');
+  toast('Article supprimé et synchronisé','g');
 }
 
 function updateBlogSEO() {
@@ -1904,7 +2433,57 @@ function updateBlogSEO() {
   if (c) { c.textContent = `${d.length}/165 car.`; c.className='char-count '+(d.length>=120&&d.length<=165?'ok':d.length>0?'warn':'bad'); }
 }
 
+/* Importe les FAQ existantes du site (faq-seed.js) dans le store du back-office
+   si elles n'y sont pas encore (dédoublonnage par question FR). Ainsi toutes les
+   FAQ affichées sur le site sont visibles et modifiables ici. */
+function _importFaqSeed() {
+  if (typeof window._ASL_FAQ_SEED === 'undefined') return;
+  let faqs = load(K.faq) || [];
+  const norm = s => String(s||'').trim().toLowerCase();
+  const seedQ = f => norm((f.i18n && f.i18n.fr && f.i18n.fr.question) || f.question);
+
+  /* Migration : purge des anciennes FAQ « seed » corrompues (traductions
+     décalées / langues mélangées) pour les installations existantes, puis
+     ré-import propre. On ne supprime QUE les questions issues de l'ancien seed
+     (liste connue) ; les questions ajoutées par l'utilisateur sont conservées. */
+  try {
+    const FAQ_VER = 2;
+    const cur = parseInt(localStorage.getItem('asl_faq_seed_ver') || '1', 10);
+    if (cur < FAQ_VER) {
+      const LEGACY = [
+        "quels documents faut-il pour louer ?","what is the minimum age?","is airport delivery really free?",
+        "le kilométrage est-il limité ?","quelle caution est demandée ?","puis-je annuler ma réservation ?",
+        "puis-je payer en euros ou par carte ?","que se passe-t-il en cas de panne ?",
+        "puis-je ajouter un second conducteur ?","do you deliver to the hotel or riad?"
+      ];
+      faqs = faqs.filter(function(f){
+        // garder si l'utilisateur l'a créée (id non « seed-… » ET question hors liste héritée)
+        const isSeedId = f.id && String(f.id).indexOf('seed-faq-') === 0;
+        const isLegacy = LEGACY.indexOf(seedQ(f)) !== -1;
+        return !isSeedId && !isLegacy;
+      });
+      save(K.faq, faqs);
+      localStorage.setItem('asl_faq_seed_ver', String(FAQ_VER));
+    }
+  } catch(e) {}
+
+  // Dédoublonnage par id stable (repli sur la question FR).
+  const haveId = {}, haveQ = {};
+  faqs.forEach(function(f){ if (f.id) haveId[f.id] = true; const q = seedQ(f); if (q) haveQ[q] = true; });
+  let added = 0;
+  window._ASL_FAQ_SEED.forEach(function(seed){
+    const dup = (seed.id && haveId[seed.id]) || haveQ[seedQ(seed)];
+    if (!dup) { faqs.push(JSON.parse(JSON.stringify(seed))); added++; }
+  });
+  if (added > 0) {
+    save(K.faq, faqs);
+    try { const all = load(MKT_LOCAL_KEY) || {}; all.faq = faqs; save(MKT_LOCAL_KEY, all); } catch(e){}
+    if (typeof syncToKV === 'function') { try { syncToKV('FAQ'); } catch(e){} }
+  }
+}
+
 function renderFAQ() {
+  _importFaqSeed();
   const faqs = load(K.faq) || [];
   const list  = document.getElementById('faq-list');
   const empty = document.getElementById('faq-empty');
@@ -1937,18 +2516,48 @@ function renderFAQ() {
     </div>`).join('');
 }
 
+let _faqEditLang = 'fr';
+let _faqEditBuf = { fr:{}, en:{}, es:{}, ar:{} };
+let _faqLangDirty = { en:false, es:false, ar:false };
+let _faqOrigFr = { question:'', answer:'' };
+function _faqMarkDirty() { if (_faqEditLang !== 'fr') _faqLangDirty[_faqEditLang] = true; }
+
 function openFAQEditor(idx) {
   const faqs = load(K.faq) || [];
   const f = idx !== undefined ? faqs[idx] : null;
+  const T = function(field, lang){
+    if (!f) return '';
+    if (f.i18n && f.i18n[lang] && f.i18n[lang][field] != null) return f.i18n[lang][field];
+    if (lang === 'fr') {
+      if (field === 'question') return f.question || '';
+      if (field === 'answer') return f.answer || '';
+    }
+    return '';
+  };
+  const esc = function(s){ return String(s==null?'':s).replace(/"/g,'&quot;'); };
+  _faqEditLang = 'fr';
+  _faqEditBuf = { fr:{}, en:{}, es:{}, ar:{} };
+  _faqLangDirty = { en:false, es:false, ar:false };
+  _faqOrigFr = { question: T('question','fr'), answer: T('answer','fr') };
+  ['fr','en','es','ar'].forEach(function(l){ _faqEditBuf[l] = { question:T('question',l), answer:T('answer',l) }; });
+
   openModal(f ? 'Modifier la question' : 'Ajouter une question', `
     <div style="display:flex;flex-direction:column;gap:14px;">
-      <div class="fg"><label>Question <span style="color:var(--red);">*</span></label>
-        <input class="fi" id="faq-q" value="${f ? f.question.replace(/"/g,'&quot;') : ''}"
-          placeholder="Comment réserver une voiture à Marrakech ?">
+      <!-- Onglets de langue -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button type="button" class="lang-tab active" data-flang="fr" onclick="switchFaqLang('fr',this)">🇫🇷 Français</button>
+        <button type="button" class="lang-tab" data-flang="en" onclick="switchFaqLang('en',this)">🇬🇧 English</button>
+        <button type="button" class="lang-tab" data-flang="es" onclick="switchFaqLang('es',this)">🇪🇸 Español</button>
+        <button type="button" class="lang-tab" data-flang="ar" onclick="switchFaqLang('ar',this)">🇸🇦 العربية</button>
+      </div>
+      <div style="font-size:11.5px;color:var(--t3,#888);margin-top:-6px;">Saisissez la version française, puis cliquez sur « Traduire automatiquement » pour générer EN/ES/AR. Chaque langue reste modifiable.</div>
+      <div><button type="button" class="btn btn-ghost btn-sm" id="faq-tr-btn" onclick="faqAutoTranslate()" style="border:1px solid var(--border);">🌐 Traduire automatiquement (FR → EN / ES / AR)</button>
+        <span id="faq-tr-status" style="font-size:11.5px;color:var(--t3,#888);margin-left:8px;"></span></div>
+      <div class="fg"><label>Question <span id="faq-lang-lbl">FR</span> <span style="color:var(--red);">*</span></label>
+        <input class="fi" id="faq-q" oninput="_faqMarkDirty()" value="${esc(T('question','fr'))}" placeholder="Comment réserver une voiture à Marrakech ?">
       </div>
       <div class="fg"><label>Réponse <span style="color:var(--red);">*</span></label>
-        <textarea class="ft" id="faq-a" rows="5"
-          placeholder="Vous pouvez réserver directement sur notre site…">${f ? f.answer : ''}</textarea>
+        <textarea class="ft" id="faq-a" oninput="_faqMarkDirty()" rows="5" placeholder="Vous pouvez réserver directement sur notre site…">${T('answer','fr')}</textarea>
       </div>
       <div class="fg"><label>
         <input type="checkbox" id="faq-active" ${f ? (f.active !== false ? 'checked' : '') : 'checked'} style="accent-color:var(--red);margin-right:6px;">
@@ -1961,30 +2570,832 @@ function openFAQEditor(idx) {
   ]);
 }
 
+function _readFaqFields() {
+  return {
+    question: document.getElementById('faq-q')?.value || '',
+    answer: document.getElementById('faq-a')?.value || ''
+  };
+}
+
+/* Génère EN/ES/AR à partir du français saisi (FAQ). Remplit les buffers de
+   langue et rafraîchit l'onglet affiché. Le contenu reste éditable ensuite. */
+async function faqAutoTranslate() {
+  _faqEditBuf[_faqEditLang] = _readFaqFields();
+  const fr = _faqEditBuf.fr || {};
+  const status = document.getElementById('faq-tr-status');
+  const btn = document.getElementById('faq-tr-btn');
+  if (!String(fr.question||'').trim() || !String(fr.answer||'').trim()) {
+    if (status) status.textContent = 'Saisissez d’abord la question et la réponse en français.';
+    return;
+  }
+  if (typeof window.ASLTranslate === 'undefined') {
+    if (status) status.textContent = 'Module de traduction indisponible.';
+    return;
+  }
+  if (btn) { btn.disabled = true; }
+  if (status) status.textContent = 'Traduction en cours…';
+  try {
+    for (const l of ['en','es','ar']) {
+      const t = await window.ASLTranslate.fields({ question: fr.question, answer: fr.answer }, l, []);
+      _faqEditBuf[l] = { question: t.question, answer: t.answer };
+    }
+    // Rafraîchir l'onglet courant
+    const cur = _faqEditLang;
+    switchFaqLang(cur, document.querySelector('.lang-tab[data-flang="'+cur+'"]'));
+    if (status) status.textContent = '✓ Traductions générées (EN/ES/AR). Vérifiez puis enregistrez.';
+  } catch (e) {
+    if (status) status.textContent = '⚠ Traduction indisponible (vérifiez la connexion). Vous pouvez saisir les langues manuellement.';
+  } finally {
+    if (btn) { btn.disabled = false; }
+  }
+}
+
+/* Auto-remplissage FAQ : régénère EN/ES/AR depuis le FR.
+   - Nouvelle question OU question FR modifiée → régénère les langues NON
+     éditées manuellement pendant la session.
+   - Sinon → complète seulement les langues vides.
+   Les langues éditées à la main pendant la session sont toujours préservées. */
+async function _faqAutoFillLangs(buf, isNew) {
+  const fr = buf.fr || {};
+  const frChanged = isNew ||
+    (String(fr.question||'') !== String(_faqOrigFr.question||'')) ||
+    (String(fr.answer||'')   !== String(_faqOrigFr.answer||''));
+  const hasTr = (typeof window.ASLTranslate !== 'undefined');
+  for (const l of ['en','es','ar']) {
+    const d = buf[l] || {};
+    const emptyQ = !String(d.question||'').trim();
+    const emptyA = !String(d.answer||'').trim();
+    const regen = !_faqLangDirty[l] && (frChanged || emptyQ || emptyA);
+    if (regen && hasTr) {
+      try {
+        const q = await window.ASLTranslate.one(fr.question, l);
+        const a = await window.ASLTranslate.one(fr.answer, l);
+        d.question = q || d.question || fr.question;
+        d.answer   = a || d.answer   || fr.answer;
+      } catch (e) {
+        if (emptyQ) d.question = fr.question;
+        if (emptyA) d.answer   = fr.answer;
+      }
+    } else {
+      if (emptyQ) d.question = fr.question;  // jamais vide
+      if (emptyA) d.answer   = fr.answer;
+    }
+    buf[l] = d;
+  }
+  return buf;
+}
+
+function switchFaqLang(lang, btn) {
+  _faqEditBuf[_faqEditLang] = _readFaqFields();
+  _faqEditLang = lang;
+  document.querySelectorAll('.lang-tab[data-flang]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-flang')===lang); });
+  var lbl = document.getElementById('faq-lang-lbl'); if (lbl) lbl.textContent = lang.toUpperCase();
+  var d = _faqEditBuf[lang] || {};
+  var qEl = document.getElementById('faq-q'), aEl = document.getElementById('faq-a');
+  if (qEl) { qEl.value = d.question || ''; qEl.dir = (lang==='ar')?'rtl':'ltr'; }
+  if (aEl) { aEl.value = d.answer || ''; aEl.dir = (lang==='ar')?'rtl':'ltr'; }
+}
+
 async function saveFAQItem(idx) {
-  const q = document.getElementById('faq-q')?.value.trim();
-  const a = document.getElementById('faq-a')?.value.trim();
-  if (!q || !a) { toast('Question et réponse obligatoires', 'r'); return; }
+  _faqEditBuf[_faqEditLang] = _readFaqFields();
+  const frQ = (_faqEditBuf.fr.question||'').trim();
+  const frA = (_faqEditBuf.fr.answer||'').trim();
+  if (!frQ || !frA) { toast('Question et réponse FR obligatoires', 'r'); return; }
+  // Auto-remplissage : génère ou met à jour EN/ES/AR depuis le FR.
+  await _faqAutoFillLangs(_faqEditBuf, idx === undefined);
   const faqs = load(K.faq) || [];
-  const item = { question:q, answer:a, active: document.getElementById('faq-active')?.checked !== false };
+  const i18n = {};
+  ['fr','en','es','ar'].forEach(function(l){
+    var d = _faqEditBuf[l] || {};
+    i18n[l] = { question:(d.question||'').trim(), answer:(d.answer||'').trim() };
+  });
+  const item = {
+    question: i18n.fr.question, answer: i18n.fr.answer,  // racine = FR (compat + fallback)
+    i18n: i18n,
+    active: document.getElementById('faq-active')?.checked !== false
+  };
   if (idx !== undefined && idx < faqs.length) faqs[idx] = item;
   else faqs.push(item);
   save(K.faq, faqs);
-  closeModal();
-  renderFAQ();
-  await syncToKV('FAQ');
-  toast('✅ FAQ sauvegardée et synchronisée', 'g');
+  // Mettre à jour immédiatement le cache marketing local lu par le site,
+  // pour que la question soit visible côté site même si le serveur tarde.
+  try { const all = load(MKT_LOCAL_KEY) || {}; all.faq = faqs; save(MKT_LOCAL_KEY, all); } catch(e){}
+  closeModal();      // ferme l'éditeur et rouvre la liste FAQ mise à jour
+  renderFAQ();       // la nouvelle question apparaît immédiatement dans la liste
+  const okSync = await syncToKV('FAQ');
+  const _barFaq=document.getElementById('sync-bar-faq');
+  if(_barFaq){_barFaq.className='sync-bar '+(okSync?'ok':'warn');_barFaq.style.display='block';
+    _barFaq.innerHTML = okSync
+      ? '✅ FAQ enregistrée et synchronisée (Schema.org + site). Rafraîchissez le site (Ctrl+F5).'
+      : '⚠ FAQ enregistrée localement. La synchronisation serveur n\'a pas abouti (testez sur le site déployé).';
+    setTimeout(()=>{ if(_barFaq) _barFaq.style.display='none'; },8000);}
+  toast(okSync ? '✅ FAQ multilingue sauvegardée et synchronisée' : '✅ FAQ enregistrée (synchro serveur à vérifier)', okSync?'g':'');
 }
 
-function deleteFAQ(idx) {
+async function deleteFAQ(idx) {
   if (!confirm('Supprimer cette question ?')) return;
   const faqs = (load(K.faq)||[]).filter((_,i) => i !== idx);
-  save(K.faq, faqs); renderFAQ(); toast('Question supprimée', 'g');
+  save(K.faq, faqs);
+  try { const all = load(MKT_LOCAL_KEY) || {}; all.faq = faqs; save(MKT_LOCAL_KEY, all); } catch(e){}
+  renderFAQ();
+  await syncToKV('FAQ');
+  toast('Question supprimée et synchronisée', 'g');
 }
 
-function toggleFAQ(idx, active) {
+/* ============================================================
+   OPTIONS DE RÉSERVATION (gérables depuis le back-office)
+   Chaque option : id, nom (multilingue), prix, type de prix
+   (par jour / par réservation / gratuit), active on/off.
+   ============================================================ */
+
+/* Options par défaut (si aucune config n'existe encore) — reprend
+   les options historiques du site pour ne rien perdre. */
+function _defaultBookOpts() {
+  return [
+    { id:'extra-driver', name:{fr:'Deuxième conducteur',en:'Second driver',es:'Segundo conductor',ar:'سائق ثانٍ'}, price:50, priceType:'day', active:true },
+    { id:'baby-seat', name:{fr:'Siège bébé',en:'Baby seat',es:'Silla de bebé',ar:'مقعد للرضع'}, price:50, priceType:'day', active:true },
+    { id:'booster', name:{fr:'Réhausseur enfant',en:'Child booster seat',es:'Elevador infantil',ar:'مقعد رافع للأطفال'}, price:50, priceType:'day', active:true },
+    { id:'gps', name:{fr:'GPS portable',en:'Portable GPS',es:'GPS portátil',ar:'GPS محمول'}, price:50, priceType:'day', active:true },
+    { id:'delivery', name:{fr:'Livraison véhicule',en:'Vehicle delivery',es:'Entrega del vehículo',ar:'توصيل السيارة'}, price:0, priceType:'free', active:true },
+    { id:'return', name:{fr:'Retour véhicule',en:'Vehicle return',es:'Devolución del vehículo',ar:'إرجاع السيارة'}, price:0, priceType:'free', active:true },
+    { id:'tire-protection', name:{fr:'Protection pneus / crevaison',en:'Tyre / puncture protection',es:'Protección neumáticos / pinchazo',ar:'حماية الإطارات / الثقب'}, price:30, priceType:'day', active:true },
+    { id:'roadside', name:{fr:'Assistance dépannage',en:'Roadside assistance',es:'Asistencia en carretera',ar:'مساعدة على الطريق'}, price:50, priceType:'day', active:true },
+    { id:'insurance-ext', name:{fr:'Extension assurance',en:'Insurance extension',es:'Extensión de seguro',ar:'تمديد التأمين'}, price:110, priceType:'day', active:true },
+  ];
+}
+
+function _loadBookOpts() {
+  let opts = load(K.bookingOptions);
+  if (!opts || !opts.length) { opts = _defaultBookOpts(); save(K.bookingOptions, opts); }
+  return opts;
+}
+
+const _PRICE_TYPE_LABEL = { day:'Par jour', booking:'Par réservation', free:'Gratuit' };
+
+function renderBookOpt() {
+  const opts = _loadBookOpts();
+  const list = document.getElementById('bookopt-list');
+  const empty = document.getElementById('bookopt-empty');
+  if (!list) return;
+  if (!opts.length) { list.innerHTML=''; if(empty) empty.style.display='block'; return; }
+  if (empty) empty.style.display='none';
+  list.innerHTML = opts.map(function(o, i){
+    const priceTxt = o.priceType==='free' ? '<span style="color:var(--green);font-weight:700;">Gratuit</span>'
+      : (o.price + ' MAD ' + (o.priceType==='day' ? '/ jour' : '/ réservation'));
+    return '<div style="display:flex;align-items:center;gap:12px;padding:14px 4px;border-bottom:1px solid var(--border,#eee);">'
+      + '<div style="flex:1;">'
+      + '<div style="font-weight:700;font-size:14px;">' + (o.name && o.name.fr || o.id) + (o.active===false?' <span style="font-size:11px;color:var(--t3);font-weight:400;">(désactivée)</span>':'') + '</div>'
+      + '<div style="font-size:12px;color:var(--t2);margin-top:2px;">' + priceTxt + '</div>'
+      + '</div>'
+      + '<button class="btn btn-ghost btn-sm" onclick="toggleBookOpt(' + i + ')">' + (o.active===false?'Activer':'Désactiver') + '</button>'
+      + '<button class="btn btn-ghost btn-sm" onclick="openBookOptEditor(' + i + ')">Modifier</button>'
+      + '<button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteBookOpt(' + i + ')">Suppr.</button>'
+      + '</div>';
+  }).join('');
+}
+
+let _bkoptEditLang = 'fr';
+let _bkoptBuf = { fr:'', en:'', es:'', ar:'' };
+
+function openBookOptEditor(idx) {
+  const opts = _loadBookOpts();
+  const o = (idx !== undefined) ? opts[idx] : null;
+  _bkoptEditLang = 'fr';
+  _bkoptBuf = {
+    fr: (o && o.name && o.name.fr) || '',
+    en: (o && o.name && o.name.en) || '',
+    es: (o && o.name && o.name.es) || '',
+    ar: (o && o.name && o.name.ar) || ''
+  };
+  const esc = function(s){ return String(s==null?'':s).replace(/"/g,'&quot;'); };
+  openModal(o ? 'Modifier l\'option' : 'Nouvelle option', `
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button type="button" class="lang-tab active" data-olang="fr" onclick="switchBkoptLang('fr',this)">🇫🇷 FR</button>
+        <button type="button" class="lang-tab" data-olang="en" onclick="switchBkoptLang('en',this)">🇬🇧 EN</button>
+        <button type="button" class="lang-tab" data-olang="es" onclick="switchBkoptLang('es',this)">🇪🇸 ES</button>
+        <button type="button" class="lang-tab" data-olang="ar" onclick="switchBkoptLang('ar',this)">🇸🇦 AR</button>
+      </div>
+      <div class="fg"><label>Nom de l'option <span id="bkopt-lang-lbl">FR</span> *</label>
+        <input class="fi" id="bkopt-name" value="${esc(_bkoptBuf.fr)}" placeholder="Ex : Siège bébé"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="fg"><label>Type de prix</label>
+          <select class="fs" id="bkopt-ptype" onchange="_bkoptPtypeChange()">
+            <option value="day" ${o&&o.priceType==='day'?'selected':''}>Par jour</option>
+            <option value="booking" ${o&&o.priceType==='booking'?'selected':''}>Par réservation</option>
+            <option value="free" ${o&&o.priceType==='free'?'selected':''}>Gratuit</option>
+          </select>
+        </div>
+        <div class="fg"><label>Prix (MAD)</label>
+          <input class="fi" type="number" id="bkopt-price" value="${o?o.price:0}" ${o&&o.priceType==='free'?'disabled':''}></div>
+      </div>
+      <div class="fg"><label>
+        <input type="checkbox" id="bkopt-active" ${o ? (o.active!==false?'checked':'') : 'checked'} style="accent-color:var(--red);margin-right:6px;">
+        Option active (visible dans le pop-up de réservation)
+      </label></div>
+    </div>
+  `, [
+    { label:'Enregistrer & Synchroniser', action:`saveBookOpt(${idx !== undefined ? idx : 'undefined'})`, cls:'btn-red' },
+    { label:'Annuler', action:'closeModal()', cls:'btn-ghost' },
+  ]);
+}
+
+function _bkoptPtypeChange() {
+  const t = document.getElementById('bkopt-ptype')?.value;
+  const p = document.getElementById('bkopt-price');
+  if (p) { if (t==='free'){ p.value=0; p.disabled=true; } else { p.disabled=false; } }
+}
+
+function switchBkoptLang(lang, btn) {
+  _bkoptBuf[_bkoptEditLang] = document.getElementById('bkopt-name')?.value || '';
+  _bkoptEditLang = lang;
+  document.querySelectorAll('.lang-tab[data-olang]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-olang')===lang); });
+  const lbl = document.getElementById('bkopt-lang-lbl'); if (lbl) lbl.textContent = lang.toUpperCase();
+  const inp = document.getElementById('bkopt-name');
+  if (inp) { inp.value = _bkoptBuf[lang] || ''; inp.dir = (lang==='ar')?'rtl':'ltr'; }
+}
+
+async function saveBookOpt(idx) {
+  _bkoptBuf[_bkoptEditLang] = document.getElementById('bkopt-name')?.value || '';
+  if (!(_bkoptBuf.fr||'').trim()) { toast('Le nom français est obligatoire', 'r'); return; }
+  const opts = _loadBookOpts();
+  const ptype = document.getElementById('bkopt-ptype')?.value || 'day';
+  const price = ptype==='free' ? 0 : (parseFloat(document.getElementById('bkopt-price')?.value) || 0);
+  const active = document.getElementById('bkopt-active')?.checked !== false;
+  const slug = (_bkoptBuf.fr||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
+  const item = {
+    id: (idx!==undefined && opts[idx]) ? opts[idx].id : (slug || ('opt-'+Date.now())),
+    name: { fr:_bkoptBuf.fr.trim(), en:(_bkoptBuf.en||'').trim(), es:(_bkoptBuf.es||'').trim(), ar:(_bkoptBuf.ar||'').trim() },
+    price: price, priceType: ptype, active: active
+  };
+  if (idx !== undefined && idx < opts.length) opts[idx] = item;
+  else opts.push(item);
+  save(K.bookingOptions, opts);
+  closeModal(); renderBookOpt();
+  await syncToKV('Options');
+  toast('✅ Option enregistrée et synchronisée', 'g');
+}
+
+async function toggleBookOpt(idx) {
+  const opts = _loadBookOpts();
+  if (!opts[idx]) return;
+  opts[idx].active = (opts[idx].active === false);
+  save(K.bookingOptions, opts); renderBookOpt();
+  await syncToKV('Options');
+  toast(opts[idx].active ? 'Option activée et synchronisée' : 'Option désactivée et synchronisée', 'g');
+}
+
+async function deleteBookOpt(idx) {
+  if (!confirm('Supprimer cette option ?')) return;
+  const opts = _loadBookOpts().filter(function(_,i){ return i!==idx; });
+  save(K.bookingOptions, opts); renderBookOpt();
+  await syncToKV('Options');
+  toast('Option supprimée et synchronisée', 'g');
+}
+
+let _legalPage = 'cgv';
+let _legalLang = 'fr';
+let _legalBuf = {};   // { fr:{badge,title,subtitle,content,metaTitle,metaDesc}, en:{...}, ... }
+let _legalMeta = { status:'published', image:'' };
+
+const _PAGE_FIELDS = ['badge','title','subtitle','content','metaTitle','metaDesc'];
+
+/* Stockage : K.legalPages (= contentPages) =
+   { cgv:{ status, image, fr:{badge,title,subtitle,content,metaTitle,metaDesc}, en:{...} }, ... } */
+
+/* Importe le seed pré-rempli (pages-seed.js) dans le store si la page n'existe
+   pas encore. Toutes les pages sont ainsi visibles et déjà remplies en 4 langues. */
+function _importPagesSeed() {
+  if (typeof window._ASL_PAGES_SEED === 'undefined') return;
+  const all = load(K.legalPages) || {};
+  let changed = false;
+  Object.keys(window._ASL_PAGES_SEED).forEach(function(slug){
+    const seed = window._ASL_PAGES_SEED[slug] || {};
+    if (!all[slug]) {
+      // Copier le seed complet (4 langues, tous les champs)
+      const entry = { status: seed.status || 'published', image: seed.image || '' };
+      ['fr','en','es','ar'].forEach(function(l){
+        entry[l] = {};
+        _PAGE_FIELDS.forEach(function(f){ entry[l][f] = (seed[f] && seed[f][l]) || ''; });
+      });
+      all[slug] = entry;
+      changed = true;
+    } else {
+      /* La page existe déjà : on COMPLÈTE automatiquement les champs/langues
+         vides depuis le seed (récupération du contenu côté site → back-office).
+         On n'écrase JAMAIS un champ déjà rempli (les modifications admin sont
+         préservées). Corrige notamment EN/ES/AR manquants sur Confidentialité
+         et Mentions légales. Aucun champ ne reste vide. */
+      const entry = all[slug];
+      if (entry.status === undefined) entry.status = seed.status || 'published';
+      if (entry.image === undefined)  entry.image = seed.image || '';
+      ['fr','en','es','ar'].forEach(function(l){
+        entry[l] = entry[l] || {};
+        _PAGE_FIELDS.forEach(function(f){
+          const cur = entry[l][f];
+          if (cur === undefined || cur === null || String(cur).trim() === '') {
+            const sv = (seed[f] && seed[f][l]) || '';
+            if (sv) { entry[l][f] = sv; changed = true; }
+            else if (cur === undefined) { entry[l][f] = ''; }
+          }
+        });
+      });
+    }
+  });
+  /* Migration : la version validée des Conditions Générales (CGV) doit remplacer
+     l'ancien contenu même si la page existait déjà dans le back-office. On ne
+     touche qu'aux CGV et une seule fois (drapeau de version), sans écraser les
+     autres pages ni les modifications faites sur celles-ci. */
+  try {
+    const SEED_VER = 2;
+    const cur = parseInt(localStorage.getItem('asl_pages_seed_ver') || '1', 10);
+    if (cur < SEED_VER && window._ASL_PAGES_SEED.cgv) {
+      const seed = window._ASL_PAGES_SEED.cgv;
+      const entry = all.cgv || { status: seed.status || 'published', image: seed.image || '' };
+      ['fr','en','es','ar'].forEach(function(l){
+        entry[l] = entry[l] || {};
+        // On rafraîchit le contenu validé ; les champs SEO/titres restent si déjà remplis.
+        entry[l].content = (seed.content && seed.content[l]) || entry[l].content || '';
+        _PAGE_FIELDS.forEach(function(f){
+          if (!entry[l][f] || !String(entry[l][f]).trim()) entry[l][f] = (seed[f] && seed[f][l]) || '';
+        });
+      });
+      all.cgv = entry;
+      localStorage.setItem('asl_pages_seed_ver', String(SEED_VER));
+      changed = true;
+    }
+  } catch (e) {}
+  if (changed) {
+    save(K.legalPages, all);
+    if (typeof syncToKV === 'function') { try { syncToKV('Légal'); } catch(e){} }
+  }
+}
+
+function renderLegalEditor() {
+  _importPagesSeed();
+  _legalPage = 'cgv';
+  _legalLang = 'fr';
+  _loadLegalBuf();
+  document.querySelectorAll('.legal-page-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-lpage')==='cgv'); });
+  document.querySelectorAll('.lang-tab[data-llang]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-llang')==='fr'); });
+  _fillLegalFields();
+}
+
+function _loadLegalBuf() {
+  const all = load(K.legalPages) || {};
+  const p = all[_legalPage] || {};
+  _legalMeta = { status: p.status || 'published', image: p.image || '' };
+  _legalBuf = {};
+  ['fr','en','es','ar'].forEach(function(l){
+    _legalBuf[l] = {};
+    _PAGE_FIELDS.forEach(function(f){ _legalBuf[l][f] = (p[l] && p[l][f]) || ''; });
+  });
+}
+
+function _readLegalFields() {
+  return {
+    badge: document.getElementById('legal-badge')?.value || '',
+    title: document.getElementById('legal-title')?.value || '',
+    subtitle: document.getElementById('legal-subtitle')?.value || '',
+    content: document.getElementById('legal-content')?.value || '',
+    metaTitle: document.getElementById('legal-metatitle')?.value || '',
+    metaDesc: document.getElementById('legal-metadesc')?.value || ''
+  };
+}
+
+function _fillLegalFields() {
+  const d = _legalBuf[_legalLang] || {};
+  const rtl = (_legalLang==='ar');
+  function set(id, v){ const el=document.getElementById(id); if(el){ el.value=v||''; el.dir=rtl?'rtl':'ltr'; } }
+  set('legal-badge', d.badge);
+  set('legal-title', d.title);
+  set('legal-subtitle', d.subtitle);
+  set('legal-content', d.content);
+  set('legal-metatitle', d.metaTitle);
+  set('legal-metadesc', d.metaDesc);
+  const img = document.getElementById('legal-image'); if (img) img.value = _legalMeta.image || '';
+  const st = document.getElementById('legal-status'); if (st) st.checked = (_legalMeta.status !== 'hidden');
+  document.querySelectorAll('.legal-lang-lbl').forEach(function(s){ s.textContent = _legalLang.toUpperCase(); });
+}
+
+function selectLegalPage(page, btn) {
+  _legalBuf[_legalLang] = _readLegalFields();
+  _saveLegalBufToStore();
+  _legalPage = page;
+  document.querySelectorAll('.legal-page-tab').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-lpage')===page); });
+  _legalLang = 'fr';
+  document.querySelectorAll('.lang-tab[data-llang]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-llang')==='fr'); });
+  _loadLegalBuf();
+  _fillLegalFields();
+}
+
+function switchLegalLang(lang, btn) {
+  _legalBuf[_legalLang] = _readLegalFields();
+  _legalLang = lang;
+  document.querySelectorAll('.lang-tab[data-llang]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-llang')===lang); });
+  _fillLegalFields();
+}
+
+function _saveLegalBufToStore() {
+  const all = load(K.legalPages) || {};
+  const entry = {
+    status: (document.getElementById('legal-status')?.checked === false) ? 'hidden' : 'published',
+    image: document.getElementById('legal-image')?.value || ''
+  };
+  ['fr','en','es','ar'].forEach(function(l){ entry[l] = _legalBuf[l]; });
+  all[_legalPage] = entry;
+  save(K.legalPages, all);
+  _legalMeta = { status: entry.status, image: entry.image };
+}
+
+/* Synchronise les langues d'une page Marketing : génère EN/ES/AR depuis le FR.
+   - badge/titre/sous-titre/metaTitle/metaDesc : texte simple.
+   - content : HTML traduit en préservant les balises (sections, paragraphes,
+     listes, CTA, boutons rédigés en HTML).
+   Met à jour le back-office ET le cache du site immédiatement. */
+async function legalAutoTranslate() {
+  _legalBuf[_legalLang] = _readLegalFields();
+  const fr = _legalBuf.fr || {};
+  const status = document.getElementById('legal-tr-status');
+  const btn = document.getElementById('legal-tr-btn');
+  if (!String(fr.title||'').trim() && !String(fr.content||'').trim()) {
+    if (status) status.textContent = 'Rédigez d’abord la page en français.';
+    return;
+  }
+  if (typeof window.ASLTranslate === 'undefined') {
+    if (status) status.textContent = 'Module de traduction indisponible.';
+    return;
+  }
+  if (btn) btn.disabled = true;
+  if (status) status.textContent = 'Traduction en cours… (le contenu peut être long)';
+  try {
+    for (const l of ['en','es','ar']) {
+      _legalBuf[l] = {
+        badge:     await window.ASLTranslate.one(fr.badge, l),
+        title:     await window.ASLTranslate.one(fr.title, l),
+        subtitle:  await window.ASLTranslate.one(fr.subtitle, l),
+        content:   await window.ASLTranslate.html(fr.content, l),
+        metaTitle: await window.ASLTranslate.one(fr.metaTitle || fr.title, l),
+        metaDesc:  await window.ASLTranslate.one(fr.metaDesc, l)
+      };
+    }
+    _saveLegalBufToStore();
+    // Cache marketing immédiat pour le site + synchro serveur.
+    try { const all = load(MKT_LOCAL_KEY) || {}; all.legalPages = load(K.legalPages) || {}; save(MKT_LOCAL_KEY, all); } catch(e){}
+    await syncToKV('Légal');
+    _fillLegalFields();   // rafraîchit l'onglet affiché
+    if (status) status.textContent = '✓ Langues synchronisées (EN/ES/AR) et publiées. Vérifiez puis ré-enregistrez si besoin.';
+  } catch (e) {
+    if (status) status.textContent = '⚠ Traduction indisponible (vérifiez la connexion). Saisie manuelle possible.';
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function saveLegalPage() {
+  _legalBuf[_legalLang] = _readLegalFields();
+  _saveLegalBufToStore();
+  // Cache marketing immédiat lu par le site.
+  try { const all = load(MKT_LOCAL_KEY) || {}; all.legalPages = load(K.legalPages) || {}; save(MKT_LOCAL_KEY, all); } catch(e){}
+  await syncToKV('Légal');
+  toast('✅ Page enregistrée et publiée sur le site', 'g');
+}
+
+/* ============================================================
+   AVIS CLIENTS — éditeur multilingue + préparation Google Reviews
+   Stockage : K.reviews = { items:[...], google:{enabled,rating,count,placeId} }
+   Chaque avis : { id, name, source, rating, active, photo, text:{fr,en,es,ar} }
+   ============================================================ */
+
+/* Avis par défaut (repris du site pour ne rien perdre). */
+function _defaultReviews() {
+  return [
+    { id:'r1', name:'Yassine A.', source:'Client Google', rating:5, active:true, color:'#C41E3A', photo:'',
+      text:{ fr:"Réservation rapide, équipe sérieuse et excellent accueil. Nous avons loué une voiture pendant plusieurs jours sans aucun problème. Très bonne expérience.", en:'', es:'', ar:'' } },
+    { id:'r2', name:'Kenza L.', source:'Cliente Google', rating:5, active:true, color:'#1A1A1A', photo:'',
+      text:{ fr:"L'une des meilleures agences de location à Marrakech. Prix corrects, véhicules propres et assistance disponible rapidement. Je reviendrai sans hésiter.", en:'', es:'', ar:'' } },
+    { id:'r3', name:'Mohamed A.', source:'Client Google', rating:5, active:true, color:'#D4A853', photo:'',
+      text:{ fr:"Excellent accueil à l'aéroport malgré notre retard. Équipe professionnelle et très sympathique. Je recommande ALL STAR LOC à 100%.", en:'', es:'', ar:'' } },
+    { id:'r4', name:'Moussa C.', source:'Touriste', rating:5, active:true, color:'#22C55E', photo:'',
+      text:{ fr:"Service très professionnel du début à la fin. La voiture était propre, récente et exactement comme sur les photos. Je recommande fortement.", en:'', es:'', ar:'' } },
+    { id:'r5', name:'Sophie B.', source:'Cliente Booking', rating:5, active:true, color:'#6366F1', photo:'',
+      text:{ fr:"Parfait pour notre séjour à Marrakech. Livraison directement à notre riad, voiture en parfait état. Le rapport qualité-prix est imbattable.", en:'', es:'', ar:'' } },
+    { id:'r6', name:'Lucas M.', source:'Client TripAdvisor', rating:5, active:true, color:'#EC4899', photo:'',
+      text:{ fr:"Top ! Réservation en ligne très simple, confirmation rapide par WhatsApp. La voiture nous attendait à l'aéroport à l'heure. Bravo.", en:'', es:'', ar:'' } },
+  ];
+}
+
+function _loadReviews() {
+  let r = load(K.reviews);
+  if (!r || !r.items) {
+    r = { items:_defaultReviews(), google:{ enabled:'no', rating:'', count:'', placeId:'' } };
+    save(K.reviews, r);
+  }
+  return r;
+}
+
+function renderReviewsEditor() {
+  const data = _loadReviews();
+  // Champs Google
+  const g = data.google || {};
+  const setV = function(id,v){ const e=document.getElementById(id); if(e) e.value = v||''; };
+  setV('gr-enabled', g.enabled || 'no');
+  setV('gr-rating', g.rating);
+  setV('gr-count', g.count);
+  setV('gr-placeid', g.placeId);
+  // Liste des avis
+  const list = document.getElementById('reviews-list');
+  const empty = document.getElementById('reviews-empty');
+  if (!list) return;
+  if (!data.items.length) { list.innerHTML=''; if(empty) empty.style.display='block'; return; }
+  if (empty) empty.style.display='none';
+  list.innerHTML = data.items.map(function(rv, i){
+    const stars = '★'.repeat(rv.rating||5) + '☆'.repeat(5-(rv.rating||5));
+    const avatar = rv.photo
+      ? '<img src="'+rv.photo+'" style="width:38px;height:38px;border-radius:50%;object-fit:cover;">'
+      : '<div style="width:38px;height:38px;border-radius:50%;background:'+(rv.color||'#C41E3A')+';color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;">'+_initials(rv.name)+'</div>';
+    return '<div style="display:flex;align-items:center;gap:12px;padding:13px 4px;border-bottom:1px solid var(--border,#eee);">'
+      + avatar
+      + '<div style="flex:1;min-width:0;">'
+      + '<div style="font-weight:700;font-size:13.5px;">'+(rv.name||'')+(rv.active===false?' <span style="font-size:11px;color:var(--t3);font-weight:400;">(masqué)</span>':'')+'</div>'
+      + '<div style="font-size:12px;color:#F59E0B;">'+stars+' <span style="color:var(--t3);">· '+(rv.source||'')+'</span></div>'
+      + '</div>'
+      + '<button class="btn btn-ghost btn-sm" onclick="toggleReview('+i+')">'+(rv.active===false?'Activer':'Masquer')+'</button>'
+      + '<button class="btn btn-ghost btn-sm" onclick="openReviewEditor('+i+')">Modifier</button>'
+      + '<button class="btn btn-ghost btn-sm" style="color:var(--red);" onclick="deleteReview('+i+')">Suppr.</button>'
+      + '</div>';
+  }).join('');
+}
+
+function _initials(name){
+  const parts = String(name||'').trim().split(/\s+/);
+  return ((parts[0]||'')[0]||'').toUpperCase() + ((parts[1]||'')[0]||'').toUpperCase();
+}
+
+let _reviewLang = 'fr';
+let _reviewBuf = { fr:'', en:'', es:'', ar:'' };
+
+function openReviewEditor(idx) {
+  const data = _loadReviews();
+  const rv = (idx !== undefined) ? data.items[idx] : null;
+  _reviewLang = 'fr';
+  _reviewBuf = {
+    fr:(rv&&rv.text&&rv.text.fr)||'', en:(rv&&rv.text&&rv.text.en)||'',
+    es:(rv&&rv.text&&rv.text.es)||'', ar:(rv&&rv.text&&rv.text.ar)||''
+  };
+  const esc = function(s){ return String(s==null?'':s).replace(/"/g,'&quot;'); };
+  openModal(rv ? 'Modifier l\'avis' : 'Nouvel avis', `
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="fg"><label>Nom du client *</label><input class="fi" id="rv-name" value="${esc(rv?.name)}" placeholder="Ex : Yassine A."></div>
+        <div class="fg"><label>Source</label><input class="fi" id="rv-source" value="${esc(rv?.source)}" placeholder="Client Google"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="fg"><label>Note</label>
+          <select class="fs" id="rv-rating">
+            ${[5,4,3,2,1].map(n=>`<option value="${n}" ${rv&&rv.rating===n?'selected':''}>${'★'.repeat(n)} (${n})</option>`).join('')}
+          </select></div>
+        <div class="fg"><label>Couleur avatar <span class="opt">(si pas de photo)</span></label><input class="fi" id="rv-color" type="color" value="${rv?.color||'#C41E3A'}" style="height:40px;padding:4px;"></div>
+      </div>
+      <div class="fg"><label>Photo (URL) <span class="opt">(optionnel, sinon initiales)</span></label>
+        <div style="display:flex;gap:8px;">
+          <input class="fi" id="rv-photo" value="${esc(rv?.photo)}" placeholder="https://…" style="flex:1;">
+          <input type="file" id="rv-photo-file" accept="image/*" style="display:none;" onchange="uploadReviewPhoto(this)">
+          <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('rv-photo-file').click()">📁</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--border,#e2e8f0);padding-top:10px;">
+        <button type="button" class="lang-tab active" data-rvlang="fr" onclick="switchReviewLang('fr',this)">🇫🇷 FR</button>
+        <button type="button" class="lang-tab" data-rvlang="en" onclick="switchReviewLang('en',this)">🇬🇧 EN</button>
+        <button type="button" class="lang-tab" data-rvlang="es" onclick="switchReviewLang('es',this)">🇪🇸 ES</button>
+        <button type="button" class="lang-tab" data-rvlang="ar" onclick="switchReviewLang('ar',this)">🇸🇦 AR</button>
+      </div>
+      <div><button type="button" class="btn btn-ghost btn-sm" id="rv-tr-btn" onclick="reviewAutoTranslate()" style="border:1px solid var(--border,#e2e8f0);">🌐 Synchroniser les langues (FR → EN / ES / AR)</button>
+        <span id="rv-tr-status" style="font-size:11.5px;color:var(--t3,#888);margin-left:8px;"></span></div>
+      <div class="fg"><label>Texte de l'avis <span id="rv-lang-lbl">FR</span></label>
+        <textarea class="ft" id="rv-text" rows="4" placeholder="Le texte de l'avis…">${_reviewBuf.fr}</textarea>
+        <div style="font-size:11px;color:var(--t3);margin-top:4px;">Repli FR si une langue est vide.</div>
+      </div>
+      <div class="fg"><label><input type="checkbox" id="rv-active" ${rv?(rv.active!==false?'checked':''):'checked'} style="accent-color:var(--red);margin-right:6px;">Avis affiché sur le site</label></div>
+    </div>
+  `, [
+    { label:'Enregistrer & Synchroniser', action:`saveReview(${idx !== undefined ? idx : 'undefined'})`, cls:'btn-red' },
+    { label:'Annuler', action:'closeModal()', cls:'btn-ghost' },
+  ]);
+}
+
+function switchReviewLang(lang, btn) {
+  _reviewBuf[_reviewLang] = document.getElementById('rv-text')?.value || '';
+  _reviewLang = lang;
+  document.querySelectorAll('.lang-tab[data-rvlang]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-rvlang')===lang); });
+  const lbl = document.getElementById('rv-lang-lbl'); if (lbl) lbl.textContent = lang.toUpperCase();
+  const ta = document.getElementById('rv-text');
+  if (ta) { ta.value = _reviewBuf[lang] || ''; ta.dir = (lang==='ar')?'rtl':'ltr'; }
+}
+
+/* Synchronise les langues d'un avis : génère EN/ES/AR depuis le texte FR. */
+async function reviewAutoTranslate() {
+  _reviewBuf[_reviewLang] = document.getElementById('rv-text')?.value || '';
+  const fr = _reviewBuf.fr || '';
+  const status = document.getElementById('rv-tr-status');
+  const btn = document.getElementById('rv-tr-btn');
+  if (!String(fr).trim()) {
+    if (status) status.textContent = 'Saisissez d’abord l’avis en français.';
+    return;
+  }
+  if (typeof window.ASLTranslate === 'undefined') {
+    if (status) status.textContent = 'Module de traduction indisponible.';
+    return;
+  }
+  if (btn) btn.disabled = true;
+  if (status) status.textContent = 'Traduction en cours…';
+  try {
+    for (const l of ['en','es','ar']) {
+      _reviewBuf[l] = await window.ASLTranslate.one(fr, l);
+    }
+    // rafraîchir l'onglet courant
+    const ta = document.getElementById('rv-text');
+    if (ta) { ta.value = _reviewBuf[_reviewLang] || ''; ta.dir = (_reviewLang==='ar')?'rtl':'ltr'; }
+    if (status) status.textContent = '✓ Langues générées (EN/ES/AR). Vérifiez puis enregistrez.';
+  } catch (e) {
+    if (status) status.textContent = '⚠ Traduction indisponible (vérifiez la connexion). Saisie manuelle possible.';
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function uploadReviewPhoto(input) {
+  const file = input && input.files && input.files[0];
+  if (!file) return;
+  if (file.size > 3*1024*1024) { toast('Photo trop lourde (max 3 Mo)', 'r'); return; }
+  try {
+    const dataUrl = await new Promise(function(res,rej){ const r=new FileReader(); r.onload=function(){res(r.result);}; r.onerror=rej; r.readAsDataURL(file); });
+    document.getElementById('rv-photo').value = dataUrl;
+    toast('Photo chargée', 'g');
+  } catch(e) { toast('Échec du chargement', 'r'); }
+}
+
+async function saveReview(idx) {
+  _reviewBuf[_reviewLang] = document.getElementById('rv-text')?.value || '';
+  const name = (document.getElementById('rv-name')?.value || '').trim();
+  if (!name) { toast('Le nom du client est obligatoire', 'r'); return; }
+  // Auto-remplissage : génère EN/ES/AR depuis le FR pour toute langue vide.
+  const frTxt = String(_reviewBuf.fr||'').trim();
+  if (frTxt && typeof window.ASLTranslate !== 'undefined') {
+    for (const l of ['en','es','ar']) {
+      if (!String(_reviewBuf[l]||'').trim()) {
+        try { _reviewBuf[l] = await window.ASLTranslate.one(frTxt, l); }
+        catch(e) { _reviewBuf[l] = frTxt; }
+      }
+    }
+  }
+  const data = _loadReviews();
+  const item = {
+    id: (idx!==undefined && data.items[idx]) ? data.items[idx].id : ('rv'+Date.now()),
+    name: name,
+    source: document.getElementById('rv-source')?.value || '',
+    rating: parseInt(document.getElementById('rv-rating')?.value || '5', 10),
+    color: document.getElementById('rv-color')?.value || '#C41E3A',
+    photo: document.getElementById('rv-photo')?.value || '',
+    active: document.getElementById('rv-active')?.checked !== false,
+    text: { fr:(_reviewBuf.fr||'').trim(), en:(_reviewBuf.en||'').trim(), es:(_reviewBuf.es||'').trim(), ar:(_reviewBuf.ar||'').trim() }
+  };
+  if (idx !== undefined && idx < data.items.length) data.items[idx] = item;
+  else data.items.push(item);
+  save(K.reviews, data);
+  try { const all = load(MKT_LOCAL_KEY) || {}; all.reviews = data; save(MKT_LOCAL_KEY, all); } catch(e){}
+  closeModal(); renderReviewsEditor();
+  await syncToKV('Avis');
+  toast('✅ Avis enregistré et synchronisé', 'g');
+}
+
+async function toggleReview(idx) {
+  const data = _loadReviews();
+  if (!data.items[idx]) return;
+  data.items[idx].active = (data.items[idx].active === false);
+  save(K.reviews, data); renderReviewsEditor();
+  await syncToKV('Avis');
+  toast('Avis mis à jour et synchronisé', 'g');
+}
+
+async function deleteReview(idx) {
+  if (!confirm('Supprimer cet avis ?')) return;
+  const data = _loadReviews();
+  data.items.splice(idx, 1);
+  save(K.reviews, data); renderReviewsEditor();
+  await syncToKV('Avis');
+  toast('Avis supprimé et synchronisé', 'g');
+}
+
+async function saveGoogleReviews() {
+  const data = _loadReviews();
+  data.google = {
+    enabled: document.getElementById('gr-enabled')?.value || 'no',
+    rating: document.getElementById('gr-rating')?.value || '',
+    count: document.getElementById('gr-count')?.value || '',
+    placeId: document.getElementById('gr-placeid')?.value || ''
+  };
+  save(K.reviews, data);
+  await syncToKV('Avis');
+  toast('✅ Paramètres Google enregistrés', 'g');
+}
+
+/* ============================================================
+   COOKIES & CONFIDENTIALITÉ — bannière configurable
+   Stockage : K.cookies = { enabled, text:{fr,en,es,ar},
+              categories:{analytics,marketing,functional},
+              trackers:{ga4,googleAds,metaPixel} }
+   ============================================================ */
+let _cookieLang = 'fr';
+let _cookieTextBuf = { fr:'', en:'', es:'', ar:'' };
+
+function _defaultCookieCfg() {
+  return {
+    enabled: true,
+    text: {
+      fr: 'Nous utilisons des cookies pour améliorer votre expérience, analyser le trafic et personnaliser le contenu. Vous pouvez accepter, refuser ou personnaliser vos choix.',
+      en: 'We use cookies to improve your experience, analyse traffic and personalise content. You can accept, decline or customise your choices.',
+      es: 'Utilizamos cookies para mejorar su experiencia, analizar el tráfico y personalizar el contenido. Puede aceptar, rechazar o personalizar sus opciones.',
+      ar: 'نستخدم ملفات تعريف الارتباط لتحسين تجربتك وتحليل الزيارات وتخصيص المحتوى. يمكنك القبول أو الرفض أو تخصيص اختياراتك.'
+    },
+    categories: { analytics:true, marketing:true, functional:true },
+    trackers: { ga4:'', googleAds:'', metaPixel:'' }
+  };
+}
+
+function _loadCookieCfg() {
+  let c = load(K.cookies);
+  if (!c) { c = _defaultCookieCfg(); save(K.cookies, c); }
+  // compléter les champs manquants
+  const d = _defaultCookieCfg();
+  return {
+    enabled: c.enabled !== false,
+    text: Object.assign({}, d.text, c.text || {}),
+    categories: Object.assign({}, d.categories, c.categories || {}),
+    trackers: Object.assign({}, d.trackers, c.trackers || {})
+  };
+}
+
+function renderCookieSettings() {
+  const c = _loadCookieCfg();
+  _cookieLang = 'fr';
+  _cookieTextBuf = Object.assign({ fr:'', en:'', es:'', ar:'' }, c.text);
+  const set = function(id, v){ const e=document.getElementById(id); if(e) e.value = v||''; };
+  const chk = function(id, on){ const e=document.getElementById(id); if(e) e.checked = !!on; };
+  chk('ck-enabled', c.enabled);
+  document.querySelectorAll('.lang-tab[data-cklang]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-cklang')==='fr'); });
+  set('ck-text', _cookieTextBuf.fr);
+  const lbl = document.getElementById('ck-lang-lbl'); if (lbl) lbl.textContent = 'FR';
+  chk('ck-cat-analytics', c.categories.analytics);
+  chk('ck-cat-marketing', c.categories.marketing);
+  chk('ck-cat-functional', c.categories.functional);
+  set('ck-ga4', c.trackers.ga4);
+  set('ck-gads', c.trackers.googleAds);
+  set('ck-meta', c.trackers.metaPixel);
+}
+
+function switchCookieLang(lang, btn) {
+  _cookieTextBuf[_cookieLang] = document.getElementById('ck-text')?.value || '';
+  _cookieLang = lang;
+  document.querySelectorAll('.lang-tab[data-cklang]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-cklang')===lang); });
+  const lbl = document.getElementById('ck-lang-lbl'); if (lbl) lbl.textContent = lang.toUpperCase();
+  const ta = document.getElementById('ck-text');
+  if (ta) { ta.value = _cookieTextBuf[lang] || ''; ta.dir = (lang==='ar')?'rtl':'ltr'; }
+}
+
+async function saveCookieSettings() {
+  _cookieTextBuf[_cookieLang] = document.getElementById('ck-text')?.value || '';
+  const cfg = {
+    enabled: document.getElementById('ck-enabled')?.checked !== false,
+    text: {
+      fr:(_cookieTextBuf.fr||'').trim(), en:(_cookieTextBuf.en||'').trim(),
+      es:(_cookieTextBuf.es||'').trim(), ar:(_cookieTextBuf.ar||'').trim()
+    },
+    categories: {
+      analytics: document.getElementById('ck-cat-analytics')?.checked !== false,
+      marketing: document.getElementById('ck-cat-marketing')?.checked !== false,
+      functional: document.getElementById('ck-cat-functional')?.checked !== false
+    },
+    trackers: {
+      ga4: (document.getElementById('ck-ga4')?.value || '').trim(),
+      googleAds: (document.getElementById('ck-gads')?.value || '').trim(),
+      metaPixel: (document.getElementById('ck-meta')?.value || '').trim()
+    }
+  };
+  save(K.cookies, cfg);
+  await syncToKV('Cookies');
+  toast('✅ Bannière cookies enregistrée et publiée', 'g');
+}
+
+async function toggleFAQ(idx, active) {
   const faqs = load(K.faq) || [];
-  if (faqs[idx]) { faqs[idx].active = active; save(K.faq, faqs); toast(active ? 'FAQ activée' : 'FAQ désactivée', 'g'); }
+  if (faqs[idx]) {
+    faqs[idx].active = active;
+    save(K.faq, faqs);
+    try { const all = load(MKT_LOCAL_KEY) || {}; all.faq = faqs; save(MKT_LOCAL_KEY, all); } catch(e){}
+    toast(active ? 'FAQ activée' : 'FAQ désactivée', 'g');
+    await syncToKV('FAQ');
+  }
 }
 
 function renderNewsletter() {
@@ -2405,7 +3816,7 @@ const PAGE_TITLES = {
    - FAQ / Popup & CTA / Réseaux sociaux : fenêtre superposée centrée.
    - SEO par page / IA : désactivés (logique de contenus centralisée). */
 const MKT_POPUP_IDS = ['faq','popup','social','email','newsletter','ads','analytics','database','conversions'];
-let _mktHosted = null, _mktAnchor = null;
+let _mktHosted = null, _mktAnchor = null, _mktOpenPopupId = null;
 
 function setActiveInlinePage(id){
   document.querySelectorAll('.page').forEach(p=>{ if(!p.closest('#mkt-pop-body')) p.classList.remove('active'); });
@@ -2430,6 +3841,7 @@ function openModulePopup(id){
   if (t) t.textContent = PAGE_TITLES[id]||id;
   host.classList.add('open');
   host.setAttribute('aria-hidden','false');
+  _mktOpenPopupId = id;
   document.body.style.overflow = 'hidden';
   body.scrollTop = 0;
   try { renderPage(id); } catch(e){}
@@ -2442,7 +3854,7 @@ function closeModulePopup(silent){
     _mktAnchor.remove();
     _mktHosted.classList.remove('active');
   }
-  _mktHosted = null; _mktAnchor = null;
+  _mktHosted = null; _mktAnchor = null; _mktOpenPopupId = null;
   if (host){ host.classList.remove('open'); host.setAttribute('aria-hidden','true'); }
   if (!silent) document.body.style.overflow = '';
 }
@@ -2451,6 +3863,9 @@ function nav(id, el) {
   if (id === 'seo' || id === 'ia') id = 'dashboard';           // modules désactivés → dashboard
   document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
   if (el) el.classList.add('active');
+  // Fermer un éventuel éditeur (modale) sans rouvrir l'ancienne fenêtre-module.
+  _modalReturnPopupId = null;
+  var _mb = document.getElementById('modal-bd'); if (_mb) _mb.classList.remove('open');
   closeModulePopup(true);                                       // ferme toute fenêtre ouverte
   if (typeof closeTextEditor === 'function') closeTextEditor();
 
@@ -2472,9 +3887,11 @@ function nav(id, el) {
   if (mainEl) mainEl.scrollTop = 0;
 }
 
-// Fermeture des popups modules avec la touche Échap
+// Fermeture avec la touche Échap : d'abord l'éditeur (modale), puis la fenêtre-module
 document.addEventListener('keydown', function(e){
   if (e.key === 'Escape') {
+    const mb = document.getElementById('modal-bd');
+    if (mb && mb.classList.contains('open')) { closeModal(); return; }
     const host = document.getElementById('mkt-pop');
     if (host && host.classList.contains('open')) closeModulePopup();
   }
@@ -2487,6 +3904,10 @@ function renderPage(id) {
   if (id==='ia')         { const b=document.getElementById('ia-season-badge'); if(b) b.textContent=getSeason().label+' · '+getMarrakechContext().month; }
   if (id==='blog')       renderBlog();
   if (id==='faq')        renderFAQ();
+  if (id==='bookopt')    renderBookOpt();
+  if (id==='legal')      renderLegalEditor();
+  if (id==='reviews')    renderReviewsEditor();
+  if (id==='cookies')    renderCookieSettings();
   if (id==='popup')      loadPopupConfig();
   if (id==='newsletter') renderNewsletter();
   if (id==='ads')        loadAds();
@@ -2621,31 +4042,10 @@ function renderDashboard() {
 }
 
 // Sync bar helpers
-const _origSaveSEO = saveSEO;
-async function saveSEO() {
-  await _origSaveSEO();
-  const bar=document.getElementById('sync-bar-seo');
-  if(bar){bar.className='sync-bar ok';bar.style.display='block';
-    bar.innerHTML='✅ SEO enregistré. <a href="../index.html" target="_blank" style="color:var(--green);font-weight:700;">Voir le site →</a>';
-    setTimeout(()=>bar.style.display='none',7000);}
-}
-const _origSavePopup=savePopupConfig;
-async function savePopupConfig(){
-  await _origSavePopup();
-  const bar=document.getElementById('sync-bar-popup');
-  if(bar){bar.className='sync-bar ok';bar.style.display='block';
-    const pc=load(K.popup)||{};
-    bar.innerHTML='✅ Popup '+(pc.active?'activé':'désactivé')+'. Rafraîchissez le site.';
-    setTimeout(()=>bar.style.display='none',7000);}
-}
-const _origSaveFAQ=saveFAQItem;
-async function saveFAQItem(idx){
-  await _origSaveFAQ(idx);
-  const bar=document.getElementById('sync-bar-faq');
-  if(bar){bar.className='sync-bar ok';bar.style.display='block';
-    bar.innerHTML='✅ FAQ enregistrée — Schema.org synchronisé.';
-    setTimeout(()=>bar.style.display='none',7000);}
-}
+// (Les mises à jour des barres de synchro sont désormais intégrées directement
+//  dans saveSEO(), savePopupConfig() et saveFAQItem() — voir leurs définitions.
+//  Les anciens "wrappers" portant le même nom provoquaient une récursion infinie
+//  via le hoisting des déclarations de fonctions ; ils ont été supprimés.)
 
 
 // ================================================================
@@ -2703,7 +4103,53 @@ async function saveSocialConfig() {
 // ================================================================
 // INIT
 // ================================================================
+
+/* ★ HYDRATATION AU DÉMARRAGE : récupère le contenu actuellement
+   en ligne (serveur) et le charge dans les stores locaux du
+   back-office. Ainsi, tout ce qui est affiché sur le site est
+   présent et modifiable dans l'admin, même sur un nouvel appareil. */
+async function hydrateFromServer() {
+  try {
+    const r = await fetch('/api/marketing', { headers: { 'Cache-Control': 'no-cache' } });
+    if (!r.ok) return;
+    const d = await r.json();
+    const data = (d && d.data) ? d.data : null;
+    if (!data) return;
+    // Recopier chaque section du serveur dans le store local correspondant
+    const map = {
+      content:'content', seo:'seo', faq:'faq', blog:'blog',
+      bookingOptions:'bookingOptions', legalPages:'legalPages', reviews:'reviews',
+      cookies:'cookies',
+      popup:'popup', keywords:'keywords', ads:'ads', social:'social',
+      analytics:'analytics', reputation:'reputation', menu:'menu'
+    };
+    Object.keys(map).forEach(function(serverKey){
+      if (data[serverKey] !== undefined && data[serverKey] !== null && K[map[serverKey]]) {
+        // Ne pas écraser par une valeur vide si on a déjà du contenu local plus riche
+        const incoming = data[serverKey];
+        const isEmpty = (incoming === null) ||
+          (Array.isArray(incoming) && incoming.length === 0) ||
+          (typeof incoming === 'object' && !Array.isArray(incoming) && Object.keys(incoming).length === 0);
+        if (!isEmpty) save(K[map[serverKey]], incoming);
+      }
+    });
+    // Rafraîchir l'affichage de la page courante
+    try {
+      const active = document.querySelector('.sb-item.active');
+      const cur = active && active.getAttribute('onclick');
+      if (cur) {
+        const m = cur.match(/nav\('([^']+)'/);
+        if (m && typeof renderPage === 'function') renderPage(m[1]);
+      }
+    } catch(e) {}
+    if (typeof showSyncStatus === 'function') {
+      showSyncStatus('✓ Contenu du site chargé depuis le serveur — tout est éditable ici.');
+    }
+  } catch(e) { /* hors-ligne / test local : on garde les stores locaux */ }
+}
+
 renderDashboard();
+hydrateFromServer();
 setTimeout(()=>{
   const b=document.getElementById('ia-season-badge');
   if(b) b.textContent=getSeason().label+' · '+getMarrakechContext().month;

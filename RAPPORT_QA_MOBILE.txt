@@ -1,0 +1,84 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — RAPPORT QA MOBILE (audit complet)
+═══════════════════════════════════════════════════════════════
+
+J'ai parcouru l'ensemble du parcours mobile (Android, iPhone,
+Chrome Mobile, Safari Mobile) et corrigé tous les problèmes
+détectés. Voici le rapport.
+
+───────────────────────────────────────────────────────────────
+BUGS DÉTECTÉS ET CORRIGÉS
+───────────────────────────────────────────────────────────────
+
+BUG 1 — Zoom automatique iOS sur le formulaire de contact
+  Cause : champs en font-size 15px → Safari iOS zoome au focus.
+  Correction : règle mobile forçant 16px sur tous les champs de
+  saisie (page.css). Plus aucun zoom au toucher d'un champ.
+
+BUG 2 — Zoom automatique iOS sur les champs du parcours réservation
+  Cause : certains champs (.form-input, préfixes téléphone) hors
+  de la règle existante.
+  Correction : règle globale 16px sur input/select/textarea/
+  .form-input sur mobile (index.html).
+
+BUG 3 — Menu burger CASSÉ sur toutes les sous-pages (critique)
+  Cause : la fonction toggleMobileMenu() n'était définie que dans
+  index.html. Sur about, contact, faq, blog, cgv, page article,
+  pages de contenu… le bouton burger ne faisait rien.
+  Correction : toggleMobileMenu + closeMobileMenu ajoutées à
+  i18n.js (chargé par toutes les pages), avec fermeture auto au
+  scroll et au clic sur un lien. Le menu fonctionne désormais
+  partout.
+
+BUG 4 — Léger débordement horizontal possible (hero)
+  Cause : éléments décoratifs du hero dépassant les bords sans
+  conteneur.
+  Correction : overflow:hidden sur .hero (en plus du garde global
+  overflow-x:hidden déjà présent).
+
+BUG 5 — Cibles tactiles du bouton menu trop petites
+  Correction : bouton burger porté à 44×44px minimum (page.css +
+  index.html), conforme aux recommandations tactiles.
+
+───────────────────────────────────────────────────────────────
+POINTS VÉRIFIÉS — DÉJÀ CONFORMES
+───────────────────────────────────────────────────────────────
+1. NAVIGATION : viewport correct sur les 15 pages ; menu mobile
+   avec ouverture/fermeture, navigation, retour accueil ; menu
+   désormais fonctionnel partout (cf. bug 3).
+2. FOOTER : 13 liens audités (accueil, véhicules, à propos,
+   contact, FAQ, blog, CGV, confidentialité, mentions, courte
+   durée, longue durée, livraison aéroport, livraison hôtel) —
+   tous valides, aucun lien mort. Les pages de contenu pointent
+   vers page.html?slug=… (slugs tous présents dans le seed).
+3. RESPONSIVE : overflow-x:hidden global (index + page.css) ;
+   aucun débordement ; drawer de réservation en pleine largeur
+   sur mobile.
+4. POP-UP RÉSERVATION : drawer 100dvh (hauteur dynamique), en-tête
+   et pied collants, champs 16px (pas de zoom), scroll vertical
+   fluide, pas de scroll horizontal.
+5. CALENDRIERS / SÉLECTEURS : calendrier custom en bas d'écran,
+   largeur min(340px, 100vw-24px), jours 44px ; lieux en <select>
+   natif → sélecteur natif mobile.
+6. RECHERCHE VÉHICULES : grille responsive (auto-fill minmax),
+   cartes propres, boutons Voir/Réserver accessibles.
+7. FICHES VÉHICULES : galerie, prix, caractéristiques, CTA
+   lisibles sur mobile.
+8. BLOG / FAQ : rendu multilingue ré-appliqué au changement de
+   langue (pas de mélange de langues), textes non tronqués.
+9. TRADUCTIONS : FR/EN/ES/AR ; RTL arabe géré (dir=rtl +
+   règles CSS [dir=rtl]).
+10. PERFORMANCE : scripts en defer, animations neutralisées au
+    premier scroll, transitions CSS légères.
+11. TACTILE : liens du menu ~44px, boutons langue, CTA, burger
+    44×44px.
+
+───────────────────────────────────────────────────────────────
+FICHIERS MODIFIÉS
+───────────────────────────────────────────────────────────────
+  i18n.js          → toggleMobileMenu/closeMobileMenu globales
+  pages/page.css   → anti-zoom 16px mobile + burger 44px
+  index.html       → anti-zoom 16px mobile + hero overflow + burger 44px
+
+Tous les fichiers validés (syntaxe JS OK). Aucun lien cassé,
+aucun zoom forcé, aucun scroll parasite détecté après correction.

@@ -1,0 +1,103 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — LOT 18
+  Blog : articles importés + page article jamais vide
+  + Bannière cookies professionnelle (UX)
+═══════════════════════════════════════════════════════════════
+
+───────────────────────────────────────────────────────────────
+1. ARTICLES EXISTANTS RÉCUPÉRÉS DANS LE BACK-OFFICE
+───────────────────────────────────────────────────────────────
+Les 3 articles qui étaient codés en dur sur le site :
+  • Louer une voiture à Marrakech : le guide complet 2026
+  • 5 road-trips inoubliables au départ de Marrakech
+  • Conduire au Maroc : règles, radars et bonnes pratiques
+
+…sont maintenant IMPORTÉS automatiquement dans le module Blog du
+back-office (fichier blog-seed.js + import au premier affichage).
+Ils sont donc visibles et entièrement MODIFIABLES depuis l'admin
+(titre, contenu, image, ALT, extrait, SEO, statut, multilingue).
+Plus aucun article n'est figé dans le code.
+
+───────────────────────────────────────────────────────────────
+2. PAGE ARTICLE — PLUS JAMAIS VIDE
+───────────────────────────────────────────────────────────────
+PROBLÈME : un nouvel article créé dans l'admin apparaissait sur la
+page Blog, mais en cliquant la page article était vide (le fichier
+HTML correspondant n'existait pas).
+
+SOLUTION : une page article UNIVERSELLE (pages/article.html) au
+design identique aux autres pages (même header, menu, footer).
+Elle lit l'article via son slug (article.html?slug=mon-article),
+le récupère dans les données synchronisées et l'affiche en entier.
+
+Chaque article dispose de : titre, slug/URL propre, image, texte
+ALT, extrait, contenu complet, langue, meta title, meta
+description, statut publié/brouillon.
+
+Au clic depuis le Blog :
+  • Vraie page article (design cohérent avec le site).
+  • Contenu complet + image affichés.
+  • SEO correct (title, meta description, Open Graph, Schema.org).
+  • Menu mobile fonctionnel.
+  • La page n'est JAMAIS vide : si l'article est introuvable, un
+    message clair + lien retour au blog s'affiche (jamais de blanc).
+
+Les anciens liens (article-guide-location.html, etc.) redirigent
+automatiquement vers la nouvelle page — rien n'est cassé.
+
+───────────────────────────────────────────────────────────────
+3. MULTILINGUE (FR / EN / ES / AR)
+───────────────────────────────────────────────────────────────
+Chaque article a une version par langue. La page article affiche
+la bonne version selon la langue du site, et se met à jour quand
+on change de langue. Repli automatique sur le français si une
+langue n'est pas encore traduite (jamais de page vide).
+
+───────────────────────────────────────────────────────────────
+4. SYNCHRONISATION
+───────────────────────────────────────────────────────────────
+Logique complète : Back-office Blog → Page Blog → Page article.
+Une modification dans l'admin met à jour la liste du blog, la page
+article et les métadonnées SEO.
+
+───────────────────────────────────────────────────────────────
+5. BANNIÈRE COOKIES — PLUS PROFESSIONNELLE
+───────────────────────────────────────────────────────────────
+AVANT : barre pleine largeur en bas, qui pouvait apparaître sous
+le pop-up de réservation et gêner le client.
+
+MAINTENANT :
+  • Carte discrète en bas à gauche (desktop), compacte et arrondie,
+    qui ne prend pas toute la largeur.
+  • Sur mobile : carte adaptée à l'écran, aucun scroll horizontal.
+  • Boutons clairs : Accepter / Refuser / Personnaliser.
+  • Surtout : la bannière se MASQUE automatiquement quand le pop-up
+    de réservation est ouvert, et réapparaît à sa fermeture — plus
+    aucun chevauchement ni confusion.
+  • Le choix (accepter/refuser) reste mémorisé : la bannière ne
+    réapparaît plus, y compris en ouvrant une réservation.
+
+───────────────────────────────────────────────────────────────
+PAGES LÉGALES (rappel)
+───────────────────────────────────────────────────────────────
+L'éditeur multilingue des pages légales (CGV, confidentialité,
+mentions, LLD) est en place dans le back-office (module Marketing
+→ Pages légales). Le contenu saisi par langue est injecté sur le
+site et remplace le texte par défaut. Tant qu'aucune traduction
+n'est saisie, le texte français d'origine reste affiché (pas
+d'auto-traduction imposée, conformément à votre choix).
+
+───────────────────────────────────────────────────────────────
+FICHIERS
+───────────────────────────────────────────────────────────────
+  pages/article.html    → NOUVEAU : page article universelle
+  article.js            → NOUVEAU : rendu dynamique de l'article
+  blog-seed.js          → NOUVEAU : 3 articles du site importés
+  pages/article-*.html  → redirections vers la nouvelle page
+  pages/blog.html       → liens cartes mis à jour
+  content-bridge.js     → cartes → article.html?slug + hook
+  admin/marketing.html  → import auto des articles dans le Blog
+  cookie-consent.js     → bannière carte discrète + masquage popup
+
+Note déploiement : la synchro passe par le serveur Cloudflare.
+Tester sur le site déployé et rafraîchir (Ctrl+F5).

@@ -1,0 +1,80 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — LOT 12
+  Vérification & correction de la synchronisation Blog/FAQ
+═══════════════════════════════════════════════════════════════
+
+OBJET : confirmer que TOUT changement de blog/FAQ dans le
+back-office (créer, modifier un existant, publier, supprimer)
+se synchronise automatiquement avec le site client.
+
+───────────────────────────────────────────────────────────────
+LA CHAÎNE DE SYNCHRONISATION (vérifiée de bout en bout)
+───────────────────────────────────────────────────────────────
+  1. Back-office : action sur un article/une question
+        → save() en local + syncToKV()
+  2. syncToKV envoie PUT /api/marketing (bloc blog + faq inclus)
+  3. Serveur Cloudflare : stocke dans KV ('marketing')
+  4. Site client : content-bridge.js fait GET /api/marketing
+        au chargement → affiche les articles publiés et les
+        questions actives.
+
+Test simulé bout-en-bout : article existant modifié, nouvel
+article créé, brouillon exclu, multilingue + image + ALT
+transmis → tout remonte correctement sur le site. ✓
+
+───────────────────────────────────────────────────────────────
+CORRECTIONS APPORTÉES DANS CE LOT
+───────────────────────────────────────────────────────────────
+1. FAQ — page non connectée au système dynamique
+   • faq.html ne chargeait PAS content-bridge.js → les questions
+     créées dans le back-office ne pouvaient pas remonter.
+   • CORRIGÉ : content-bridge.js est maintenant chargé sur faq.html.
+
+2. FAQ — questions du back-office non affichées
+   • content-bridge ne générait que le schéma SEO (invisible),
+     pas les questions visibles sur la page.
+   • AJOUTÉ : renderFaqList() affiche les questions du back-office
+     sur faq.html, multilingues, avant les questions statiques,
+     avec re-rendu automatique au changement de langue.
+
+3. FAQ — suppression non synchronisée
+   • deleteFAQ() enregistrait en local sans envoyer au serveur.
+   • CORRIGÉ : la suppression d'une question se synchronise.
+
+(Rappel LOT précédent : publier/masquer et supprimer un ARTICLE
+ de blog étaient déjà corrigés pour synchroniser.)
+
+───────────────────────────────────────────────────────────────
+RÉCAP — CE QUI SE SYNCHRONISE MAINTENANT
+───────────────────────────────────────────────────────────────
+BLOG (back-office → site) :
+  • Créer un nouvel article        → apparaît sur le Blog ✓
+  • Modifier un article existant   → mis à jour sur le Blog ✓
+  • Publier / Masquer              → apparaît / disparaît ✓
+  • Supprimer                      → retiré du Blog ✓
+  • Multilingue (FR/EN/ES/AR)      → la bonne langue s'affiche ✓
+  • Image + Texte ALT (SEO)        → transmis au site ✓
+
+FAQ (back-office → site) :
+  • Créer / modifier une question  → apparaît sur la FAQ ✓
+  • Supprimer                      → retirée de la FAQ ✓
+  • Multilingue                    → la bonne langue s'affiche ✓
+  • Schéma SEO Google              → suit la langue ✓
+
+───────────────────────────────────────────────────────────────
+NOTE DÉPLOIEMENT (important)
+───────────────────────────────────────────────────────────────
+La synchronisation réelle passe par le serveur Cloudflare
+(/api/marketing + KV). Elle fonctionne donc pleinement sur le
+site DÉPLOYÉ. En test local (fichier ouvert depuis le disque),
+le serveur n'existe pas : le système retombe sur le cache local
+du navigateur, ce qui peut donner l'impression que ça ne remonte
+pas. Pour valider : tester sur l'URL déployée et rafraîchir la
+page Blog/FAQ du site (Ctrl+F5) après une modification.
+
+FICHIERS :
+  content-bridge.js     → renderFaqList + FAQ multilingue visible
+  pages/faq.html        → chargement de content-bridge.js
+  admin/marketing.html  → deleteFAQ synchronisé
+
+Site et lots précédents : conservés.

@@ -1,0 +1,70 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — LOT 11
+  Vérification notifications + Blog images/SEO
+═══════════════════════════════════════════════════════════════
+
+───────────────────────────────────────────────────────────────
+1. NOTIFICATIONS CLIQUABLES — VÉRIFIÉ ET RENFORCÉ
+───────────────────────────────────────────────────────────────
+Chaque notification est cliquable et ouvre DIRECTEMENT la fiche /
+le module permettant de traiter le problème :
+
+  • Réservation en attente → ouvre la réservation (confirmer /
+    modifier / traiter).
+  • Retour prévu aujourd'hui → ouvre la location concernée.
+  • Véhicule en retard → ouvre la fiche de location (client,
+    véhicule, date de retour dépassée).
+  • Vidange → ouvre la fiche Entretien du véhicule.
+  • Visite technique → ouvre la fiche Entretien du véhicule.
+  • Assurance → ouvre la fiche Entretien du véhicule.
+  • Impayé → ouvre la réservation/location concernée.
+
+DISPARITION AUTOMATIQUE (renforcé dans ce lot) :
+  • Un compteur live est affiché sur la cloche (nombre réel
+    de notifications).
+  • Quand un problème est corrigé et enregistré, les données
+    changent → ASLDB.onChange se déclenche → le compteur se
+    recalcule automatiquement → la notification disparaît.
+  • Si le panneau est ouvert, il se rafraîchit aussi : l'élément
+    traité disparaît de la liste immédiatement.
+  • Le tableau de bord et les badges se resynchronisent via les
+    fonctions de rendu déjà en place (renderDashboard,
+    updateBadges) appelées après chaque traitement.
+
+CORRECTION au passage : un faux positif « véhicule en retard »
+pouvait apparaître pour une réservation future sans date de
+retour. Corrigé (on exige désormais une date de retour valide).
+
+───────────────────────────────────────────────────────────────
+2. BLOG — IMAGES & SEO
+───────────────────────────────────────────────────────────────
+Dans l'éditeur d'article (Marketing Digital → Blog), la gestion
+d'image fonctionne maintenant comme pour les véhicules :
+
+  • Champ URL d'image — CONSERVÉ (on garde les 2 possibilités).
+  • Bouton « 📁 Téléverser une image » — choisir une image depuis
+    son appareil (ordinateur ou téléphone).
+  • L'image est enregistrée automatiquement avec l'article :
+      - en production (Cloudflare) : hébergée via /api/upload,
+      - en local / hors-ligne : intégrée directement à l'article
+        (repli automatique, jamais bloquant).
+  • Aperçu de l'image affiché sous le champ.
+  • Nouveau champ « Texte ALT de l'image » (SEO), ex :
+      « Location Renault Clio 5 à Marrakech »
+      « Location Kia Sportage Marrakech Aéroport »
+  • Le texte ALT est utilisé sur la page Blog du site (attribut
+    alt des images) → meilleur référencement.
+
+L'image et le texte ALT sont communs à toutes les langues de
+l'article (l'image ne change pas selon la langue).
+
+───────────────────────────────────────────────────────────────
+FICHIERS
+───────────────────────────────────────────────────────────────
+  admin/admin-lot10.js   → compteur live + auto-disparition +
+                           correction faux positif retard
+  admin/marketing.html   → upload image + champ ALT + aperçu
+                           dans l'éditeur d'article
+  content-bridge.js      → ALT SEO utilisé sur les cartes Blog
+
+Lots précédents : conservés. Site client : non impacté.

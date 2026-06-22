@@ -1,0 +1,99 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — APPLICATION MOBILE DU BACK-OFFICE
+═══════════════════════════════════════════════════════════════
+
+La version mobile du back-office est désormais une véritable
+application de gestion, pensée mobile-first (et non un desktop
+réduit). Elle s'active automatiquement sur téléphone (≤ 768px).
+
+───────────────────────────────────────────────────────────────
+NAVIGATION
+───────────────────────────────────────────────────────────────
+Une barre de navigation basse (comme une app) avec :
+  Accueil · Véhicules · Réservations · Caisse · Alertes · Plus
+Le bouton « Plus » ouvre une feuille avec : Entretien, Paiements,
+Paramètres, version desktop complète, déconnexion.
+
+Les modules réservés au PC (Marketing Digital, Blog, FAQ, Pages
+légales, SEO, traductions, éditeurs de contenu) N'APPARAISSENT
+PAS sur mobile. Ils restent accessibles via « Plus → version
+complète » si besoin ponctuel.
+
+───────────────────────────────────────────────────────────────
+TABLEAU DE BORD
+───────────────────────────────────────────────────────────────
+6 cartes simples et cliquables :
+  • Véhicules disponibles      → écran Véhicules
+  • Véhicules loués            → écran Locations
+  • Réservations en attente    → écran Réservations
+  • Retours aujourd'hui        → liste filtrable + fiche
+  • Encaissements réels        → écran Caisse
+  • Montants à encaisser       → notifications / impayés
+Plus un bloc « À surveiller » (retards, impayés).
+
+───────────────────────────────────────────────────────────────
+VÉHICULES
+───────────────────────────────────────────────────────────────
+Cartes (pas de tableau) : photo, nom, immatriculation, statut,
+prix/jour, carburant, boîte + bouton « Voir la fiche ».
+Filtres : Tous · Disponibles · Loués · Réservés.
+
+───────────────────────────────────────────────────────────────
+RÉSERVATIONS & LOCATIONS
+───────────────────────────────────────────────────────────────
+Cartes : client, véhicule, date de départ, date de retour,
+paiement (payé / reste), statut + bouton « Ouvrir la fiche ».
+Consultation rapide en un coup d'œil.
+
+───────────────────────────────────────────────────────────────
+RETOURS AUJOURD'HUI
+───────────────────────────────────────────────────────────────
+Indicateur conservé. Au clic : liste des véhicules concernés avec
+filtres Aujourd'hui / Demain / Date choisie, immatriculation,
+heure de retour, et accès direct à la fiche.
+
+───────────────────────────────────────────────────────────────
+CLIENTS
+───────────────────────────────────────────────────────────────
+Cartes : nom, téléphone, véhicule actuel, total payé, reste à
+payer + bouton « Appeler ». Recherche en haut.
+
+───────────────────────────────────────────────────────────────
+CAISSE (simplifiée)
+───────────────────────────────────────────────────────────────
+Encaissements réels · Charges · Solde réel · Montants à encaisser.
+Le Grand Livre reste accessible (bouton dédié), affiché en vue
+adaptée.
+
+───────────────────────────────────────────────────────────────
+NOTIFICATIONS
+───────────────────────────────────────────────────────────────
+Comme une vraie app de gestion, un écran centralise :
+  • Retours aujourd'hui
+  • Retards
+  • Impayés
+  • Échéances (retours demain)
+  • Nouveaux clients / nouvelles réservations (dont site web)
+Chaque notification mène directement à la fiche concernée.
+Une pastille rouge sur l'onglet « Alertes » indique le nombre.
+
+───────────────────────────────────────────────────────────────
+INTERFACE
+───────────────────────────────────────────────────────────────
+  • Cartes et gros boutons tactiles.
+  • Navigation fluide entre écrans.
+  • Aucun scroll horizontal, aucun tableau compressé.
+  • Mise à jour en temps réel (synchronisée avec le desktop).
+  • Respecte les permissions employés : un employé ne voit que
+    les onglets autorisés.
+
+───────────────────────────────────────────────────────────────
+FICHIERS
+───────────────────────────────────────────────────────────────
+  admin/admin-mobile.css  → design de l'application mobile
+  admin/admin-mobile.js   → écrans, navigation, données
+  admin/index.html        → chargement CSS + JS
+
+NOTE : les fiches détaillées (réservation, location) réutilisent
+les écrans existants du système — aucune donnée dupliquée, tout
+est synchronisé.

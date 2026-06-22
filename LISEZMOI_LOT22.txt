@@ -1,0 +1,158 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — LOT 22
+  Corrections après tests : pages légales · FAQ (sauvegarde,
+  synchro, langues) · CTA premium sans bouton WhatsApp
+═══════════════════════════════════════════════════════════════
+
+Ce lot corrige les points remontés après tests. Chaque correction
+a été testée par simulation réelle du parcours.
+
+───────────────────────────────────────────────────────────────
+1. PAGES LÉGALES — SYNCHRONISATION COMPLÉTÉE (EN / ES / AR)
+───────────────────────────────────────────────────────────────
+Problème : dans le back-office, Politique de Confidentialité et
+Mentions Légales n'affichaient pas l'anglais, l'espagnol ni
+l'arabe (champs vides), alors que le contenu existait côté site.
+
+Correction (admin/marketing.html → _importPagesSeed) :
+  • À l'ouverture, le back-office COMPLÈTE automatiquement chaque
+    champ vide de chaque langue à partir du contenu de référence
+    (récupération site → administration).
+  • Aucun champ déjà rempli n'est écrasé (vos modifications sont
+    préservées).
+  • S'applique aux 7 pages. Résultat vérifié : 0 champ vide sur
+    Confidentialité, Mentions, CGV, Courte durée, LLD, Aéroport,
+    Hôtel/Riad, dans les 4 langues.
+
+TEST : installation simulée avec Confidentialité et Mentions en FR
+seulement → après ouverture, EN/ES/AR remplis (ex. « Privacy
+Policy », contenu AR présent). 0 champ vide.
+
+───────────────────────────────────────────────────────────────
+2. FAQ — SAUVEGARDE, SYNCHRONISATION ET LANGUES
+───────────────────────────────────────────────────────────────
+
+▸ Problème 1 — « Enregistré » mais rien ne s'enregistre
+
+CAUSE RÉELLE TROUVÉE : une fonction « wrapper » dupliquée
+(saveFAQItem, et aussi saveSEO, savePopupConfig) s'appelait
+elle-même à l'infini (récursion due au hoisting JavaScript). La
+sauvegarde plantait silencieusement → la question n'était ni
+ajoutée à la liste, ni envoyée au site, ni persistée.
+
+Correction :
+  • Suppression des wrappers récursifs ; la mise à jour de la
+    barre de synchro est désormais intégrée proprement dans les
+    fonctions d'origine.
+  • À l'enregistrement, la FAQ est écrite dans le store ET dans le
+    cache marketing lu par le site (visibilité immédiate côté
+    site, sans attendre le serveur).
+  • La question apparaît IMMÉDIATEMENT dans la liste (avec statut,
+    position et langue).
+  • Le message reflète le résultat réel de la synchro serveur
+    (succès vérifié, ou avertissement clair si le serveur n'a pas
+    confirmé — utile en test local).
+  • Données persistantes après rechargement.
+
+TEST (cycle complet) : Création → 11 entrées, visible dans la
+liste et dans le cache site. Modification → texte mis à jour.
+Activation/Désactivation → état reflété côté site (Schema.org).
+Suppression → liste et cache mis à jour. Persistance confirmée.
+
+▸ Problème 2 — Langues FAQ mélangées
+
+CAUSE RÉELLE TROUVÉE : le fichier de FAQ (faq-seed.js) était
+corrompu — plusieurs questions avaient leurs traductions DÉCALÉES
+(texte anglais dans le champ français, espagnol dans l'anglais…)
+et l'arabe manquant. D'où l'affichage mélangé FR/EN/AR.
+
+Correction :
+  • faq-seed.js entièrement reconstruit : 10 questions, chacune
+    correctement traduite dans les 4 langues, chaque langue ne
+    contenant QUE son propre texte (aucun décalage, aucun vide).
+  • Chaque FAQ reçoit un identifiant stable (seed-faq-1…10).
+  • Migration automatique : sur les installations existantes, les
+    anciennes FAQ corrompues sont purgées et remplacées par la
+    version propre — SANS supprimer les questions que vous avez
+    ajoutées vous-même, et sans créer de doublons.
+  • Le site et le back-office dédoublonnent désormais par
+    identifiant stable (puis par question FR en repli).
+
+Résultat : FAQ FR → FR uniquement, EN → EN, ES → ES, AR → AR.
+
+TEST : vérification par langue → 0 question dans le mauvais
+alphabet/langue. Migration → entrées corrompues supprimées,
+question personnalisée conservée, 0 doublon, 0 langue manquante.
+
+▸ Problème 3 — Vérifications
+
+Création, modification, suppression, activation/désactivation,
+synchro site, Schema.org, chargement par langue : tous testés par
+simulation réelle du parcours. OK.
+
+───────────────────────────────────────────────────────────────
+3. CTA — DESIGN PREMIUM, SANS GROS BOUTON WHATSAPP
+───────────────────────────────────────────────────────────────
+Le bloc CTA rouge est conservé (titre, texte marketing, bouton
+« Réserver un véhicule »). Le gros bouton WhatsApp vert a été
+RETIRÉ du CTA pour un rendu plus premium et équilibré.
+
+Le contact WhatsApp reste disponible en permanence via le bouton
+flottant : un bouton WhatsApp flottant a été ajouté en bas de
+chaque page de contenu (présent pendant tout le scroll, repositionné
+à gauche en arabe/RTL). Aucune perte de canal de contact.
+
+  • Bouton unique « Réserver un véhicule » → section de
+    réservation de l'accueil.
+  • Design : bloc rouge dégradé, bouton blanc, centré.
+  • Responsive (bouton pleine largeur < 520 px) et RTL.
+
+TEST : rendu dans les 4 langues → 1 seul bouton, aucun lien
+WhatsApp dans le CTA, lien Réserver présent, RTL correct en arabe.
+
+───────────────────────────────────────────────────────────────
+4. UNIFORMITÉ VISUELLE DES CTA
+───────────────────────────────────────────────────────────────
+Les CTA des 7 pages (CGV, Confidentialité, Mentions, Courte durée,
+LLD, Aéroport, Hôtel/Riad) sont générés par un SEUL et même moteur
+(page-render.js) avec une feuille de style unique : même couleur,
+même espacement, même typographie, même comportement responsive.
+La cohérence est donc garantie par construction sur toutes les
+pages.
+
+───────────────────────────────────────────────────────────────
+VALIDATION FINALE — TESTS RÉELS EFFECTUÉS
+───────────────────────────────────────────────────────────────
+  ✔ Pages légales : 7 pages × 4 langues × 6 champs → 0 champ vide.
+  ✔ FAQ : récursion corrigée ; création/édition/suppression/
+    activation testées ; question visible immédiatement ; cache
+    site mis à jour ; persistance OK.
+  ✔ FAQ langues : 4 langues pures, aucun mélange ; migration des
+    données corrompues sans perte ni doublon.
+  ✔ Schema.org FAQPage : alimenté par les FAQ actives.
+  ✔ CTA : bloc rouge + bouton Réserver uniquement ; WhatsApp
+    déplacé en bouton flottant permanent ; uniforme sur 7 pages.
+  ✔ Contrôle de syntaxe de tous les scripts : OK (0 erreur).
+
+Note déploiement : la synchro serveur passe par Cloudflare
+(/api/marketing + KV). En local, l'enregistrement et l'affichage
+fonctionnent via le cache ; la confirmation serveur n'apparaît que
+sur le site déployé (rafraîchir avec Ctrl/Cmd+F5). Si la synchro
+serveur échoue (clé admin), le back-office l'indique désormais
+clairement au lieu d'afficher un faux succès.
+
+───────────────────────────────────────────────────────────────
+FICHIERS MODIFIÉS DANS CE LOT
+───────────────────────────────────────────────────────────────
+  faq-seed.js            → 10 FAQ reconstruites, 4 langues propres,
+                           identifiants stables.
+  admin/marketing.html   → récursion saveFAQItem/saveSEO/
+                           savePopupConfig supprimée ; FAQ écrite
+                           dans le cache site ; toggle/delete
+                           synchronisés ; backfill EN/ES/AR des
+                           pages ; migration FAQ corrompues.
+  content-bridge.js      → fusion FAQ par identifiant stable.
+  page-render.js         → CTA premium sans bouton WhatsApp.
+  pages/page.html        → bouton WhatsApp flottant permanent.
+
+Lots précédents (1→21) : tous conservés.

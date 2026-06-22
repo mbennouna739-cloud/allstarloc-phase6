@@ -1,0 +1,67 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — LOT 13
+  Finalisation sync Blog/FAQ + Disponibilité précise véhicules
+═══════════════════════════════════════════════════════════════
+
+───────────────────────────────────────────────────────────────
+A. BLOG / FAQ — VÉRIFICATION DE SYNCHRO FIABILISÉE
+───────────────────────────────────────────────────────────────
+Suite/fin du travail en cours. Le message de confirmation après
+sauvegarde était trompeur : il ne contrôlait QUE le H1 du SEO,
+donc pour un changement de blog seul il pouvait afficher un faux
+avertissement (ou un faux succès).
+
+CORRECTION : la vérification relit maintenant la SECTION réellement
+modifiée (blog, faq, seo, contenu, popup) et compare son contenu
+exact avec le serveur. Le message « ✓ bien enregistré (vérifié) »
+dit désormais la vérité.
+
+RAPPEL (déjà validé) : blog et SEO empruntent le MÊME chemin de
+synchronisation (save + syncToKV → PUT /api/marketing → KV →
+GET côté site). Test bout-en-bout avec le vrai code serveur :
+article créé/modifié/publié + image + ALT + multilingue → tout
+remonte correctement. Puisque le SEO fonctionne, le blog aussi.
+
+───────────────────────────────────────────────────────────────
+B. DISPONIBILITÉ VÉHICULES — DATE + HEURE + MARGE DE SÉCURITÉ
+───────────────────────────────────────────────────────────────
+AVANT : « Disponible à partir du 15 août » (date seule, pas
+d'heure, pas de marge).
+
+MAINTENANT : le système affiche la date ET l'heure exacte de
+disponibilité, en ajoutant automatiquement une marge de sécurité
+de 3 heures après le retour prévu.
+
+Exemple (exactement votre cas) :
+  Retour prévu       : 15 août 2026 à 15h00
+  Message au client  : « Disponible à partir du 15 août 2026 à
+                        18:00. Vous pouvez modifier vos dates ou
+                        choisir un autre véhicule. »
+
+Détails techniques :
+  • Marge de sécurité = 3 heures (constante ASL_AVAIL_MARGIN_H,
+    modifiable en un seul endroit).
+  • L'heure de retour vient de la réservation (endTime). Si une
+    réservation n'a pas d'heure, on prend 12h00 par défaut.
+  • Gestion correcte du passage au lendemain (retour 22h + 3h =
+    01h00 le jour suivant).
+  • Appliqué partout où la prochaine disponibilité est indiquée
+    (cartes véhicules de la page d'accueil — seul endroit qui
+    affiche cette information).
+  • Multilingue : message traduit en FR, EN, ES, AR.
+
+OBJECTIFS ATTEINTS :
+  • Éviter les conflits de réservation.
+  • Absorber les retards de retour.
+  • Prévoir le temps de contrôle + préparation du véhicule.
+  • Information réaliste et précise pour le client.
+
+───────────────────────────────────────────────────────────────
+FICHIERS
+───────────────────────────────────────────────────────────────
+  index.html            → carAvailability + availabilityWithMargin
+                          + availFromLabel (date/heure/marge)
+  i18n.js               → clé fleet.availFromTime ×4 langues
+  admin/marketing.html  → vérification syncToKV par section
+
+Lots précédents : conservés. Aucune régression.

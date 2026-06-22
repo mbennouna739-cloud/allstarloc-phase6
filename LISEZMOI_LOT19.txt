@@ -1,0 +1,81 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — LOT 19
+  Blog, Pages légales et FAQ réellement synchronisés et éditables
+  + Bannière cookies qui ne gêne plus le pop-up de réservation
+═══════════════════════════════════════════════════════════════
+
+CAUSE COMMUNE CORRIGÉE
+───────────────────────────────────────────────────────────────
+Blog, Pages légales et FAQ tombaient en panne pour une même raison :
+le contenu existant était codé en dur dans le HTML / i18n et n'avait
+jamais été « importé » (seed) dans le back-office, et les pages
+publiques ne fusionnaient aucun contenu de secours.
+
+Principe appliqué partout : SEED (contenu du site) + BACK-OFFICE (KV).
+Le contenu géré dans l'admin a TOUJOURS la priorité ; le seed complète
+ce qui n'a pas encore été repris. Résultat : rien n'est codé en dur,
+rien n'est jamais vide.
+
+1. BLOG — PAGE ARTICLE PLUS JAMAIS VIDE
+───────────────────────────────────────────────────────────────
+• AVANT : blog-seed.js n'était chargé QUE dans l'admin. Sur le site,
+  les articles n'existaient pas → clic = « article introuvable ».
+• MAINTENANT : blog-seed.js est chargé sur le site (blog + article).
+  La page article lit la liste fusionnée (seed + admin) et affiche
+  toujours l'article — même hors-ligne ou avant réponse serveur.
+• Les 3 cartes du blog ne sont PLUS codées en dur : elles sont
+  générées dynamiquement depuis le seed/back-office (mêmes images,
+  même design). Tout article modifié dans l'admin remplace le seed.
+
+2. PAGES LÉGALES — IMPORTÉES ET ÉDITABLES (4 LANGUES)
+───────────────────────────────────────────────────────────────
+• Le vrai contenu des pages CGV, Confidentialité, Mentions légales
+  et LLD est désormais importé dans le back-office (legal-seed.js).
+• Module Marketing → Pages légales : le contenu FR réel apparaît,
+  modifiable par langue (FR / EN / ES / AR), sans jamais écraser une
+  saisie existante.
+• Côté site : le contenu admin non vide prime ; sinon le contenu
+  d'origine reste affiché. Repli FR si la langue n'est pas traduite ;
+  le titre du hero se traduit si une traduction est saisie.
+
+3. FAQ — LES 10 QUESTIONS DU SITE DANS LE BACK-OFFICE
+───────────────────────────────────────────────────────────────
+• Les 10 FAQ affichées sur le site sont importées dans le module FAQ
+  (faq-seed.js) : visibles, modifiables, multilingues (FR/EN/ES/AR),
+  avec statut actif/inactif et synchronisation.
+• Sur la page FAQ publique : les questions codées en dur sont
+  remplacées par la liste unique pilotée depuis le back-office
+  (aucun doublon). Les réponses peuvent contenir des liens.
+• Ajout / modification / suppression dans l'admin → le site se met
+  à jour (logique : Back-office FAQ → FAQ du site).
+
+4. BANNIÈRE COOKIES — NE GÊNE PLUS LE POP-UP DE RÉSERVATION
+───────────────────────────────────────────────────────────────
+• La carte cookies passe SOUS le pop-up de réservation
+  (z-index 980 < overlay 990 < drawer 1000) : elle ne le couvre
+  plus jamais, en plus du masquage automatique déjà en place.
+• Toujours : carte discrète en bas à gauche, responsive, boutons
+  Accepter / Refuser / Personnaliser, choix mémorisé.
+
+FICHIERS
+───────────────────────────────────────────────────────────────
+  legal-seed.js          → NOUVEAU : contenu légal du site importé
+  faq-seed.js            → NOUVEAU : 10 FAQ du site importées
+  blog-seed.js           → images d'origine ajoutées aux 3 articles
+  content-bridge.js      → fusion seed+admin (blog/FAQ/légal),
+                           bootstrap anti-page-vide, FAQ sans doublon
+  pages/blog.html        → cartes dynamiques (plus de codé en dur)
+  pages/article.html     → charge blog-seed.js
+  pages/faq.html         → charge faq-seed.js
+  pages/cgv|privacy|mentions|lld.html → chargent legal-seed.js
+  admin/marketing.html   → import FAQ + légal dans le back-office
+  cookie-consent.js      → bannière sous le pop-up de réservation
+  i18n.js                → clé bl.empty (4 langues)
+
+DÉPLOIEMENT
+───────────────────────────────────────────────────────────────
+La synchronisation passe par le serveur Cloudflare (KV). Après
+déploiement : ouvrir une fois le back-office (modules Blog, FAQ,
+Pages légales) pour pousser l'import initial vers le serveur, puis
+rafraîchir le site public (Ctrl+F5). Même sans cette étape, le site
+affiche déjà tout le contenu grâce au seed embarqué.

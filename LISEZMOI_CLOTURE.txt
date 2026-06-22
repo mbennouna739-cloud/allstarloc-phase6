@@ -1,0 +1,71 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — CLÔTURE DE PÉRIODE & ARCHIVAGE
+═══════════════════════════════════════════════════════════════
+
+Le bouton « Réinitialiser » est remplacé par une véritable
+CLÔTURE DE PÉRIODE avec archivage. Plus de simple remise à zéro
+de chiffres : on archive, puis on repart sur une période vierge.
+
+───────────────────────────────────────────────────────────────
+CE QUE FAIT LA CLÔTURE (bouton « Clôturer la période et archiver »)
+───────────────────────────────────────────────────────────────
+1. ARCHIVE toutes les données opérationnelles terminées :
+   réservations, locations, clients, paiements, charges, activité
+   récente, grand livre, rapports — dans une archive complète.
+
+2. REMET LE TABLEAU DE BORD À ZÉRO :
+   • Revenus du mois = 0
+   • Activité récente vide
+   • Réservations = 0
+   • Locations en cours = 0
+   • Impayés = 0
+   • Toutes les statistiques à zéro
+   • Le parc redevient entièrement disponible
+
+   (Correction du bug : avant, les revenus du mois et certaines
+    données restaient affichés. Désormais les données actives sont
+    réellement vidées, donc le dashboard repart bien à zéro.)
+
+3. ÉLÉMENTS PERMANENTS JAMAIS SUPPRIMÉS :
+   véhicules, tarifs, paramètres, utilisateurs, FAQ, blog,
+   marketing digital, historique d'entretien.
+
+───────────────────────────────────────────────────────────────
+ARCHIVES (Paramètres → Archives des périodes clôturées)
+───────────────────────────────────────────────────────────────
+Chaque clôture crée une archive nommée (vous choisissez le nom).
+Pour chaque archive :
+  • RECHERCHE : par nom de période, client ou véhicule.
+  • CONSULTATION : détail complet (réservations + charges) dans
+    une fenêtre, avec totaux.
+  • EXPORT EXCEL : fichier complet (résumé + réservations +
+    charges) prêt pour le comptable.
+  • RESTAURATION : réinjecte les données de l'archive dans le
+    tableau de bord si nécessaire (fusion sans doublon).
+  • SUPPRESSION : possible, sur double confirmation.
+
+───────────────────────────────────────────────────────────────
+LOGIQUE
+───────────────────────────────────────────────────────────────
+Après une clôture, le système donne l'impression de démarrer une
+nouvelle période d'exploitation, tout en conservant l'intégralité
+de l'historique dans les archives. Rien n'est perdu.
+
+───────────────────────────────────────────────────────────────
+TESTS EFFECTUÉS (tous validés)
+───────────────────────────────────────────────────────────────
+  • Clôture avec 2 réservations (1500 encaissé) + 1 charge (200) :
+    → tableau de bord : réservations 0, revenus 0, parc 100% dispo
+    → archive créée : 2 réservations, encaissé 1500, charges 200
+  • Revenus du mois correctement remis à zéro.
+  • Parc entièrement libéré.
+  • Stats de l'archive préservées et exactes.
+  • Consultation, export Excel et restauration opérationnels.
+  • Éléments permanents (flotte, FAQ, blog, etc.) intacts.
+
+FICHIERS :
+  admin/admin-archive.js  → clôture + interface des archives
+  admin/index.html        → section Archives + bouton clôture
+  data.js                 → moteur closePeriod / getArchives /
+                            restoreArchive / deleteArchive
+  admin/admin-lot5.js     → ancien reset neutralisé

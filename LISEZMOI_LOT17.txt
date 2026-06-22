@@ -1,0 +1,82 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — LOT 17
+  Synchro bidirectionnelle renforcée + Bannière cookies
+═══════════════════════════════════════════════════════════════
+
+───────────────────────────────────────────────────────────────
+1. SYNCHRONISATION SITE ↔ BACK-OFFICE (le point le plus important)
+───────────────────────────────────────────────────────────────
+Deux renforcements majeurs garantissent que tout le contenu du
+site est présent dans l'admin ET que rien ne se perd :
+
+A) HYDRATATION AU DÉMARRAGE (serveur → admin)
+   Quand vous ouvrez le back-office, il récupère automatiquement
+   le contenu actuellement EN LIGNE depuis le serveur et le charge
+   dans les éditeurs. Résultat : tout ce qui est affiché sur le
+   site (blog, FAQ, avis, options, pages légales, textes…) est
+   présent et modifiable dans l'admin, même sur un nouvel appareil
+   ou un nouveau navigateur.
+
+B) SAUVEGARDE ANTI-PERTE (« merge-safe »)
+   Avant d'enregistrer une section, le système lit d'abord le
+   document du serveur et superpose uniquement vos modifications.
+   Conséquence : enregistrer les AVIS n'efface jamais les OPTIONS,
+   le BLOG, etc. — même si vous éditez depuis plusieurs appareils.
+   (Testé : sauvegarde d'une section → les autres restent intactes.)
+
+RÉCAP — TOUT LE CONTENU VISIBLE EST GÉRABLE DEPUIS L'ADMIN :
+   • Blog / Articles ......... créer / modifier / publier / supprimer
+   • FAQ .................... créer / modifier / supprimer
+   • Avis clients ........... ajouter / modifier / activer / supprimer
+   • Options de réservation . sous « Assurances », gérables
+   • Pages légales .......... modifier / traduire / publier
+   • Textes du site & SEO ... éditeur multilingue
+   • Cookies ................ bannière configurable (nouveau)
+   Tout est multilingue (FR/EN/ES/AR) et synchronisé automatiquement.
+
+───────────────────────────────────────────────────────────────
+2. BANNIÈRE COOKIES (nouveau)
+───────────────────────────────────────────────────────────────
+Le site n'avait aucun système de cookies. Ajout d'une bannière
+professionnelle et responsive, gérable depuis le back-office :
+
+SECTION BACK-OFFICE : « Cookies & Confidentialité »
+   • Activer / désactiver la bannière.
+   • Modifier le texte affiché (multilingue FR/EN/ES/AR).
+   • Choisir les catégories proposées : Analytics, Marketing,
+     Fonctionnels (les cookies « Nécessaires » sont toujours actifs).
+   • Renseigner les identifiants de suivi :
+       - Google Analytics 4 (ID de mesure G-XXXX)
+       - Google Ads (ID de conversion AW-XXXX)
+       - Meta Pixel (ID)
+
+SUR LE SITE :
+   • Bannière en bas de page : « Tout accepter », « Tout refuser »,
+     « Personnaliser ».
+   • « Personnaliser » ouvre une fenêtre avec les catégories à
+     cocher individuellement.
+   • Le choix est mémorisé (pas de réaffichage à chaque visite).
+   • Lien « Gérer les cookies » réutilisable via ASLCookies.open().
+
+PRÊT POUR LE SUIVI SANS CODE :
+   Les scripts Google Analytics, Google Ads et Meta Pixel ne se
+   chargent QUE si le visiteur a accepté la catégorie concernée.
+   Vous renseignez simplement les identifiants dans le back-office
+   quand vous serez prêt — aucune modification de code nécessaire.
+   (Testé : refus = aucun script ; acceptation partielle = seuls
+   les scripts autorisés se chargent.)
+
+───────────────────────────────────────────────────────────────
+FICHIERS
+───────────────────────────────────────────────────────────────
+  cookie-consent.js       → NOUVEAU : bannière + gestion consentement
+  admin/marketing.html    → hydratation démarrage + sauvegarde
+                            merge-safe + section Cookies & Confidentialité
+  content-bridge.js       → expose la config cookies au site
+  index.html + pages/*    → chargent la bannière cookies
+
+Note déploiement : la synchronisation passe par le serveur
+Cloudflare (/api/marketing + KV). Tester sur le site déployé et
+rafraîchir (Ctrl+F5) après modification.
+
+Lots précédents : conservés. Tous fichiers validés.

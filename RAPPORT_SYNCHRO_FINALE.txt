@@ -1,0 +1,106 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — SYNCHRO DISPONIBILITÉS, TRADUCTIONS & STABILITÉ
+═══════════════════════════════════════════════════════════════
+
+───────────────────────────────────────────────────────────────
+1. BUG CRITIQUE CORRIGÉ — SYNCHRONISATION DES DISPONIBILITÉS
+───────────────────────────────────────────────────────────────
+CAUSE EXACTE TROUVÉE : le moteur de recherche du SITE CLIENT ne
+comptait que les réservations au statut « confirmed ». Or les
+locations et réservations créées en back-office portent le statut
+« active ». Résultat : une voiture louée manuellement restait
+affichée comme disponible sur le site.
+
+CORRECTION : le site client utilise désormais EXACTEMENT le même
+moteur central que le back-office (ASLDB.checkAvailability). Ce
+moteur compte TOUTES les réservations non annulées et non
+clôturées, quelle que soit leur origine :
+  • réservation site client
+  • réservation manuelle
+  • location manuelle
+  • réservation confirmée
+  • location en cours / prolongation
+
+→ Source unique, base unique, règles identiques partout.
+→ Synchronisation bidirectionnelle en temps réel.
+
+L'AFFICHAGE EST CONSERVÉ À L'IDENTIQUE : si une voiture n'est pas
+disponible, le site l'affiche toujours avec le message « Disponible
+à partir du [date] à [heure]. Vous pouvez modifier vos dates ou
+choisir un autre véhicule », et le bouton bascule de Réserver vers
+Modifier les dates.
+
+TESTS VALIDÉS :
+  • Location manuelle (active) → voiture INDISPONIBLE sur le site
+    aux mêmes dates ✓
+  • Réservation confirmée → bloque ✓
+  • Dates différentes → disponible ✓
+  • Location clôturée → ne bloque plus ✓
+  • Back-office : créer une location sur une voiture déjà réservée
+    → conflit détecté, message + prochaine dispo ✓
+
+───────────────────────────────────────────────────────────────
+2. PRODUCT SEARCH / CALENDRIERS
+───────────────────────────────────────────────────────────────
+Les calendriers et sélecteurs transmettent bien date de départ,
+date de retour, heure de départ et heure de retour au moteur
+central (mêmes paramètres, même format). Le nouveau design est
+conservé ; seule la logique a été reconnectée au moteur unique.
+
+───────────────────────────────────────────────────────────────
+3. CHEVAUCHEMENTS
+───────────────────────────────────────────────────────────────
+La détection compare dates ET heures, avec marge de sécurité de
+3h après chaque retour. Locations, réservations confirmées et
+prolongations sont toutes prises en compte.
+
+───────────────────────────────────────────────────────────────
+4 & 5. RETOUR AUJOURD'HUI
+───────────────────────────────────────────────────────────────
+• Le compteur « Retours aujourd'hui » se met à jour en temps réel
+  (rafraîchissement automatique à chaque changement de données).
+• Au clic : un pop-up simple avec uniquement les filtres
+  Aujourd'hui / Demain / Date choisie.
+• Chaque ligne affiche : véhicule, immatriculation, date de retour
+  prévue, heure de retour prévue, et un bouton « Fiche ».
+• « Fiche » ouvre directement la fiche existante de la location
+  (client, téléphone, paiements reçus, restes à payer, statut,
+  infos location) — aucune nouvelle fiche créée.
+
+───────────────────────────────────────────────────────────────
+6. TRADUCTIONS DES ASSURANCES (pop-up réservation)
+───────────────────────────────────────────────────────────────
+Les cartes d'assurance (titre, sous-titre, badge, explication,
+mention « Sélectionnée ») étaient codées en français en dur. Elles
+utilisent maintenant le système de traduction, avec des textes
+fournis dans les 4 langues (FR / EN / ES / AR). Au changement de
+langue, les assurances suivent désormais la langue active, comme
+le reste du pop-up.
+
+───────────────────────────────────────────────────────────────
+7. STABILITÉ — HERO « COUPÉ » AU SCROLL
+───────────────────────────────────────────────────────────────
+SYMPTÔME : après avoir choisi des dates puis remonté la page, la
+voiture et le hero apparaissaient coupés un instant avant de se
+rétablir.
+CAUSE : les animations d'entrée combinées au masquage du hero
+rognaient temporairement les éléments.
+CORRECTION :
+  • Le hero masque uniquement les débordements horizontaux
+    (overflow-x:clip) — plus aucun rognage vertical de la voiture.
+  • Les animations d'entrée sont figées dès l'ouverture du
+    calendrier ou du pop-up de réservation (plus de clignotement
+    au retour vers le haut).
+  • L'image garde ses proportions (height:auto), jamais déformée
+    ni découpée.
+
+───────────────────────────────────────────────────────────────
+FICHIERS MODIFIÉS
+───────────────────────────────────────────────────────────────
+  index.html            → moteur dispo unifié (site), assurances
+                          traduites, correctif hero
+  i18n.js               → clés assurances FR/EN/ES/AR
+  admin/admin-lot5.js   → Retours (filtres + immat + heure + Fiche),
+                          refresh temps réel du tableau de bord
+
+Tous les fichiers validés (syntaxe OK). Tous les scénarios testés.

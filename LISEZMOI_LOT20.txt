@@ -1,0 +1,112 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — LOT 20
+  CMS unifié : 7 pages pré-remplies 4 langues + Blog/FAQ multilingues
+═══════════════════════════════════════════════════════════════
+
+OBJECTIF ATTEINT : Site ↔ Back-office ↔ Multilingue ↔ SEO.
+Plus aucun contenu codé en dur. Tout est pré-rempli dans les 4
+langues, visible et modifiable depuis le back-office, synchronisé.
+
+───────────────────────────────────────────────────────────────
+1. TRANSFERT PRIVÉ — SUPPRIMÉ DÉFINITIVEMENT
+───────────────────────────────────────────────────────────────
+Retiré de : footers de toutes les pages, page contact, et vidé
+dans les 4 langues du système de traduction (i18n). Plus aucune
+référence visible ni dans les menus ni dans le SEO.
+
+───────────────────────────────────────────────────────────────
+2. PAGES DE CONTENU — 7 PAGES PRÉ-REMPLIES 4 LANGUES
+───────────────────────────────────────────────────────────────
+Dans le back-office (Marketing → Pages de contenu), vous trouvez
+déjà remplies, en FR / EN / ES / AR :
+  • Conditions générales
+  • Politique de confidentialité
+  • Mentions légales
+  • Location courte durée
+  • Location longue durée
+  • Livraison aéroport
+  • Livraison hôtel / riad
+
+Pour CHAQUE page et CHAQUE langue, vous pouvez modifier :
+  • Badge / étiquette du hero
+  • Titre
+  • Sous-titre (accroche)
+  • Contenu complet (HTML simple : titres, paragraphes, listes)
+  • Meta title (SEO)
+  • Meta description (SEO)
+  • Image de couverture (optionnelle)
+  • Statut publié / masqué
+
+Sélectionnez la langue, modifiez, cliquez « Enregistrer &
+Publier » : le site se met à jour automatiquement.
+
+───────────────────────────────────────────────────────────────
+3. AFFICHAGE CÔTÉ SITE — PAGE UNIVERSELLE
+───────────────────────────────────────────────────────────────
+Une page universelle (pages/page.html?slug=…) affiche chaque
+page de contenu :
+  • Design identique aux autres pages (header, menu, footer).
+  • Bon contenu selon la langue sélectionnée (repli FR si vide).
+  • SEO correct (title, meta description, Open Graph).
+  • Passage automatique en RTL pour l'arabe.
+  • Menu mobile (burger) fonctionnel, viewport stable, aucun
+    scroll horizontal, aucun zoom involontaire.
+  • Jamais vide : message clair si une page est introuvable.
+
+Tous les liens du footer (services ET légal) pointent désormais
+vers cette page universelle, pour une cohérence totale.
+
+───────────────────────────────────────────────────────────────
+4. BLOG — ARTICLES PRÉ-REMPLIS DANS LES 4 LANGUES
+───────────────────────────────────────────────────────────────
+Les 3 articles de démonstration ont maintenant leur version
+française, anglaise, espagnole et arabe déjà rédigée (titre,
+extrait, contenu, meta title). Quand vous ouvrez un article dans
+le back-office, les 4 langues sont déjà remplies — vous n'avez
+qu'à modifier ce que vous voulez.
+
+───────────────────────────────────────────────────────────────
+5. FAQ — QUESTIONS PRÉ-REMPLIES 4 LANGUES + SYNCHRO VÉRIFIÉE
+───────────────────────────────────────────────────────────────
+Les 10 questions fréquentes sont désormais pré-remplies en
+FR / EN / ES / AR. Quand vous ouvrez le back-office, les FAQ
+existent déjà dans les 4 langues.
+
+Synchronisation : la chaîne Back-office FAQ → Sauvegarde → Base
+→ Site suit exactement la même logique que le Blog (vérifié).
+L'éditeur s'ouvre dans une fenêtre propre et centrée, identique
+au Blog et aux autres modules — aucun formulaire caché derrière
+un autre.
+
+───────────────────────────────────────────────────────────────
+6. STABILITÉ MOBILE
+───────────────────────────────────────────────────────────────
+Toutes les nouvelles pages :
+  • Menu burger fonctionnel.
+  • Viewport stable (initial-scale=1.0), aucun zoom involontaire.
+  • Aucun débordement horizontal (overflow-x maîtrisé).
+  • Images limitées à la largeur de l'écran.
+  • Responsive mobile et desktop.
+
+───────────────────────────────────────────────────────────────
+FICHIERS PRINCIPAUX
+───────────────────────────────────────────────────────────────
+  pages-seed.js          → 7 pages × 4 langues (pré-remplies)
+  pages/page.html        → page de contenu universelle
+  page-render.js         → moteur d'affichage des pages
+  blog-seed.js           → 3 articles × 4 langues
+  faq-seed.js            → 10 FAQ × 4 langues
+  admin/marketing.html   → éditeur « Pages de contenu » complet
+  content-bridge.js      → fusion seed + back-office, exposition
+  index.html + pages/*   → footers mis à jour, transfert privé ôté
+
+───────────────────────────────────────────────────────────────
+NOTE IMPORTANTE — DÉPLOIEMENT
+───────────────────────────────────────────────────────────────
+La synchronisation passe par le serveur Cloudflare (/api/marketing
++ KV). Pour voir les changements en conditions réelles, testez sur
+le site DÉPLOYÉ et rafraîchissez (Ctrl+F5). En local (fichiers
+ouverts directement), le pré-remplissage s'affiche grâce au seed,
+mais la synchronisation serveur n'est pas active.
+
+Lots précédents : tous conservés. Tous les fichiers validés.

@@ -1,0 +1,84 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — GESTION DES UTILISATEURS & PERMISSIONS
+═══════════════════════════════════════════════════════════════
+
+L'administrateur principal peut créer des accès pour ses employés
+et choisir précisément les sections auxquelles chacun a droit.
+
+───────────────────────────────────────────────────────────────
+OÙ ?
+───────────────────────────────────────────────────────────────
+Back-office → Paramètres système → « Utilisateurs & accès
+employés ». Cette section n'est visible QUE par l'administrateur
+principal.
+
+───────────────────────────────────────────────────────────────
+CE QUE PEUT FAIRE L'ADMINISTRATEUR PRINCIPAL
+───────────────────────────────────────────────────────────────
+• Créer un accès employé (bouton « + Créer un accès »).
+• Définir un nom, un identifiant et un mot de passe.
+• Cocher / décocher les sections autorisées (18 sections) :
+    Tableau de bord, Véhicules, Réservations, Locations, Clients,
+    Paiements, Impayés, Caisse, Charges, Rapports, Entretiens,
+    Archives, Marketing Digital, Blog, FAQ, Pages légales,
+    Avis clients, Paramètres.
+• Boutons « Tout cocher » / « Tout décocher » pour aller vite.
+• Modifier un accès (nom, identifiant, mot de passe, permissions).
+• Désactiver un accès (l'employé ne peut plus se connecter).
+• Réactiver un accès désactivé.
+• Supprimer définitivement un accès.
+
+───────────────────────────────────────────────────────────────
+CÔTÉ EMPLOYÉ
+───────────────────────────────────────────────────────────────
+• L'employé se connecte avec son identifiant et son mot de passe
+  sur la même page de connexion que l'administrateur.
+• Il entre directement dans son espace back-office.
+• Il ne voit QUE les menus autorisés (les autres sont masqués).
+• S'il n'a pas accès au tableau de bord, il arrive sur la première
+  section autorisée.
+• Les modifications qu'il effectue se synchronisent normalement
+  avec le système (mêmes données que l'administrateur).
+
+───────────────────────────────────────────────────────────────
+SÉCURITÉ
+───────────────────────────────────────────────────────────────
+Si un employé n'a pas accès à une section :
+  • Le menu correspondant est MASQUÉ.
+  • L'accès direct (lien, navigation) est BLOQUÉ.
+  • Un écran « Accès non autorisé » s'affiche, avec un bouton de
+    retour au tableau de bord.
+Cette protection couvre :
+  • Les pages principales (véhicules, réservations, paiements,
+    caisse, paramètres…).
+  • Le module Marketing Digital (page séparée).
+  • Les sous-sections Caisse (charges, rapports).
+  • Les archives (dans Paramètres).
+
+Le mot de passe n'est jamais stocké en clair (haché).
+L'administrateur principal conserve l'accès complet à tout.
+
+───────────────────────────────────────────────────────────────
+FICHIERS
+───────────────────────────────────────────────────────────────
+  admin/admin-users.js     → logique (création, auth, permissions)
+  admin/admin-users-ui.js  → interface (liste, modale, cases)
+  admin/auth-guard.js      → masquage menus + blocage accès direct
+  admin/login.html         → connexion employés
+  admin/index.html         → section Paramètres + chargement
+  admin/marketing.html     → protection par permission
+
+───────────────────────────────────────────────────────────────
+TESTS EFFECTUÉS (tous validés)
+───────────────────────────────────────────────────────────────
+  • Création d'un employé avec accès limités.
+  • Connexion bon mot de passe → OK ; mauvais → refusé.
+  • Permissions : sections autorisées accessibles, sections
+    interdites bloquées.
+  • Compte désactivé → connexion refusée.
+  • Administrateur principal → accès à tout.
+  • Mot de passe haché (jamais en clair).
+
+NOTE : les accès sont stockés localement (asl_users_v1). Pour un
+partage multi-postes en temps réel, prévoir le déploiement
+Cloudflare ; la logique est déjà compatible avec la synchro.

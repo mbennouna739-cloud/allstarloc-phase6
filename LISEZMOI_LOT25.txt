@@ -1,0 +1,125 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — LOT 25
+  « Synchroniser les langues » généralisé : Pages Marketing
+  (CGV, Confidentialité, Mentions, Services…) + Avis clients
+  — même logique que FAQ / Blog.
+═══════════════════════════════════════════════════════════════
+
+───────────────────────────────────────────────────────────────
+1. PAGES MARKETING — Bouton « Synchroniser les langues »
+───────────────────────────────────────────────────────────────
+Un bouton « 🌐 Synchroniser les langues (FR → EN/ES/AR) » a été
+ajouté à l'éditeur de pages (Marketing Digital → Pages), pour
+TOUTES les pages gérées :
+  • Conditions Générales (CGV)
+  • Politique de Confidentialité
+  • Mentions Légales
+  • Location Courte Durée
+  • Location Longue Durée
+  • Livraison Aéroport
+  • Livraison Hôtel / Riad
+
+Fonctionnement (exactement comme FAQ / Blog) :
+  1. Vous rédigez / modifiez la page en français.
+  2. Vous cliquez sur « Synchroniser les langues ».
+  3. Le système génère EN / ES / AR pour :
+     • Badge / étiquette
+     • Titre principal
+     • Sous-titre (hero)
+     • Contenu (titres de sections, paragraphes, listes, CTA et
+       boutons rédigés en HTML → la mise en forme est préservée,
+       seul le texte est traduit)
+     • Meta Title (SEO)
+     • Meta Description (SEO)
+  4. Les traductions apparaissent immédiatement dans le back-office
+     (onglets EN/ES/AR) et sont publiées sur le site.
+  5. Chaque langue reste modifiable à la main.
+
+Le slug et l'image de couverture restent communs à toutes les
+langues (une seule URL et une seule image par page — bonne
+pratique SEO).
+
+★ CORRECTION IMPORTANTE (bug latent trouvé et corrigé)
+Les traductions des pages saisies dans le back-office n'étaient en
+réalité PAS appliquées sur le site : le site lisait la structure
+des données dans le mauvais sens (champ→langue au lieu de
+langue→champ). Résultat : seules les versions du « seed » initial
+s'affichaient. C'est corrigé — les traductions et modifications
+faites dans l'administration (dans les 4 langues) apparaissent
+désormais réellement sur le site.
+
+Côté site : chaque page s'affiche dans la langue active
+(FR→FR, EN→EN, ES→ES, AR→AR), repli FR uniquement si une langue
+est réellement vide.
+
+TEST : page CGV éditée en FR → après synchro, EN/ES/AR générés
+(badge, titre, sous-titre, contenu HTML préservé, SEO) ; le cache
+du site est mis à jour immédiatement ; le site lit bien la version
+de chaque langue. ✔
+
+───────────────────────────────────────────────────────────────
+2. AVIS CLIENTS — Bouton « Synchroniser les langues »
+───────────────────────────────────────────────────────────────
+Un bouton « 🌐 Synchroniser les langues (FR → EN/ES/AR) » a été
+ajouté à l'éditeur d'avis (Marketing Digital → Avis clients).
+
+Fonctionnement :
+  • Vous saisissez l'avis en français.
+  • Vous cliquez sur « Synchroniser les langues » → le texte de
+    l'avis est généré en EN / ES / AR.
+  • À l'enregistrement, toute langue laissée vide est aussi
+    complétée automatiquement depuis le français.
+  • Les traductions apparaissent immédiatement dans le back-office
+    et sur le site (mise à jour du cache du site).
+
+Le nom du client et la source restent communs (un nom propre ne se
+traduit pas). Le texte de l'avis — le contenu réellement affiché —
+est traduit dans les 4 langues.
+(Remarque : les champs « pays/ville », « réponse de l'agence » et
+« titre/résumé » n'existent pas dans le modèle d'avis actuel ;
+seul le texte de l'avis y figure et c'est lui qui est traduit. Ces
+champs pourront être ajoutés ultérieurement si vous le souhaitez.)
+
+Côté site : chaque avis s'affiche dans la langue active, sans
+mélange (FR→FR, EN→EN, ES→ES, AR→AR), repli FR si une langue est
+vide.
+
+TEST : nouvel avis FR → après synchro et enregistrement, EN/ES/AR
+générés et stockés ; le cache du site est mis à jour. ✔
+
+───────────────────────────────────────────────────────────────
+RAPPEL — Traduction automatique
+───────────────────────────────────────────────────────────────
+La génération EN/ES/AR utilise un service de traduction en ligne
+(connexion Internet requise — fonctionne sur le site déployé et en
+local si le navigateur a accès au réseau). Si le service est
+indisponible, le français est conservé (aucun champ vide) et reste
+modifiable à la main. Toute la logique (lecture du FR, génération
+des 3 langues, préservation du HTML, écriture back-office + cache
+site + synchro serveur) a été testée.
+
+───────────────────────────────────────────────────────────────
+VALIDATION FINALE — TESTS RÉELS
+───────────────────────────────────────────────────────────────
+  ✔ Pages Marketing : synchro FR → EN/ES/AR (badge, titre,
+    sous-titre, contenu HTML, SEO) + publication immédiate.
+  ✔ Correctif : les traductions des pages apparaissent enfin sur
+    le site (structure de données corrigée).
+  ✔ Avis clients : synchro FR → EN/ES/AR + auto-remplissage à
+    l'enregistrement + publication immédiate.
+  ✔ Affichage par langue (pages et avis), sans mélange.
+  ✔ Contrôle de syntaxe de tous les scripts : 0 erreur.
+
+───────────────────────────────────────────────────────────────
+FICHIERS MODIFIÉS DANS CE LOT
+───────────────────────────────────────────────────────────────
+  admin/marketing.html → bouton « Synchroniser les langues » +
+                         logique de traduction pour les Pages
+                         Marketing et les Avis clients ; mise à
+                         jour immédiate du cache du site.
+  content-bridge.js    → correction de la fusion des pages
+                         (structure langue→champ) : les
+                         traductions du back-office s'affichent
+                         désormais réellement sur le site.
+
+Lots précédents (1 → 24) : tous conservés.

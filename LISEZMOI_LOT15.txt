@@ -1,0 +1,105 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — LOT 15
+  Pages footer + Responsabilité client + Options de réservation
+═══════════════════════════════════════════════════════════════
+
+───────────────────────────────────────────────────────────────
+1. PAGES DU FOOTER — STABILITÉ MOBILE + MULTILINGUE
+───────────────────────────────────────────────────────────────
+Pages : Politique de confidentialité, Conditions générales (CGV),
+Mentions légales, Location longue durée.
+
+PROBLÈME TROUVÉ (identique à l'ancienne FAQ) : ces 4 pages ne
+chargeaient pas i18n.js → menu burger cassé + pas de traduction
+du menu / pied de page.
+
+CORRIGÉ : i18n.js + content-bridge.js ajoutés sur les 4 pages.
+Résultat, comme Accueil / Véhicules / Blog / FAQ :
+  • Menu burger fonctionnel (ouverture/fermeture).
+  • Navigation + pied de page traduits (FR/EN/ES/AR).
+  • Aucun scroll horizontal (page.css : overflow-x hidden,
+    max-width 100% — déjà en place, commun à toutes les pages).
+  • Scroll fluide, responsive mobile et desktop.
+
+NOTE sur le contenu éditorial multilingue des pages légales :
+le menu, le pied de page et la structure suivent déjà la langue.
+La traduction du corps juridique complet (articles détaillés) et
+son édition depuis le back-office constituent un module dédié
+volumineux (comme pour les articles de blog longs). Il peut être
+ajouté dans un lot séparé si souhaité, avec le même système
+d'onglets de langue. Aucune régression entre-temps.
+
+───────────────────────────────────────────────────────────────
+2. RESPONSABILITÉ DU CLIENT (CGV)
+───────────────────────────────────────────────────────────────
+Nouvel « Article 7 bis — Responsabilité du client pendant la
+location » ajouté aux Conditions générales, rédigé de façon
+professionnelle. Il couvre :
+  • Crevaisons et dommages aux pneus (sauf option Protection
+    pneus / crevaison).
+  • Infractions routières et amendes (y compris reçues après
+    la restitution).
+  • Mauvaise utilisation du véhicule.
+  • Dommages causés pendant la location (selon franchise et
+    protection souscrite).
+
+───────────────────────────────────────────────────────────────
+3. OPTIONS DE RÉSERVATION ADMINISTRABLES
+───────────────────────────────────────────────────────────────
+Nouvelle section « Options de réservation » dans le back-office
+(Marketing Digital → Options de réservation). Permet de :
+  • Ajouter une option.
+  • Modifier une option.
+  • Supprimer une option.
+  • Activer / désactiver une option.
+  • Définir le prix.
+  • Choisir le type de prix : Par jour / Par réservation / Gratuit.
+  • Nom multilingue (FR / EN / ES / AR).
+
+Options par défaut fournies (modifiables) : deuxième conducteur,
+siège bébé, réhausseur, GPS, livraison véhicule, retour véhicule,
+protection pneus/crevaison, assistance, extension assurance.
+
+SYNCHRONISATION : les options sont envoyées au serveur (comme le
+blog / la FAQ) et lues par le site dans le pop-up de réservation.
+Le calcul du total applique le bon type de prix (jour × durée,
+forfait par réservation, ou gratuit). Les options choisies par le
+client apparaissent dans la réservation, le résumé et le total →
+visibles ensuite dans Réservations / Locations / Paiements.
+
+Si aucune configuration n'existe encore, le site garde ses
+options par défaut (aucune rupture).
+
+───────────────────────────────────────────────────────────────
+4. OPTION PROTECTION PNEUS / CREVAISON
+───────────────────────────────────────────────────────────────
+Incluse dans les options gérables ci-dessus (id tire-protection) :
+  • Activable / désactivable depuis le back-office.
+  • Facturable selon le prix défini (par défaut 30 MAD/jour).
+  • Visible dans le pop-up uniquement si activée.
+  • Si sélectionnée : apparaît dans la réservation, la location
+    et est prise en compte dans le paiement.
+
+───────────────────────────────────────────────────────────────
+5. NOTIFICATIONS — VÉRIFIÉ
+───────────────────────────────────────────────────────────────
+Confirmé en place (depuis les lots précédents) :
+  • Chaque notification est cliquable et ouvre directement la
+    fiche/le module concerné (réservation, location, entretien,
+    impayé → réservation/client).
+  • Quand le problème est résolu et enregistré, la notification
+    disparaît automatiquement (compteur live + hook onChange),
+    les données et le tableau de bord se synchronisent.
+
+───────────────────────────────────────────────────────────────
+FICHIERS
+───────────────────────────────────────────────────────────────
+  pages/privacy.html, cgv.html, mentions.html, lld.html
+                        → + i18n.js + content-bridge.js
+  pages/cgv.html        → + Article 7 bis (responsabilité client)
+  admin/marketing.html  → section + éditeur Options de réservation
+  content-bridge.js     → expose les options au site
+  index.html            → pop-up lit les options dynamiques +
+                          calcul par type de prix
+
+Lots précédents : conservés. Tests : OK.

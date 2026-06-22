@@ -1,0 +1,84 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — MODULE CAISSE
+═══════════════════════════════════════════════════════════════
+
+PRINCIPE : aucune donnée recréée. La Caisse LIT automatiquement
+les informations déjà présentes (locations, réservations, fiches
+clients, paiements). Une donnée = un seul endroit où elle est
+gérée. Seules les CHARGES sont saisies dans ce module.
+
+───────────────────────────────────────────────────────────────
+MENU
+───────────────────────────────────────────────────────────────
+Un seul menu « Caisse » dans le back-office, avec 3 sous-onglets :
+Résumé · Charges · Rapports. Rien de plus.
+
+───────────────────────────────────────────────────────────────
+1. RÉSUMÉ
+───────────────────────────────────────────────────────────────
+Compréhensible en moins de 10 secondes :
+
+  • Encaissements réels — argent réellement reçu (somme des
+    paiements « paid »). N'inclut JAMAIS les impayés ni les restes.
+  • Charges — total des dépenses enregistrées.
+  • Solde réel = Encaissements réels − Charges.
+  • Montants à encaisser — impayés + restes à payer, affichés
+    SÉPARÉMENT (jamais ajoutés à la caisse réelle).
+  • Solde estimé = Encaissements réels + Montants à encaisser − Charges.
+
+Une phrase de lecture rapide résume tout en bas.
+
+IMPAYÉS — AUCUN DOUBLON : la carte « Montants à encaisser »
+affiche seulement le total. Au clic, elle OUVRE LE MODULE IMPAYÉS
+EXISTANT (le même panneau que le tableau de bord). Aucune
+deuxième liste, aucune désynchronisation.
+
+───────────────────────────────────────────────────────────────
+2. CHARGES
+───────────────────────────────────────────────────────────────
+Bouton « Ajouter une charge ». Champs : date, véhicule concerné,
+catégorie, montant, description, photo facture (optionnel).
+
+Catégories : Carburant, Lavage, Vidange, Pneus, Réparation,
+Entretien, Assurance, Parking, Amende, Accessoire, Autre.
+
+Les charges sont stockées séparément (asl_charges_v1) et
+déduites automatiquement du solde réel.
+
+───────────────────────────────────────────────────────────────
+3. RAPPORTS
+───────────────────────────────────────────────────────────────
+Filtres : Aujourd'hui · Cette semaine · Ce mois · Période
+personnalisée (du / au).
+
+Affiche pour la période : encaissements réels, charges, solde
+réel, montants à encaisser, solde estimé.
+
+Exports : PDF (impression) et Excel (CSV).
+
+───────────────────────────────────────────────────────────────
+LIAISON AUTOMATIQUE
+───────────────────────────────────────────────────────────────
+La Caisse est reliée aux locations, réservations et fiches
+clients via la base partagée. Exemple :
+  Location 1 000 MAD, 300 MAD reçus →
+    Encaissements réels = 300 MAD
+    Montants à encaisser = 700 MAD
+  La caisse réelle n'affiche jamais 1 000 MAD tant que le client
+  n'a pas payé. Quand les 700 MAD sont encaissés (via la fiche),
+  ils passent automatiquement en encaissements réels et le montant
+  à encaisser diminue. Mise à jour en temps réel.
+
+───────────────────────────────────────────────────────────────
+FICHIERS
+───────────────────────────────────────────────────────────────
+  admin/admin-caisse.js  → tout le module (calculs, charges,
+                           rapports, exports)
+  admin/index.html       → menu Caisse + page + 3 sous-onglets
+                           + styles, branché sur showPage
+
+Tests effectués (scénario du cahier des charges) :
+  Encaissements 2300, Charges 350, Solde réel 1950,
+  À encaisser 2200, Solde estimé 4150 — tous corrects.
+  Annulations exclues. Exemple 1000/300 → 300 réel / 700 à
+  encaisser : validé.

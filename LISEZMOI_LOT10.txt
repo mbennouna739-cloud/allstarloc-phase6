@@ -1,0 +1,81 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — LOT 10
+  Blog/FAQ multilingues + Notifications cliquables
+═══════════════════════════════════════════════════════════════
+
+───────────────────────────────────────────────────────────────
+A. BLOG & FAQ MULTILINGUES (contrôle total, pas d'auto-traduction)
+───────────────────────────────────────────────────────────────
+Même logique que l'éditeur de textes SEO du site : on sélectionne
+une langue, on modifie UNIQUEMENT cette langue. Aucune traduction
+automatique imposée.
+
+ÉDITEUR D'ARTICLES (Marketing Digital → Blog)
+• Onglets de langue : 🇫🇷 FR · 🇬🇧 EN · 🇪🇸 ES · 🇸🇦 AR
+• Par langue : Titre, Contenu, Titre SEO (meta title), Meta description.
+• Communs à toutes les langues : catégorie, auteur, statut, image, slug.
+• Les articles déjà créés sont CONSERVÉS (compatibilité) :
+  leur texte FR existant devient automatiquement la version FR.
+• Champs arabes en saisie RTL.
+
+ÉDITEUR FAQ (Marketing Digital → FAQ)
+• Mêmes onglets de langue.
+• Par question : version FR / EN / ES / AR (question + réponse).
+
+AFFICHAGE SUR LE SITE
+• Quand le visiteur change la langue du site, le Blog se met à
+  jour automatiquement (titres, descriptions, bouton « Lire »).
+• Le schéma FAQ (SEO/Google) suit aussi la langue active.
+• Secours : si une langue est vide pour un article/une question,
+  la version française s'affiche (jamais de page vide).
+
+───────────────────────────────────────────────────────────────
+B. PUBLICATION BLOG — SYNCHRONISATION CORRIGÉE
+───────────────────────────────────────────────────────────────
+CAUSE TROUVÉE : le bouton « Publier / Masquer » (toggleBlogStatus)
+et la suppression d'article enregistraient en local mais NE
+synchronisaient PAS vers le site (pas d'appel à syncToKV).
+→ C'est pourquoi certains articles ne remontaient pas sur le Blog.
+
+CORRECTION :
+• « Publier / Masquer » synchronise désormais immédiatement.
+• La suppression synchronise aussi.
+• Message de confirmation : « publié et synchronisé sur le site ».
+Chaque article publié apparaît donc automatiquement sur la page Blog.
+
+───────────────────────────────────────────────────────────────
+C. NOTIFICATIONS CLIQUABLES
+───────────────────────────────────────────────────────────────
+L'ancienne notification (simple alerte texte) est remplacée par
+un vrai panneau cliquable. Chaque notification ouvre DIRECTEMENT
+la fiche/le module permettant de résoudre le problème :
+
+• Réservation en attente → ouvre la réservation
+  (confirmer / modifier / traiter). Une fois traitée, elle
+  disparaît de la liste.
+• Retour prévu aujourd'hui → ouvre la location concernée
+  (voir le véhicule, confirmer le retour → la notif disparaît).
+• Véhicule en retard → ouvre la fiche location (client, véhicule,
+  date de retour dépassée) pour traiter la situation.
+• Vidange → ouvre la fiche véhicule dans Entretien véhicules
+  (modifier date/km → notif disparaît après enregistrement).
+• Visite technique → ouvre la fiche véhicule (modifier la date).
+• Assurance → ouvre la fiche véhicule (modifier le renouvellement).
+• Impayé important (≥ 500 MAD) → ouvre la réservation concernée.
+
+Les notifications se recalculent à chaque ouverture : dès qu'une
+situation est résolue (réservation confirmée, retour validé,
+entretien mis à jour…), la notification correspondante disparaît.
+
+───────────────────────────────────────────────────────────────
+FICHIERS
+───────────────────────────────────────────────────────────────
+  admin/marketing.html   → éditeurs Blog & FAQ multilingues +
+                           correction sync publication
+  content-bridge.js      → affichage Blog/FAQ par langue + re-rendu
+                           au changement de langue + schéma FAQ ML
+  admin/admin-lot10.js   → NOUVEAU : panneau notifications cliquables
+  admin/index.html       → lien admin-lot10.js
+
+Site client (hors blog/faq dynamiques) : non modifié.
+Lots précédents : conservés.

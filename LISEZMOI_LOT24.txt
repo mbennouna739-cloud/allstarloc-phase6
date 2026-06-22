@@ -1,0 +1,138 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — LOT 24 (dernières modifications avant version finale)
+  Auto-remplissage FAQ/Blog sur édition FR · « Nombre de jours »
+  (Location + Réservation, sans exemples) · calendrier qui s'ouvre
+  vers le haut
+═══════════════════════════════════════════════════════════════
+
+───────────────────────────────────────────────────────────────
+1. FAQ — Auto-remplissage multilingue (génération sur édition FR)
+───────────────────────────────────────────────────────────────
+Avant, l'auto-remplissage ne complétait que les langues VIDES ;
+les questions existantes (déjà traduites) ne se régénéraient donc
+pas quand on modifiait le français. C'est corrigé.
+
+Nouveau comportement (Marketing Digital → FAQ → Ajouter / Modifier) :
+• Si la question est NOUVELLE, ou si vous MODIFIEZ le texte
+  français → EN/ES/AR sont (re)générés automatiquement à partir
+  du français à l'enregistrement.
+• Si vous éditez vous-même une langue (onglet EN/ES/AR) pendant la
+  session, cette langue est PRÉSERVÉE (non écrasée).
+• Si vous ne touchez pas au français → les autres langues restent
+  inchangées (seules les langues vides sont complétées).
+• Le bouton « 🌐 Traduire automatiquement » reste disponible pour
+  forcer une régénération.
+
+Sont gérés automatiquement :
+• Question et réponse → traduites EN/ES/AR.
+• Statut actif/inactif et position → PARTAGÉS (une seule FAQ pour
+  les 4 langues : le statut et l'ordre s'appliquent à toutes).
+• Schema.org FAQPage → généré dans la langue active du visiteur,
+  uniquement avec les FAQ actives, dans l'ordre des positions.
+
+Côté site : chaque langue affiche les mêmes FAQ, traduites
+(FR→FR, EN→EN, ES→ES, AR→AR), sans mélange.
+
+TESTS (parcours réel simulé) :
+  • Modifier le FR d'une FAQ existante → EN/ES/AR régénérés. ✔
+  • Modifier le FR + éditer l'anglais à la main → anglais conservé,
+    ES/AR régénérés. ✔
+  • Aucune modification du FR → langues inchangées. ✔
+
+───────────────────────────────────────────────────────────────
+2. Blog — Auto-remplissage multilingue (même logique)
+───────────────────────────────────────────────────────────────
+Marketing Digital → Blog → Ajouter / Modifier :
+• Titre, contenu (HTML préservé), extrait/meta-description et
+  meta-title → (re)générés EN/ES/AR à partir du FR (nouvel article
+  ou contenu FR modifié), avec préservation des langues éditées à
+  la main et complétion des langues vides.
+• Champs partagés (une seule valeur pour toutes les langues) :
+  catégorie, statut (publié/brouillon), image de couverture,
+  texte ALT, slug d'URL (une seule URL par article = bonne
+  pratique SEO). Le slug se génère depuis le titre FR si laissé
+  vide.
+
+Côté site : chaque langue affiche les articles traduits, sans
+mélange.
+
+TEST : nouvel article en français seulement → EN/ES/AR générés,
+balises HTML du contenu préservées. ✔
+
+★ Rappel traduction : la génération utilise un service en ligne
+(connexion Internet requise). Si indisponible, le français est
+conservé (aucun champ vide) et reste modifiable. La logique
+(détection des modifications, régénération, préservation des
+saisies manuelles, complétion des vides) est testée.
+
+───────────────────────────────────────────────────────────────
+3. « Nombre de jours » — Nouvelle location ET Nouvelle réservation
+───────────────────────────────────────────────────────────────
+• Les exemples sous le champ (4, 5, 10, 30 jours…) ont été
+  RETIRÉS. Le champ n'affiche plus que le libellé « Nombre de
+  jours » et une saisie.
+• La fonctionnalité est désormais présente dans LES DEUX pop-ups :
+  « Nouvelle location » ET « Nouvelle réservation ».
+
+Fonctionnement (identique aux deux) :
+  • Date de départ + nombre de jours → date de retour calculée
+    automatiquement.
+  • Si la date de départ change → la date de retour se recalcule.
+  • Si la date de retour est modifiée à la main → le nombre de
+    jours se met à jour.
+  • Le prix/jour et le total se recalculent comme avant.
+
+TESTS :
+  • Location : 01/07 + 30 = 31/07 ; 01/07 + 60 = 30/08 ; passages
+    de mois/d'année corrects ; retour→jours correct. ✔
+  • Réservation : 05/07 + 10 = 15/07 ; retour→jours = 10. ✔
+
+───────────────────────────────────────────────────────────────
+4. Sélecteurs de date — Ouverture vers le haut
+───────────────────────────────────────────────────────────────
+Le calendrier personnalisé du site (recherche de véhicule : date de
+départ / date de retour) s'ouvre désormais VERS LE HAUT du champ
+lorsque l'espace en dessous est insuffisant (et qu'il y a plus de
+place au-dessus). Sinon, il s'ouvre vers le bas. Comportement
+stable sur desktop et mobile.
+
+Le sélecteur d'heure personnalisé applique la même logique
+(ouverture vers le haut si nécessaire).
+
+Note : les champs de date du back-office (Nouvelle location /
+Nouvelle réservation) utilisent le sélecteur natif du navigateur,
+qui se positionne automatiquement du bon côté selon l'espace
+disponible (comportement géré par le navigateur, identique sur
+desktop et mobile).
+
+TEST : logique de positionnement (mesure de l'espace au-dessus/en
+dessous, bascule vers le haut) en place et sans erreur. ✔
+
+───────────────────────────────────────────────────────────────
+VALIDATION FINALE — TESTS RÉELS
+───────────────────────────────────────────────────────────────
+  ✔ Auto-remplissage FAQ FR → EN/ES/AR (sur modification du FR).
+  ✔ Auto-remplissage Blog FR → EN/ES/AR (HTML préservé).
+  ✔ Affichage FAQ et Blog par langue, sans mélange.
+  ✔ « Nombre de jours » dans Nouvelle location ET Nouvelle
+    réservation, avec recalcul automatique des dates.
+  ✔ Champ « Nombre de jours » épuré (sans exemples).
+  ✔ Calendrier qui s'ouvre vers le haut quand nécessaire.
+  ✔ Contrôle de syntaxe de tous les scripts : 0 erreur.
+
+───────────────────────────────────────────────────────────────
+FICHIERS MODIFIÉS DANS CE LOT
+───────────────────────────────────────────────────────────────
+  admin/marketing.html → auto-remplissage FAQ & Blog désormais
+                         déclenché sur l'édition du français
+                         (suivi des modifications + préservation
+                         des langues éditées à la main).
+  admin/admin-lot5.js  → champ « Nombre de jours » épuré (exemples
+                         retirés) dans Nouvelle location.
+  admin/index.html     → champ « Nombre de jours » + recalcul
+                         automatique des dates dans Nouvelle
+                         réservation.
+  index.html           → calendrier et sélecteur d'heure qui
+                         s'ouvrent vers le haut si nécessaire.
+
+Lots précédents (1 → 23) : tous conservés.
