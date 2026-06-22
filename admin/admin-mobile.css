@@ -1,78 +1,91 @@
 /* ============================================================
-   ALL STAR LOC — Application mobile back-office
-   Conçue mobile-first : barre de navigation basse, écrans dédiés
-   en cartes, gros boutons, aucun tableau desktop. S'active sous
-   768px et prend toute la place. Lit les mêmes données (ASLDB).
+   ALL STAR LOC — Application mobile back-office (design)
+   ------------------------------------------------------------
+   Mobile-first : barre de navigation basse, écrans en cartes,
+   gros boutons tactiles, icônes linéaires professionnelles.
+   S'active sous 768px. N'affecte PAS le desktop (tout est borné
+   à @media max-width:768px ou à #asl-mobile-* masqués par défaut).
+   Charte ASL conservée : rouge #C41E3A, encre #101216, fond #F4F5F7.
    ============================================================ */
 
-/* Masqué par défaut (desktop) */
-#asl-mobile-app { display: none; }
-#asl-mobile-tabbar { display: none; }
+/* Masqués par défaut (desktop intact) */
+#asl-mobile-app, #asl-mobile-tabbar, #ma-sync-error { display: none; }
 
 @media (max-width: 768px) {
-  /* On masque entièrement l'ancien dashboard mobile et le contenu desktop */
+  /* ---- Reset léger borné à l'app (évite débordements / scroll horizontal) ---- */
+  #asl-mobile-app, #asl-mobile-app * , #asl-mobile-tabbar, #asl-mobile-tabbar *,
+  .ma-sheet, .ma-sheet * { box-sizing: border-box; }
+  html, body { max-width: 100%; overflow-x: hidden; }
+
+  /* On masque l'ancien dashboard mobile et le contenu desktop */
   #mobile-dash { display: none !important; }
   .main > .content { display: none !important; }
-  .sidebar, #sidebar, .sb-backdrop { /* géré par l'app */ }
-
-  #asl-mobile-app {
-    display: block;
-    position: fixed; inset: 0; top: 0; bottom: 0;
-    background: #F4F5F7;
-    overflow-y: auto; -webkit-overflow-scrolling: touch;
-    padding-bottom: 78px; /* place pour la tabbar */
-    z-index: 1500;
-  }
-  /* On masque la navigation desktop/mobile d'origine au profit de l'app */
   .sb-toggle, .sb-mobile-backdrop, .sidebar, #sidebar { display: none !important; }
   .main > .topbar { display: none !important; }
-  /* Quand l'utilisateur ouvre une vue desktop ponctuelle (Grand Livre,
-     paramètres…), on autorise l'affichage du contenu desktop. */
+
+  /* Badge de synchronisation desktop : MASQUÉ sur mobile (gain de place).
+     La synchro continue en arrière-plan ; seules les vraies erreurs
+     s'affichent via #ma-sync-error (géré en JS). */
+  #asl-sync-badge { display: none !important; }
+
+  #asl-mobile-app {
+    display: block; position: fixed; inset: 0;
+    background: #F4F5F7; color: #101216;
+    overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    z-index: 1500;
+    font-family: 'Outfit', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  }
+
+  /* Vue desktop ponctuelle (Grand Livre, etc.) */
   body.ma-desktop-view .main > .content { display: block !important; }
   body.ma-desktop-view #asl-mobile-app,
   body.ma-desktop-view #asl-mobile-tabbar { display: none !important; }
 
-  /* Les fiches/modales doivent s'afficher AU-DESSUS de l'app mobile. */
+  /* Fiches/modales desktop AU-DESSUS de l'app */
   .modal-overlay { z-index: 2200 !important; }
   #rental-drawer-bg { z-index: 2200 !important; }
   #rental-drawer { z-index: 2201 !important; }
-  /* Le panneau "Retours" (openDashDrawer) au-dessus aussi */
   #dash-drawer, #dash-drawer-bg { z-index: 2200 !important; }
 
-  /* En-tête d'écran */
+  /* ---- Icônes ---- */
+  .ma-ic { width: 20px; height: 20px; display: inline-block; vertical-align: middle; flex-shrink: 0; }
+
+  /* ---- En-tête ---- */
   .ma-head {
-    position: sticky; top: 0; z-index: 5;
-    background: #fff; padding: 16px 16px 14px;
-    border-bottom: 1px solid rgba(18,22,30,.07);
+    position: sticky; top: 0; z-index: 5; background: #fff;
+    padding: 14px 16px 12px; border-bottom: 1px solid rgba(18,22,30,.07);
     display: flex; align-items: center; gap: 12px;
   }
-  .ma-head h1 { font-size: 19px; font-weight: 900; color: #101216; margin: 0; flex: 1; }
-  .ma-head .ma-greet { font-size: 12.5px; color: #888; font-weight: 600; margin-top: 2px; }
+  .ma-head-txt { flex: 1; min-width: 0; }
+  .ma-head h1 { font-size: 19px; font-weight: 800; color: #101216; margin: 0; letter-spacing: -.01em; }
+  .ma-head .ma-greet { font-size: 12.5px; color: #8a909a; font-weight: 600; margin-top: 2px; }
   .ma-head-btn {
-    width: 40px; height: 40px; border-radius: 11px; border: none;
-    background: #F4F5F7; display: flex; align-items: center; justify-content: center;
-    cursor: pointer; position: relative; flex-shrink: 0;
+    width: 42px; height: 42px; border-radius: 12px; border: none; background: #F4F5F7;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    position: relative; flex-shrink: 0; color: #101216;
   }
+  .ma-head-btn .ma-ic { width: 21px; height: 21px; }
   .ma-head-btn .ma-dot {
-    position: absolute; top: 7px; right: 7px; width: 9px; height: 9px;
+    position: absolute; top: 9px; right: 9px; width: 9px; height: 9px;
     border-radius: 50%; background: #C41E3A; border: 2px solid #fff;
   }
 
   .ma-screen { padding: 16px; display: none; }
-  .ma-screen.active { display: block; animation: maFade .2s ease; }
+  .ma-screen.active { display: block; animation: maFade .18s ease; }
   @keyframes maFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
-  /* Cartes statistiques (tableau de bord) */
+  /* ---- Cartes statistiques (tableau de bord) ---- */
   .ma-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
   .ma-stat {
-    background: #fff; border-radius: 16px; padding: 16px;
+    background: #fff; border-radius: 16px; padding: 15px; text-align: left;
     box-shadow: 0 2px 12px rgba(0,0,0,.05); border: 1px solid rgba(18,22,30,.06);
-    cursor: pointer; transition: transform .12s; position: relative; overflow: hidden;
+    cursor: pointer; transition: transform .12s; min-width: 0; color: inherit; font: inherit;
   }
   .ma-stat:active { transform: scale(.97); }
-  .ma-stat-ico { width: 38px; height: 38px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 18px; margin-bottom: 10px; }
-  .ma-stat-num { font-size: 26px; font-weight: 900; line-height: 1; color: #101216; }
-  .ma-stat-lbl { font-size: 12.5px; color: #667; font-weight: 600; margin-top: 4px; }
+  .ma-stat-ico { width: 38px; height: 38px; border-radius: 11px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; }
+  .ma-stat-num { font-size: 26px; font-weight: 800; line-height: 1.05; color: #101216; word-break: break-word; }
+  .ma-stat-lbl { font-size: 12.5px; color: #5d6470; font-weight: 600; margin-top: 4px; }
   .ma-stat-num.green { color: #16a34a; } .ma-stat-ico.green { background: rgba(22,163,74,.12); color: #16a34a; }
   .ma-stat-num.blue { color: #2563eb; } .ma-stat-ico.blue { background: rgba(37,99,235,.12); color: #2563eb; }
   .ma-stat-num.orange { color: #d97706; } .ma-stat-ico.orange { background: rgba(217,119,6,.12); color: #d97706; }
@@ -80,11 +93,11 @@
   .ma-stat-num.purple { color: #7c3aed; } .ma-stat-ico.purple { background: rgba(124,58,237,.12); color: #7c3aed; }
   .ma-stat-num.teal { color: #0d9488; } .ma-stat-ico.teal { background: rgba(13,148,136,.12); color: #0d9488; }
 
-  .ma-section-title { font-size: 13px; font-weight: 800; color: #444; margin: 22px 4px 10px; text-transform: uppercase; letter-spacing: .03em; }
+  .ma-section-title { font-size: 12px; font-weight: 800; color: #5d6470; margin: 22px 2px 10px; text-transform: uppercase; letter-spacing: .04em; }
 
-  /* Carte générique (véhicule, réservation, client…) */
+  /* ---- Carte générique ---- */
   .ma-card {
-    background: #fff; border-radius: 15px; padding: 14px; margin-bottom: 11px;
+    background: #fff; border-radius: 16px; padding: 14px; margin-bottom: 11px;
     box-shadow: 0 2px 10px rgba(0,0,0,.045); border: 1px solid rgba(18,22,30,.06);
   }
   .ma-card-top { display: flex; align-items: center; gap: 12px; }
@@ -94,109 +107,201 @@
   }
   .ma-card-ava {
     width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; font-weight: 700;
     font-size: 17px; color: #fff; background: #C41E3A;
   }
+  .ma-card-ico-box { width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .ma-card-ico-box.red { background: rgba(196,30,58,.12); color: #C41E3A; }
   .ma-card-info { flex: 1; min-width: 0; }
-  .ma-card-name { font-size: 15px; font-weight: 800; color: #101216; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .ma-card-sub { font-size: 12.5px; color: #778; margin-top: 2px; }
-  .ma-card-meta { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-top: 11px; padding-top: 11px; border-top: 1px solid rgba(18,22,30,.06); }
-  .ma-meta { font-size: 12px; color: #556; }
-  .ma-meta b { color: #101216; font-weight: 700; display: block; font-size: 13px; }
-  .ma-badge { font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 50px; white-space: nowrap; }
-  .ma-badge.green { background: rgba(22,163,74,.12); color: #16a34a; }
-  .ma-badge.blue { background: rgba(37,99,235,.12); color: #2563eb; }
-  .ma-badge.orange { background: rgba(217,119,6,.12); color: #d97706; }
-  .ma-badge.red { background: rgba(196,30,58,.12); color: #C41E3A; }
-  .ma-badge.gray { background: rgba(100,116,139,.12); color: #64748b; }
-  .ma-card-btn {
-    display: block; width: 100%; margin-top: 12px; padding: 11px;
-    border: none; border-radius: 11px; background: #101216; color: #fff;
-    font-size: 13.5px; font-weight: 700; cursor: pointer; text-align: center;
-  }
-  .ma-card-btn:active { opacity: .85; }
-  .ma-card-btn.ghost { background: #F4F5F7; color: #101216; }
+  .ma-card-name { font-size: 15px; font-weight: 700; color: #101216; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ma-card-sub { font-size: 12.5px; color: #6b7280; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; }
+  .ma-card-meta { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(18,22,30,.06); }
+  .ma-meta { font-size: 12px; color: #6b7280; }
+  .ma-meta b { color: #101216; font-weight: 700; display: block; font-size: 13px; margin-top: 1px; }
+  .ma-pay-line { margin-top: 11px; }
 
-  /* Boutons d'action gros */
+  .ma-badge { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 50px; white-space: nowrap; flex-shrink: 0; }
+  .ma-badge.green { background: rgba(22,163,74,.12); color: #15803d; }
+  .ma-badge.blue { background: rgba(37,99,235,.12); color: #1d4ed8; }
+  .ma-badge.orange { background: rgba(217,119,6,.12); color: #b45309; }
+  .ma-badge.red { background: rgba(196,30,58,.12); color: #C41E3A; }
+  .ma-badge.gray { background: rgba(100,116,139,.14); color: #475569; }
+
+  /* ---- Rangée d'actions rapides (tactiles ≥ 44px) ---- */
+  .ma-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .ma-act-btn {
+    flex: 1 1 0; min-width: 88px; min-height: 44px; padding: 8px 6px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    border: 1px solid rgba(18,22,30,.1); border-radius: 11px; background: #F4F5F7;
+    color: #101216; font-size: 12.5px; font-weight: 700; cursor: pointer; text-decoration: none;
+    font-family: inherit;
+  }
+  .ma-act-btn:active { transform: scale(.97); }
+  .ma-act-btn .ma-ic { width: 17px; height: 17px; }
+  .ma-act-btn.ok { background: rgba(22,163,74,.1); color: #15803d; border-color: rgba(22,163,74,.25); }
+  .ma-act-btn.danger { background: rgba(196,30,58,.08); color: #C41E3A; border-color: rgba(196,30,58,.22); }
+
+  /* ---- Gros bouton d'action ---- */
   .ma-action {
-    display: block; width: 100%; padding: 15px; border: none; border-radius: 13px;
-    background: #C41E3A; color: #fff; font-size: 15px; font-weight: 800; cursor: pointer;
-    margin-bottom: 12px; text-align: center;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 15px; border: none; border-radius: 13px;
+    background: #C41E3A; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer;
+    margin-bottom: 12px; font-family: inherit;
   }
   .ma-action:active { opacity: .9; }
   .ma-action.dark { background: #101216; }
+  .ma-action .ma-ic { width: 19px; height: 19px; }
 
-  /* Filtres (chips) */
-  .ma-chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 10px; -webkit-overflow-scrolling: touch; }
+  /* ---- Filtres (chips) ---- */
+  .ma-chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 12px; -webkit-overflow-scrolling: touch; }
   .ma-chips::-webkit-scrollbar { display: none; }
   .ma-chip {
-    flex-shrink: 0; padding: 8px 16px; border-radius: 50px; border: 1px solid rgba(18,22,30,.12);
-    background: #fff; font-size: 13px; font-weight: 600; color: #556; cursor: pointer; white-space: nowrap;
+    flex-shrink: 0; padding: 9px 16px; min-height: 40px; border-radius: 50px; border: 1px solid rgba(18,22,30,.12);
+    background: #fff; font-size: 13px; font-weight: 600; color: #475569; cursor: pointer; white-space: nowrap; font-family: inherit;
   }
   .ma-chip.active { background: #101216; color: #fff; border-color: #101216; }
 
-  /* Recherche */
+  /* ---- Recherche ---- */
+  .ma-search-wrap { position: relative; margin-bottom: 14px; }
+  .ma-search-wrap .ma-ic { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #9aa1ad; width: 19px; height: 19px; }
   .ma-search {
-    width: 100%; padding: 12px 16px; border: 1px solid rgba(18,22,30,.1); border-radius: 12px;
-    font-size: 16px; background: #fff; margin-bottom: 14px; outline: none;
+    width: 100%; padding: 13px 16px 13px 42px; border: 1px solid rgba(18,22,30,.1); border-radius: 12px;
+    font-size: 16px; background: #fff; outline: none; color: #101216; font-family: inherit;
   }
+  .ma-search:focus { border-color: #C41E3A; }
 
-  .ma-empty { text-align: center; padding: 40px 20px; color: #99a; font-size: 14px; }
+  /* ---- Date (retours) ---- */
+  .ma-date {
+    width: 100%; padding: 13px 16px; border: 1px solid rgba(18,22,30,.1); border-radius: 12px;
+    font-size: 16px; background: #fff; outline: none; color: #101216; margin-bottom: 14px; font-family: inherit;
+  }
+  .ma-date:focus { border-color: #C41E3A; }
 
-  /* Caisse mobile */
+  .ma-empty { text-align: center; padding: 44px 20px; color: #9aa1ad; font-size: 14px; }
+  .ma-empty .ma-ic { width: 34px; height: 34px; color: #16a34a; }
+
+  /* ---- Retours ---- */
+  .ma-return-card { cursor: pointer; }
+  .ma-return-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding-top: 11px; border-top: 1px solid rgba(18,22,30,.06); font-size: 12.5px; color: #6b7280; font-weight: 600; }
+  .ma-return-foot .ma-ic { width: 16px; height: 16px; vertical-align: -3px; margin-right: 2px; }
+  .ma-return-date { color: #101216; font-weight: 700; }
+
+  /* ---- Caisse ---- */
   .ma-cash-card {
-    background: #fff; border-radius: 16px; padding: 18px; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 14px;
+    background: #fff; border-radius: 16px; padding: 16px 18px; margin-bottom: 12px;
     box-shadow: 0 2px 10px rgba(0,0,0,.05); border-left: 4px solid #16a34a;
   }
-  .ma-cash-lbl { font-size: 13px; color: #667; }
-  .ma-cash-num { font-size: 24px; font-weight: 900; margin-top: 4px; }
+  .ma-cash-ico { width: 40px; height: 40px; border-radius: 11px; background: rgba(18,22,30,.04); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .ma-cash-ico .ma-ic { width: 22px; height: 22px; }
+  .ma-cash-lbl { font-size: 13px; color: #5d6470; font-weight: 600; }
+  .ma-cash-num { font-size: 23px; font-weight: 800; margin-top: 2px; }
 
-  /* Notifications */
+  /* ---- Notifications ---- */
   .ma-notif {
-    display: flex; gap: 12px; background: #fff; border-radius: 13px; padding: 14px;
+    display: flex; align-items: center; gap: 12px; background: #fff; border-radius: 14px; padding: 14px;
     margin-bottom: 10px; border: 1px solid rgba(18,22,30,.06); cursor: pointer;
   }
-  .ma-notif-ico { width: 40px; height: 40px; border-radius: 11px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+  .ma-notif-ico { width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .ma-notif-ico.red { background: rgba(196,30,58,.12); color: #C41E3A; }
+  .ma-notif-ico.orange { background: rgba(217,119,6,.12); color: #d97706; }
+  .ma-notif-ico.blue { background: rgba(37,99,235,.12); color: #2563eb; }
+  .ma-notif-ico.green { background: rgba(22,163,74,.12); color: #16a34a; }
+  .ma-notif-ico.teal { background: rgba(13,148,136,.12); color: #0d9488; }
   .ma-notif-body { flex: 1; min-width: 0; }
   .ma-notif-title { font-size: 14px; font-weight: 700; color: #101216; }
-  .ma-notif-sub { font-size: 12.5px; color: #778; margin-top: 2px; }
+  .ma-notif-sub { font-size: 12.5px; color: #6b7280; margin-top: 2px; }
+  .ma-notif-chev { color: #cbd0d8; flex-shrink: 0; transform: scaleX(-1); }
+  .ma-notif-chev .ma-ic { width: 18px; height: 18px; }
 
-  /* ===== Barre de navigation basse ===== */
+  /* ---- Barre de navigation basse ---- */
   #asl-mobile-tabbar {
     display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 1600;
     background: #fff; border-top: 1px solid rgba(18,22,30,.08);
-    padding: 7px 4px calc(7px + env(safe-area-inset-bottom, 0px)); justify-content: space-around;
+    padding: 8px 4px calc(8px + env(safe-area-inset-bottom, 0px)); justify-content: space-around;
     box-shadow: 0 -3px 16px rgba(0,0,0,.05);
   }
   .ma-tab {
     flex: 1; background: none; border: none; cursor: pointer; padding: 4px 0;
-    display: flex; flex-direction: column; align-items: center; gap: 3px;
-    color: #889; font-size: 10px; font-weight: 600; position: relative;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    color: #94a0b0; font-size: 10.5px; font-weight: 600; position: relative; font-family: inherit;
   }
-  .ma-tab svg { width: 22px; height: 22px; }
+  .ma-tab .ma-ic { width: 23px; height: 23px; }
   .ma-tab.active { color: #C41E3A; }
   .ma-tab .ma-tab-dot {
-    position: absolute; top: 0; right: 50%; margin-right: -16px;
+    position: absolute; top: -2px; right: 50%; margin-right: -18px;
     min-width: 16px; height: 16px; padding: 0 4px; border-radius: 50px;
     background: #C41E3A; color: #fff; font-size: 9px; font-weight: 800;
     display: flex; align-items: center; justify-content: center;
   }
 
-  /* "Plus" : feuille d'options (paramètres essentiels, etc.) */
+  /* ---- Feuilles (bottom-sheets) — responsives, tactiles ---- */
   .ma-sheet {
     position: fixed; inset: 0; z-index: 1700; background: rgba(10,12,18,.5);
     display: flex; align-items: flex-end;
   }
   .ma-sheet-inner {
-    background: #fff; width: 100%; border-radius: 20px 20px 0 0; padding: 8px 16px 30px;
-    animation: maSheetUp .25s ease;
+    position: relative; background: #fff; width: 100%; border-radius: 22px 22px 0 0;
+    padding: 8px 18px calc(28px + env(safe-area-inset-bottom, 0px));
+    max-height: 86vh; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    animation: maSheetUp .24s ease;
   }
   @keyframes maSheetUp { from { transform: translateY(100%); } to { transform: none; } }
-  .ma-sheet-handle { width: 40px; height: 4px; border-radius: 4px; background: #ddd; margin: 8px auto 16px; }
+  .ma-sheet-handle { width: 42px; height: 4px; border-radius: 4px; background: #dfe3e9; margin: 8px auto 14px; }
+  .ma-sheet-close { position: absolute; top: 14px; right: 14px; width: 34px; height: 34px; border-radius: 50%; border: none; background: #F4F5F7; color: #6b7280; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .ma-sheet-close .ma-ic { width: 18px; height: 18px; }
+  .ma-sheet-title { font-size: 17px; font-weight: 800; color: #101216; padding-right: 40px; }
+  .ma-sheet-sub { font-size: 13px; color: #6b7280; margin: 4px 0 16px; font-weight: 500; }
+  .ma-sheet-section { font-size: 12px; font-weight: 800; color: #5d6470; text-transform: uppercase; letter-spacing: .04em; margin: 18px 0 10px; }
+
   .ma-sheet-item {
-    display: flex; align-items: center; gap: 14px; padding: 15px 6px;
-    border-bottom: 1px solid rgba(18,22,30,.06); font-size: 15px; font-weight: 600; color: #101216; cursor: pointer;
+    display: flex; align-items: center; gap: 14px; width: 100%; padding: 15px 6px;
+    border: none; border-bottom: 1px solid rgba(18,22,30,.06); background: none;
+    font-size: 15px; font-weight: 600; color: #101216; cursor: pointer; text-align: left; font-family: inherit;
   }
   .ma-sheet-item:last-child { border-bottom: none; }
-  .ma-sheet-item .ma-sheet-ico { font-size: 20px; width: 26px; text-align: center; }
+  .ma-sheet-item.danger { color: #C41E3A; }
+  .ma-sheet-ico { width: 38px; height: 38px; border-radius: 11px; background: #F4F5F7; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .ma-sheet-item.danger .ma-sheet-ico { background: rgba(196,30,58,.1); }
+
+  /* Options de statut */
+  .ma-sheet-opt {
+    display: flex; align-items: center; gap: 12px; width: 100%; min-height: 52px; padding: 14px;
+    margin-bottom: 9px; border: 1px solid rgba(18,22,30,.1); border-radius: 13px; background: #fff;
+    font-size: 15px; font-weight: 600; color: #101216; cursor: pointer; text-align: left; font-family: inherit;
+  }
+  .ma-sheet-opt.active { border-color: #101216; background: #F4F5F7; }
+  .ma-sheet-opt .ma-sheet-chk { margin-left: auto; color: #16a34a; }
+  .ma-dot-status { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+  .ma-dot-status.green { background: #16a34a; } .ma-dot-status.blue { background: #2563eb; }
+  .ma-dot-status.orange { background: #d97706; } .ma-dot-status.gray { background: #94a0b0; }
+
+  /* Historique client */
+  .ma-hist-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%;
+    padding: 13px 12px; margin-bottom: 8px; border: 1px solid rgba(18,22,30,.08); border-radius: 12px;
+    background: #fff; cursor: pointer; text-align: left; font-family: inherit;
+  }
+  .ma-hist-car { font-size: 14px; font-weight: 700; color: #101216; }
+  .ma-hist-dates { font-size: 12px; color: #6b7280; margin-top: 2px; }
+
+  /* ---- Bannière d'erreur de synchro (mobile, erreurs réelles seulement) ---- */
+  #ma-sync-error {
+    display: none; position: fixed; left: 12px; right: 12px;
+    bottom: calc(86px + env(safe-area-inset-bottom, 0px)); z-index: 1800;
+    align-items: center; gap: 10px; background: #C41E3A; color: #fff;
+    padding: 12px 14px; border-radius: 14px; box-shadow: 0 8px 24px rgba(196,30,58,.32);
+    font-size: 13px; font-weight: 600;
+  }
+  #ma-sync-error .ma-sync-error-ic { display: flex; }
+  #ma-sync-error .ma-sync-error-msg { flex: 1; min-width: 0; }
+  #ma-sync-error .ma-sync-error-x { background: rgba(255,255,255,.18); border: none; color: #fff; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+  #ma-sync-error .ma-ic { width: 19px; height: 19px; }
+
+  /* ---- Bouton « Retour à l'application » (vue desktop ponctuelle) ---- */
+  #ma-back-to-app {
+    position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 9999;
+    background: #101216; color: #fff; border: none; padding: 13px 24px; border-radius: 50px;
+    font-weight: 700; font-size: 14px; box-shadow: 0 6px 20px rgba(0,0,0,.25); cursor: pointer; font-family: inherit;
+  }
 }

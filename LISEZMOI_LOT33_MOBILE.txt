@@ -1,0 +1,89 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — LOT 33 · APPLICATION MOBILE (refonte exploitation)
+═══════════════════════════════════════════════════════════════
+
+Portée : MOBILE UNIQUEMENT (≤ 768px).
+Fichiers modifiés : admin/admin-mobile.js · admin/admin-mobile.css
+Aucun autre fichier touché. La version desktop, le logo, la charte
+graphique et les couleurs ASL sont conservés à l'identique.
+
+───────────────────────────────────────────────────────────────
+MODULES PRÉSENTS SUR MOBILE
+───────────────────────────────────────────────────────────────
+Tableau de bord · Véhicules · Réservations · Locations · Retours ·
+Clients · Paiements & Caisse · Notifications · Déconnexion.
+
+Retirés du mobile (restent sur PC) : Marketing, Blog, FAQ, Pages
+légales, Traductions, SEO, Avis, CTA, Réseaux sociaux, Paramètres
+avancés, Entretien, Archives, Infos système, Réinitialisation,
+Utilisateurs & accès, Notifications externes, « voir version
+desktop ». Aucun de ces éléments n'apparaît dans l'interface mobile.
+
+───────────────────────────────────────────────────────────────
+NAVIGATION
+───────────────────────────────────────────────────────────────
+Barre basse : Accueil · Véhicules · Réservations · Caisse · Plus.
+Cloche d'en-tête → Notifications (pastille rouge avec compteur).
+« Plus » → Locations · Retours · Clients · Paiements & Caisse ·
+Se déconnecter (uniquement des modules autorisés).
+
+───────────────────────────────────────────────────────────────
+TABLEAU DE BORD (cartes cliquables)
+───────────────────────────────────────────────────────────────
+Véhicules disponibles · Véhicules loués · Réservations en attente ·
+Retours prévus · Encaissements réels · Montants à encaisser.
+Bloc « À surveiller » : retards, impayés.
+
+───────────────────────────────────────────────────────────────
+ACTIONS RAPIDES PAR ÉCRAN
+───────────────────────────────────────────────────────────────
+Véhicules    : Fiche · Modifier · Changer statut (feuille tactile).
+Réservations : Voir · Valider · Refuser · Modifier.
+Locations    : Fiche · Retour véhicule · Prolonger.
+Retours      : filtres Aujourd'hui / Demain / Date choisie ; clic →
+               fiche location/client directe.
+Clients      : Appeler · Historique · Paiements (feuille détaillée).
+Caisse       : Encaissements · Charges · Solde réel · À encaisser ·
+               Grand Livre (consultation adaptée).
+
+───────────────────────────────────────────────────────────────
+NOTIFICATIONS
+───────────────────────────────────────────────────────────────
+Retour aujourd'hui · Retour demain · Véhicule en retard · Impayé ·
+Nouvelle réservation · Nouvelle location · Paiement reçu.
+Chaque notification ouvre la fiche concernée.
+
+───────────────────────────────────────────────────────────────
+SYNCHRONISATION
+───────────────────────────────────────────────────────────────
+Le badge fixe « Synchronisé (serveur) » est MASQUÉ sur mobile
+(gain de place). La synchronisation continue normalement en
+arrière-plan. Une bannière rouge n'apparaît QUE si une erreur
+réelle survient (ex. clé admin invalide) ; elle est refermable.
+Sur desktop, le badge reste inchangé.
+
+───────────────────────────────────────────────────────────────
+DESIGN & ICÔNES
+───────────────────────────────────────────────────────────────
+Aucun emoji. Jeu d'icônes linéaires professionnelles (style Lucide)
+inliné en SVG : sobre, élégant, cohérent, sans dépendance externe.
+Charte ASL : rouge #C41E3A (actions/onglet actif), encre #101216,
+fond #F4F5F7.
+
+───────────────────────────────────────────────────────────────
+STABILITÉ MOBILE (points vérifiés)
+───────────────────────────────────────────────────────────────
+• Champs de saisie en 16px → pas de zoom auto iOS.
+• box-sizing + overflow-x:hidden → aucun scroll horizontal / débordement.
+• Cibles tactiles ≥ 44px (boutons, chips, onglets).
+• Bottom-sheets responsives : poignée, bouton fermer, scroll interne,
+  max-height 86vh, marge clavier (safe-area-inset-bottom).
+• Fiches/modales desktop ré-affichées AU-DESSUS de l'app (z-index).
+• Aucun texte coupé (ellipsis maîtrisée), aucun bouton hors écran.
+
+───────────────────────────────────────────────────────────────
+RÉVERSIBILITÉ
+───────────────────────────────────────────────────────────────
+Toute la logique mobile est isolée dans admin-mobile.js / .css et
+bornée à @media (max-width:768px). Supprimer/retirer ces deux
+fichiers rétablit le comportement antérieur sans impacter le desktop.
