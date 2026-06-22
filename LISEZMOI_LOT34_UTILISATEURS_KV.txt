@@ -1,0 +1,66 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — LOT 34 · COMPTES EMPLOYÉS MULTI-APPAREILS (KV)
+═══════════════════════════════════════════════════════════════
+
+OBJECTIF
+Chaque employé peut désormais se connecter depuis N'IMPORTE QUEL
+navigateur ou appareil. Les comptes ne vivent plus seulement dans
+le navigateur : ils sont stockés dans le KV serveur (Cloudflare),
+et la connexion employé est vérifiée côté serveur.
+
+FICHIERS MODIFIÉS (aucune page desktop touchée)
+  functions/api/[[route]].js  → connexion employé + endpoints /api/users
+  admin/admin-users.js        → pousse/tire les comptes vers le KV
+  admin/login.html            → vérifie le serveur d'abord (repli local)
+
+CE QUI CHANGE
+  • Création / modification / suppression / activation d'un employé
+    depuis le back-office → écrit AUSSI dans le KV (clé « users »).
+  • À la connexion : /api/login vérifie d'abord l'admin principal,
+    puis les comptes employés du KV. Un compte créé fonctionne
+    immédiatement, sur tout appareil, après synchronisation.
+  • Mot de passe haché (même algorithme client/serveur). Le serveur
+    ne renvoie JAMAIS les empreintes (GET /api/users les masque).
+  • Migration automatique : au premier passage de l'admin après le
+    déploiement, les comptes déjà créés localement sont poussés vers
+    le KV (rien à refaire à la main).
+  • Repli hors-ligne : si le serveur est injoignable (file:// ou
+    coupure réseau), un employé déjà connu de l'appareil peut encore
+    se connecter en local.
+
+NOUVEAUX ENDPOINTS (API)
+  POST /api/login    → admin principal OU employé (vérif. serveur)
+  GET  /api/users    → liste des comptes SANS empreintes (clé admin)
+  POST /api/users    → action add | update | remove | replace (clé admin)
+
+STOCKAGE
+  KV « ASL_DB », clé « users » : { rev, items:[ {id, name, username,
+  passHash, perms, active, createdAt} ] }. Aucune base D1 requise.
+
+CONFIGURATION CLOUDFLARE (inchangée — RIEN par employé)
+  Une seule fois, dans Settings → Variables :
+    ADMIN_USER  = identifiant admin principal
+    ADMIN_PASS  = mot de passe admin principal
+    ADMIN_KEY   = clé d'écriture (protège les écritures KV)
+  Aucune variable à créer par employé. Les employés sont gérés
+  à 100 % depuis le back-office.
+
+APRÈS DÉPLOIEMENT — bonnes pratiques
+  1. Connectez-vous une fois en admin principal : vos éventuels
+     comptes locaux existants migrent automatiquement vers le KV.
+  2. Créez/ajustez les employés depuis « Utilisateurs & accès ».
+  3. Chaque employé peut alors se connecter depuis son propre
+     téléphone / navigateur.
+
+NOTE DE SÉCURITÉ (transparence)
+  La clé d'écriture (ADMIN_KEY) est partagée par tous les comptes
+  connectés (admin et employés), comme dans le modèle existant —
+  elle autorise les écritures KV ; le détail des permissions est
+  appliqué dans l'interface. La gestion des comptes (Utilisateurs &
+  accès) n'est proposée qu'à l'admin principal dans le back-office.
+  Pour une séparation stricte côté serveur (RBAC par rôle), prévoir
+  une évolution dédiée — non incluse ici pour ne rien casser.
+
+RÉVERSIBILITÉ
+  Le cache local (asl_users_v1) reste en place : en cas d'absence
+  d'API, le comportement antérieur (local) continue de fonctionner.

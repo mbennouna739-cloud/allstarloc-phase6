@@ -1,0 +1,58 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — LOT 35 · MOBILE : PHOTOS, STABILITÉ, CONNEXION
+═══════════════════════════════════════════════════════════════
+
+Fichiers modifiés : admin/admin-mobile.js · admin/admin-mobile.css ·
+admin/login.html. Aucune page desktop (back-office) touchée.
+
+───────────────────────────────────────────────────────────────
+1) PHOTO VÉHICULE DEPUIS LE TÉLÉPHONE
+───────────────────────────────────────────────────────────────
+Nouveau bouton « Photo » sur chaque carte véhicule (mobile).
+  • Sélection depuis la galerie OU prise de photo (appareil photo) :
+    input accept="image/*" sans capture → le système propose les
+    deux (iPhone Safari + Android Chrome).
+  • Aperçu avant enregistrement, avec « Reprendre / changer ».
+  • Compression/redimensionnement automatique (max 1280 px, JPEG ~82%)
+    via le mécanisme existant ASLDB.uploadImage.
+  • Enregistrement → /api/upload (KV) puis mise à jour du véhicule
+    (img/image/photo) → visible immédiatement côté back-office ET
+    côté site client, et persistant après rechargement/reconnexion.
+  • Ne casse pas la mise en page ; aperçu borné (max 46% hauteur écran).
+  Note : le téléversement nécessite le site déployé sur Cloudflare ;
+  en local (file://) un message clair s'affiche.
+
+───────────────────────────────────────────────────────────────
+2) AUCUN MOUVEMENT HORIZONTAL (tous les formulaires mobiles)
+───────────────────────────────────────────────────────────────
+Correctif global : la page ne peut plus glisser latéralement.
+  • Verrou racine overflow-x:hidden + largeur 100%.
+  • Modale « Ajouter une charge » (#charge-modal-host) : marges
+    réduites, champs en 100% largeur, 16px (pas de zoom), pas de
+    débordement.
+  • Vue desktop ponctuelle (Grand Livre, Caisse…) : contenu borné à
+    la largeur écran, lignes de formulaire empilées, champs 16px,
+    tables en scroll interne (jamais la page).
+  • Modales réservation/location, feuilles (fiche client, photo),
+    drawers : toutes bornées à 100vw, scroll vertical uniquement.
+  Vérifié : Ajouter une charge, Nouvelle réservation, Nouvelle
+  location, Fiche client, Paiement, Caisse, Retours, drawers.
+
+───────────────────────────────────────────────────────────────
+3) ÉCRAN DE CONNEXION — PREMIUM + CORRECTIF AUTOFILL
+───────────────────────────────────────────────────────────────
+  • Logo All Star Loc bien visible, carte centrée, fond sombre avec
+    halo rouge discret, bouton premium (dégradé ASL).
+  • Animation d'entrée légère (carte + logo), désactivée si
+    « réduire les animations » est activé.
+  • Anneau de focus rouge discret sur les champs.
+  • CORRECTIF AUTOFILL : plus de champ jaune au remplissage
+    automatique — le design reste identique (fond sombre, texte
+    blanc), sur mobile ET desktop.
+
+───────────────────────────────────────────────────────────────
+COMPATIBILITÉ / STABILITÉ
+───────────────────────────────────────────────────────────────
+iPhone Safari + Android Chrome. Champs 16px (pas de zoom auto),
+cibles ≥ 44px, scroll vertical fluide, barre basse fixe, pop-ups
+bornées avec scroll interne et pied accessible.

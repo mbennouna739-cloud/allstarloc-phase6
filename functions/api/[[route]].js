@@ -78,6 +78,14 @@ function b64ToBytes(b64) {
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
   return bytes;
 }
+/* Hachage du mot de passe — STRICTEMENT identique à admin-users.js (client),
+   pour vérifier la connexion d'un employé côté serveur. */
+function hashPass(pass) {
+  var h = 5381;
+  var str = 'asl::' + String(pass == null ? '' : pass);
+  for (var i = 0; i < str.length; i++) { h = ((h << 5) + h) + str.charCodeAt(i); h = h & 0xffffffff; }
+  return 'h' + (h >>> 0).toString(16);
+}
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -141,6 +149,27 @@ export async function onRequest(context) {
       var token = randId(24);
       return json({ ok: true, user: user, exp: exp, token: token, adminKey: env.ADMIN_KEY || '' });
     }
+    // Comptes EMPLOYÉS (stockés en KV par l'administration) :
+    // connexion possible depuis N'IMPORTE QUEL navigateur / appareil.
+    if (env.ASL_DB) {
+      try {
+        const udoc = await readDoc(env, 'users');
+        const users = (udoc && Array.isArray(udoc.items)) ? udoc.items : [];
+        const emp = users.find(function (x) { return x.username && x.username.toLowerCase() === user.toLowerCase(); });
+        if (emp) {
+          if (emp.active === false) return err(403, 'Compte désactivé. Contactez l\'administrateur.');
+          if (emp.passHash === hashPass(pass)) {
+            return json({
+              ok: true, employee: true,
+              user: emp.name || emp.username, username: emp.username, userId: emp.id,
+              perms: emp.perms || {},
+              exp: Date.now() + 8 * 3600 * 1000, token: randId(24),
+              adminKey: env.ADMIN_KEY || ''
+            });
+          }
+        }
+      } catch (e) { /* tombera en 401 ci-dessous */ }
+    }
     return err(401, 'Identifiant ou mot de passe incorrect');
   }
 
@@ -198,6 +227,62 @@ export async function onRequest(context) {
     const fleet = await readDoc(env, 'fleet');
     const reservations = await readDoc(env, 'reservations');
     return json({ ok: true, fleet: fleet, reservations: reservations });
+  }
+
+  /* ---- Utilisateurs / accès employés (administration, multi-appareils) ----
+     Stockés dans le KV (clé "users"). Lecture/écriture réservées à l'admin
+     (clé X-ASL-Key). Les empreintes de mot de passe ne sont JAMAIS renvoyées
+     par GET. La connexion employé (vérifiée plus haut dans /login) lit cette
+     même clé KV : un compte créé ici fonctionne sur tout appareil. */
+  if (path === 'users') {
+    if (request.method === 'GET') {
+      if (!authorized(request, env)) return err(403, 'Clé admin invalide ou absente (X-ASL-Key)');
+      const doc = (await readDoc(env, 'users')) || { rev: 0, items: [] };
+      const items = Array.isArray(doc.items) ? doc.items : [];
+      const safe = items.map(function (u) {
+        return { id: u.id, name: u.name, username: u.username, perms: u.perms || {}, active: u.active !== false, createdAt: u.createdAt };
+      });
+      return json({ ok: true, users: safe, rev: doc.rev });
+    }
+    if (request.method === 'POST') {
+      if (!authorized(request, env)) return err(403, 'Clé admin invalide ou absente (X-ASL-Key)');
+      let body;
+      try { body = await request.json(); } catch (e) { return err(400, 'JSON invalide'); }
+      const doc = (await readDoc(env, 'users')) || { rev: 0, items: [] };
+      let items = Array.isArray(doc.items) ? doc.items : [];
+
+      if (body.action === 'add') {
+        const item = body.item;
+        if (!item || typeof item !== 'object' || !item.username) return err(400, 'item invalide');
+        if (items.some(function (u) { return (u.username || '').toLowerCase() === String(item.username).toLowerCase(); })) return err(409, 'Cet identifiant existe déjà.');
+        if (!item.id) item.id = 'usr' + Date.now() + randId(3);
+        if (item.active == null) item.active = true;
+        if (!item.createdAt) item.createdAt = new Date().toISOString();
+        items.push(item);
+        const rev = await writeDoc(env, 'users', items);
+        return json({ ok: true, rev: rev, id: item.id });
+      }
+      if (body.action === 'update') {
+        const u = items.find(function (x) { return x.id === body.id; });
+        if (!u) return err(404, 'Utilisateur introuvable');
+        if (!body.patch || typeof body.patch !== 'object') return err(400, 'patch manquant');
+        if (body.patch.username && items.some(function (x) { return x.id !== body.id && (x.username || '').toLowerCase() === String(body.patch.username).toLowerCase(); })) return err(409, 'Cet identifiant existe déjà.');
+        Object.assign(u, body.patch);
+        const rev = await writeDoc(env, 'users', items);
+        return json({ ok: true, rev: rev });
+      }
+      if (body.action === 'remove') {
+        items = items.filter(function (x) { return x.id !== body.id; });
+        const rev = await writeDoc(env, 'users', items);
+        return json({ ok: true, rev: rev });
+      }
+      if (body.action === 'replace') {
+        if (!isArrayOfObjects(body.items, 500)) return err(400, 'items invalide (max 500)');
+        const rev = await writeDoc(env, 'users', body.items);
+        return json({ ok: true, rev: rev });
+      }
+      return err(400, 'action inconnue (add | update | remove | replace)');
+    }
   }
 
   /* ---- Flotte : remplacement complet (administration) ---- */

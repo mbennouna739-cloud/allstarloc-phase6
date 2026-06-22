@@ -51,10 +51,50 @@
   }
 
   function getUsers() { return rd(USERS_KEY, []); }
-  function saveUsers(list) {
-    wr(USERS_KEY, list);
-    // Synchronisation (même mécanisme que le reste si disponible)
-    try { if (typeof ASLDB !== 'undefined' && ASLDB.syncNow) ASLDB.syncNow(); } catch (e) {}
+  function saveUsers(list) { wr(USERS_KEY, list); }
+
+  /* ---- Synchronisation serveur (KV) — comptes employés multi-appareils ----
+     Le cache local sert l'affichage immédiat ; le KV est la source partagée.
+     Toutes les écritures sont aussi poussées vers /api/users (clé admin). */
+  function adminKey() { try { return localStorage.getItem('asl_admin_key') || ''; } catch (e) { return ''; } }
+  function usersApi(method, body) {
+    return fetch('/api/users', {
+      method: method,
+      headers: { 'Content-Type': 'application/json', 'X-ASL-Key': adminKey() },
+      cache: 'no-store',
+      body: body ? JSON.stringify(body) : undefined
+    }).then(function (r) {
+      return r.json().then(function (d) {
+        if (!r.ok || !d || d.ok === false) throw new Error((d && d.error) || ('HTTP ' + r.status));
+        return d;
+      });
+    });
+  }
+  /* Pousse une action (add | update | remove | replace) vers le serveur.
+     Silencieux : en cas d'absence de réseau, le cache local reste valable
+     et sera renvoyé au prochain pullUsers/replace. */
+  function pushUser(action, payload) {
+    try { usersApi('POST', Object.assign({ action: action }, payload || {})).catch(function () {}); } catch (e) {}
+  }
+  /* Récupère la liste serveur et met à jour le cache local.
+     - migre les comptes locaux vers le KV si le serveur est encore vide ;
+     - conserve les empreintes locales (le GET serveur ne les renvoie pas). */
+  function pullUsers() {
+    try {
+      usersApi('GET').then(function (d) {
+        if (!d || !Array.isArray(d.users)) return;
+        var local = getUsers();
+        if (d.users.length === 0 && local.length > 0) { pushUser('replace', { items: local }); return; }
+        var byId = {}; local.forEach(function (u) { byId[u.id] = u; });
+        var merged = d.users.map(function (su) {
+          var lu = byId[su.id];
+          if (lu && lu.passHash && !su.passHash) return Object.assign({}, su, { passHash: lu.passHash });
+          return su;
+        });
+        wr(USERS_KEY, merged);
+        if (typeof window.renderUsers === 'function') { try { window.renderUsers(); } catch (e) {} }
+      }).catch(function () {});
+    } catch (e) {}
   }
 
   function getSession() {
@@ -105,6 +145,7 @@
     currentPerms: currentPerms,
     hasPerm: hasPerm,
     hashPass: hashPass,
+    refresh: pullUsers,
 
     /* Tente d'authentifier un employé. Renvoie l'objet user si OK, sinon null. */
     authEmployee: function (username, password) {
@@ -133,6 +174,7 @@
       };
       list.push(user);
       saveUsers(list);
+      pushUser('add', { item: user });
       return { user: user };
     },
 
@@ -146,18 +188,30 @@
       if (patch.perms) u.perms = patch.perms;
       if (patch.active != null) u.active = patch.active;
       saveUsers(list);
+      pushUser('update', { id: id, patch: { name: u.name, username: u.username, passHash: u.passHash, perms: u.perms, active: u.active } });
       return u;
     },
 
     remove: function (id) {
       saveUsers(getUsers().filter(function (x) { return x.id !== id; }));
+      pushUser('remove', { id: id });
     },
 
     toggleActive: function (id) {
       var list = getUsers();
       var u = list.filter(function (x) { return x.id === id; })[0];
-      if (u) { u.active = !u.active; saveUsers(list); }
+      if (u) { u.active = !u.active; saveUsers(list); pushUser('update', { id: id, patch: { active: u.active } }); }
       return u;
     }
   };
+
+  /* Synchronisation initiale depuis le serveur (comptes employés multi-appareils).
+     Ne s'exécute que si l'utilisateur est connecté (clé admin présente). */
+  function initialPull() { if (adminKey()) pullUsers(); }
+  try {
+    if (typeof document !== 'undefined') {
+      if (document.readyState !== 'loading') setTimeout(initialPull, 600);
+      else document.addEventListener('DOMContentLoaded', function () { setTimeout(initialPull, 600); });
+    }
+  } catch (e) {}
 })();

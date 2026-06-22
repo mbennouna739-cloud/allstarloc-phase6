@@ -67,7 +67,9 @@
     plus: '<path d="M5 12h14M12 5v14"/>',
     wrench: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.3L3 18l3 3 6.4-6.3a4 4 0 0 0 5.3-5.4l-2.5 2.5-2.1-2.1Z"/>',
     search: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
-    sparkle: '<path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/>'
+    sparkle: '<path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/>',
+    camera: '<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/><circle cx="12" cy="13" r="3.2"/>',
+    image: '<rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/>'
   };
   function ic(name, cls) {
     return '<svg class="ma-ic' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (ICONS[name] || '') + '</svg>';
@@ -189,6 +191,7 @@
       + '<button class="ma-act-btn" onclick="maViewVehicle(' + idArg + ')">' + ic('eye') + 'Fiche</button>'
       + '<button class="ma-act-btn" onclick="maEditVehicle(' + idArg + ')">' + ic('edit') + 'Modifier</button>'
       + '<button class="ma-act-btn" onclick="maChangeStatus(' + idArg + ')">' + ic('swap') + 'Statut</button>'
+      + '<button class="ma-act-btn" onclick="maVehiclePhoto(' + idArg + ')">' + ic('camera') + 'Photo</button>'
       + '</div></div>';
   }
   window.maViewVehicle = function (id) {
@@ -227,6 +230,63 @@
     if (typeof window.showToast === 'function') window.showToast('Statut mis à jour ✓');
     renderVehicles();
   };
+
+  /* ---- Photo véhicule (mobile natif) ----
+     accept="image/*" sans capture → le système propose « Galerie / Photothèque »
+     ET « Appareil photo » (iPhone Safari + Android Chrome). Aperçu avant
+     enregistrement, compression via ASLDB.uploadImage, puis mise à jour du
+     véhicule (synchronisée KV → back-office + site client). */
+  window.maVehiclePhoto = function (id) {
+    var input = document.getElementById('ma-veh-photo-input');
+    if (!input) {
+      input = document.createElement('input');
+      input.type = 'file'; input.accept = 'image/*'; input.id = 'ma-veh-photo-input';
+      input.style.display = 'none';
+      document.body.appendChild(input);
+    }
+    input.value = '';
+    input.onchange = function () {
+      var file = input.files && input.files[0];
+      if (file) maPhotoPreview(id, file);
+    };
+    input.click();
+  };
+  function maPhotoPreview(id, file) {
+    var reader = new FileReader();
+    reader.onload = function () {
+      var idArg = (typeof id === 'number' ? id : "'" + String(id) + "'");
+      openSheet(
+        '<div class="ma-sheet-title">Photo du véhicule</div>'
+        + '<div class="ma-sheet-sub">Vérifiez l\'aperçu avant d\'enregistrer.</div>'
+        + '<div class="ma-photo-preview"><img src="' + reader.result + '" alt=""></div>'
+        + '<button class="ma-action" id="ma-photo-save">' + ic('check') + ' Enregistrer la photo</button>'
+        + '<button class="ma-act-btn ma-photo-retake" onclick="maVehiclePhoto(' + idArg + ')">' + ic('camera') + ' Reprendre / changer</button>'
+      );
+      var btn = document.getElementById('ma-photo-save');
+      if (btn) btn.onclick = function () { maPhotoSave(id, file, btn); };
+    };
+    reader.readAsDataURL(file);
+  }
+  function maPhotoSave(id, file, btn) {
+    if (btn) { btn.disabled = true; btn.innerHTML = ic('clock') + ' Envoi en cours…'; }
+    function finish(url) {
+      try { if (ASLDB && ASLDB.updateVehicle) ASLDB.updateVehicle(id, { img: url, image: url, photo: url }); } catch (e) {}
+      closeSheet();
+      if (typeof window.showToast === 'function') window.showToast('Photo mise à jour ✓');
+      renderVehicles();
+    }
+    function fail(msg) {
+      if (btn) { btn.disabled = false; btn.innerHTML = ic('check') + ' Enregistrer la photo'; }
+      alert(msg || 'Échec de l\'envoi de la photo. Réessayez.');
+    }
+    try {
+      if (ASLDB && typeof ASLDB.uploadImage === 'function') {
+        ASLDB.uploadImage(file).then(finish).catch(function (err) { fail(err && err.message ? err.message : null); });
+      } else {
+        fail('Téléversement indisponible. Déployez le site sur Cloudflare pour activer les photos.');
+      }
+    } catch (e) { fail(e && e.message ? e.message : null); }
+  }
 
   /* ============ RÉSERVATIONS ============ */
   function renderReservations() {
@@ -539,7 +599,7 @@
     app.id = 'asl-mobile-app';
     app.innerHTML =
       '<div class="ma-head">'
-      + '<img class="ma-head-logo" src="../assets/logo-asl-header.png" alt="All Star Loc" onerror="this.onerror=null;this.src=\'logo-asl.png\';">'
+      + '<img class="ma-head-logo" src="logo-asl.png" alt="All Star Loc" onerror="this.onerror=null;this.src=\'../assets/logo-asl-admin.png\';">'
       + '<div class="ma-head-txt"><h1 id="ma-title">Tableau de bord</h1><div class="ma-greet">Bonjour ' + esc(greet) + '</div></div>'
       + '<button class="ma-head-btn" aria-label="Notifications" onclick="maGo(\'notifications\')">' + ic('bell') + '<span class="ma-dot" id="ma-head-dot" style="display:none;"></span></button></div>'
       + screen('dashboard') + screen('vehicles') + screen('reservations') + screen('rentals')

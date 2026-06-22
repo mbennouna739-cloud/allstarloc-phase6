@@ -37,7 +37,7 @@ body{font-family:'Outfit',system-ui,sans-serif;background:#08080a;
   border:1.5px solid rgba(255,255,255,.09);border-radius:11px;
   padding:13px 16px;font-size:16px;color:#fff;font-family:inherit;-webkit-appearance:none;appearance:none;touch-action:manipulation;
   outline:none;transition:border-color .18s, background .18s;}
-.fg input:focus{border-color:rgba(196,30,58,.55);background:rgba(255,255,255,.08);}
+.fg input:focus{border-color:rgba(196,30,58,.6);background:rgba(255,255,255,.08);box-shadow:0 0 0 4px rgba(196,30,58,.13);}
 .fg input::placeholder{color:rgba(255,255,255,.18);}
 /* Bouton */
 .btn{width:100%;margin-top:6px;
@@ -54,7 +54,30 @@ body{font-family:'Outfit',system-ui,sans-serif;background:#08080a;
   color:#ff7088;border-radius:9px;padding:11px 14px;font-size:13px;
   font-weight:600;margin-bottom:16px;text-align:center;display:none;}
 .footer{text-align:center;margin-top:22px;font-size:11px;color:rgba(255,255,255,.16);letter-spacing:.4px;}
-@media(max-width:440px){.card{padding:30px 22px;} .wrap{padding:14px;}}
+/* Autofill : on neutralise le rendu jaune/blanc du navigateur et on conserve
+   exactement le même design (fond sombre, texte blanc) — mobile ET desktop. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active{
+  -webkit-text-fill-color:#ffffff !important;
+  caret-color:#ffffff;
+  -webkit-box-shadow:0 0 0 1000px #16161b inset !important;
+  box-shadow:0 0 0 1000px #16161b inset !important;
+  border:1.5px solid rgba(255,255,255,.09) !important;
+  border-radius:11px;
+  transition:background-color 99999s ease-in-out 0s;
+}
+input:-webkit-autofill:focus{ border-color:rgba(196,30,58,.6) !important; }
+/* Animation d'entrée légère, professionnelle (désactivée si l'utilisateur
+   préfère réduire les animations). */
+@media (prefers-reduced-motion: no-preference){
+  @keyframes aslCardIn{from{opacity:0;transform:translateY(14px) scale(.985);}to{opacity:1;transform:none;}}
+  @keyframes aslLogoIn{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:none;}}
+  .card{animation:aslCardIn .45s cubic-bezier(.2,.7,.2,1) both;}
+  .logo-wrap{animation:aslLogoIn .55s ease .12s both;}
+}
+@media(max-width:440px){.card{padding:32px 24px;border-radius:20px;} .wrap{padding:14px;} .logo-wrap img{width:168px;}}
 </style>
 </head>
 <body>
@@ -113,50 +136,49 @@ async function login(){
   const btn=document.getElementById('btn');
   if(btn)btn.disabled=true;
 
-  // 1) Comptes EMPLOYES d'abord (geres par l'admin principal)
-  try {
-    if (typeof ASLUsers !== 'undefined' && ASLUsers.authEmployee) {
-      const emp = ASLUsers.authEmployee(u, p);
-      if (emp && emp.blocked) {
-        showErr('Ce compte est desactive. Contactez l\'administrateur.');
-        document.getElementById('p').value=''; if(btn)btn.disabled=false;
-        return;
-      }
-      if (emp) {
-        const sess={ user: emp.name||emp.username, username: emp.username,
-          employee:true, perms: emp.perms||{}, userId: emp.id,
-          exp: Date.now()+TTL, token: Math.random().toString(36).slice(2) };
-        localStorage.setItem(SK, JSON.stringify(sess));
-        localStorage.removeItem(LK);
-        window.location.replace('index.html');
-        return;
-      }
-    }
-  } catch(e) {}
-
-  // 2) Sinon, admin principal cote serveur
+  // 1) Verification SERVEUR (admin principal OU employe stocke en KV).
+  //    Fonctionne depuis N'IMPORTE QUEL navigateur / appareil.
   try{
     const r=await fetch('/api/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user:u,pass:p})});
-    const d=await r.json();
+    let d=null; try{ d=await r.json(); }catch(_){}
     if(r.ok&&d&&d.ok){
-      // Session validée par le serveur
-      const sess={user:d.user,exp:d.exp||Date.now()+TTL,token:d.token||Math.random().toString(36).slice(2)};
-      if(d.adminKey)sess.adminKey=d.adminKey;
+      let sess;
+      if(d.employee){
+        sess={ user:d.user, username:d.username, employee:true, perms:d.perms||{}, userId:d.userId,
+               exp:d.exp||Date.now()+TTL, token:d.token||Math.random().toString(36).slice(2) };
+      }else{
+        sess={ user:d.user, exp:d.exp||Date.now()+TTL, token:d.token||Math.random().toString(36).slice(2) };
+      }
+      if(d.adminKey){ sess.adminKey=d.adminKey; try{localStorage.setItem('asl_admin_key',d.adminKey);}catch(e){} }
       localStorage.setItem(SK,JSON.stringify(sess));
-      if(d.adminKey){try{localStorage.setItem('asl_admin_key',d.adminKey);}catch(e){}}
       localStorage.removeItem(LK);
       window.location.replace('index.html');
       return;
     }
-    // Échec
+    if(r.status===403&&d&&d.error){
+      showErr(d.error); document.getElementById('p').value=''; if(btn)btn.disabled=false; return;
+    }
     tries++;
     if(tries>=MAX){localStorage.setItem(LK,String(Date.now()+BAN));showErr('Trop de tentatives. Accès bloqué 15 min.');}
     else showErr('Identifiant ou mot de passe incorrect. '+(MAX-tries)+' tentative(s) restante(s).');
     document.getElementById('p').value='';
     document.getElementById('p').focus();
     if(btn)btn.disabled=false;
+    return;
   }catch(e){
-    // Pas de réseau / test local (file://) : message clair
+    // 2) Reseau indisponible (hors-ligne / file://) : repli LOCAL pour les
+    //    comptes employes deja connus de cet appareil.
+    try{
+      if(typeof ASLUsers!=='undefined'&&ASLUsers.authEmployee){
+        const emp=ASLUsers.authEmployee(u,p);
+        if(emp&&emp.blocked){ showErr('Ce compte est desactive. Contactez l\'administrateur.'); document.getElementById('p').value=''; if(btn)btn.disabled=false; return; }
+        if(emp){
+          const sess={ user:emp.name||emp.username, username:emp.username, employee:true, perms:emp.perms||{}, userId:emp.id, exp:Date.now()+TTL, token:Math.random().toString(36).slice(2) };
+          localStorage.setItem(SK,JSON.stringify(sess)); localStorage.removeItem(LK);
+          window.location.replace('index.html'); return;
+        }
+      }
+    }catch(_){}
     showErr('Connexion au serveur impossible. En local, l\'authentification fonctionne uniquement une fois déployé sur Cloudflare.');
     if(btn)btn.disabled=false;
   }
