@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<script>(function(){try{var l=localStorage.getItem("asl_lang")||"fr";if(["fr","en","es","ar"].indexOf(l)<0)l="fr";document.documentElement.lang=l;document.documentElement.dir=(l==="ar")?"rtl":"ltr";}catch(e){}})();</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/x-icon" href="../assets/favicons/favicon.ico">
@@ -25,6 +26,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="page.css">
+<script src="../i18n.js" defer></script>
+<script src="../faq-seed.js" defer></script>
+<script src="../pages-seed.js" defer></script>
+<script src="../content-bridge.js" defer></script>
+<script src="../cookie-consent.js" defer></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -195,25 +201,25 @@
 </header>
 
 <div class="page-hero">
-  <div class="page-badge"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg> Questions fréquentes</div>
-  <h1>Foire aux<br><span>Questions</span></h1>
-  <p>Les réponses aux questions que l'on nous pose le plus souvent. Une autre question ? WhatsApp 24h/7j.</p>
+  <div class="page-badge"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg> <span data-i18n="fq.badge">Questions fréquentes</span></div>
+  <h1 data-i18n-html="fq.h1Html">Foire aux<br><span>Questions</span></h1>
+  <p data-i18n="fq.lead">Les réponses aux questions que l'on nous pose le plus souvent. Une autre question ? WhatsApp 24h/7j.</p>
 </div>
 
 <div class="page-content">
-<div class="faq-item"><button class="faq-q" onclick="this.parentElement.classList.toggle('open')">Quels documents faut-il pour louer ?</button><div class="faq-a"><p style="margin:10px 0 0;">Un permis de conduire valide depuis plus d'un an et une pièce d'identité ou un passeport. Le permis international n'est pas nécessaire pour la plupart des nationalités.</p></div></div>
-<div class="faq-item"><button class="faq-q" onclick="this.parentElement.classList.toggle('open')">Quel est l'âge minimum ?</button><div class="faq-a"><p style="margin:10px 0 0;">21 ans pour la majorité des véhicules, 25 ans pour la catégorie SUV Premium.</p></div></div>
-<div class="faq-item"><button class="faq-q" onclick="this.parentElement.classList.toggle('open')">La livraison à l'aéroport est-elle vraiment gratuite ?</button><div class="faq-a"><p style="margin:10px 0 0;">Oui, prise en charge et restitution à l'aéroport Ménara (RAK) sont 100 % gratuites, 24h/24. Indiquez simplement votre numéro de vol lors de la réservation.</p></div></div>
-<div class="faq-item"><button class="faq-q" onclick="this.parentElement.classList.toggle('open')">Le kilométrage est-il limité ?</button><div class="faq-a"><p style="margin:10px 0 0;">Non, tous nos véhicules sont loués en kilométrage illimité.</p></div></div>
-<div class="faq-item"><button class="faq-q" onclick="this.parentElement.classList.toggle('open')">Quelle caution est demandée ?</button><div class="faq-a"><p style="margin:10px 0 0;">Le montant dépend du véhicule et de la protection choisie ; il est indiqué clairement au contrat avant signature et restitué intégralement au retour si aucun dommage n'est constaté.</p></div></div>
-<div class="faq-item"><button class="faq-q" onclick="this.parentElement.classList.toggle('open')">Puis-je annuler ma réservation ?</button><div class="faq-a"><p style="margin:10px 0 0;">Oui : remboursement intégral si vous annulez plus de 48 h avant la prise en charge. Voir nos <a href='cgv.html'>conditions générales</a> pour le détail.</p></div></div>
-<div class="faq-item"><button class="faq-q" onclick="this.parentElement.classList.toggle('open')">Puis-je payer en euros ou par carte ?</button><div class="faq-a"><p style="margin:10px 0 0;">Oui. Nous acceptons MAD, EUR, USD et GBP, en ligne, par acompte ou sur place, en carte ou en espèces.</p></div></div>
-<div class="faq-item"><button class="faq-q" onclick="this.parentElement.classList.toggle('open')">Que se passe-t-il en cas de panne ?</button><div class="faq-a"><p style="margin:10px 0 0;">Appelez-nous au +212 6 75 31 24 53 : nous remplaçons le véhicule dans les meilleurs délais, sans frais si la panne ne vous est pas imputable.</p></div></div>
-<div class="faq-item"><button class="faq-q" onclick="this.parentElement.classList.toggle('open')">Puis-je ajouter un second conducteur ?</button><div class="faq-a"><p style="margin:10px 0 0;">Oui, pour 5 €/jour, à déclarer lors de la réservation. Il doit remplir les mêmes conditions (âge, permis).</p></div></div>
-<div class="faq-item"><button class="faq-q" onclick="this.parentElement.classList.toggle('open')">Livrez-vous à l'hôtel ou au riad ?</button><div class="faq-a"><p style="margin:10px 0 0;">Oui, nous livrons votre voiture directement à votre hébergement à Marrakech. Précisez l'adresse lors de la réservation ou <a href='contact.html'>contactez-nous</a>.</p></div></div><div class="cta-band">
-  <h3>Prêt à prendre la route ?</h3>
-  <p>Réservez votre voiture en 2 minutes, livraison gratuite à l'aéroport de Marrakech.</p>
-  <a href="../index.html#fleet">Voir nos véhicules <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+<div class="faq-item"><button class="faq-q" onclick="this.parentElement.classList.toggle('open')" data-i18n="fq.q1">Quels documents faut-il pour louer ?</button><div class="faq-a"><p style="margin:10px 0 0;" data-i18n="fq.a1">Un permis de conduire valide depuis plus d'un an et une pièce d'identité ou un passeport. Le permis international n'est pas nécessaire pour la plupart des nationalités.</p></div></div>
+<div class="faq-item"><button class="faq-q" onclick="this.parentElement.classList.toggle('open')" data-i18n="fq.q2">Quel est l'âge minimum ?</button><div class="faq-a"><p style="margin:10px 0 0;" data-i18n="fq.a2">21 ans pour la majorité des véhicules, 25 ans pour la catégorie SUV Premium.</p></div></div>
+<div class="faq-item"><button class="faq-q" onclick="this.parentElement.classList.toggle('open')" data-i18n="fq.q3">La livraison à l'aéroport est-elle vraiment gratuite ?</button><div class="faq-a"><p style="margin:10px 0 0;" data-i18n="fq.a3">Oui, prise en charge et restitution à l'aéroport Ménara (RAK) sont 100 % gratuites, 24h/24. Indiquez simplement votre numéro de vol lors de la réservation.</p></div></div>
+<div class="faq-item"><button class="faq-q" onclick="this.parentElement.classList.toggle('open')" data-i18n="fq.q4">Le kilométrage est-il limité ?</button><div class="faq-a"><p style="margin:10px 0 0;" data-i18n="fq.a4">Non, tous nos véhicules sont loués en kilométrage illimité.</p></div></div>
+<div class="faq-item"><button class="faq-q" onclick="this.parentElement.classList.toggle('open')" data-i18n="fq.q5">Quelle caution est demandée ?</button><div class="faq-a"><p style="margin:10px 0 0;" data-i18n="fq.a5">Le montant dépend du véhicule et de la protection choisie ; il est indiqué clairement au contrat avant signature et restitué intégralement au retour si aucun dommage n'est constaté.</p></div></div>
+<div class="faq-item"><button class="faq-q" onclick="this.parentElement.classList.toggle('open')" data-i18n="fq.q6">Puis-je annuler ma réservation ?</button><div class="faq-a"><p style="margin:10px 0 0;" data-i18n-html="fq.a6Html">Oui : remboursement intégral si vous annulez plus de 48 h avant la prise en charge. Voir nos <a href='cgv.html'>conditions générales</a> pour le détail.</p></div></div>
+<div class="faq-item"><button class="faq-q" onclick="this.parentElement.classList.toggle('open')" data-i18n="fq.q7">Puis-je payer en euros ou par carte ?</button><div class="faq-a"><p style="margin:10px 0 0;" data-i18n="fq.a7">Oui. Nous acceptons MAD, EUR, USD et GBP, en ligne, par acompte ou sur place, en carte ou en espèces.</p></div></div>
+<div class="faq-item"><button class="faq-q" onclick="this.parentElement.classList.toggle('open')" data-i18n="fq.q8">Que se passe-t-il en cas de panne ?</button><div class="faq-a"><p style="margin:10px 0 0;" data-i18n="fq.a8">Appelez-nous au +212 6 75 31 24 53 : nous remplaçons le véhicule dans les meilleurs délais, sans frais si la panne ne vous est pas imputable.</p></div></div>
+<div class="faq-item"><button class="faq-q" onclick="this.parentElement.classList.toggle('open')" data-i18n="fq.q9">Puis-je ajouter un second conducteur ?</button><div class="faq-a"><p style="margin:10px 0 0;" data-i18n="fq.a9">Oui, pour 5 €/jour, à déclarer lors de la réservation. Il doit remplir les mêmes conditions (âge, permis).</p></div></div>
+<div class="faq-item"><button class="faq-q" onclick="this.parentElement.classList.toggle('open')" data-i18n="fq.q10">Livrez-vous à l'hôtel ou au riad ?</button><div class="faq-a"><p style="margin:10px 0 0;" data-i18n-html="fq.a10Html">Oui, nous livrons votre voiture directement à votre hébergement à Marrakech. Précisez l'adresse lors de la réservation ou <a href='contact.html'>contactez-nous</a>.</p></div></div><div class="cta-band">
+  <h3 data-i18n="cta.h3">Prêt à prendre la route ?</h3>
+  <p data-i18n="cta.p">Réservez votre voiture en 2 minutes, livraison gratuite à l'aéroport de Marrakech.</p>
+  <a href="../index.html#fleet"><span data-i18n="cta.btn">Voir nos véhicules</span> <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
 </div>
 </div>
 
@@ -255,11 +261,10 @@
     <div>
       <div class="footer-col-title" data-i18n="ft.colServices">Nos Services</div>
       <div class="footer-links">
-        <a href="../index.html#fleet" class="footer-link" data-i18n="ft.s1">Location Courte Durée</a>
-        <a href="lld.html" class="footer-link" data-i18n="ft.s2">Location Longue Durée</a>
-        <a href="aeroport.html" class="footer-link" data-i18n="ft.s3">Livraison Aéroport</a>
-        <a href="contact.html" class="footer-link" data-i18n="ft.s4">Livraison Hôtel</a>
-        <a href="contact.html" class="footer-link" data-i18n="ft.s6">Transfert Privé</a>
+        <a href="page.html?slug=courte-duree" class="footer-link" data-i18n="ft.s1">Location Courte Durée</a>
+        <a href="page.html?slug=lld" class="footer-link" data-i18n="ft.s2">Location Longue Durée</a>
+        <a href="page.html?slug=aeroport" class="footer-link" data-i18n="ft.s3">Livraison Aéroport</a>
+        <a href="page.html?slug=livraison-hotel" class="footer-link" data-i18n="ft.s4">Livraison Hôtel</a>
       </div>
     </div>
     <div>
@@ -276,9 +281,9 @@
     <div>
       <div class="footer-col-title" data-i18n="ft.colLegal">Légal</div>
       <div class="footer-links">
-        <a href="cgv.html" class="footer-link" data-i18n="ft.lCgv">Conditions Générales</a>
-        <a href="privacy.html" class="footer-link" data-i18n="ft.lPriv">Politique de Confidentialité</a>
-        <a href="mentions.html" class="footer-link" data-i18n="ft.lLegal">Mentions Légales</a>
+        <a href="page.html?slug=cgv" class="footer-link" data-i18n="ft.lCgv">Conditions Générales</a>
+        <a href="page.html?slug=privacy" class="footer-link" data-i18n="ft.lPriv">Politique de Confidentialité</a>
+        <a href="page.html?slug=mentions" class="footer-link" data-i18n="ft.lLegal">Mentions Légales</a>
       </div>
       <div class="footer-col-title" style="margin-top:24px;" data-i18n="ft.colCur">Devises</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -292,9 +297,9 @@
   <div class="footer-bottom">
     <div class="footer-copy" data-i18n="ft.copy">© 2025 All Star Loc — Location de Voitures à Marrakech. Tous droits réservés.</div>
     <div class="footer-legal">
-      <a href="cgv.html" data-i18n="ft.bCgv">CGV</a>
-      <a href="privacy.html" data-i18n="ft.bPriv">Confidentialité</a>
-      <a href="mentions.html" data-i18n="ft.bLegal">Mentions légales</a>
+      <a href="page.html?slug=cgv" data-i18n="ft.bCgv">CGV</a>
+      <a href="page.html?slug=privacy" data-i18n="ft.bPriv">Confidentialité</a>
+      <a href="page.html?slug=mentions" data-i18n="ft.bLegal">Mentions légales</a>
     </div>
   </div>
 </footer>

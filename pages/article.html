@@ -9,18 +9,28 @@
   <link rel="icon" type="image/png" sizes="16x16" href="../assets/favicons/favicon-16x16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="../assets/favicons/apple-touch-icon.png">
   <meta name="theme-color" content="#12151B">
-<title>Nos Véhicules de Location à Marrakech — Citadines, Berlines & SUV | ALL STAR LOC</title>
-<meta name="description" content="Découvrez toute la flotte ALL STAR LOC à Marrakech : citadines, berlines et SUV récents avec assurance incluse, kilométrage illimité et livraison gratuite à l'aéroport. Réservez votre voiture en ligne.">
-<link rel="canonical" href="https://allstarloc.ma/nos-vehicules">
-<meta property="og:title" content="Nos Véhicules — ALL STAR LOC Marrakech">
-<meta property="og:description" content="Toute notre flotte de location de voiture à Marrakech : citadines, berlines et SUV récents, tarifs dégressifs et assurance incluse.">
+<title>Article — ALL STAR LOC Marrakech</title>
+<meta name="description" content="Guide complet 2026 pour louer une voiture à Marrakech : documents, assurance, caution, conseils de conduite et pièges à éviter."
+<link rel="canonical" href="https://allstarloc.ma/article-guide-location">
 <meta property="og:type" content="website">
+<meta property="og:title" content="Louer une voiture à Marrakech : guide complet — ALL STAR LOC Marrakech">
+<meta property="og:description" content="Guide complet 2026 pour louer une voiture à Marrakech : documents, assurance, caution, conseils de conduite et pièges à éviter.">
+<meta property="og:url" content="https://allstarloc.ma/article-guide-location">
+<meta property="og:image" content="https://allstarloc.ma/assets/logo-asl.png">
+<meta property="og:site_name" content="ALL STAR LOC">
+<meta property="og:locale" content="fr_FR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Louer une voiture à Marrakech : guide complet — ALL STAR LOC Marrakech">
+<meta name="twitter:description" content="Guide complet 2026 pour louer une voiture à Marrakech : documents, assurance, caution, conseils de conduite et pièges à éviter.">
+>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="page.css">
 <script src="../i18n.js" defer></script>
+<script src="../blog-seed.js" defer></script>
+<script src="../pages-seed.js" defer></script>
+<script src="../content-bridge.js" defer></script>
 <script src="../cookie-consent.js" defer></script>
-<script src="../data.js" defer></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -35,8 +45,8 @@
     {
       "@type": "ListItem",
       "position": 2,
-      "name": "Nos Véhicules",
-      "item": "https://allstarloc.ma/nos-vehicules"
+      "name": "Guide Location",
+      "item": "https://allstarloc.ma/article-guide-location"
     }
   ]
 }
@@ -102,27 +112,17 @@
   </div>
 </header>
 
-<div class="page-hero hero-fleet">
-  <h1 data-i18n="vp.h1">Notre flotte de location à Marrakech</h1>
-  <p data-i18n="vp.lead">Citadines, berlines et SUV récents — assurance incluse, kilométrage illimité et tarifs dégressifs selon la durée.</p>
+<div class="page-hero" id="art-hero">
+  <div class="page-badge" id="art-badge"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg> <span id="art-cat">Article</span></div>
+  <h1 id="art-title">…</h1>
+  <p id="art-excerpt"></p>
 </div>
 
-<div class="page-content page-content--wide">
-  <div class="vp-toolbar">
-    <div class="vp-filters" id="vp-filters">
-      <button class="vp-filter active" data-cat="all" data-i18n="filter.all">Tous</button>
-      <button class="vp-filter" data-cat="citadine" data-i18n="filter.city">Citadines</button>
-      <button class="vp-filter" data-cat="economique" data-i18n="filter.eco">Économiques</button>
-      <button class="vp-filter" data-cat="familiale" data-i18n="filter.family">Familiales</button>
-      <button class="vp-filter" data-cat="suv" data-i18n="filter.suv">SUV</button>
-    </div>
-    <div class="vp-note" data-i18n="vp.degressive">Tarifs dégressifs selon la durée de location.</div>
-  </div>
-
-  <div class="vp-grid" id="vp-grid" aria-live="polite"></div>
-  <p class="vp-empty" id="vp-empty" style="display:none;" data-i18n="vp.empty">Aucun véhicule dans cette catégorie pour le moment.</p>
+<div class="page-content" id="art-content">
+  <p id="art-loading" style="text-align:center;color:#888;padding:40px 0;">Chargement de l'article…</p>
 </div>
 
+<script src="../article.js" defer></script>
 <footer>
   <div class="footer-top">
     <div class="footer-brand">
@@ -203,137 +203,5 @@
     </div>
   </div>
 </footer>
-
-<script>
-// Page « Nos Véhicules » : SEO + vitrine. Elle lit la flotte synchronisée
-// (Cloudflare KV via data.js, exactement comme la page d'accueil et l'admin).
-// La réservation N'A PAS lieu ici : « Réserver » renvoie vers le calendrier
-// de la page d'accueil (réservation centralisée, parcours dates → véhicule).
-(function () {
-  var curFilter = 'all';
-
-  function priceLabel(car) {
-    // Affiche le prix de base (MAD) ; la tarification dégressive complète
-    // s'applique dans le tunnel de réservation de la page d'accueil.
-    var p = (car.priceMAD != null) ? car.priceMAD
-          : Math.round((car.priceEUR || 0) * ((window.ASLDB && ASLDB.RATE_MAD) || 10.8));
-    var perDay = (window.t ? t('u.perDayLong') : '/ jour');
-    return p + ' MAD ' + perDay;
-  }
-
-  function carExtras(car) {
-    var f = car.features || {};
-    var T = window.t || function (k, p) { return k; };
-    var list = [
-      f.ac ? T('sp.ac') : '', f.bluetooth ? 'Bluetooth' : '', f.gps ? 'GPS' : '',
-      f.camera ? T('sp.cam') : '',
-      car.transmission || '', car.fuel || '',
-      car.doors ? T('sp.doors', { n: car.doors }) : '',
-      (car.seats ? car.seats + ' ' + (T('u.seats') || 'places') : ''),
-      car.trunk ? T('sp.trunk', { v: car.trunk }) : '',
-      car.consumption || '',
-      f.insurance ? T('sp.insur') : '', f.airport ? T('sp.airport') : '',
-      (car.depositShow && car.deposit) ? T('sp.deposit', { v: car.deposit + ' MAD' }) : ''
-    ].filter(Boolean);
-    return list;
-  }
-
-  function render() {
-    var grid = document.getElementById('vp-grid');
-    var empty = document.getElementById('vp-empty');
-    if (!grid || !window.ASLDB) return;
-    var fleet = ASLDB.getFleet().filter(function (c) {
-      return c.status === 'available' || c.status === 'reserved';
-    });
-    // Filtrage insensible à la casse ; "Tout" affiche toujours tout
-    if (curFilter !== 'all') {
-      fleet = fleet.filter(function (c) {
-        return (c.category || '').toLowerCase() === curFilter.toLowerCase();
-      });
-    }
-    // Reconstruire les boutons de filtre dynamiquement à partir des catégories réelles
-    rebuildFilters(ASLDB.getFleet().filter(function(c){ return c.status==='available'||c.status==='reserved'; }));
-
-    if (!fleet.length) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
-    empty.style.display = 'none';
-
-    var T = window.t || function (k) { return k; };
-    grid.innerHTML = fleet.map(function (car) {
-      var extras = carExtras(car).map(function (x) {
-        return '<span class="vp-chip">' + x + '</span>';
-      }).join('');
-      var img = car.img || '../assets/hero-car.svg';
-      return '' +
-        '<article class="vp-card">' +
-          '<div class="vp-card-img"><img src="' + img + '" alt="' + (car.name || 'Véhicule') +
-            ' — location à Marrakech" loading="lazy" onerror="this.onerror=null;this.src=\'../assets/hero-car.svg\'"></div>' +
-          '<div class="vp-card-body">' +
-            '<div class="vp-card-top">' +
-              '<h3 class="vp-card-name">' + (car.name || '') + '</h3>' +
-              '<span class="vp-card-badge">' + (car.badge || car.category || '') + '</span>' +
-            '</div>' +
-            '<div class="vp-price">' + priceLabel(car) + '</div>' +
-            (extras ? '<div class="vp-chips">' + extras + '</div>' : '') +
-            '<a href="../index.html#fleet" class="vp-book" data-i18n="car.book">Réserver</a>' +
-          '</div>' +
-        '</article>';
-    }).join('');
-    if (window.applyI18n) window.applyI18n();
-  }
-
-  // Labels des catégories (insensible à la casse, correspondance exacte)
-  var CAT_LABELS = { all:'Tous', citadine:'Citadines', economique:'Économiques',
-                     familiale:'Familiales', suv:'SUV' };
-  var filtersWired = false;
-
-  function rebuildFilters(allCars) {
-    var box = document.getElementById('vp-filters');
-    if (!box) return;
-    // Collecter les catégories présentes dans la flotte (insensible à la casse)
-    var seen = new Set(['all']);
-    allCars.forEach(function(c){ if(c.category) seen.add(c.category.toLowerCase()); });
-    var T = window.t || function(k){ return k; };
-    box.innerHTML = '';
-    seen.forEach(function(cat) {
-      var btn = document.createElement('button');
-      btn.className = 'vp-filter' + (cat === curFilter ? ' active' : '');
-      btn.setAttribute('data-cat', cat);
-      btn.textContent = CAT_LABELS[cat] || (cat.charAt(0).toUpperCase() + cat.slice(1));
-      box.appendChild(btn);
-    });
-    // Toujours mettre "Tous" en premier
-    var allBtn = box.querySelector('[data-cat="all"]');
-    if (allBtn && allBtn !== box.firstChild) box.insertBefore(allBtn, box.firstChild);
-    // Un seul event listener
-    if (!filtersWired) {
-      filtersWired = true;
-      box.addEventListener('click', function (e) {
-        var b = e.target.closest('.vp-filter');
-        if (!b) return;
-        box.querySelectorAll('.vp-filter').forEach(function (x) { x.classList.remove('active'); });
-        b.classList.add('active');
-        curFilter = b.getAttribute('data-cat');
-        render();
-      });
-    }
-  }
-
-  function wireFilters() { /* désormais géré par rebuildFilters */ }
-
-  function start() {
-    if (!window.ASLDB) { setTimeout(start, 60); return; }
-    wireFilters();
-    // Premier rendu immédiat avec les données locales (localStorage)
-    render();
-    // Après la sync KV, re-rendu avec les données serveur
-    if (ASLDB.syncNow) ASLDB.syncNow().then(render).catch(function () {});
-    // Mise à jour en direct si l'admin modifie la flotte
-    ASLDB.onChange(render);
-    // Ré-affiche quand la langue change
-    window.addEventListener('asl-lang-change', render);
-  }
-  document.addEventListener('DOMContentLoaded', start);
-})();
-</script>
 </body>
 </html>

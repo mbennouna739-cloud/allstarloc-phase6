@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<script>(function(){try{var l=localStorage.getItem("asl_lang")||"fr";if(["fr","en","es","ar"].indexOf(l)<0)l="fr";document.documentElement.lang=l;document.documentElement.dir=(l==="ar")?"rtl":"ltr";}catch(e){}})();</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/x-icon" href="../assets/favicons/favicon.ico">
@@ -25,6 +26,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="page.css">
+<script src="../i18n.js" defer></script>
+<script src="../legal-seed.js" defer></script>
+<script src="../pages-seed.js" defer></script>
+<script src="../content-bridge.js" defer></script>
+<script src="../cookie-consent.js" defer></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -139,6 +145,17 @@
 <h2>Article 7 — Utilisation du véhicule</h2>
 <p>Le véhicule est destiné à un usage privé sur le territoire marocain. Sont interdits : la sous-location, le transport rémunéré de personnes ou marchandises, la participation à des compétitions, le remorquage et le franchissement des frontières sans autorisation écrite préalable. Le kilométrage est illimité.</p>
 
+<h2>Article 7 bis — Responsabilité du client pendant la location</h2>
+<p>Pendant toute la durée de la location, et jusqu'à la restitution effective du véhicule, le client demeure seul responsable du véhicule et de son usage. Sa responsabilité couvre notamment :</p>
+<ul>
+<li><strong>Pneumatiques :</strong> les crevaisons ainsi que tout dommage aux pneus (coupure, hernie, éclatement, usure anormale) survenus pendant la location sont à la charge du client, sauf souscription de l'option « Protection pneus / crevaison ».</li>
+<li><strong>Infractions routières et amendes :</strong> le client est responsable de toute infraction au code de la route commise pendant la location (excès de vitesse, stationnement, péages, etc.). Les amendes, majorations et frais de traitement administratif lui sont intégralement imputables, y compris lorsqu'ils sont reçus par l'agence après la restitution.</li>
+<li><strong>Mauvaise utilisation :</strong> tout dommage résultant d'une utilisation non conforme du véhicule (erreur de carburant, surcharge, conduite négligente, non-respect des consignes du constructeur) reste à la charge du client.</li>
+<li><strong>Dommages causés pendant la location :</strong> le client répond des dommages matériels causés au véhicule pendant la période de location, dans les limites de la franchise et de la protection souscrite.</li>
+</ul>
+<p>Ces responsabilités s'appliquent sans préjudice des garanties d'assurance souscrites, dont les conditions et exclusions sont précisées à l'Article 5.</p>
+
+
 <h2>Article 8 — Annulation et modification</h2>
 <ul>
   <li>Annulation <strong>plus de 48 h</strong> avant la prise en charge : remboursement intégral des sommes versées ;</li>
@@ -194,11 +211,10 @@
     <div>
       <div class="footer-col-title" data-i18n="ft.colServices">Nos Services</div>
       <div class="footer-links">
-        <a href="../index.html#fleet" class="footer-link" data-i18n="ft.s1">Location Courte Durée</a>
-        <a href="lld.html" class="footer-link" data-i18n="ft.s2">Location Longue Durée</a>
-        <a href="aeroport.html" class="footer-link" data-i18n="ft.s3">Livraison Aéroport</a>
-        <a href="contact.html" class="footer-link" data-i18n="ft.s4">Livraison Hôtel</a>
-        <a href="contact.html" class="footer-link" data-i18n="ft.s6">Transfert Privé</a>
+        <a href="page.html?slug=courte-duree" class="footer-link" data-i18n="ft.s1">Location Courte Durée</a>
+        <a href="page.html?slug=lld" class="footer-link" data-i18n="ft.s2">Location Longue Durée</a>
+        <a href="page.html?slug=aeroport" class="footer-link" data-i18n="ft.s3">Livraison Aéroport</a>
+        <a href="page.html?slug=livraison-hotel" class="footer-link" data-i18n="ft.s4">Livraison Hôtel</a>
       </div>
     </div>
     <div>
@@ -215,9 +231,9 @@
     <div>
       <div class="footer-col-title" data-i18n="ft.colLegal">Légal</div>
       <div class="footer-links">
-        <a href="cgv.html" class="footer-link" data-i18n="ft.lCgv">Conditions Générales</a>
-        <a href="privacy.html" class="footer-link" data-i18n="ft.lPriv">Politique de Confidentialité</a>
-        <a href="mentions.html" class="footer-link" data-i18n="ft.lLegal">Mentions Légales</a>
+        <a href="page.html?slug=cgv" class="footer-link" data-i18n="ft.lCgv">Conditions Générales</a>
+        <a href="page.html?slug=privacy" class="footer-link" data-i18n="ft.lPriv">Politique de Confidentialité</a>
+        <a href="page.html?slug=mentions" class="footer-link" data-i18n="ft.lLegal">Mentions Légales</a>
       </div>
       <div class="footer-col-title" style="margin-top:24px;" data-i18n="ft.colCur">Devises</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -231,9 +247,9 @@
   <div class="footer-bottom">
     <div class="footer-copy" data-i18n="ft.copy">© 2025 All Star Loc — Location de Voitures à Marrakech. Tous droits réservés.</div>
     <div class="footer-legal">
-      <a href="cgv.html" data-i18n="ft.bCgv">CGV</a>
-      <a href="privacy.html" data-i18n="ft.bPriv">Confidentialité</a>
-      <a href="mentions.html" data-i18n="ft.bLegal">Mentions légales</a>
+      <a href="page.html?slug=cgv" data-i18n="ft.bCgv">CGV</a>
+      <a href="page.html?slug=privacy" data-i18n="ft.bPriv">Confidentialité</a>
+      <a href="page.html?slug=mentions" data-i18n="ft.bLegal">Mentions légales</a>
     </div>
   </div>
 </footer>

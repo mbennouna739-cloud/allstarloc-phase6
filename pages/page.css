@@ -105,6 +105,17 @@ header{position:absolute;top:0;left:0;right:0;z-index:900;background:rgba(12,12,
 
 /* ---- Phase finale : navigation uniforme, heros spécifiques, finition ---- */
 html, body { overflow-x: hidden; max-width: 100%; overscroll-behavior-x: none; }
+
+/* ===== Anti-zoom iOS : tout champ de saisie doit faire >=16px sur mobile,
+   sinon Safari iOS zoome automatiquement au focus. Règle universelle. ===== */
+@media (max-width: 768px) {
+  input, select, textarea,
+  .cform-input, .cform-textarea, .fi, .ft, .fs,
+  input[type="text"], input[type="email"], input[type="tel"],
+  input[type="date"], input[type="time"], input[type="number"], input[type="search"] {
+    font-size: 16px !important;
+  }
+}
 img, iframe { max-width: 100%; }
 
 .pg-nav { display: flex; align-items: center; gap: 4px; }
@@ -322,7 +333,8 @@ footer {
 /* === Header unifié (menu nav + burger + sélecteurs) === */
 .menu-toggle {
   display: none; background: none; border: none; cursor: pointer;
-  color: white; padding: 8px;
+  color: white; padding: 10px; min-width: 44px; min-height: 44px;
+  align-items: center; justify-content: center;
 }
 
 .mobile-menu {
