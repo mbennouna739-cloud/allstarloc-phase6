@@ -87,3 +87,29 @@ RÉVERSIBILITÉ
 Toute la logique mobile est isolée dans admin-mobile.js / .css et
 bornée à @media (max-width:768px). Supprimer/retirer ces deux
 fichiers rétablit le comportement antérieur sans impacter le desktop.
+
+───────────────────────────────────────────────────────────────
+AJUSTEMENTS FINAUX (mise à jour)
+───────────────────────────────────────────────────────────────
+1) MENU PLUS — actions manuelles
+   « Nouvelle réservation » et « Nouvelle location » ajoutées en
+   haut du menu Plus. Elles ouvrent EXACTEMENT le formulaire desktop
+   (openModal 'new-reservation' / 'new-location') : même logique de
+   synchro, disponibilités, paiements, fiches clients, dates, calculs
+   et validation. Seule l'interface est adaptée au tactile (champs
+   empilés sur une colonne, saisie 16px anti-zoom, gros boutons,
+   feuille basse, pied collant, fermeture facile).
+
+2) MENU BURGER — supprimé sur tout le mobile
+   Le burger réapparaissait sur certaines vues (ex. Grand Livre) à
+   cause d'une règle desktop hors media-query (body.sb-is-collapsed
+   .sb-toggle). Il est désormais neutralisé dans tous les états
+   (normal, replié, vue desktop ponctuelle), ainsi que la sidebar et
+   le bouton de repli. Navigation par la barre du bas uniquement ;
+   bouton « Retour à l'application » pour les consultations desktop.
+
+3) LOGO ALL STAR LOC — intégration discrète
+   Le vrai logo (assets/logo-asl-header.png) apparaît à gauche de
+   l'en-tête, à côté de « Bonjour {utilisateur} ». Hauteur 26px,
+   largeur auto (max 116px) : présent, élégant, sans casser la mise
+   en page. Repli automatique sur admin/logo-asl.png si besoin.

@@ -485,11 +485,29 @@
       { ico: 'wallet', label: 'Paiements & Caisse', act: "maMore('caisse')", perm: 'caisse' }
     ];
     var visible = items.filter(function (it) { return !it.perm || can(it.perm); });
+    var canCreate = can('reservations') || can('rentals');
     openSheet(
       '<div class="ma-sheet-title">Plus</div>'
+      + (canCreate
+          ? '<div class="ma-sheet-section">Créer</div>'
+            + (can('reservations') ? '<button class="ma-action" onclick="maNewReservation()">' + ic('calendar') + ' Nouvelle réservation</button>' : '')
+            + (can('rentals') || can('reservations') ? '<button class="ma-action dark" onclick="maNewLocation()">' + ic('key') + ' Nouvelle location</button>' : '')
+          : '')
+      + '<div class="ma-sheet-section">Accès</div>'
       + visible.map(function (it) { return '<button class="ma-sheet-item" onclick="' + it.act + '"><span class="ma-sheet-ico">' + ic(it.ico) + '</span>' + it.label + '</button>'; }).join('')
       + '<button class="ma-sheet-item danger" onclick="maLogout()"><span class="ma-sheet-ico">' + ic('logout') + '</span>Se déconnecter</button>'
     );
+  };
+  /* Réservation / location manuelles : réutilisent EXACTEMENT la logique
+     desktop (openModal). Le formulaire s'affiche au-dessus de l'app mobile,
+     adapté tactile par le CSS (champs empilés, 16px, gros boutons). */
+  window.maNewReservation = function () {
+    closeSheet();
+    if (typeof window.openModal === 'function') window.openModal('new-reservation');
+  };
+  window.maNewLocation = function () {
+    closeSheet();
+    if (typeof window.openModal === 'function') window.openModal('new-location');
   };
   window.maMore = function (screen) { closeSheet(); maGo(screen); };
   window.maLogout = function () {
@@ -520,7 +538,9 @@
     var app = document.createElement('div');
     app.id = 'asl-mobile-app';
     app.innerHTML =
-      '<div class="ma-head"><div class="ma-head-txt"><h1 id="ma-title">Tableau de bord</h1><div class="ma-greet">Bonjour ' + esc(greet) + '</div></div>'
+      '<div class="ma-head">'
+      + '<img class="ma-head-logo" src="../assets/logo-asl-header.png" alt="All Star Loc" onerror="this.onerror=null;this.src=\'logo-asl.png\';">'
+      + '<div class="ma-head-txt"><h1 id="ma-title">Tableau de bord</h1><div class="ma-greet">Bonjour ' + esc(greet) + '</div></div>'
       + '<button class="ma-head-btn" aria-label="Notifications" onclick="maGo(\'notifications\')">' + ic('bell') + '<span class="ma-dot" id="ma-head-dot" style="display:none;"></span></button></div>'
       + screen('dashboard') + screen('vehicles') + screen('reservations') + screen('rentals')
       + screen('returns') + screen('clients') + screen('caisse') + screen('notifications');
