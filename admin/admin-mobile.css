@@ -133,6 +133,11 @@
   }
   .ma-card-ico-box { width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
   .ma-card-ico-box.red { background: rgba(196,30,58,.12); color: #C41E3A; }
+  .ma-card-ico-box.green { background: rgba(22,163,74,.12); color: #16a34a; }
+  .ma-card-ico-box.blue { background: rgba(37,99,235,.12); color: #1d4ed8; }
+  .ma-card-ico-box.orange { background: rgba(217,119,6,.12); color: #b45309; }
+  .ma-card-ico-box.purple { background: rgba(124,58,237,.12); color: #7c3aed; }
+  .ma-card-ico-box svg { width: 22px; height: 22px; }
   .ma-card-info { flex: 1; min-width: 0; }
   .ma-card-name { font-size: 15px; font-weight: 700; color: #101216; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ma-card-sub { font-size: 12.5px; color: #6b7280; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; }
@@ -145,6 +150,7 @@
   .ma-badge.green { background: rgba(22,163,74,.12); color: #15803d; }
   .ma-badge.blue { background: rgba(37,99,235,.12); color: #1d4ed8; }
   .ma-badge.orange { background: rgba(217,119,6,.12); color: #b45309; }
+  .ma-badge.purple { background: rgba(124,58,237,.12); color: #7c3aed; }
   .ma-badge.red { background: rgba(196,30,58,.12); color: #C41E3A; }
   .ma-badge.gray { background: rgba(100,116,139,.14); color: #475569; }
 
@@ -220,6 +226,7 @@
   .ma-cash-note { font-size: 11.5px; color: #9aa0ab; margin-top: 3px; }
   .ma-card-note { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(18,22,30,.07); }
   .ma-card-note.orange { color: #d97706; }
+  .ma-card-note.blue { color: #1d4ed8; }
   .ma-card-note svg { width: 15px; height: 15px; flex-shrink: 0; }
 
   /* ---- Notifications ---- */
@@ -283,6 +290,10 @@
   .ma-sheet-close { position: absolute; top: 14px; right: 14px; width: 34px; height: 34px; border-radius: 50%; border: none; background: #F4F5F7; color: #6b7280; display: flex; align-items: center; justify-content: center; cursor: pointer; }
   .ma-sheet-close .ma-ic { width: 18px; height: 18px; }
   .ma-sheet-title { font-size: 17px; font-weight: 800; color: #101216; padding-right: 40px; }
+  .ma-fiche-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid rgba(18,22,30,.07); }
+  .ma-fiche-row:last-of-type { border-bottom: none; }
+  .ma-fiche-lbl { font-size: 13px; color: #6b7280; flex-shrink: 0; }
+  .ma-fiche-val { font-size: 14px; font-weight: 700; color: #101216; text-align: right; }
   .ma-sheet-sub { font-size: 13px; color: #6b7280; margin: 4px 0 16px; font-weight: 500; }
   .ma-sheet-section { font-size: 12px; font-weight: 800; color: #5d6470; text-transform: uppercase; letter-spacing: .04em; margin: 18px 0 10px; }
 

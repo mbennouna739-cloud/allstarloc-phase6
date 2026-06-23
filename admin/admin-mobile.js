@@ -67,6 +67,8 @@
     edit: '<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/>',
     swap: '<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
     plus: '<path d="M5 12h14M12 5v14"/>',
+    user: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+    shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>',
     wrench: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.3L3 18l3 3 6.4-6.3a4 4 0 0 0 5.3-5.4l-2.5 2.5-2.1-2.1Z"/>',
     search: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
     sparkle: '<path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/>',
@@ -93,13 +95,29 @@
   /* ---------- Comptes pour le tableau de bord ---------- */
   function counts() {
     var f = fleet(), r = reservations(), ts = todayISO();
+    var MAINT = {}; try { MAINT = JSON.parse(localStorage.getItem('asl_maint_v1') || '{}'); } catch (e) {}
+    var todayMs = new Date(ts).getTime();
+    // Visites techniques proches (≤ 7 j) + vidanges dues (rappel atteint)
+    var vt = 0, vid = 0;
+    f.forEach(function (c) {
+      var m = MAINT[String(c.id)] || {};
+      if (m.vt_next) { var dv = Math.round((new Date(m.vt_next) - todayMs) / 86400000); if (dv <= 7) vt++; }
+      if (m.reminder_next && new Date(m.reminder_next).getTime() <= todayMs + 86400000) vid++;
+    });
     return {
       available: f.filter(function (c) { return c.status === 'available'; }).length,
       // Loués = réservations actives/confirmées en cours aujourd'hui (logique desktop)
       rented: r.filter(function (x) { return (x.status === 'active' || x.status === 'confirmed') && (x.startDate || '') <= ts && (x.endDate || '') >= ts; }).length,
+      // Réservés = réservations futures non encore commencées (à venir)
+      reserved: r.filter(function (x) { return (x.status === 'confirmed' || x.status === 'reserved' || x.status === 'pending') && (x.startDate || '') > ts; }).length,
       returnsToday: r.filter(function (x) { return (x.endDate || '').slice(0, 10) === ts && x.status !== 'cancelled'; }).length,
       late: r.filter(function (x) { return (x.endDate || '') < ts && (x.status === 'active' || x.status === 'confirmed'); }).length,
-      unpaid: r.filter(function (x) { return x.status !== 'cancelled' && (Number(x.amount) || 0) > (Number(x.paid) || 0); }).length
+      unpaid: r.filter(function (x) { return x.status !== 'cancelled' && (Number(x.amount) || 0) > (Number(x.paid) || 0); }).length,
+      // Activités du jour
+      entrants: r.filter(function (x) { return (x.endDate || '').slice(0, 10) === ts && x.status !== 'cancelled'; }).length,
+      sortants: r.filter(function (x) { return (x.startDate || '').slice(0, 10) === ts && x.status !== 'cancelled'; }).length,
+      vt: vt,
+      vidanges: vid
     };
   }
 
@@ -133,6 +151,8 @@
     if (screen === 'dashboard') renderDash();
     else if (screen === 'vehicles') renderVehicles();
     else if (screen === 'available') renderAvailableM();
+    else if (screen === 'reserved') renderReservedM();
+    else if (screen === 'activites') renderActivitesM();
     else if (screen === 'reservations') renderReservations();
     else if (screen === 'rentals') renderRentals();
     else if (screen === 'returns') renderReturns();
@@ -154,11 +174,12 @@
       { num: c.rented, lbl: 'Loués', cls: 'blue', ico: 'key', act: "maDash('rented')" },
       { num: c.returnsToday, lbl: "Retours aujourd'hui", cls: 'orange', ico: 'returns', act: "maDash('returns')" },
       { num: c.late, lbl: 'En retard', cls: 'red', ico: 'alert', act: "maDash('late')" },
-      { num: c.unpaid, lbl: 'Impayés', cls: 'purple', ico: 'card', act: "maDash('unpaid')" },
+      { num: c.reserved, lbl: 'Réservés', cls: 'purple', ico: 'calendar', act: "maDash('reserved')" },
       { num: money(rev.month), lbl: 'Revenus du mois', cls: 'teal', ico: 'wallet', act: "maDash('revenue')", small: true }
     ];
     var host = document.getElementById('ma-dashboard');
     if (!host) return;
+    var activites = c.entrants + c.sortants + c.vt + c.vidanges;
     host.innerHTML =
       '<div class="ma-stats">' + cards.map(function (k) {
         return '<button type="button" class="ma-stat" onclick="' + k.act + '">'
@@ -166,9 +187,9 @@
           + '<div class="ma-stat-num ' + k.cls + '"' + (k.small ? ' style="font-size:17px;"' : '') + '>' + k.num + '</div>'
           + '<div class="ma-stat-lbl">' + k.lbl + '</div></button>';
       }).join('') + '</div>'
-      + (c.late || c.unpaid ? '<div class="ma-section-title">À surveiller</div>' : '')
-      + (c.late ? alertRow('alert', c.late + ' retard(s)', 'Véhicules non rendus à temps', "maDash('late')", 'red') : '')
-      + (c.unpaid ? alertRow('card', c.unpaid + ' impayé(s)', 'Dossiers avec reste à payer', "maDash('unpaid')", 'orange') : '');
+      + '<div class="ma-section-title">À surveiller</div>'
+      + alertRow('returns', "Activités du jour", c.entrants + ' entrant(s) · ' + c.sortants + ' sortant(s) · ' + c.vt + ' VT · ' + c.vidanges + ' vidange(s)', "maDash('activites')", 'blue')
+      + alertRow('card', c.unpaid + ' impayé(s)', 'Dossiers avec reste à payer', "maDash('unpaid')", 'orange');
   }
 
   /* Revenus : réutilise la logique desktop si disponible, sinon recalcule
@@ -207,6 +228,8 @@
     else if (type === 'rented') maGo('rentals');
     else if (type === 'returns') maGo('returns');
     else if (type === 'late') maGo('late');
+    else if (type === 'reserved') maGo('reserved');
+    else if (type === 'activites') maGo('activites');
     else if (type === 'unpaid') maGo('unpaid');
     else if (type === 'revenue') maGo('revenue');
   };
@@ -373,27 +396,40 @@
 
   function resCard(r, kind) {
     var reste = Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
-    var stMap = { pending: ['orange', 'En attente'], confirmed: ['blue', 'Confirmée'], active: ['green', 'En cours'], reserved: ['orange', 'Réservée'], completed: ['gray', 'Terminée'], cancelled: ['red', 'Annulée'] };
-    var st = stMap[r.status] || ['gray', r.status || '—'];
     var payBadge = reste > 0 ? '<span class="ma-badge red">Reste ' + money(reste) + '</span>' : '<span class="ma-badge green">Payé</span>';
     var idStr = "'" + String(r.id || '') + "'";
-    var actions;
+
     if (kind === 'rental') {
-      actions = '<div class="ma-actions">'
-        + '<button class="ma-act-btn" onclick="maViewRental(' + idStr + ')">' + ic('eye') + 'Fiche</button>'
-        + '<button class="ma-act-btn" onclick="maReturnVehicle(' + idStr + ')">' + ic('returns') + 'Retour</button>'
+      // LOUÉS : on met en valeur le nom de la voiture, le client en dessous.
+      // Pas de badge de statut. Fiche (popup) + Prolonger + Retour.
+      var plate = r.assignedPlate || (function () { try { var c = fleet().filter(function (z) { return z.name === r.car || z.id === r.carId; })[0]; return c ? (c.plate || '') : ''; } catch (e) { return ''; } })();
+      return '<div class="ma-card">'
+        + '<div class="ma-card-top"><div class="ma-card-ico-box blue">' + ic('key') + '</div>'
+        + '<div class="ma-card-info"><div class="ma-card-name">' + esc(r.car || 'Véhicule') + '</div>'
+        + '<div class="ma-card-sub">' + esc(r.client || 'Client') + (plate ? ' · ' + esc(plate) : '') + '</div></div>'
+        + payBadge + '</div>'
+        + '<div class="ma-card-meta">'
+        + '<div class="ma-meta">Départ<b>' + esc(r.startDate || '—') + (r.startTime ? ' ' + r.startTime : '') + '</b></div>'
+        + '<div class="ma-meta">Retour<b>' + esc(r.endDate || '—') + (r.endTime ? ' ' + r.endTime : '') + '</b></div>'
+        + '<div class="ma-meta">Total<b>' + money(r.amount || 0) + '</b></div>'
+        + '<div class="ma-meta">Reste<b style="color:' + (reste > 0 ? '#C41E3A' : '#16a34a') + ';">' + money(reste) + '</b></div></div>'
+        + '<div class="ma-actions">'
+        + '<button class="ma-act-btn" onclick="maRentalFiche(' + idStr + ')">' + ic('eye') + 'Fiche</button>'
         + '<button class="ma-act-btn" onclick="maExtend(' + idStr + ')">' + ic('plus') + 'Prolonger</button>'
-        + '</div>';
-    } else {
-      var validable = r.status === 'pending' || r.status === 'reserved';
-      var cancellable = r.status !== 'cancelled' && r.status !== 'completed';
-      actions = '<div class="ma-actions">'
-        + '<button class="ma-act-btn" onclick="maViewRes(' + idStr + ')">' + ic('eye') + 'Voir</button>'
-        + (validable ? '<button class="ma-act-btn ok" onclick="maConfirmRes(' + idStr + ')">' + ic('check') + 'Valider</button>' : '')
-        + '<button class="ma-act-btn" onclick="maViewRes(' + idStr + ')">' + ic('edit') + 'Modifier</button>'
-        + (cancellable ? '<button class="ma-act-btn danger" onclick="maCancelRes(' + idStr + ')">' + ic('x') + 'Annuler</button>' : '')
-        + '</div>';
+        + '<button class="ma-act-btn ok" onclick="maReturnVehicle(' + idStr + ')">' + ic('returns') + 'Retour</button>'
+        + '</div></div>';
     }
+
+    var stMap = { pending: ['orange', 'En attente'], confirmed: ['blue', 'Confirmée'], active: ['green', 'En cours'], reserved: ['orange', 'Réservée'], completed: ['gray', 'Terminée'], cancelled: ['red', 'Annulée'] };
+    var st = stMap[r.status] || ['gray', r.status || '—'];
+    var validable = r.status === 'pending' || r.status === 'reserved';
+    var cancellable = r.status !== 'cancelled' && r.status !== 'completed';
+    var actions = '<div class="ma-actions">'
+      + '<button class="ma-act-btn" onclick="maViewRes(' + idStr + ')">' + ic('eye') + 'Voir</button>'
+      + (validable ? '<button class="ma-act-btn ok" onclick="maConfirmRes(' + idStr + ')">' + ic('check') + 'Valider</button>' : '')
+      + '<button class="ma-act-btn" onclick="maViewRes(' + idStr + ')">' + ic('edit') + 'Modifier</button>'
+      + (cancellable ? '<button class="ma-act-btn danger" onclick="maCancelRes(' + idStr + ')">' + ic('x') + 'Annuler</button>' : '')
+      + '</div>';
     return '<div class="ma-card">'
       + '<div class="ma-card-top"><div class="ma-card-ava">' + esc((r.client || '?').charAt(0).toUpperCase()) + '</div>'
       + '<div class="ma-card-info"><div class="ma-card-name">' + esc(r.client || 'Client') + '</div>'
@@ -406,15 +442,41 @@
       + '<div class="ma-pay-line">' + payBadge + '</div>'
       + actions + '</div>';
   }
+
+  /* Fiche location en POPUP mobile propre (centrée, stable, scroll vertical,
+     bouton fermer = croix, aucun bouton caché). */
+  window.maRentalFiche = function (id) {
+    var r = (ASLDB.getReservations() || []).filter(function (x) { return x.id === id; })[0];
+    if (!r) return;
+    var reste = Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
+    var plate = r.assignedPlate || (function () { try { var c = fleet().filter(function (z) { return z.name === r.car || z.id === r.carId; })[0]; return c ? (c.plate || '') : ''; } catch (e) { return ''; } })();
+    function row(label, val, color) {
+      return '<div class="ma-fiche-row"><span class="ma-fiche-lbl">' + label + '</span><span class="ma-fiche-val"' + (color ? ' style="color:' + color + ';"' : '') + '>' + val + '</span></div>';
+    }
+    openSheet(
+      '<div class="ma-sheet-title">' + esc(r.car || 'Location') + '</div>'
+      + '<div style="font-size:13px;color:#6b7280;margin:-6px 0 14px;">' + esc(plate || '') + '</div>'
+      + row('Client', esc(r.client || '—'))
+      + (r.phone ? row('Téléphone', '<a href="tel:' + esc(r.phone) + '" style="color:#2563eb;text-decoration:none;">' + esc(r.phone) + '</a>') : '')
+      + row('Contrat', esc(r.contractRef || r.id || '—'))
+      + row('Départ', esc(r.startDate || '—') + (r.startTime ? ' ' + r.startTime : ''))
+      + row('Retour', esc(r.endDate || '—') + (r.endTime ? ' ' + r.endTime : ''))
+      + row('Total', money(r.amount || 0))
+      + row('Payé', money(r.paid || 0), '#16a34a')
+      + row('Reste à payer', money(reste), reste > 0 ? '#C41E3A' : '#16a34a')
+      + '<div class="ma-actions" style="margin-top:16px;">'
+      + '<button class="ma-act-btn" onclick="maCloseSheet();maExtend(\'' + r.id + '\')">' + ic('plus') + 'Prolonger</button>'
+      + '<button class="ma-act-btn ok" onclick="maCloseSheet();maReturnVehicle(\'' + r.id + '\')">' + ic('returns') + 'Confirmer retour</button>'
+      + '</div>'
+      + (r.phone ? '<a class="ma-act-btn" style="margin-top:8px;text-decoration:none;background:#25D366;color:#fff;border:none;" href="https://wa.me/' + esc(r.phone.replace(/[^0-9]/g, '')) + '" target="_blank">' + ic('phone') + 'WhatsApp</a>' : '')
+    );
+  };
   /* Actions réservations / locations — réutilisent les fonctions desktop */
   window.maViewRes = function (id) {
     if (typeof window.viewRes === 'function') { window.viewRes(id); return; }
     if (typeof window.viewRental === 'function') window.viewRental(id);
   };
-  window.maViewRental = function (id) {
-    if (typeof window.viewRental === 'function') { window.viewRental(id); return; }
-    if (typeof window.viewRes === 'function') window.viewRes(id);
-  };
+  window.maViewRental = function (id) { maRentalFiche(id); };
   window.maConfirmRes = function (id) { if (typeof window.confirmRes === 'function') window.confirmRes(id); refreshSoon(); };
   window.maCancelRes = function (id) {
     var r = (ASLDB.getReservations() || []).filter(function (x) { return x.id === id; })[0];
@@ -494,6 +556,89 @@
         + (fut ? '<div class="ma-card-note orange">' + ic('calendar') + ' Réservée du ' + fmtDM(fut.startDate) + ' au ' + fmtDM(fut.endDate) + '</div>' : '')
         + '</div>';
     }).join('') : '<div class="ma-empty">Aucun véhicule disponible en ce moment.</div>';
+  }
+
+  /* ============ RÉSERVÉS (vue mobile, identique à Disponibles) ============ */
+  function renderReservedM() {
+    var host = document.getElementById('ma-reserved');
+    if (!host) return;
+    var ts = todayISO();
+    // Réservations futures (à venir), pas encore commencées
+    var list = reservations().filter(function (r) {
+      return (r.status === 'confirmed' || r.status === 'reserved' || r.status === 'pending') && (r.startDate || '') > ts;
+    }).sort(function (a, b) { return String(a.startDate || '').localeCompare(String(b.startDate || '')); });
+    host.innerHTML = list.length ? list.map(function (r) {
+      // Immatriculation depuis la flotte
+      var plate = r.assignedPlate || (function () { try { var c = fleet().filter(function (x) { return x.name === r.car || x.id === r.carId; })[0]; return c ? (c.plate || '') : ''; } catch (e) { return ''; } })();
+      return '<div class="ma-card">'
+        + '<div class="ma-card-top"><div class="ma-card-ico-box purple">' + ic('calendar') + '</div>'
+        + '<div class="ma-card-info"><div class="ma-card-name">' + esc(r.car || 'Véhicule') + '</div>'
+        + '<div class="ma-card-sub">' + esc(plate || '—') + '</div></div>'
+        + '<span class="ma-badge purple">Réservé</span></div>'
+        + '<div class="ma-card-note blue">' + ic('calendar') + ' Réservée du ' + fmtDM(r.startDate) + ' au ' + fmtDM(r.endDate) + '</div>'
+        + '<div class="ma-card-note">' + ic('user') + ' ' + esc(r.client || r.finalClient || 'Client') + '</div>'
+        + '</div>';
+    }).join('') : '<div class="ma-empty">Aucun véhicule réservé.</div>';
+  }
+
+  /* ============ ACTIVITÉS DU JOUR (dynamique) ============ */
+  function renderActivitesM() {
+    var host = document.getElementById('ma-activites');
+    if (!host) return;
+    var ts = todayISO();
+    var r = reservations();
+    var MAINT = {}; try { MAINT = JSON.parse(localStorage.getItem('asl_maint_v1') || '{}'); } catch (e) {}
+    var todayMs = new Date(ts).getTime();
+
+    // Véhicules entrants (retours du jour)
+    var entrants = r.filter(function (x) { return (x.endDate || '').slice(0, 10) === ts && x.status !== 'cancelled'; });
+    // Véhicules sortants (départs du jour)
+    var sortants = r.filter(function (x) { return (x.startDate || '').slice(0, 10) === ts && x.status !== 'cancelled'; });
+    // Visites techniques proches + vidanges dues
+    var f = fleet();
+    var vts = [], vids = [];
+    f.forEach(function (c) {
+      var m = MAINT[String(c.id)] || {};
+      if (m.vt_next) { var dv = Math.round((new Date(m.vt_next) - todayMs) / 86400000); if (dv <= 7) vts.push({ car: c, m: m, dv: dv }); }
+      if (m.reminder_next && new Date(m.reminder_next).getTime() <= todayMs + 86400000) vids.push({ car: c, m: m });
+    });
+
+    function block(title, icon, tone, items, render) {
+      return '<div class="ma-section-title">' + title + ' (' + items.length + ')</div>'
+        + (items.length ? items.map(render).join('') : '<div class="ma-empty" style="padding:18px;">Aucun pour aujourd\'hui.</div>');
+    }
+
+    host.innerHTML =
+      block('Véhicules sortants', 'key', 'blue', sortants, function (x) {
+        return resMiniCard(x, 'sortant');
+      })
+      + block('Véhicules entrants', 'returns', 'orange', entrants, function (x) {
+        return resMiniCard(x, 'entrant');
+      })
+      + block('Visites techniques', 'shield', 'purple', vts, function (v) {
+        return '<div class="ma-card"><div class="ma-card-top"><div class="ma-card-ico-box purple">' + ic('shield') + '</div>'
+          + '<div class="ma-card-info"><div class="ma-card-name">' + esc(v.car.name) + '</div>'
+          + '<div class="ma-card-sub">' + esc(v.car.plate || '') + '</div></div>'
+          + '<span class="ma-badge ' + (v.dv < 0 ? 'red' : 'orange') + '">' + (v.dv < 0 ? 'En retard' : 'Dans ' + v.dv + 'j') + '</span></div>'
+          + '<div class="ma-card-note">' + ic('calendar') + ' Visite technique : ' + esc(v.m.vt_next) + '</div></div>';
+      })
+      + block('Vidanges', 'wrench', 'orange', vids, function (v) {
+        var kmTxt = v.m.km_vidange_next ? Number(v.m.km_vidange_next).toLocaleString('fr-FR') + ' km' : '—';
+        return '<div class="ma-card"><div class="ma-card-top"><div class="ma-card-ico-box orange">' + ic('wrench') + '</div>'
+          + '<div class="ma-card-info"><div class="ma-card-name">' + esc(v.car.name) + '</div>'
+          + '<div class="ma-card-sub">' + esc(v.car.plate || '') + '</div></div>'
+          + '<span class="ma-badge orange">À vérifier</span></div>'
+          + '<div class="ma-card-note">' + ic('wrench') + ' Prochaine vidange : ' + kmTxt + '</div></div>';
+      });
+  }
+  function resMiniCard(x, kind) {
+    var plate = x.assignedPlate || (function () { try { var c = fleet().filter(function (z) { return z.name === x.car || z.id === x.carId; })[0]; return c ? (c.plate || '') : ''; } catch (e) { return ''; } })();
+    var idStr = "'" + String(x.id || '') + "'";
+    return '<div class="ma-card"><div class="ma-card-top"><div class="ma-card-ico-box ' + (kind === 'sortant' ? 'blue' : 'orange') + '">' + ic(kind === 'sortant' ? 'key' : 'returns') + '</div>'
+      + '<div class="ma-card-info"><div class="ma-card-name">' + esc(x.car || 'Véhicule') + '</div>'
+      + '<div class="ma-card-sub">' + esc(x.client || '') + (plate ? ' · ' + esc(plate) : '') + '</div></div>'
+      + '<span class="ma-badge ' + (kind === 'sortant' ? 'blue' : 'orange') + '">' + (kind === 'sortant' ? 'Départ' : 'Retour') + '</span></div>'
+      + '<div class="ma-actions"><button class="ma-act-btn" onclick="maViewRental(' + idStr + ')">' + ic('eye') + 'Fiche</button></div></div>';
   }
 
   /* ============ EN RETARD (vue mobile native) ============ */
@@ -972,7 +1117,7 @@
       + '<img class="ma-head-logo" src="data:image/png;base64,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" alt="All Star Loc">'
       + '<div class="ma-head-txt"><h1 id="ma-title">Tableau de bord</h1><div class="ma-greet">Bonjour ' + esc(greet) + '</div></div>'
       + '<button class="ma-head-btn" aria-label="Notifications" onclick="maToggleNotifications()">' + ic('bell') + '<span class="ma-dot" id="ma-head-dot" style="display:none;"></span></button></div>'
-      + screen('dashboard') + screen('vehicles') + screen('available') + screen('reservations') + screen('rentals')
+      + screen('dashboard') + screen('vehicles') + screen('available') + screen('reserved') + screen('activites') + screen('reservations') + screen('rentals')
       + screen('returns') + screen('late') + screen('clients') + screen('sublease') + screen('unpaid') + screen('revenue') + screen('caisse') + screen('notifications');
     document.body.appendChild(app);
 
@@ -993,7 +1138,7 @@
     }).join('');
     document.body.appendChild(bar);
 
-    var titles = { dashboard: 'Tableau de bord', vehicles: 'Véhicules', available: 'Disponibles', reservations: 'Réservations', rentals: 'Véhicules loués', returns: "Retours aujourd'hui", late: 'En retard', clients: 'Clients', sublease: 'Sous-location', unpaid: 'Impayés', revenue: 'Revenus', caisse: 'Paiements & Caisse', notifications: 'Notifications' };
+    var titles = { dashboard: 'Tableau de bord', vehicles: 'Véhicules', available: 'Disponibles', reserved: 'Véhicules réservés', activites: 'Activités du jour', reservations: 'Réservations', rentals: 'Véhicules loués', returns: "Retours aujourd'hui", late: 'En retard', clients: 'Clients', sublease: 'Sous-location', unpaid: 'Impayés', revenue: 'Revenus', caisse: 'Paiements & Caisse', notifications: 'Notifications' };
     window.maGo = function (s) {
       var titleEl = document.getElementById('ma-title');
       if (titleEl && titles[s]) titleEl.textContent = titles[s];

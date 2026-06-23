@@ -1,0 +1,89 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — LOT 42
+  Flash blanc (site client) + ajustements dashboard mobile
+═══════════════════════════════════════════════════════════════
+
+───────────────────────────────────────────────────────────────
+1. FLASH BLANC ENTRE LES PAGES (PRIORITÉ) — CORRIGÉ
+───────────────────────────────────────────────────────────────
+CAUSE TROUVÉE :
+Les pages internes (À propos, Contact, etc.) chargent leur style
+depuis un fichier externe (page.css) + Google Fonts, et leur
+en-tête/hero est SOMBRE. Or le navigateur affiche d'abord le fond
+BLANC du body, puis peint le sombre quand le CSS arrive. Ce moment
+« blanc avant sombre » = le flash. La page d'accueil ne flashait
+pas car son CSS est intégré (peinture instantanée).
+
+CORRECTION (aucun changement de design) :
+  • Un petit style critique est ajouté tout en haut du <head> de
+    chaque page : il fixe IMMÉDIATEMENT le fond à la couleur du
+    haut de CETTE page.
+      - Pages internes : fond sombre #0A0A0A (= header/hero/footer).
+      - Accueil : fond blanc (= son hero clair).
+    → plus aucun écran blanc pendant le changement de page.
+  • Une transition native entre pages (@view-transition, 0,18 s)
+    rend la navigation fluide (fondu doux). Ignorée sans effet sur
+    les navigateurs qui ne la gèrent pas.
+  • Aucun JavaScript ajouté, aucune couleur/maquette modifiée.
+
+Appliqué aux 16 pages du site client (accueil + 15 pages).
+
+───────────────────────────────────────────────────────────────
+2. SECTION « À SURVEILLER » (mobile)
+───────────────────────────────────────────────────────────────
+  • 1er élément remplacé par « ACTIVITÉS DU JOUR » : chiffres
+    DYNAMIQUES (recalculés en temps réel à chaque changement) :
+    entrants · sortants · visites techniques · vidanges.
+    Au clic → écran détaillé :
+        - Véhicules sortants (départs du jour)
+        - Véhicules entrants (retours du jour)
+        - Visites techniques (échéances proches)
+        - Vidanges (rappels dus)
+  • « Impayés » est CONSERVÉ comme 2e élément de « À surveiller ».
+
+───────────────────────────────────────────────────────────────
+3. CARTE « RÉSERVÉS » (dashboard principal)
+───────────────────────────────────────────────────────────────
+  • La carte « Impayés » est RETIRÉE du dashboard (plus de doublon
+    avec « À surveiller »).
+  • Nouvelle carte « RÉSERVÉS » à sa place. Au clic → liste des
+    véhicules réservés, AFFICHAGE IDENTIQUE à « Disponibles »,
+    avec en plus : les dates de réservation et le nom du client.
+
+───────────────────────────────────────────────────────────────
+4. SECTION « LOUÉS »
+───────────────────────────────────────────────────────────────
+  • Le NOM DE LA VOITURE est mis en valeur, le nom du client
+    juste en dessous.
+  • Conservés : date de départ, date de retour, total, reste.
+  • Le badge « Confirmer/Confirmée » est RETIRÉ (inutile).
+  • Conservés : Prolonger et Retour.
+  • Le bouton « Fiche » ouvre maintenant une VRAIE POP-UP mobile :
+    centrée, bien dimensionnée, champs lisibles, scroll vertical
+    propre, stable, fermeture par une croix, aucun bouton caché.
+    Elle affiche client, téléphone, contrat, dates, total, payé,
+    reste + actions Prolonger / Confirmer retour / WhatsApp.
+
+───────────────────────────────────────────────────────────────
+CE QUI N'A PAS ÉTÉ TOUCHÉ (comme demandé)
+───────────────────────────────────────────────────────────────
+Dashboard (structure), mobile (design), cartes (style), couleurs,
+pop-ups existants, header, menu bas, bouton +. Seules les
+demandes ci-dessus ont été traitées.
+
+───────────────────────────────────────────────────────────────
+TESTS EFFECTUÉS (validés)
+───────────────────────────────────────────────────────────────
+  • Anti-flash présent sur les 16 pages, fond adapté à chacune.
+  • Activités du jour : entrants/sortants/réservés calculés
+    correctement.
+  • Réservés : liste des futures réservations avec dates + client.
+  • Tous les écrans mobiles enregistrés et fonctionnels.
+  • JS validé (node --check), CSS équilibré.
+
+───────────────────────────────────────────────────────────────
+FICHIERS MODIFIÉS
+───────────────────────────────────────────────────────────────
+  index.html + pages/*.html   → style anti-flash (16 fichiers)
+  admin/admin-mobile.js        → activités, réservés, loués, fiche
+  admin/admin-mobile.css       → styles fiche + variantes couleurs
