@@ -1,0 +1,110 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — PHASE DE FINALISATION & STABILISATION
+═══════════════════════════════════════════════════════════════
+
+Aucune nouvelle fonctionnalité. Uniquement : logique métier
+cohérente, synchronisation, stabilité.
+
+───────────────────────────────────────────────────────────────
+1. TABLEAU DE BORD MOBILE = LOGIQUE DESKTOP
+───────────────────────────────────────────────────────────────
+Les cartes du tableau de bord mobile ouvrent désormais EXACTEMENT
+les mêmes panneaux que le desktop (même contenu, même comportement
+métier) :
+  • Disponibles    → liste véhicules (sans tarif, voir point 2)
+  • Loués          → véhicule, client, date retour, bouton Voir
+  • Retours auj.   → même liste + filtres aujourd'hui/demain/date
+  • En retard      → même liste + actions (voir point 3)
+  • Impayés        → client, véhicule, montant restant, détail
+  • Revenus du mois → semaine, mois, année, reste à encaisser
+Les compteurs utilisent les mêmes règles que le desktop (ex : les
+« Loués » = locations actives en cours aujourd'hui).
+
+───────────────────────────────────────────────────────────────
+2. VÉHICULES DISPONIBLES — SANS TARIF + RÉSERVATION FUTURE
+───────────────────────────────────────────────────────────────
+Dans la vue Disponibles (desktop ET mobile, c'est le même
+panneau) :
+  • Les TARIFS ne sont plus affichés.
+  • Pour chaque véhicule : Véhicule · Immatriculation · Statut.
+  • Si un véhicule est libre aujourd'hui mais déjà réservé pour
+    une période future, on voit directement :
+        Clio 5
+        Disponible
+        Réservée du 15/07 au 20/07
+Vue claire et opérationnelle.
+
+───────────────────────────────────────────────────────────────
+3. EN RETARD — CONFIRMER RETOUR / PROLONGER
+───────────────────────────────────────────────────────────────
+Depuis le panneau « En retard » :
+  • Confirmer retour (clôture + libère le véhicule).
+  • Prolonger la location.
+Après traitement, le panneau se rafraîchit et l'alerte disparaît
+automatiquement.
+
+───────────────────────────────────────────────────────────────
+4. NOTIFICATIONS MOBILE
+───────────────────────────────────────────────────────────────
+  • Clic sur la cloche → ouvre les notifications.
+  • Nouveau clic sur la cloche → retour à l'accueil.
+Comportement stable à chaque fois.
+
+───────────────────────────────────────────────────────────────
+5. SYNCHRONISATION SOUS-LOCATION & ENTRETIEN/VIDANGE
+───────────────────────────────────────────────────────────────
+Vraie synchronisation serveur pour les sous-locations,
+l'entretien/vidange, les charges et les documents :
+  • Création sur PC → visible sur mobile et tous les appareils.
+  • Création sur mobile → visible partout.
+  • Les notifications d'entretien/vidange remontent sur mobile.
+  • Mêmes données partout.
+Mécanisme : endpoint serveur /api/misc + synchronisation client
+(push si modifié, pull sinon). Un employé sans clé admin reçoit
+quand même les données (lecture), et l'app se rafraîchit
+automatiquement à la réception.
+
+  ⚠ IMPORTANT : la synchronisation entre appareils nécessite le
+  site DÉPLOYÉ sur Cloudflare avec la clé admin configurée. En
+  ouverture locale (fichier), chaque appareil reste isolé — c'est
+  une limite technique normale, pas un bug.
+
+───────────────────────────────────────────────────────────────
+6. BUG GRAND LIVRE / CAISSE (corrigé)
+───────────────────────────────────────────────────────────────
+Les boutons Charges / Résumé / Rapports ne se bloquent plus après
+navigation. Avant chaque bascule vers une vue desktop ponctuelle,
+tous les verrous (feuilles, pop-ups) sont nettoyés, et l'état est
+réinitialisé proprement au retour. Plus besoin de rafraîchir.
+
+───────────────────────────────────────────────────────────────
+7. EFFET DE LUMINOSITÉ DU BOUTON +
+───────────────────────────────────────────────────────────────
+Le fond du menu « + » s'ouvre maintenant en fondu doux et discret
+(plus de flash de contraste brutal). Rendu propre et professionnel.
+
+───────────────────────────────────────────────────────────────
+STABILITÉ GÉNÉRALE
+───────────────────────────────────────────────────────────────
+  • Le retour à l'application nettoie systématiquement tous les
+    états (vue desktop, verrous de défilement, pop-ups).
+  • Plus de boutons bloqués après navigation.
+  • Plus de besoin de rafraîchir la page.
+  • Rafraîchissement automatique à la réception de données.
+
+───────────────────────────────────────────────────────────────
+TESTS EFFECTUÉS (validés)
+───────────────────────────────────────────────────────────────
+  • Synchro 2 appareils : PC crée → mobile reçoit ; ajout → re-sync ;
+    employé sans clé → reçoit quand même, pas de perte.
+  • « Disponible + Réservée du 15/07 au 20/07 » : format conforme.
+  • Tous les fichiers JS validés (node --check).
+
+───────────────────────────────────────────────────────────────
+FICHIERS MODIFIÉS
+───────────────────────────────────────────────────────────────
+  admin/admin-mobile.js / .css → tableau de bord, notifications,
+                                 stabilité, fondu du menu +
+  admin/admin-lot5.js          → panneau Disponibles (sans tarif +
+                                 résa future), En retard (actions)
+  data.js                      → synchro robuste (repli pull)

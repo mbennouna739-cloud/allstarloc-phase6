@@ -345,7 +345,15 @@ export async function onRequest(context) {
     const name = url.searchParams.get('name') || '';
     const allowed = ['subleases', 'charges', 'maint', 'docs', 'users'];
     if (allowed.indexOf(name) < 0) return err(400, 'name invalide');
-    const doc = await readDoc(env, 'misc_' + name);
+    const raw = await env.ASL_DB.get('misc_' + name);
+    let doc = null;
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        // Compat : ancien format {rev, items} OU nouveau {rev, value}
+        doc = { rev: parsed.rev || 0, value: (parsed.value !== undefined ? parsed.value : parsed.items) };
+      } catch (e) { doc = null; }
+    }
     return json({ ok: true, name: name, doc: doc });
   }
   if (path === 'misc' && request.method === 'PUT') {
@@ -355,7 +363,8 @@ export async function onRequest(context) {
     const allowed = ['subleases', 'charges', 'maint', 'docs', 'users'];
     if (allowed.indexOf(body.name) < 0) return err(400, 'name invalide');
     if (JSON.stringify(body.value || '').length > 4_000_000) return err(413, 'Données trop volumineuses');
-    const rev = await writeDoc(env, 'misc_' + body.name, body.value);
+    const rev = Date.now();
+    await env.ASL_DB.put('misc_' + body.name, JSON.stringify({ rev: rev, value: body.value }));
     return json({ ok: true, rev: rev });
   }
 

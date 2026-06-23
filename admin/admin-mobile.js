@@ -47,6 +47,7 @@
     hourglass: '<path d="M5 22h14M5 2h14"/><path d="M17 22v-4.17a2 2 0 0 0-.59-1.41L12 12l-4.41 4.41A2 2 0 0 0 7 17.83V22"/><path d="M7 2v4.17a2 2 0 0 0 .59 1.41L12 12l4.41-4.41A2 2 0 0 0 17 6.17V2"/>',
     alert: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
     card: '<rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>',
+    arrowLeft: '<path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>',
     bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
     users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
     handshake: '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/><circle cx="12" cy="12" r="3"/>',
@@ -108,6 +109,14 @@
     current = screen;
     document.querySelectorAll('.ma-screen').forEach(function (s) { s.classList.toggle('active', s.id === 'ma-' + screen); });
     document.querySelectorAll('.ma-tab').forEach(function (t) { t.classList.toggle('active', t.getAttribute('data-screen') === screen); });
+    // Bouton retour : visible sur les sous-écrans, masqué sur le tableau de bord
+    var back = document.getElementById('ma-head-back');
+    var logo = document.querySelector('.ma-head-logo');
+    var greet = document.querySelector('.ma-greet');
+    var isHome = (screen === 'dashboard');
+    if (back) back.style.display = isHome ? 'none' : 'flex';
+    if (logo) logo.style.display = isHome ? '' : 'none';
+    if (greet) greet.style.display = isHome ? '' : 'none';
     var app = document.getElementById('asl-mobile-app');
     if (app) app.scrollTop = 0;
     renderScreen(screen);
@@ -123,12 +132,15 @@
   function renderScreen(screen) {
     if (screen === 'dashboard') renderDash();
     else if (screen === 'vehicles') renderVehicles();
+    else if (screen === 'available') renderAvailableM();
     else if (screen === 'reservations') renderReservations();
     else if (screen === 'rentals') renderRentals();
     else if (screen === 'returns') renderReturns();
+    else if (screen === 'late') renderLateM();
     else if (screen === 'clients') renderClients();
     else if (screen === 'sublease') renderSubleaseM();
     else if (screen === 'unpaid') renderUnpaidM();
+    else if (screen === 'revenue') renderRevenueM();
     else if (screen === 'caisse') renderCaisse();
     else if (screen === 'notifications') renderNotifications();
   }
@@ -159,40 +171,45 @@
       + (c.unpaid ? alertRow('card', c.unpaid + ' impayé(s)', 'Dossiers avec reste à payer', "maDash('unpaid')", 'orange') : '');
   }
 
-  /* Revenus : réutilise la logique desktop si disponible, sinon recalcule. */
+  /* Revenus : réutilise la logique desktop si disponible, sinon recalcule
+     exactement de la même façon (paiements réellement encaissés). */
   function computeRev() {
     try { if (typeof window.computeRevenues === 'function') return window.computeRevenues(); } catch (e) {}
-    // Repli : même règle (paiements réellement encaissés sur le mois)
     var r = reservations(), now = new Date();
-    var mFrom = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-01';
-    var mTo = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-31';
-    var sum = 0;
-    r.forEach(function (x) {
-      if (x.status === 'cancelled') return;
-      var paid = Number(x.paid) || 0; if (paid <= 0) return;
-      var d = (x.startDate || x.createdAt || '').slice(0, 10);
-      if (d >= mFrom && d <= mTo) sum += paid;
-    });
-    return { week: 0, month: sum, year: 0, dueGlobal: 0 };
+    function pad(n) { return String(n).padStart(2, '0'); }
+    var day = now.getDay(); var diffToMon = (day === 0 ? 6 : day - 1);
+    var monday = new Date(now); monday.setDate(now.getDate() - diffToMon); monday.setHours(0, 0, 0, 0);
+    var sunday = new Date(monday); sunday.setDate(monday.getDate() + 6);
+    var wf = monday.getFullYear() + '-' + pad(monday.getMonth() + 1) + '-' + pad(monday.getDate());
+    var wt = sunday.getFullYear() + '-' + pad(sunday.getMonth() + 1) + '-' + pad(sunday.getDate());
+    var mf = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-01';
+    var mt = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-31';
+    var yf = now.getFullYear() + '-01-01', yt = now.getFullYear() + '-12-31';
+    function between(from, to) {
+      var s = 0;
+      r.forEach(function (x) {
+        if (x.status === 'cancelled') return;
+        var paid = Number(x.paid) || 0; if (paid <= 0) return;
+        var d = (x.startDate || x.createdAt || '').slice(0, 10);
+        if (d >= from && d <= to) s += paid;
+      });
+      return s;
+    }
+    var due = 0;
+    r.forEach(function (x) { if (x.status !== 'cancelled') due += Math.max(0, (Number(x.amount) || 0) - (Number(x.paid) || 0)); });
+    return { week: between(wf, wt), month: between(mf, mt), year: between(yf, yt), dueGlobal: due };
   }
 
-  /* Cartes du tableau de bord → mêmes panneaux que le desktop (contenu
-     identique). On bascule brièvement en vue desktop pour afficher le
-     drawer existant, avec le bouton « Retour à l'application ». */
+  /* Cartes du tableau de bord → vraies vues mobiles en cartes (jamais les
+     panneaux desktop). Le retour ramène toujours au dashboard. */
   window.maDash = function (type) {
-    if (type === 'revenue') {
-      if (typeof window.openRevenueDrawer === 'function') { showDeskDrawer(window.openRevenueDrawer); return; }
-    }
-    if (typeof window.openDashDrawer === 'function') {
-      if (type === 'returns') { try { window._returnsFilter = { mode: 'today', date: todayISO() }; } catch (e) {} }
-      showDeskDrawer(function () { window.openDashDrawer(type); });
-    }
+    if (type === 'available') maGo('available');
+    else if (type === 'rented') maGo('rentals');
+    else if (type === 'returns') maGo('returns');
+    else if (type === 'late') maGo('late');
+    else if (type === 'unpaid') maGo('unpaid');
+    else if (type === 'revenue') maGo('revenue');
   };
-  function showDeskDrawer(fn) {
-    enterDesktopView();
-    try { fn(); } catch (e) {}
-    maShowBackToApp();
-  }
   function alertRow(icon, title, sub, act, tone) {
     return '<div class="ma-notif" onclick="' + act + '"><div class="ma-notif-ico ' + (tone || 'red') + '">' + ic(icon) + '</div>'
       + '<div class="ma-notif-body"><div class="ma-notif-title">' + title + '</div><div class="ma-notif-sub">' + sub + '</div></div>'
@@ -453,6 +470,92 @@
         + '</div>';
     }).join('') : '<div class="ma-empty">Aucun retour prévu pour cette date.</div>';
     host.innerHTML = head + body;
+  }
+
+  /* ============ DISPONIBLES (vue mobile native) ============ */
+  function renderAvailableM() {
+    var host = document.getElementById('ma-available');
+    if (!host) return;
+    var ts = todayISO();
+    var f = fleet().filter(function (c) { return c.status === 'available'; });
+    var res = reservations();
+    host.innerHTML = f.length ? f.map(function (c) {
+      // Réservation future éventuelle (libre aujourd'hui mais réservé plus tard)
+      var fut = res.filter(function (r) {
+        if (r.status === 'cancelled' || r.status === 'completed') return false;
+        if (!(r.car === c.name || r.carId === c.id || r.assignedPlate === c.plate)) return false;
+        return (r.startDate || '') > ts;
+      }).sort(function (a, b) { return String(a.startDate || '').localeCompare(String(b.startDate || '')); })[0];
+      return '<div class="ma-card">'
+        + '<div class="ma-card-top"><div class="ma-card-ico-box green">' + ic('car') + '</div>'
+        + '<div class="ma-card-info"><div class="ma-card-name">' + esc(c.name || 'Véhicule') + '</div>'
+        + '<div class="ma-card-sub">' + esc(c.plate || '—') + '</div></div>'
+        + '<span class="ma-badge green">Disponible</span></div>'
+        + (fut ? '<div class="ma-card-note orange">' + ic('calendar') + ' Réservée du ' + fmtDM(fut.startDate) + ' au ' + fmtDM(fut.endDate) + '</div>' : '')
+        + '</div>';
+    }).join('') : '<div class="ma-empty">Aucun véhicule disponible en ce moment.</div>';
+  }
+
+  /* ============ EN RETARD (vue mobile native) ============ */
+  function renderLateM() {
+    var host = document.getElementById('ma-late');
+    if (!host) return;
+    var ts = todayISO();
+    // Vrai retard : date de retour STRICTEMENT dépassée ET location non clôturée
+    var list = reservations().filter(function (r) {
+      return (r.endDate || '') < ts && (r.status === 'active' || r.status === 'confirmed');
+    }).sort(function (a, b) { return (a.endDate || '').localeCompare(b.endDate || ''); });
+    host.innerHTML = list.length ? list.map(function (r) {
+      var idStr = "'" + String(r.id || '') + "'";
+      var days = Math.max(0, Math.round((new Date(ts) - new Date(r.endDate)) / 86400000));
+      return '<div class="ma-card">'
+        + '<div class="ma-card-top"><div class="ma-card-ico-box red">' + ic('alert') + '</div>'
+        + '<div class="ma-card-info"><div class="ma-card-name">' + esc(r.car || 'Véhicule') + '</div>'
+        + '<div class="ma-card-sub">' + esc(r.client || '') + ' · retour prévu ' + esc(r.endDate || '') + '</div></div>'
+        + '<span class="ma-badge red">' + days + ' j</span></div>'
+        + '<div class="ma-actions">'
+        + '<button class="ma-act-btn" onclick="maViewRental(' + idStr + ')">' + ic('eye') + 'Fiche</button>'
+        + '<button class="ma-act-btn ok" onclick="maLateConfirm(' + idStr + ')">' + ic('check') + 'Confirmer retour</button>'
+        + '<button class="ma-act-btn" onclick="maExtend(' + idStr + ')">' + ic('plus') + 'Prolonger</button>'
+        + '</div></div>';
+    }).join('') : '<div class="ma-empty">' + ic('checkCircle') + '<div style="margin-top:8px;">Aucun retard — tout est à l\'heure.</div></div>';
+  }
+  /* Confirmer le retour depuis l'écran En retard : clôture, libère le
+     véhicule, l'alerte disparaît et tout se recalcule/synchronise. */
+  window.maLateConfirm = function (id) {
+    var r = (ASLDB.getReservations() || []).filter(function (x) { return x.id === id; })[0];
+    if (!r) return;
+    if (!confirm('Confirmer le retour de ' + (r.car || '') + ' (' + (r.client || '') + ') ?\n\nLe véhicule sera libéré.')) return;
+    try {
+      if (r.carId != null && r.assignedPlate && typeof ASLDB.releaseUnit === 'function') ASLDB.releaseUnit(r.carId, r.assignedPlate);
+      ASLDB.updateReservation(id, { status: 'completed' });
+    } catch (e) {}
+    if (typeof showToast === 'function') showToast('Retour confirmé — véhicule libéré ✓');
+    try { if (typeof reloadData === 'function') reloadData(); } catch (e) {}
+    renderLateM();
+  };
+
+  /* ============ REVENUS (vue mobile native) ============ */
+  function renderRevenueM() {
+    var host = document.getElementById('ma-revenue');
+    if (!host) return;
+    var rev = computeRev();
+    host.innerHTML =
+      cashLine('Revenus de la semaine', rev.week, '#16a34a', 'Du lundi au dimanche en cours')
+      + cashLine('Revenus du mois', rev.month, '#16a34a', 'Mois calendaire en cours')
+      + cashLine("Revenus de l'année", rev.year, '#16a34a', 'Année ' + new Date().getFullYear())
+      + cashLine('Reste à encaisser', rev.dueGlobal, (rev.dueGlobal > 0 ? '#C41E3A' : '#16a34a'), 'Somme de tous les soldes dus');
+  }
+  function cashLine(label, val, color, note) {
+    return '<div class="ma-cash-card" style="border-left-color:' + color + ';">'
+      + '<div><div class="ma-cash-lbl">' + label + '</div>'
+      + '<div class="ma-cash-num" style="color:' + color + ';">' + money(val) + '</div>'
+      + (note ? '<div class="ma-cash-note">' + note + '</div>' : '') + '</div></div>';
+  }
+  function fmtDM(d) {
+    if (!d) return '';
+    var p = String(d).slice(0, 10).split('-');
+    return p.length === 3 ? (p[2] + '/' + p[1]) : d;
   }
 
   /* ============ CLIENTS ============ */
@@ -723,11 +826,15 @@
     if (document.getElementById('ma-back-to-app')) return;
     var b = document.createElement('button');
     b.id = 'ma-back-to-app';
-    b.innerHTML = '&#8592; Retour à l\'application';
+    b.innerHTML = '&#8592; Retour au tableau de bord';
     b.onclick = function () {
       document.body.classList.remove('ma-desktop-view', 'ma-locked', 'ma-modal-open');
       b.remove();
-      try { window.maGo(current || 'dashboard'); } catch (e) {}
+      // Réinitialise l'onglet Caisse à « Résumé » pour qu'il soit toujours
+      // sain au prochain accès (évite les boutons bloqués après Grand Livre).
+      try { if (typeof window.caisseTab === 'function') window.caisseTab('resume'); } catch (e) {}
+      // Règle simple : toute vue desktop ponctuelle revient au tableau de bord.
+      try { window.maGo('dashboard'); } catch (e) {}
     };
     document.body.appendChild(b);
   }
@@ -861,11 +968,12 @@
     app.id = 'asl-mobile-app';
     app.innerHTML =
       '<div class="ma-head">'
+      + '<button class="ma-head-back" id="ma-head-back" aria-label="Retour" onclick="window.maGo(\'dashboard\')" style="display:none;">' + ic('arrowLeft') + '</button>'
       + '<img class="ma-head-logo" src="data:image/png;base64,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" alt="All Star Loc">'
       + '<div class="ma-head-txt"><h1 id="ma-title">Tableau de bord</h1><div class="ma-greet">Bonjour ' + esc(greet) + '</div></div>'
       + '<button class="ma-head-btn" aria-label="Notifications" onclick="maToggleNotifications()">' + ic('bell') + '<span class="ma-dot" id="ma-head-dot" style="display:none;"></span></button></div>'
-      + screen('dashboard') + screen('vehicles') + screen('reservations') + screen('rentals')
-      + screen('returns') + screen('clients') + screen('sublease') + screen('unpaid') + screen('caisse') + screen('notifications');
+      + screen('dashboard') + screen('vehicles') + screen('available') + screen('reservations') + screen('rentals')
+      + screen('returns') + screen('late') + screen('clients') + screen('sublease') + screen('unpaid') + screen('revenue') + screen('caisse') + screen('notifications');
     document.body.appendChild(app);
 
     var tabsAll = [
@@ -885,7 +993,7 @@
     }).join('');
     document.body.appendChild(bar);
 
-    var titles = { dashboard: 'Tableau de bord', vehicles: 'Véhicules', reservations: 'Réservations', rentals: 'Locations', returns: 'Retours prévus', clients: 'Clients', sublease: 'Sous-location', unpaid: 'Impayés', caisse: 'Paiements & Caisse', notifications: 'Notifications' };
+    var titles = { dashboard: 'Tableau de bord', vehicles: 'Véhicules', available: 'Disponibles', reservations: 'Réservations', rentals: 'Véhicules loués', returns: "Retours aujourd'hui", late: 'En retard', clients: 'Clients', sublease: 'Sous-location', unpaid: 'Impayés', revenue: 'Revenus', caisse: 'Paiements & Caisse', notifications: 'Notifications' };
     window.maGo = function (s) {
       var titleEl = document.getElementById('ma-title');
       if (titleEl && titles[s]) titleEl.textContent = titles[s];

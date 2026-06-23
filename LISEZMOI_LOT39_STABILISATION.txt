@@ -1,0 +1,119 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — STABILISATION MOBILE COMPLÈTE
+═══════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════
+  ★★★ LE BUG DE SYNCHRONISATION EST TROUVÉ ET CORRIGÉ ★★★
+═══════════════════════════════════════════════════════════════
+
+Pourquoi les réservations/prix se synchronisaient MAIS PAS les
+sous-locations ni l'entretien :
+
+  • Le serveur SAUVEGARDAIT la sous-location dans un champ « items ».
+  • L'application allait la CHERCHER dans un champ « value ».
+  • Résultat : la donnée arrivait bien, mais l'app lisait le mauvais
+    champ → elle recevait « rien » → rien ne s'affichait.
+
+Les réservations marchaient car elles utilisent « items » des deux
+côtés. Les sous-locations/entretien utilisaient « value » côté app
+mais « items » côté serveur → désaccord → pas de synchro.
+
+✅ CORRIGÉ : le serveur stocke désormais « value », et reste
+compatible avec les anciennes données déjà en base. Une fois ce
+ZIP redéployé sur Cloudflare, les sous-locations ET l'entretien se
+synchronisent comme les réservations, sur tous les appareils.
+
+  ⚠ Ta configuration Cloudflare était CORRECTE depuis le début
+  (KV ASL_DB + variables ADMIN_USER/ADMIN_PASS/ADMIN_KEY). Le
+  problème était uniquement dans le code. Il faut juste redéployer
+  ce ZIP.
+
+───────────────────────────────────────────────────────────────
+1. VUES MOBILES NATIVES (plus de tableaux desktop)
+───────────────────────────────────────────────────────────────
+Chaque carte du tableau de bord ouvre maintenant une VRAIE vue
+mobile en cartes (et non plus un panneau desktop par-dessus) :
+  • Disponibles → liste de cartes : véhicule, immatriculation,
+    statut, et « Réservée du .. au .. » si réservation future.
+  • Loués → cartes : véhicule, client, départ, retour, + Fiche.
+  • Retours aujourd'hui → cartes : véhicule, client, heure/date.
+  • En retard → cartes : vrais retards uniquement.
+  • Impayés → cartes : client, véhicule, montant restant, + Voir.
+  • Revenus du mois → semaine / mois / année / reste à encaisser.
+Aucun tableau desktop compressé. Aucun scroll horizontal.
+
+───────────────────────────────────────────────────────────────
+2. EN RETARD — VRAIS RETARDS UNIQUEMENT
+───────────────────────────────────────────────────────────────
+Un véhicule n'apparaît en retard QUE si sa date de retour est
+réellement dépassée ET la location n'est pas clôturée. Plus de
+fausse alerte « 4 jours trop tôt ». Actions : Confirmer retour
+(libère le véhicule, l'alerte disparaît) et Prolonger.
+
+───────────────────────────────────────────────────────────────
+3. NAVIGATION / RETOUR
+───────────────────────────────────────────────────────────────
+  • Un bouton retour (flèche) apparaît en haut sur chaque sous-vue
+    et revient TOUJOURS au tableau de bord.
+  • Le bouton « Retour au tableau de bord » (vues desktop
+    ponctuelles : Grand Livre, entretien…) revient TOUJOURS au
+    tableau de bord. Jamais vers « Locations en cours » ni un
+    tableau intermédiaire.
+
+───────────────────────────────────────────────────────────────
+4. POP-UPS MOBILES UNIFORMES & PROFESSIONNELS
+───────────────────────────────────────────────────────────────
+Tous les pop-ups (nouvelle réservation, nouvelle location, charge,
+sous-location, modifier véhicule, fiche client, paiement, etc.) :
+  • Centrés, sobres, pas trop grands (largeur max maîtrisée).
+  • Marges internes confortables — les champs ne collent JAMAIS
+    aux bords.
+  • Champs harmonieux, même hauteur, même style partout.
+  • Saisie à 16px → aucun zoom automatique.
+  • Scroll vertical propre si nécessaire, jamais horizontal.
+  • Boutons toujours visibles (en-tête et pied fixes).
+  • Le pop-up ne bouge pas quand le clavier s'ouvre ; la page
+    derrière ne glisse pas.
+
+───────────────────────────────────────────────────────────────
+5. SCROLL — AUCUN MOUVEMENT HORIZONTAL
+───────────────────────────────────────────────────────────────
+  • overflow-x masqué partout.
+  • Rien de plus large que l'écran.
+  • Scroll vertical uniquement.
+  • Page stable au remplissage des champs et à l'ouverture clavier.
+
+───────────────────────────────────────────────────────────────
+6. BUG CAISSE / GRAND LIVRE
+───────────────────────────────────────────────────────────────
+Avant chaque bascule vers une vue desktop, tous les verrous
+(feuilles, pop-ups) sont nettoyés. Au retour, l'onglet Caisse est
+réinitialisé sur « Résumé ». Les boutons Charges/Résumé/Rapports
+ne se bloquent plus. Plus besoin de rafraîchir.
+
+───────────────────────────────────────────────────────────────
+7. CE QUI N'A PAS ÉTÉ TOUCHÉ (validé)
+───────────────────────────────────────────────────────────────
+Header, menu du bas, bouton +, logo, design général : conservés.
+Seules la logique, la navigation, la synchro et la stabilité ont
+été corrigées.
+
+───────────────────────────────────────────────────────────────
+TESTS EFFECTUÉS (validés)
+───────────────────────────────────────────────────────────────
+  • Synchro 2 appareils (PC ↔ mobile) : reproduite et corrigée.
+  • En retard : exclut les fausses alertes (4j trop tôt, clôturé,
+    retour aujourd'hui), garde les vrais retards.
+  • Routage des 6 cartes vers les écrans natifs.
+  • Tous les fichiers JS validés (node --check).
+
+───────────────────────────────────────────────────────────────
+À FAIRE DE TON CÔTÉ (important)
+───────────────────────────────────────────────────────────────
+  1. Redéployer ce ZIP sur Cloudflare (le fix synchro est côté
+     serveur : functions/api/[[route]].js).
+  2. Penser à changer ta clé admin (tu l'avais partagée) :
+     Cloudflare → Settings → Variables → ADMIN_KEY = nouvelle valeur,
+     puis te reconnecter dans l'app avec cette valeur.
+  3. Tester : créer une sous-location sur PC → elle doit apparaître
+     sur mobile après quelques secondes ou un refresh.
