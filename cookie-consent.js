@@ -121,9 +121,12 @@
     ].join(';');
     wrap.innerHTML =
       '<div style="display:flex;flex-direction:column;gap:14px;">'
-      + '<div style="display:flex;gap:10px;align-items:flex-start;">'
-      + '<span style="flex-shrink:0;font-size:20px;line-height:1;">🍪</span>'
-      + '<div style="flex:1;font-size:13px;color:#374151;line-height:1.5;">' + escapeHtml(L(cfg.text)) + '</div>'
+      + '<div style="display:flex;gap:12px;align-items:flex-start;">'
+      + '<span style="flex-shrink:0;width:34px;height:34px;border-radius:9px;background:rgba(196,30,58,.08);display:flex;align-items:center;justify-content:center;">'
+      + '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#C41E3A" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"/><path d="M8.5 8.5v.01"/><path d="M16 15.5v.01"/><path d="M12 12v.01"/><path d="M11 17v.01"/><path d="M7 14v.01"/></svg></span>'
+      + '<div style="flex:1;font-size:13px;color:#374151;line-height:1.55;">'
+      + '<div style="font-weight:700;color:#111827;font-size:13.5px;margin-bottom:3px;">' + (tx.title || 'Cookies & confidentialité') + '</div>'
+      + escapeHtml(L(cfg.text)) + '</div>'
       + '</div>'
       + '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
       + '<button id="asl-ck-accept" style="'+btn('primary')+'flex:1;min-width:120px;">' + tx.accept + '</button>'

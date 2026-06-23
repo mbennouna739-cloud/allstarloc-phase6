@@ -285,74 +285,7 @@ export async function onRequest(context) {
     }
   }
 
-  /* ---- Partenaires / sous-location (administration, multi-appareils) ----
-     Stockés dans le KV (clé "partners"). Lecture/écriture réservées à
-     l'admin (X-ASL-Key). Aucun mélange avec les clients classiques. */
-  if (path === 'partners') {
-    if (request.method === 'GET') {
-      if (!authorized(request, env)) return err(403, 'Clé admin invalide ou absente (X-ASL-Key)');
-      const doc = (await readDoc(env, 'partners')) || { rev: 0, items: [] };
-      return json({ ok: true, partners: Array.isArray(doc.items) ? doc.items : [], rev: doc.rev });
-    }
-    if (request.method === 'POST') {
-      if (!authorized(request, env)) return err(403, 'Clé admin invalide ou absente (X-ASL-Key)');
-      let body;
-      try { body = await request.json(); } catch (e) { return err(400, 'JSON invalide'); }
-      const doc = (await readDoc(env, 'partners')) || { rev: 0, items: [] };
-      let items = Array.isArray(doc.items) ? doc.items : [];
-
-      if (body.action === 'add') {
-        const item = body.item;
-        if (!item || typeof item !== 'object' || !item.name) return err(400, 'item invalide');
-        if (!item.id) item.id = 'prt' + Date.now() + randId(3);
-        if (!item.createdAt) item.createdAt = new Date().toISOString();
-        items.push(item);
-        const rev = await writeDoc(env, 'partners', items);
-        return json({ ok: true, rev: rev, id: item.id });
-      }
-      if (body.action === 'update') {
-        const p = items.find(function (x) { return x.id === body.id; });
-        if (!p) return err(404, 'Partenaire introuvable');
-        if (!body.patch || typeof body.patch !== 'object') return err(400, 'patch manquant');
-        Object.assign(p, body.patch);
-        const rev = await writeDoc(env, 'partners', items);
-        return json({ ok: true, rev: rev });
-      }
-      if (body.action === 'remove') {
-        items = items.filter(function (x) { return x.id !== body.id; });
-        const rev = await writeDoc(env, 'partners', items);
-        return json({ ok: true, rev: rev });
-      }
-      if (body.action === 'replace') {
-        if (!isArrayOfObjects(body.items, 1000)) return err(400, 'items invalide (max 1000)');
-        const rev = await writeDoc(env, 'partners', body.items);
-        return json({ ok: true, rev: rev });
-      }
-      return err(400, 'action inconnue (add | update | remove | replace)');
-    }
-  }
-  /* ---- Entretien / maintenance (administration, multi-appareils) ----
-     Stocké dans le KV (clé "maintenance") sous forme d'objet { carId: {...} }.
-     Persistance serveur comme la flotte / les réservations : visible sur
-     tous les appareils et comptes. */
-  if (path === 'maintenance') {
-    if (request.method === 'GET') {
-      if (!authorized(request, env)) return err(403, 'Clé admin invalide ou absente (X-ASL-Key)');
-      const doc = await readDoc(env, 'maintenance');
-      const map = (doc && doc.items && typeof doc.items === 'object') ? doc.items : {};
-      return json({ ok: true, maintenance: map, rev: doc ? doc.rev : 0 });
-    }
-    if (request.method === 'PUT') {
-      if (!authorized(request, env)) return err(403, 'Clé admin invalide ou absente (X-ASL-Key)');
-      let body;
-      try { body = await request.json(); } catch (e) { return err(400, 'JSON invalide'); }
-      if (!body.map || typeof body.map !== 'object' || Array.isArray(body.map)) return err(400, 'map invalide');
-      if (JSON.stringify(body.map).length > 1_000_000) return err(413, 'Données entretien trop volumineuses');
-      const rev = await writeDoc(env, 'maintenance', body.map);
-      return json({ ok: true, rev: rev });
-    }
-  }
-
+  /* ---- Flotte : remplacement complet (administration) ---- */
   if (path === 'fleet' && request.method === 'PUT') {
     if (!authorized(request, env)) return err(403, 'Clé admin invalide ou absente (X-ASL-Key)');
     let body;
@@ -403,6 +336,36 @@ export async function onRequest(context) {
     }
 
     return err(400, 'action inconnue (add | update | replace)');
+  }
+
+  /* ---- Données auxiliaires synchronisées (sous-locations, charges,
+         entretien, documents) : GET (lecture) / PUT (admin).
+         name ∈ { subleases, charges, maint, docs } ---- */
+  if (path === 'misc' && request.method === 'GET') {
+    const name = url.searchParams.get('name') || '';
+    const allowed = ['subleases', 'charges', 'maint', 'docs', 'users'];
+    if (allowed.indexOf(name) < 0) return err(400, 'name invalide');
+    const raw = await env.ASL_DB.get('misc_' + name);
+    let doc = null;
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        // Compat : ancien format {rev, items} OU nouveau {rev, value}
+        doc = { rev: parsed.rev || 0, value: (parsed.value !== undefined ? parsed.value : parsed.items) };
+      } catch (e) { doc = null; }
+    }
+    return json({ ok: true, name: name, doc: doc });
+  }
+  if (path === 'misc' && request.method === 'PUT') {
+    if (!authorized(request, env)) return err(403, 'Clé admin invalide ou absente (X-ASL-Key)');
+    let body;
+    try { body = await request.json(); } catch (e) { return err(400, 'JSON invalide'); }
+    const allowed = ['subleases', 'charges', 'maint', 'docs', 'users'];
+    if (allowed.indexOf(body.name) < 0) return err(400, 'name invalide');
+    if (JSON.stringify(body.value || '').length > 4_000_000) return err(413, 'Données trop volumineuses');
+    const rev = Date.now();
+    await env.ASL_DB.put('misc_' + body.name, JSON.stringify({ rev: rev, value: body.value }));
+    return json({ ok: true, rev: rev });
   }
 
   /* ---- Téléversement d'image (administration) ---- */
