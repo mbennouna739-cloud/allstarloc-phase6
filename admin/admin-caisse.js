@@ -23,8 +23,6 @@
   }
   function writeCharges(list) {
     try { localStorage.setItem(CHARGES_KEY, JSON.stringify(list)); } catch (e) {}
-    try { if (typeof ASLDB !== 'undefined' && ASLDB.noteLocalChange) ASLDB.noteLocalChange(CHARGES_KEY); } catch (e) {}
-    try { if (typeof ASLDB !== 'undefined' && ASLDB.syncNow) ASLDB.syncNow(); } catch (e) {}
   }
 
   /* Récupère toutes les réservations/locations via la base partagée. */
@@ -156,11 +154,11 @@
     }).join('');
     host.innerHTML =
       '<div style="position:fixed;inset:0;background:rgba(10,12,18,.5);z-index:7000;display:flex;align-items:center;justify-content:center;padding:16px;" onclick="if(event.target===this)closeChargeModal()">'
-      + '<div style="background:#fff;border-radius:16px;max-width:460px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.25);">'
-      + '<div style="padding:18px 20px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between;">'
+      + '<div style="background:#fff;border-radius:16px;max-width:460px;width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.25);box-sizing:border-box;">'
+      + '<div style="flex:0 0 auto;padding:18px 20px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between;">'
       + '<strong style="font-size:16px;">' + (c ? 'Modifier la charge' : 'Nouvelle charge') + '</strong>'
       + '<button onclick="closeChargeModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#999;">&#10005;</button></div>'
-      + '<div style="padding:20px;display:flex;flex-direction:column;gap:14px;">'
+      + '<div style="flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px;display:flex;flex-direction:column;gap:14px;">'
       + fg('Date', '<input type="date" id="chg-date" class="form-input" value="' + (c && c.date ? c.date.slice(0,10) : today) + '">')
       + fg('Véhicule concerné', '<select id="chg-vehicle" class="form-input">' + fleetOptions(c && c.vehicle) + '</select>')
       + fg('Catégorie', '<select id="chg-category" class="form-input">' + catOpts + '</select>')
@@ -169,10 +167,12 @@
       + fg('Description', '<input type="text" id="chg-desc" class="form-input" value="' + (c ? esc(c.description) : '') + '" placeholder="Ex : plein gasoil station Shell">')
       + fg('Photo facture (optionnel)', '<input type="file" id="chg-photo-file" accept="image/*" class="form-input" onchange="chargePhotoPreview(this)"><div id="chg-photo-prev" style="margin-top:6px;">' + (c && c.photo ? '<img src="' + c.photo + '" style="max-height:60px;border-radius:6px;">' : '') + '</div>')
       + '</div>'
-      + '<div style="padding:16px 20px;border-top:1px solid #eee;display:flex;gap:10px;justify-content:flex-end;">'
+      + '<div style="flex:0 0 auto;padding:14px 20px calc(14px + env(safe-area-inset-bottom, 0px));border-top:1px solid #eee;display:flex;gap:10px;justify-content:flex-end;background:#fff;">'
       + '<button onclick="closeChargeModal()" style="padding:10px 18px;border:1px solid #ddd;background:#fff;border-radius:8px;cursor:pointer;">Annuler</button>'
       + '<button onclick="saveCharge(' + (id ? '\'' + id + '\'' : 'null') + ')" style="padding:10px 18px;border:none;background:#C41E3A;color:#fff;border-radius:8px;cursor:pointer;font-weight:600;">Enregistrer</button>'
       + '</div></div></div>';
+    // Verrouille le scroll du fond : le contenu derrière ne bouge plus.
+    try { window._chgScrollLock = document.body.style.overflow; document.body.style.overflow = 'hidden'; document.documentElement.style.overflow = 'hidden'; } catch (e) {}
     // mémoriser la photo existante
     window._chargePhotoData = (c && c.photo) || '';
   };
@@ -197,6 +197,7 @@
   window.closeChargeModal = function () {
     var host = document.getElementById('charge-modal-host');
     if (host) host.innerHTML = '';
+    try { document.body.style.overflow = window._chgScrollLock || ''; document.documentElement.style.overflow = ''; } catch (e) {}
     window._chargePhotoData = '';
   };
 

@@ -1,0 +1,37 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — LOT 38 · VIDANGE (logique simple) + ANNULATIONS
+═══════════════════════════════════════════════════════════════
+
+VIDANGE — fichiers : admin/admin-lot5.js · admin/admin-lot10.js ·
+admin/admin-mobile.js · admin/index.html
+
+PRINCIPE
+Le système ne devine jamais le kilométrage. On saisit uniquement le
+« km prochaine vidange ». Un rappel de VÉRIFICATION est créé
+automatiquement tous les 20 jours.
+
+FONCTIONNEMENT
+  • Fiche entretien : un seul champ → « Km prochaine vidange » (+ notes).
+  • À la saisie/modification du km, le compteur de 20 jours repart à zéro
+    (km_updated_at).
+  • 20 jours plus tard : notification « Vérifier le kilométrage de
+    [véhicule]. Prochaine vidange prévue à [km]. »
+  • Vidange faite → on saisit le nouveau km → compteur réinitialisé.
+
+TABLEAU ENTRETIEN — SIMPLIFIÉ
+  Colonnes : Véhicule · Immatriculation · Km prochaine vidange ·
+  Dernière mise à jour · Prochain rappel · Actions.
+  Colonnes SUPPRIMÉES : Assurance, Statut (et Km actuel / Visite
+  technique retirés de l'affichage, données conservées en stockage).
+
+NOTIFICATIONS
+  Le rappel apparaît dans : Tableau de bord (badge), page Notifications,
+  et l'application mobile (onglet Notifications).
+
+───────────────────────────────────────────────────────────────
+RAPPEL — ANNULATIONS (LOT 37, inclus)
+───────────────────────────────────────────────────────────────
+Annulation back-office uniquement (aucun bouton côté client) ; le
+véhicule est libéré et les dates rouvertes (site + back-office) pour
+les réservations du site comme manuelles ; statuts annulée/refusée/
+expirée/terminée/clôturée ne bloquent jamais un véhicule.

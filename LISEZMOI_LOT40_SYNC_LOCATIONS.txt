@@ -1,0 +1,58 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — LOT 40 · SYNCHRO SERVEUR + LOGIQUE LOCATIONS
+═══════════════════════════════════════════════════════════════
+
+═══ 1. LOCATIONS EN COURS / VÉHICULES LOUÉS (définitions claires) ═══
+Fichiers : admin/admin-lot5.js · admin/admin-mobile.js
+
+Cause du bug : la liste « Locations » et certains compteurs incluaient
+les réservations CONFIRMÉES (qui bloquent les dates mais ne sont pas
+encore des locations remises au client).
+
+Désormais, partout (desktop + mobile, tableau de bord + listes) :
+  • Véhicule LOUÉ / Location EN COURS = uniquement statut « active »
+    (voiture remise au client, pas encore clôturée).
+  • Réservation CONFIRMÉE = bloque la voiture pour les dates, mais
+    n'est PAS comptée comme louée tant qu'elle n'est pas passée en
+    location active.
+  • DISPONIBLE = ni louée, ni réservée, ni indisponible.
+  • À la clôture d'une location : elle quitte « en cours », le
+    véhicule n'est plus compté loué et redevient disponible si rien
+    ne le bloque (déjà géré par la libération d'unité).
+
+Corrigé : liste Locations (desktop + mobile), badges, compteurs du
+tableau de bord (Loués / Disponibles / Retards), tiroirs « loués » et
+« retards ». Les chiffres sont cohérents desktop ↔ mobile.
+
+═══ 2. SOUS-LOCATION : VRAIE SYNCHRO SERVEUR ═══
+Fichiers : admin/admin-partners.js · admin/admin-mobile.js
+
+  • Les partenaires sont déjà stockés dans le KV (/api/partners) ;
+    la synchro est désormais ROBUSTE :
+      - détection de changement (pas de re-render inutile) ;
+      - re-render automatique desktop ET mobile à la réception ;
+      - rafraîchissement périodique (toutes les 12 s) ;
+      - synchro déclenchée à l'ouverture de l'onglet/écran.
+  • Création / modif depuis desktop → visible sur mobile et autres
+    appareils ; persistant après rechargement et reconnexion.
+  • Les locations liées (partnerId/clientFinal) et les paiements
+    passent par les réservations → déjà synchronisés (Caisse + Grand
+    Livre inclus).
+
+═══ 3. ENTRETIEN : VRAIE SYNCHRO SERVEUR + VISITE TECHNIQUE ═══
+Fichiers : functions/api/[[route]].js · admin/admin-lot5.js · index.html
+
+  • NOUVEAU endpoint /api/maintenance (KV) : l'entretien n'est plus
+    uniquement local. Enregistrement → KV ; chargement au démarrage,
+    à l'ouverture de l'onglet, et toutes les 15 s. Visible sur tous
+    les appareils et tous les comptes.
+  • Données synchronisées : km prochaine vidange, dernière mise à
+    jour, prochain rappel (20 j), date de visite technique, notes.
+  • Tableau « Suivi entretien flotte » : AJOUT de la colonne
+    « Date prochaine visite technique » (avec alerte si proche/en
+    retard). Le champ est de nouveau saisissable dans la fiche.
+  • Notifications/rappels (tableau de bord, page Notifications,
+    mobile) basés sur ces données synchronisées.
+
+REMARQUE : toutes ces synchros nécessitent le déploiement Cloudflare
+(KV + clé admin). En local (file://), le comportement reste local.

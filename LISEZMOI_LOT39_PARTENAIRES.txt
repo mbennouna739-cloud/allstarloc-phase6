@@ -1,0 +1,52 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — LOT 39 · PARTENAIRES / SOUS-LOCATION (Livraison 1)
+═══════════════════════════════════════════════════════════════
+
+Fichiers : functions/api/[[route]].js · admin/admin-partners.js (NOUVEAU)
+           admin/index.html · admin/auth-guard.js · admin/admin-mobile.js
+
+PRINCIPE
+Module de sous-location SÉPARÉ des clients classiques. Les partenaires
+ont leur propre onglet et leurs propres soldes. Les locations sont
+rattachées à un partenaire via reservation.partnerId (+ clientFinal).
+Les paiements partenaires passent par reservation.paid → ils alimentent
+AUTOMATIQUEMENT la Caisse et le Grand Livre (aucun système parallèle).
+
+DONNÉES
+KV serveur (clé "partners") + cache localStorage (asl_partners_v1),
+même mécanique que les comptes employés. Endpoints /api/partners
+(GET / add / update / remove / replace), protégés par la clé admin.
+Multi-appareils : un partenaire créé est disponible partout.
+
+DESKTOP — onglet « Sous-location » (sidebar, après Clients)
+  • Liste : Nom · Téléphone · Ville · Nb locations · Facturé · Payé ·
+    Impayé · Statut (à jour / impayé).
+  • Ajouter / modifier / supprimer un partenaire (nom, téléphone,
+    WhatsApp, ville, adresse, notes).
+  • Fiche partenaire : infos + totaux + locations en cours + terminées
+    + historique + DÉTAIL DES IMPAYÉS (ligne par ligne).
+  • Encaisser : total OU partiel → met à jour reservation.paid →
+    Caisse + Grand Livre mis à jour, statut recalculé.
+  • « Lier une location » : rattache une location existante au
+    partenaire (+ client final).
+
+MOBILE — menu Plus → « Partenaires »
+  • Liste : nom, impayé, locations en cours, bouton Fiche, Appeler,
+    WhatsApp.
+  • Fiche : total impayé, locations liées, bouton Encaisser (partiel
+    ou total), Appeler / WhatsApp.
+
+SÉPARATION STRICTE
+  • Le partenaire n'est jamais mélangé aux clients classiques.
+  • Le client final est conservé dans le détail de la location
+    (champ clientFinal).
+  • Les impayés clients restent dans Clients / Impayés ; les soldes
+    partenaires sont suivis dans l'onglet Sous-location.
+
+À VENIR (Livraison 2)
+  • Section « Type de dossier » (Client direct / Partenaire) DIRECTEMENT
+    dans les formulaires Nouvelle réservation / Nouvelle location.
+  • Libellé dédié dans le Grand Livre :
+    « Paiement partenaire – Nom – Véhicule ».
+  (Pour l'instant, le rattachement se fait via « Lier une location » et
+   les paiements apparaissent déjà dans la Caisse/Grand Livre.)

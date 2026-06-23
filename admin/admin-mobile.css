@@ -46,13 +46,17 @@
   #asl-sync-badge { display: none !important; }
 
   #asl-mobile-app {
-    display: block; position: fixed; inset: 0;
+    display: flex; flex-direction: column; position: fixed; inset: 0;
     background: #F4F5F7; color: #101216;
-    overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: contain;
-    padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    overflow: hidden; /* l'app elle-même ne défile jamais : seul .ma-body défile */
     z-index: 1500;
     font-family: 'Outfit', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  }
+  /* ZONE 2 — contenu scrollable (la SEULE zone qui défile, verticalement) */
+  .ma-body {
+    flex: 1 1 auto; min-height: 0;
+    overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
   }
 
   /* Vue desktop ponctuelle (Grand Livre, etc.) */
@@ -71,13 +75,12 @@
 
   /* ---- En-tête ---- */
   .ma-head {
-    position: sticky; top: 0; z-index: 5; background: #fff;
-    padding: 14px 16px 12px; border-bottom: 1px solid rgba(18,22,30,.07);
+    flex: 0 0 auto; z-index: 5; background: #fff;
+    padding: calc(14px + env(safe-area-inset-top, 0px)) 16px 12px;
+    border-bottom: 1px solid rgba(18,22,30,.07);
     display: flex; align-items: center; gap: 12px;
   }
-  .ma-head-logo { height: 30px; width: auto; max-width: 130px; flex-shrink: 0; display: block; object-fit: contain; }
-  .ma-head-back { width: 38px; height: 38px; border-radius: 11px; border: none; background: #F4F5F7; color: #101216; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; padding: 0; }
-  .ma-head-back svg { width: 20px; height: 20px; }
+  .ma-head-logo { height: 30px; width: auto; max-width: 132px; flex-shrink: 0; display: block; object-fit: contain; }
   .ma-head-txt { flex: 1; min-width: 0; }
   .ma-head h1 { font-size: 18px; font-weight: 800; color: #101216; margin: 0; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ma-head .ma-greet { font-size: 12.5px; color: #8a909a; font-weight: 600; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -217,10 +220,6 @@
   .ma-cash-ico .ma-ic { width: 22px; height: 22px; }
   .ma-cash-lbl { font-size: 13px; color: #5d6470; font-weight: 600; }
   .ma-cash-num { font-size: 23px; font-weight: 800; margin-top: 2px; }
-  .ma-cash-note { font-size: 11.5px; color: #9aa0ab; margin-top: 3px; }
-  .ma-card-note { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(18,22,30,.07); }
-  .ma-card-note.orange { color: #d97706; }
-  .ma-card-note svg { width: 15px; height: 15px; flex-shrink: 0; }
 
   /* ---- Notifications ---- */
   .ma-notif {
@@ -241,7 +240,7 @@
 
   /* ---- Barre de navigation basse ---- */
   #asl-mobile-tabbar {
-    display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 1600;
+    flex: 0 0 auto; display: flex;
     background: #fff; border-top: 1px solid rgba(18,22,30,.08);
     padding: 8px 4px calc(8px + env(safe-area-inset-bottom, 0px)); justify-content: space-around;
     box-shadow: 0 -3px 16px rgba(0,0,0,.05);
@@ -262,16 +261,9 @@
 
   /* ---- Feuilles (bottom-sheets) — responsives, tactiles ---- */
   .ma-sheet {
-    position: fixed; inset: 0; z-index: 1700; background: rgba(15,18,24,.44);
+    position: fixed; inset: 0; z-index: 1700; background: rgba(10,12,18,.5);
     display: flex; align-items: flex-end;
-    animation: maSheetFade .22s ease;
   }
-  @keyframes maSheetFade { from { background: rgba(15,18,24,0); } to { background: rgba(15,18,24,.44); } }
-  /* Quand une feuille/popup est ouverte, on fige l'app derrière : plus de
-     scroll de l'arrière-plan, plus de bande noire qui apparaît/disparaît. */
-  body.ma-locked #asl-mobile-app { overflow: hidden !important; }
-  body.ma-locked #asl-mobile-tabbar { display: none !important; }
-  .ma-sheet-scroll { max-height: calc(86vh - 60px); overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
   .ma-sheet-inner {
     position: relative; background: #fff; width: 100%; border-radius: 22px 22px 0 0;
     padding: 8px 18px calc(28px + env(safe-area-inset-bottom, 0px));
@@ -331,70 +323,47 @@
   #ma-sync-error .ma-ic { width: 19px; height: 19px; }
 
   /* ---- Bouton « Retour à l'application » (vue desktop ponctuelle) ---- */
+  /* Bouton « Retour à l'application » : barre supérieure fine et discrète,
+     visible uniquement en consultation desktop ponctuelle (Grand Livre…).
+     Jamais au-dessus du contenu (le contenu est décalé) ni de la nav. */
   #ma-back-to-app {
-    position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999;
-    background: #101216; color: #fff; border: none; padding: 14px 24px calc(14px + env(safe-area-inset-bottom, 0px));
-    font-weight: 700; font-size: 14px; box-shadow: 0 -4px 20px rgba(0,0,0,.18); cursor: pointer; font-family: inherit;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1900;
+    height: calc(48px + env(safe-area-inset-top, 0px));
+    padding: env(safe-area-inset-top, 0px) 16px 0;
+    background: #101216; color: #fff; border: none;
+    display: flex; align-items: center; gap: 8px; justify-content: flex-start;
+    font-weight: 700; font-size: 14px; cursor: pointer; font-family: inherit;
+    box-shadow: 0 2px 12px rgba(0,0,0,.22);
   }
-  /* Quand on est en vue desktop ponctuelle, on réserve de la place en bas
-     pour que la barre "Retour à l'application" ne masque jamais le contenu. */
-  body.ma-desktop-view .main > .content { padding-bottom: 84px !important; }
-  body.ma-desktop-view #modal-content,
-  body.ma-desktop-view .modal-overlay .modal { margin-bottom: 68px !important; }
+  body.ma-desktop-view .main,
+  body.ma-desktop-view .content { padding-top: calc(56px + env(safe-area-inset-top, 0px)) !important; }
+  /* La modale/tiroir ouvert(e) passe AU-DESSUS de la barre de retour (jamais
+     l'inverse) : plus aucun champ ni bouton « Annuler/Enregistrer » masqué. */
 
   /* ============================================================
      MODALE RÉUTILISÉE (réservation / location manuelle)
      Même logique desktop, interface adaptée au tactile.
      ============================================================ */
-  /* ============================================================
-     POP-UPS MOBILES UNIFORMES — inspirés du pop-up de réservation
-     du site client : centrés, sobres, marges internes confortables,
-     champs harmonieux (jamais collés aux bords), scroll vertical
-     propre, boutons toujours visibles, pas de zoom, stables au clavier.
-     ============================================================ */
-  .modal-overlay {
-    z-index: 2200 !important;
-    align-items: center !important; justify-content: center !important;
-    padding: 16px !important;
-    overflow: hidden !important;
-  }
+  .modal-overlay { z-index: 2200 !important; align-items: flex-end !important; padding: 0 !important; }
   .modal-overlay.open { -webkit-overflow-scrolling: touch; }
-  /* Modale ouverte : on fige l'app derrière et on masque la tabbar. */
-  body.ma-modal-open #asl-mobile-app { overflow: hidden !important; }
-  body.ma-modal-open #asl-mobile-tabbar { display: none !important; }
   #modal-content, .modal-overlay .modal {
-    width: 100% !important; max-width: 440px !important;
-    max-height: 88vh !important;
-    border-radius: 18px !important; margin: 0 auto !important;
-    display: flex !important; flex-direction: column !important;
-    overflow: hidden !important;
+    width: 100% !important; max-width: 100% !important; max-height: 94vh !important;
+    border-radius: 22px 22px 0 0 !important; margin: 0 !important;
   }
-  /* Corps : marges internes généreuses + scroll vertical uniquement */
-  .modal-overlay .modal-body {
-    padding: 20px !important; overflow-y: auto !important; overflow-x: hidden !important;
-    overscroll-behavior: contain; flex: 1 1 auto;
-  }
-  /* Champs : une colonne, largeur harmonieuse, jamais collés aux bords */
-  .modal-overlay .form-row { grid-template-columns: 1fr !important; display: grid !important; gap: 14px !important; }
-  .modal-overlay .form-group { margin-bottom: 14px !important; }
-  .modal-overlay .form-label { font-size: 13px !important; margin-bottom: 6px !important; display: block; }
-  /* 16px = pas de zoom iOS ; hauteur et style identiques partout */
+  .modal-overlay .modal-body { padding: 18px 16px calc(16px + env(safe-area-inset-bottom, 0px)) !important; overscroll-behavior: contain; }
+  /* Champs empilés (une colonne) pour le pouce */
+  .modal-overlay .form-row { grid-template-columns: 1fr !important; display: grid !important; gap: 12px !important; }
+  /* 16px = pas de zoom automatique iOS ; champs et boutons plus grands */
   .modal-overlay .form-input,
   .modal-overlay .form-select,
   .modal-overlay textarea,
   .modal-overlay input,
-  .modal-overlay select {
-    font-size: 16px !important; min-height: 48px !important;
-    width: 100% !important; max-width: 100% !important; box-sizing: border-box !important;
-    border-radius: 11px !important; padding: 12px 14px !important;
-  }
-  .modal-overlay textarea { min-height: 84px !important; }
-  /* En-tête + pied collants, gros boutons tactiles toujours visibles */
-  .modal-overlay .modal-header { flex-shrink: 0; padding: 16px 20px !important; }
+  .modal-overlay select { font-size: 16px !important; min-height: 46px !important; }
+  .modal-overlay textarea { min-height: 80px !important; }
+  /* Pied collant, gros boutons tactiles, faciles à fermer */
   .modal-overlay .modal-footer {
-    flex-shrink: 0; gap: 10px; border-top: 1px solid rgba(18,22,30,.08);
-    padding: 14px 20px calc(14px + env(safe-area-inset-bottom, 0px)) !important;
+    position: sticky; bottom: 0; gap: 10px;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)) !important;
   }
   .modal-overlay .modal-footer .topbar-btn { flex: 1; min-height: 50px; font-size: 15px; border-radius: 12px; }
   .modal-overlay .modal-close { width: 40px; height: 40px; font-size: 26px; }
@@ -414,30 +383,14 @@
   html, body { overflow-x: hidden !important; width: 100%; position: relative; }
 
   /* Modale « charge » (overlay inline, hors .modal-overlay) */
-  #charge-modal-host { position: fixed; inset: 0; max-width: 100vw; overflow-x: hidden; }
-  #charge-modal-host > div { padding-left: 12px !important; padding-right: 12px !important; overflow-x: hidden !important; }
+  /* Modale « charge » (overlay inline) : NE PAS rendre le conteneur lui-même
+     plein écran — sinon, une fois vidé (fermé), il resterait un calque
+     invisible qui bloque tous les clics. On ne stylise que son contenu. */
+  #charge-modal-host:empty { display: none !important; }
+  #charge-modal-host > div { padding-left: 12px !important; padding-right: 12px !important; overflow-x: hidden !important; max-width: 100vw; }
   #charge-modal-host input, #charge-modal-host select, #charge-modal-host textarea, #charge-modal-host .form-input {
     width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; font-size: 16px !important;
   }
-
-  /* ---- Modales à hôte dédié (sous-location, documents, utilisateur,
-     fiche) : mêmes règles que les pop-ups principaux pour une cohérence
-     visuelle totale. Centrées, champs harmonieux, 16px, scroll vertical. ---- */
-  #sublease-modal-host > div, #sublease-fiche-host > div, #sublease-unpaid-host > div,
-  #doc-add-host > div, #user-modal-host > div {
-    padding: 16px !important; box-sizing: border-box;
-  }
-  #sublease-modal-host input, #sublease-modal-host select, #sublease-modal-host textarea,
-  #doc-add-host input, #user-modal-host input, #user-modal-host select,
-  #sublease-modal-host .form-input, #doc-add-host .form-input {
-    font-size: 16px !important; min-height: 48px !important; width: 100% !important;
-    max-width: 100% !important; box-sizing: border-box !important;
-    border-radius: 11px !important; padding: 12px 14px !important;
-  }
-  #sublease-modal-host textarea { min-height: 84px !important; }
-  /* Les cartes internes de ces modales ne débordent jamais */
-  #sublease-modal-host *, #sublease-fiche-host *, #sublease-unpaid-host *,
-  #doc-add-host *, #user-modal-host * { max-width: 100%; box-sizing: border-box; }
 
   /* Vue desktop ponctuelle : aucun débordement ni pan horizontal */
   body.ma-desktop-view { overflow-x: hidden !important; }

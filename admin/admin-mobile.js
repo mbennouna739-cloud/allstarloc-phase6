@@ -47,10 +47,8 @@
     hourglass: '<path d="M5 22h14M5 2h14"/><path d="M17 22v-4.17a2 2 0 0 0-.59-1.41L12 12l-4.41 4.41A2 2 0 0 0 7 17.83V22"/><path d="M7 2v4.17a2 2 0 0 0 .59 1.41L12 12l4.41-4.41A2 2 0 0 0 17 6.17V2"/>',
     alert: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
     card: '<rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>',
-    arrowLeft: '<path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>',
     bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
     users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
-    handshake: '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/><circle cx="12" cy="12" r="3"/>',
     phone: '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"/>',
     file: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><line x1="9" x2="15" y1="13" y2="13"/><line x1="9" x2="15" y1="17" y2="17"/>',
     logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/>',
@@ -71,7 +69,8 @@
     search: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
     sparkle: '<path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/>',
     camera: '<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z"/><circle cx="12" cy="13" r="3.2"/>',
-    image: '<rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/>'
+    image: '<rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/>',
+    partner: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m15 11 2 2 4-4"/>'
   };
   function ic(name, cls) {
     return '<svg class="ma-ic' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (ICONS[name] || '') + '</svg>';
@@ -95,10 +94,10 @@
     var f = fleet(), r = reservations(), ts = todayISO();
     return {
       available: f.filter(function (c) { return c.status === 'available'; }).length,
-      // Loués = réservations actives/confirmées en cours aujourd'hui (logique desktop)
-      rented: r.filter(function (x) { return (x.status === 'active' || x.status === 'confirmed') && (x.startDate || '') <= ts && (x.endDate || '') >= ts; }).length,
-      returnsToday: r.filter(function (x) { return (x.endDate || '').slice(0, 10) === ts && x.status !== 'cancelled'; }).length,
-      late: r.filter(function (x) { return (x.endDate || '') < ts && (x.status === 'active' || x.status === 'confirmed'); }).length,
+      rented: f.filter(function (c) { return c.status === 'rented' || c.status === 'active'; }).length,
+      pending: r.filter(function (x) { return x.status === 'pending'; }).length,
+      returnsToday: r.filter(function (x) { return (x.endDate || '').slice(0, 10) === ts && x.status !== 'cancelled' && x.status !== 'completed'; }).length,
+      late: r.filter(function (x) { return (x.endDate || '') < ts && (x.status === 'active'); }).length,
       unpaid: r.filter(function (x) { return x.status !== 'cancelled' && (Number(x.amount) || 0) > (Number(x.paid) || 0); }).length
     };
   }
@@ -106,110 +105,72 @@
   /* ============ NAVIGATION ============ */
   var current = 'dashboard';
   function rawGo(screen) {
+    if (typeof killOrphanOverlays === 'function') killOrphanOverlays();
     current = screen;
     document.querySelectorAll('.ma-screen').forEach(function (s) { s.classList.toggle('active', s.id === 'ma-' + screen); });
     document.querySelectorAll('.ma-tab').forEach(function (t) { t.classList.toggle('active', t.getAttribute('data-screen') === screen); });
-    // Bouton retour : visible sur les sous-écrans, masqué sur le tableau de bord
-    var back = document.getElementById('ma-head-back');
-    var logo = document.querySelector('.ma-head-logo');
-    var greet = document.querySelector('.ma-greet');
-    var isHome = (screen === 'dashboard');
-    if (back) back.style.display = isHome ? 'none' : 'flex';
-    if (logo) logo.style.display = isHome ? '' : 'none';
-    if (greet) greet.style.display = isHome ? '' : 'none';
-    var app = document.getElementById('asl-mobile-app');
-    if (app) app.scrollTop = 0;
+    var body = document.getElementById('ma-body');
+    if (body) body.scrollTop = 0;
     renderScreen(screen);
   }
   window.maGo = rawGo;
-  /* Cloche Notifications : ouvre les notifications ; si on est déjà dessus,
-     retour à l'accueil. Comportement stable à chaque clic. */
-  window.maToggleNotifications = function () {
-    if (current === 'notifications') window.maGo('dashboard');
-    else window.maGo('notifications');
+
+  /* Cloche Notifications : 1er clic → ouvrir ; re-clic → rester sur
+     Notifications (jamais de retour automatique vers l'accueil). */
+  window.maToggleNotif = function () {
+    if (current !== 'notifications') rawGo('notifications');
+    // déjà sur Notifications : on reste, on ne renvoie jamais à l'accueil.
   };
 
   function renderScreen(screen) {
     if (screen === 'dashboard') renderDash();
     else if (screen === 'vehicles') renderVehicles();
-    else if (screen === 'available') renderAvailableM();
     else if (screen === 'reservations') renderReservations();
     else if (screen === 'rentals') renderRentals();
     else if (screen === 'returns') renderReturns();
-    else if (screen === 'late') renderLateM();
     else if (screen === 'clients') renderClients();
-    else if (screen === 'sublease') renderSubleaseM();
-    else if (screen === 'unpaid') renderUnpaidM();
-    else if (screen === 'revenue') renderRevenueM();
     else if (screen === 'caisse') renderCaisse();
     else if (screen === 'notifications') renderNotifications();
+    else if (screen === 'partners') renderPartnersMobile();
   }
 
   /* ============ TABLEAU DE BORD ============ */
   function renderDash() {
-    var c = counts();
-    var rev = computeRev();
+    var c = counts(), t = totals();
     var cards = [
-      { num: c.available, lbl: 'Disponibles', cls: 'green', ico: 'car', act: "maDash('available')" },
-      { num: c.rented, lbl: 'Loués', cls: 'blue', ico: 'key', act: "maDash('rented')" },
-      { num: c.returnsToday, lbl: "Retours aujourd'hui", cls: 'orange', ico: 'returns', act: "maDash('returns')" },
-      { num: c.late, lbl: 'En retard', cls: 'red', ico: 'alert', act: "maDash('late')" },
-      { num: c.unpaid, lbl: 'Impayés', cls: 'purple', ico: 'card', act: "maDash('unpaid')" },
-      { num: money(rev.month), lbl: 'Revenus du mois', cls: 'teal', ico: 'wallet', act: "maDash('revenue')", small: true }
+      { num: c.available, lbl: 'Véhicules disponibles', cls: 'green', ico: 'car', act: "maGo('vehicles')" },
+      { num: c.rented, lbl: 'Véhicules loués', cls: 'blue', ico: 'key', act: "maGoLoues()" },
+      { num: c.pending, lbl: 'Réservations en attente', cls: 'orange', ico: 'clock', act: "maGo('reservations')" },
+      { num: c.returnsToday, lbl: 'Retours prévus', cls: 'red', ico: 'returns', act: "maGo('returns')" },
+      { num: money(t.enc), lbl: 'Encaissements réels', cls: 'teal', ico: 'wallet', act: "maGo('caisse')", small: true },
+      { num: money(t.rest), lbl: 'Montants à encaisser', cls: 'purple', ico: 'hourglass', act: "maGo('caisse')", small: true }
     ];
     var host = document.getElementById('ma-dashboard');
     if (!host) return;
+    // Activités du jour (vue opérationnelle, sans doublon avec les retards)
+    var ts = todayISO();
+    var allRes = reservations();
+    var departToday = allRes.filter(function (r) { return (r.startDate || '') === ts && r.status !== 'cancelled' && r.status !== 'completed'; }).length;
+    var newToday = allRes.filter(function (r) { return (r.createdAt || '').slice(0, 10) === ts && r.status !== 'cancelled'; }).length;
+    var toPrepare = allRes.filter(function (r) { return (r.startDate || '') === ts && (r.status === 'confirmed' || r.status === 'pending' || r.status === 'reserved'); }).length;
     host.innerHTML =
       '<div class="ma-stats">' + cards.map(function (k) {
         return '<button type="button" class="ma-stat" onclick="' + k.act + '">'
           + '<div class="ma-stat-ico ' + k.cls + '">' + ic(k.ico) + '</div>'
-          + '<div class="ma-stat-num ' + k.cls + '"' + (k.small ? ' style="font-size:17px;"' : '') + '>' + k.num + '</div>'
+          + '<div class="ma-stat-num ' + k.cls + '"' + (k.small ? ' style="font-size:18px;"' : '') + '>' + k.num + '</div>'
           + '<div class="ma-stat-lbl">' + k.lbl + '</div></button>';
       }).join('') + '</div>'
-      + (c.late || c.unpaid ? '<div class="ma-section-title">À surveiller</div>' : '')
-      + (c.late ? alertRow('alert', c.late + ' retard(s)', 'Véhicules non rendus à temps', "maDash('late')", 'red') : '')
-      + (c.unpaid ? alertRow('card', c.unpaid + ' impayé(s)', 'Dossiers avec reste à payer', "maDash('unpaid')", 'orange') : '');
+      + '<div class="ma-section-title">À surveiller</div>'
+      + '<div class="ma-card" style="margin-bottom:10px;">'
+      + '<div style="font-weight:700;margin-bottom:10px;">Activités du jour</div>'
+      + '<div class="ma-card-meta">'
+      + '<div class="ma-meta">Retours<b>' + c.returnsToday + '</b></div>'
+      + '<div class="ma-meta">Départs<b>' + departToday + '</b></div>'
+      + '<div class="ma-meta">Nouvelles<b>' + newToday + '</b></div>'
+      + '<div class="ma-meta">À préparer<b>' + toPrepare + '</b></div>'
+      + '</div></div>'
+      + (c.unpaid ? alertRow('card', c.unpaid + ' impayé(s)', 'Dossiers impayés', "maGo('notifications')", 'orange') : '');
   }
-
-  /* Revenus : réutilise la logique desktop si disponible, sinon recalcule
-     exactement de la même façon (paiements réellement encaissés). */
-  function computeRev() {
-    try { if (typeof window.computeRevenues === 'function') return window.computeRevenues(); } catch (e) {}
-    var r = reservations(), now = new Date();
-    function pad(n) { return String(n).padStart(2, '0'); }
-    var day = now.getDay(); var diffToMon = (day === 0 ? 6 : day - 1);
-    var monday = new Date(now); monday.setDate(now.getDate() - diffToMon); monday.setHours(0, 0, 0, 0);
-    var sunday = new Date(monday); sunday.setDate(monday.getDate() + 6);
-    var wf = monday.getFullYear() + '-' + pad(monday.getMonth() + 1) + '-' + pad(monday.getDate());
-    var wt = sunday.getFullYear() + '-' + pad(sunday.getMonth() + 1) + '-' + pad(sunday.getDate());
-    var mf = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-01';
-    var mt = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-31';
-    var yf = now.getFullYear() + '-01-01', yt = now.getFullYear() + '-12-31';
-    function between(from, to) {
-      var s = 0;
-      r.forEach(function (x) {
-        if (x.status === 'cancelled') return;
-        var paid = Number(x.paid) || 0; if (paid <= 0) return;
-        var d = (x.startDate || x.createdAt || '').slice(0, 10);
-        if (d >= from && d <= to) s += paid;
-      });
-      return s;
-    }
-    var due = 0;
-    r.forEach(function (x) { if (x.status !== 'cancelled') due += Math.max(0, (Number(x.amount) || 0) - (Number(x.paid) || 0)); });
-    return { week: between(wf, wt), month: between(mf, mt), year: between(yf, yt), dueGlobal: due };
-  }
-
-  /* Cartes du tableau de bord → vraies vues mobiles en cartes (jamais les
-     panneaux desktop). Le retour ramène toujours au dashboard. */
-  window.maDash = function (type) {
-    if (type === 'available') maGo('available');
-    else if (type === 'rented') maGo('rentals');
-    else if (type === 'returns') maGo('returns');
-    else if (type === 'late') maGo('late');
-    else if (type === 'unpaid') maGo('unpaid');
-    else if (type === 'revenue') maGo('revenue');
-  };
   function alertRow(icon, title, sub, act, tone) {
     return '<div class="ma-notif" onclick="' + act + '"><div class="ma-notif-ico ' + (tone || 'red') + '">' + ic(icon) + '</div>'
       + '<div class="ma-notif-body"><div class="ma-notif-title">' + title + '</div><div class="ma-notif-sub">' + sub + '</div></div>'
@@ -235,37 +196,56 @@
       }).join('') + '</div>'
       + (list.length ? list.map(vehCard).join('') : '<div class="ma-empty">Aucun véhicule dans cette catégorie.</div>');
   }
+  function activeRentalFor(c) {
+    return reservations().filter(function (r) {
+      return r.status === 'active' && (r.car === c.name || String(r.carId) === String(c.id) || (c.plate && r.assignedPlate === c.plate));
+    })[0] || null;
+  }
   function vehCard(c) {
     var statusMap = { available: ['green', 'Disponible'], rented: ['blue', 'Loué'], active: ['blue', 'Loué'], reserved: ['orange', 'Réservé'], maintenance: ['gray', 'Entretien'] };
     var st = statusMap[c.status] || ['gray', c.status || '—'];
     var photo = c.photo || c.image || c.img || '';
     var imgHtml = photo ? '<img class="ma-card-photo" src="' + esc(photo) + '" alt="" loading="lazy">' : '<div class="ma-card-photo"></div>';
     var idArg = (typeof c.id === 'number' ? c.id : "'" + String(c.id) + "'");
+    var rental = (c.status === 'rented' || c.status === 'active') ? activeRentalFor(c) : null;
+    var rentedLine = rental
+      ? '<div style="margin:-2px 0 10px;font-size:12.5px;color:#d97706;font-weight:600;">Client : ' + esc(rental.client || '—') + ' · Retour : ' + esc(rental.endDate || '—') + '</div>'
+      : '';
+    var actions;
+    if (rental) {
+      var rid = "'" + String(rental.id || '') + "'";
+      actions = '<div class="ma-actions">'
+        + '<button class="ma-act-btn" onclick="maViewVehicle(' + idArg + ')">' + ic('eye') + 'Fiche</button>'
+        + '<button class="ma-act-btn" onclick="maReturnVehicle(' + rid + ')">' + ic('returns') + 'Retour</button>'
+        + '<button class="ma-act-btn" onclick="maExtend(' + rid + ')">' + ic('plus') + 'Prolonger</button>'
+        + '</div>';
+    } else {
+      actions = '<div class="ma-actions">'
+        + '<button class="ma-act-btn" onclick="maViewVehicle(' + idArg + ')">' + ic('eye') + 'Fiche</button>'
+        + '<button class="ma-act-btn" onclick="maEditVehicle(' + idArg + ')">' + ic('edit') + 'Modifier</button>'
+        + '<button class="ma-act-btn" onclick="maChangeStatus(' + idArg + ')">' + ic('swap') + 'Statut</button>'
+        + '<button class="ma-act-btn" onclick="maVehiclePhoto(' + idArg + ')">' + ic('camera') + 'Photo</button>'
+        + '</div>';
+    }
     return '<div class="ma-card">'
       + '<div class="ma-card-top">' + imgHtml
       + '<div class="ma-card-info"><div class="ma-card-name">' + esc(c.name || 'Véhicule') + '</div>'
       + '<div class="ma-card-sub">' + esc(c.plate || c.immat || '—') + ' · ' + esc(c.category || '') + '</div></div>'
       + '<span class="ma-badge ' + st[0] + '">' + st[1] + '</span></div>'
+      + rentedLine
       + '<div class="ma-card-meta"><div class="ma-meta">Prix/jour<b>' + money(c.priceMAD || c.price || 0) + '</b></div>'
       + '<div class="ma-meta">Carburant<b>' + esc(c.fuel || '—') + '</b></div>'
       + '<div class="ma-meta">Boîte<b>' + esc(c.transmission || '—') + '</b></div></div>'
-      + '<div class="ma-actions">'
-      + '<button class="ma-act-btn" onclick="maViewVehicle(' + idArg + ')">' + ic('eye') + 'Fiche</button>'
-      + '<button class="ma-act-btn" onclick="maEditVehicle(' + idArg + ')">' + ic('edit') + 'Modifier</button>'
-      + '<button class="ma-act-btn" onclick="maChangeStatus(' + idArg + ')">' + ic('swap') + 'Statut</button>'
-      + '<button class="ma-act-btn" onclick="maVehiclePhoto(' + idArg + ')">' + ic('camera') + 'Photo</button>'
-      + '</div></div>';
+      + actions + '</div>';
   }
+  window.maGoLoues = function () { rawGo('vehicles'); if (window.maVehFilter) window.maVehFilter('rented'); };
   window.maViewVehicle = function (id) {
+    if (typeof window.viewVehicle === 'function') { window.viewVehicle(id); return; }
     maEditVehicle(id);
   };
   window.maEditVehicle = function (id) {
-    enterDesktopView();
-    if (typeof window.showPage === 'function') window.showPage('fleet', null);
-    setTimeout(function () {
-      if (typeof window.editCar === 'function') { try { window.editCar(typeof id === 'string' ? id : Number(id)); } catch (e) {} }
-    }, 100);
-    maShowBackToApp();
+    if (typeof window.editVehicle === 'function') { window.editVehicle(id); return; }
+    maExitToPage('fleet');
   };
   /* Changer le statut : feuille tactile, écrit via ASLDB.updateVehicle */
   window.maChangeStatus = function (id) {
@@ -367,8 +347,8 @@
     var host = document.getElementById('ma-rentals');
     if (!host) return;
     var ts = todayISO();
-    var list = reservations().filter(function (r) { return (r.status === 'active' || r.status === 'confirmed') && (r.startDate || '') <= ts && (r.endDate || '') >= ts; });
-    host.innerHTML = list.length ? list.map(function (r) { return resCard(r, 'rental'); }).join('') : '<div class="ma-empty">Aucune location en cours aujourd\'hui.</div>';
+    var list = reservations().filter(function (r) { return r.status === 'active'; });
+    host.innerHTML = list.length ? list.map(function (r) { return resCard(r, 'rental'); }).join('') : '<div class="ma-empty">Aucune location en cours.</div>';
   }
 
   function resCard(r, kind) {
@@ -386,12 +366,11 @@
         + '</div>';
     } else {
       var validable = r.status === 'pending' || r.status === 'reserved';
-      var cancellable = r.status !== 'cancelled' && r.status !== 'completed';
       actions = '<div class="ma-actions">'
         + '<button class="ma-act-btn" onclick="maViewRes(' + idStr + ')">' + ic('eye') + 'Voir</button>'
         + (validable ? '<button class="ma-act-btn ok" onclick="maConfirmRes(' + idStr + ')">' + ic('check') + 'Valider</button>' : '')
+        + (validable ? '<button class="ma-act-btn danger" onclick="maCancelRes(' + idStr + ')">' + ic('x') + 'Refuser</button>' : '')
         + '<button class="ma-act-btn" onclick="maViewRes(' + idStr + ')">' + ic('edit') + 'Modifier</button>'
-        + (cancellable ? '<button class="ma-act-btn danger" onclick="maCancelRes(' + idStr + ')">' + ic('x') + 'Annuler</button>' : '')
         + '</div>';
     }
     return '<div class="ma-card">'
@@ -416,20 +395,7 @@
     if (typeof window.viewRes === 'function') window.viewRes(id);
   };
   window.maConfirmRes = function (id) { if (typeof window.confirmRes === 'function') window.confirmRes(id); refreshSoon(); };
-  window.maCancelRes = function (id) {
-    var r = (ASLDB.getReservations() || []).filter(function (x) { return x.id === id; })[0];
-    var who = r ? (r.client || '') + (r.car ? ' — ' + r.car : '') : '';
-    if (!confirm('Êtes-vous sûr de vouloir annuler cette réservation ?\n' + who + '\n\nLe véhicule redeviendra disponible.')) return;
-    // Annulation + libération du véhicule (même logique que desktop)
-    try {
-      if (r && r.carId != null && r.assignedPlate && typeof ASLDB.releaseUnit === 'function') ASLDB.releaseUnit(r.carId, r.assignedPlate);
-      ASLDB.updateReservation(id, { status: 'cancelled' });
-    } catch (e) {}
-    if (typeof showToast === 'function') showToast('Réservation annulée ✓');
-    try { if (typeof reloadData === 'function') reloadData(); } catch (e) {}
-    renderScreen(current);
-    refreshSoon();
-  };
+  window.maCancelRes = function (id) { if (typeof window.cancelRes === 'function') window.cancelRes(id); refreshSoon(); };
   window.maReturnVehicle = function (id) { if (typeof window.terminerLocation === 'function') window.terminerLocation(id); refreshSoon(); };
   window.maExtend = function (id) {
     if (typeof window.prolongerLocation === 'function') { window.prolongerLocation(id); return; }
@@ -472,92 +438,6 @@
     host.innerHTML = head + body;
   }
 
-  /* ============ DISPONIBLES (vue mobile native) ============ */
-  function renderAvailableM() {
-    var host = document.getElementById('ma-available');
-    if (!host) return;
-    var ts = todayISO();
-    var f = fleet().filter(function (c) { return c.status === 'available'; });
-    var res = reservations();
-    host.innerHTML = f.length ? f.map(function (c) {
-      // Réservation future éventuelle (libre aujourd'hui mais réservé plus tard)
-      var fut = res.filter(function (r) {
-        if (r.status === 'cancelled' || r.status === 'completed') return false;
-        if (!(r.car === c.name || r.carId === c.id || r.assignedPlate === c.plate)) return false;
-        return (r.startDate || '') > ts;
-      }).sort(function (a, b) { return String(a.startDate || '').localeCompare(String(b.startDate || '')); })[0];
-      return '<div class="ma-card">'
-        + '<div class="ma-card-top"><div class="ma-card-ico-box green">' + ic('car') + '</div>'
-        + '<div class="ma-card-info"><div class="ma-card-name">' + esc(c.name || 'Véhicule') + '</div>'
-        + '<div class="ma-card-sub">' + esc(c.plate || '—') + '</div></div>'
-        + '<span class="ma-badge green">Disponible</span></div>'
-        + (fut ? '<div class="ma-card-note orange">' + ic('calendar') + ' Réservée du ' + fmtDM(fut.startDate) + ' au ' + fmtDM(fut.endDate) + '</div>' : '')
-        + '</div>';
-    }).join('') : '<div class="ma-empty">Aucun véhicule disponible en ce moment.</div>';
-  }
-
-  /* ============ EN RETARD (vue mobile native) ============ */
-  function renderLateM() {
-    var host = document.getElementById('ma-late');
-    if (!host) return;
-    var ts = todayISO();
-    // Vrai retard : date de retour STRICTEMENT dépassée ET location non clôturée
-    var list = reservations().filter(function (r) {
-      return (r.endDate || '') < ts && (r.status === 'active' || r.status === 'confirmed');
-    }).sort(function (a, b) { return (a.endDate || '').localeCompare(b.endDate || ''); });
-    host.innerHTML = list.length ? list.map(function (r) {
-      var idStr = "'" + String(r.id || '') + "'";
-      var days = Math.max(0, Math.round((new Date(ts) - new Date(r.endDate)) / 86400000));
-      return '<div class="ma-card">'
-        + '<div class="ma-card-top"><div class="ma-card-ico-box red">' + ic('alert') + '</div>'
-        + '<div class="ma-card-info"><div class="ma-card-name">' + esc(r.car || 'Véhicule') + '</div>'
-        + '<div class="ma-card-sub">' + esc(r.client || '') + ' · retour prévu ' + esc(r.endDate || '') + '</div></div>'
-        + '<span class="ma-badge red">' + days + ' j</span></div>'
-        + '<div class="ma-actions">'
-        + '<button class="ma-act-btn" onclick="maViewRental(' + idStr + ')">' + ic('eye') + 'Fiche</button>'
-        + '<button class="ma-act-btn ok" onclick="maLateConfirm(' + idStr + ')">' + ic('check') + 'Confirmer retour</button>'
-        + '<button class="ma-act-btn" onclick="maExtend(' + idStr + ')">' + ic('plus') + 'Prolonger</button>'
-        + '</div></div>';
-    }).join('') : '<div class="ma-empty">' + ic('checkCircle') + '<div style="margin-top:8px;">Aucun retard — tout est à l\'heure.</div></div>';
-  }
-  /* Confirmer le retour depuis l'écran En retard : clôture, libère le
-     véhicule, l'alerte disparaît et tout se recalcule/synchronise. */
-  window.maLateConfirm = function (id) {
-    var r = (ASLDB.getReservations() || []).filter(function (x) { return x.id === id; })[0];
-    if (!r) return;
-    if (!confirm('Confirmer le retour de ' + (r.car || '') + ' (' + (r.client || '') + ') ?\n\nLe véhicule sera libéré.')) return;
-    try {
-      if (r.carId != null && r.assignedPlate && typeof ASLDB.releaseUnit === 'function') ASLDB.releaseUnit(r.carId, r.assignedPlate);
-      ASLDB.updateReservation(id, { status: 'completed' });
-    } catch (e) {}
-    if (typeof showToast === 'function') showToast('Retour confirmé — véhicule libéré ✓');
-    try { if (typeof reloadData === 'function') reloadData(); } catch (e) {}
-    renderLateM();
-  };
-
-  /* ============ REVENUS (vue mobile native) ============ */
-  function renderRevenueM() {
-    var host = document.getElementById('ma-revenue');
-    if (!host) return;
-    var rev = computeRev();
-    host.innerHTML =
-      cashLine('Revenus de la semaine', rev.week, '#16a34a', 'Du lundi au dimanche en cours')
-      + cashLine('Revenus du mois', rev.month, '#16a34a', 'Mois calendaire en cours')
-      + cashLine("Revenus de l'année", rev.year, '#16a34a', 'Année ' + new Date().getFullYear())
-      + cashLine('Reste à encaisser', rev.dueGlobal, (rev.dueGlobal > 0 ? '#C41E3A' : '#16a34a'), 'Somme de tous les soldes dus');
-  }
-  function cashLine(label, val, color, note) {
-    return '<div class="ma-cash-card" style="border-left-color:' + color + ';">'
-      + '<div><div class="ma-cash-lbl">' + label + '</div>'
-      + '<div class="ma-cash-num" style="color:' + color + ';">' + money(val) + '</div>'
-      + (note ? '<div class="ma-cash-note">' + note + '</div>' : '') + '</div></div>';
-  }
-  function fmtDM(d) {
-    if (!d) return '';
-    var p = String(d).slice(0, 10).split('-');
-    return p.length === 3 ? (p[2] + '/' + p[1]) : d;
-  }
-
   /* ============ CLIENTS ============ */
   function buildClients() {
     var ts = todayISO(), map = {};
@@ -568,7 +448,7 @@
       map[key].paid += Number(r.paid) || 0;
       map[key].rest += Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
       map[key].items.push(r);
-      var active = (r.status === 'active' || r.status === 'confirmed') && (r.startDate || '') <= ts && (r.endDate || '') >= ts;
+      var active = (r.status === 'active');
       if (active) map[key].current = r.car || '';
     });
     return Object.keys(map).map(function (k) { return map[k]; }).filter(function (c) { return c.name; });
@@ -624,169 +504,6 @@
     );
   };
 
-  /* ============ IMPAYÉS (liste complète) ============ */
-  window.maOpenUnpaid = function () { maGo('unpaid'); };
-  function renderUnpaidM() {
-    var host = document.getElementById('ma-unpaid');
-    if (!host) return;
-    var ts = todayISO();
-    var list = reservations().filter(function (r) {
-      return r.status !== 'cancelled' && (Number(r.amount) || 0) > (Number(r.paid) || 0);
-    }).sort(function (a, b) { return (b.endDate || '').localeCompare(a.endDate || ''); });
-    var total = list.reduce(function (s, r) { return s + ((Number(r.amount) || 0) - (Number(r.paid) || 0)); }, 0);
-    if (!list.length) { host.innerHTML = '<div class="ma-empty">✓ Aucun impayé. Tout est encaissé.</div>'; return; }
-    host.innerHTML =
-      '<div class="ma-cash-card" style="border-color:#C41E3A;margin-bottom:14px;"><div class="ma-cash-lbl">Total à encaisser</div><div class="ma-cash-num" style="color:#C41E3A;">' + money(total) + '</div></div>'
-      + list.map(function (r) {
-        var reste = (Number(r.amount) || 0) - (Number(r.paid) || 0);
-        var late = (r.endDate || '') < ts && (r.status === 'active' || r.status === 'confirmed');
-        return '<div class="ma-card">'
-          + '<div class="ma-card-top"><div class="ma-card-ava">' + esc((r.client || '?').charAt(0).toUpperCase()) + '</div>'
-          + '<div class="ma-card-info"><div class="ma-card-name">' + esc(r.client || 'Client') + '</div>'
-          + '<div class="ma-card-sub">' + esc(r.car || '') + ' · ' + esc(r.contractRef || r.id || '') + '</div></div>'
-          + '<span class="ma-badge red">' + money(reste) + '</span></div>'
-          + '<div class="ma-card-meta"><div class="ma-meta">Total<b>' + money(r.amount || 0) + '</b></div>'
-          + '<div class="ma-meta">Payé<b style="color:#16a34a;">' + money(r.paid || 0) + '</b></div>'
-          + '<div class="ma-meta">Retour<b' + (late ? ' style="color:#C41E3A;"' : '') + '>' + esc(r.endDate || '—') + (late ? ' (retard)' : '') + '</b></div></div>'
-          + '<div style="display:flex;gap:8px;margin-top:10px;">'
-          + '<button class="ma-act-btn" onclick="maViewRes(\'' + r.id + '\')">Voir la fiche</button>'
-          + '<button class="ma-act-btn ok" onclick="maPayUnpaid(\'' + r.id + '\')">Encaisser</button>'
-          + '</div></div>';
-      }).join('');
-  }
-  window.maPayUnpaid = function (resId) {
-    var r = (ASLDB.getReservations() || []).filter(function (x) { return x.id === resId; })[0];
-    if (!r) return;
-    var reste = Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
-    var amountStr = prompt('Montant encaissé (reste ' + money(reste) + ') :', String(Math.round(reste)));
-    if (amountStr === null) return;
-    var amount = parseFloat(amountStr) || 0;
-    if (amount <= 0) { alert('Montant invalide.'); return; }
-    if (amount > reste) amount = reste;
-    var newPaid = (Number(r.paid) || 0) + amount;
-    try { ASLDB.updateReservation(resId, { paid: newPaid, paymentStatus: newPaid >= (Number(r.amount) || 0) ? 'paid' : 'partial' }); } catch (e) {}
-    if (typeof showToast === 'function') showToast('Paiement de ' + money(amount) + ' enregistré ✓');
-    renderUnpaidM();
-  };
-
-  /* ============ SOUS-LOCATION (mobile) ============ */
-  function renderSubleaseM() {
-    var host = document.getElementById('ma-sublease');
-    if (!host || typeof ASLSublease === 'undefined') return;
-    var list = ASLSublease.list();
-    var head = '<button class="ma-action" onclick="maNewSublease()">' + ic('plus') + ' Nouvelle sous-location</button>'
-      + '<input type="search" id="ma-sub-search" class="ma-search" placeholder="Rechercher…" oninput="maRenderSubleaseList()">';
-    host.innerHTML = head + '<div id="ma-sub-list"></div>';
-    maRenderSubleaseList();
-  }
-  window.maRenderSubleaseList = function () {
-    var box = document.getElementById('ma-sub-list');
-    if (!box) return;
-    var q = ((document.getElementById('ma-sub-search') || {}).value || '').toLowerCase().trim();
-    var list = ASLSublease.list();
-    if (q) list = list.filter(function (s) { return ((s.name || '') + ' ' + (s.phone || '')).toLowerCase().indexOf(q) >= 0; });
-    if (!list.length) { box.innerHTML = '<div class="ma-empty">Aucune sous-location.</div>'; return; }
-    box.innerHTML = list.map(function (s) {
-      var st = ASLSublease.stats(s.id);
-      return '<div class="ma-card" onclick="maSubleaseFiche(\'' + s.id + '\')">'
-        + '<div class="ma-card-top"><div class="ma-card-ava">' + esc((s.name || '?').charAt(0).toUpperCase()) + '</div>'
-        + '<div class="ma-card-info"><div class="ma-card-name">' + esc(s.name) + '</div>'
-        + '<div class="ma-card-sub">' + esc(s.phone || 'Pas de téléphone') + ' · ' + st.count + ' location(s)</div></div>'
-        + '<span class="ma-badge ' + (st.rest > 0 ? 'red' : 'green') + '">' + money(st.rest) + '</span></div>'
-        + '<div class="ma-card-meta"><div class="ma-meta">Facturé<b>' + money(st.total) + '</b></div>'
-        + '<div class="ma-meta">Payé<b style="color:#16a34a;">' + money(st.paid) + '</b></div>'
-        + '<div class="ma-meta">Restant<b style="color:' + (st.rest > 0 ? '#C41E3A' : '#16a34a') + ';">' + money(st.rest) + '</b></div></div>'
-        + '</div>';
-    }).join('');
-  };
-
-  window.maNewSublease = function () {
-    if (typeof openSubleaseModal === 'function') {
-      openSubleaseModal(null, function () { maRenderSubleaseList(); });
-    }
-  };
-
-  window.maSubleaseFiche = function (id) {
-    var sub = ASLSublease.get(id);
-    if (!sub) return;
-    var st = ASLSublease.stats(id);
-    var rows = ASLSublease.linkedRes(id);
-    var rowsHtml = rows.length ? rows.map(function (r) {
-      var reste = Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
-      var plate = r.assignedPlate || (function () { try { var f = ASLDB.getFleet().filter(function (c) { return c.name === r.car || c.id === r.carId; })[0]; return f ? (f.plate || '') : ''; } catch (e) { return ''; } })();
-      return '<div class="ma-card">'
-        + '<div class="ma-card-top"><div class="ma-card-info"><div class="ma-card-name">' + esc(r.finalClient || r.client || 'Client') + '</div>'
-        + '<div class="ma-card-sub">' + esc(r.car || '') + (plate ? ' · ' + esc(plate) : '') + '</div></div>'
-        + '<span class="ma-badge ' + (reste > 0 ? 'red' : 'green') + '">' + (reste > 0 ? money(reste) : 'Soldé') + '</span></div>'
-        + '<div class="ma-card-meta"><div class="ma-meta">Dates<b>' + esc(r.startDate || '') + ' → ' + esc(r.endDate || '') + '</b></div>'
-        + '<div class="ma-meta">Total<b>' + money(r.amount || 0) + '</b></div>'
-        + '<div class="ma-meta">Payé<b style="color:#16a34a;">' + money(r.paid || 0) + '</b></div></div>'
-        + '<div style="display:flex;gap:8px;margin-top:10px;">'
-        + '<button class="ma-act-btn" onclick="maCloseSheet();maViewRes(\'' + r.id + '\')">Voir</button>'
-        + (reste > 0 ? '<button class="ma-act-btn ok" onclick="maSubPay(\'' + id + '\',\'' + r.id + '\')">Marquer payé</button>' : '')
-        + '</div></div>';
-    }).join('') : '<div class="ma-empty">Aucune location liée.</div>';
-
-    openSheet(
-      '<div class="ma-sheet-title">' + esc(sub.name) + '</div>'
-      + '<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:#556;margin-bottom:14px;">'
-      + (sub.phone ? '<a href="tel:' + esc(sub.phone) + '" style="color:#2563eb;text-decoration:none;">📞 ' + esc(sub.phone) + '</a>' : '')
-      + (sub.whatsapp ? '<a href="https://wa.me/' + esc(sub.whatsapp.replace(/[^0-9]/g, '')) + '" target="_blank" style="color:#16a34a;text-decoration:none;">💬 WhatsApp</a>' : '')
-      + '</div>'
-      + (sub.notes ? '<div style="background:#f5f6f8;border-radius:10px;padding:11px;font-size:12.5px;color:#556;margin-bottom:14px;">📝 ' + esc(sub.notes) + '</div>' : '')
-      + '<div class="ma-stats" style="margin-bottom:8px;">'
-      + '<div class="ma-stat" style="cursor:default;"><div class="ma-stat-num" style="font-size:20px;">' + st.count + '</div><div class="ma-stat-lbl">Locations</div></div>'
-      + '<div class="ma-stat" style="cursor:default;"><div class="ma-stat-num green" style="font-size:18px;">' + money(st.paid) + '</div><div class="ma-stat-lbl">Payé</div></div>'
-      + '<div class="ma-stat" style="cursor:default;"><div class="ma-stat-num" style="font-size:18px;">' + money(st.total) + '</div><div class="ma-stat-lbl">Facturé</div></div>'
-      + '<div class="ma-stat" onclick="maSubUnpaid(\'' + id + '\')"><div class="ma-stat-num red" style="font-size:18px;">' + money(st.rest) + '</div><div class="ma-stat-lbl">Restant dû →</div></div>'
-      + '</div>'
-      + '<div class="ma-sheet-section">Historique</div>'
-      + rowsHtml
-    );
-  };
-
-  window.maSubUnpaid = function (id) {
-    var sub = ASLSublease.get(id);
-    if (!sub) return;
-    var unpaid = ASLSublease.linkedRes(id).filter(function (r) { return (Number(r.amount) || 0) > (Number(r.paid) || 0); });
-    var total = unpaid.reduce(function (s, r) { return s + ((Number(r.amount) || 0) - (Number(r.paid) || 0)); }, 0);
-    var rows = unpaid.length ? unpaid.map(function (r) {
-      var reste = (Number(r.amount) || 0) - (Number(r.paid) || 0);
-      return '<div class="ma-card">'
-        + '<div class="ma-card-top"><div class="ma-card-info"><div class="ma-card-name">' + esc(r.finalClient || r.client || 'Client') + '</div>'
-        + '<div class="ma-card-sub">' + esc(r.car || '') + ' · ' + esc(r.startDate || '') + ' → ' + esc(r.endDate || '') + '</div></div>'
-        + '<span class="ma-badge red">' + money(reste) + '</span></div>'
-        + '<div class="ma-card-meta"><div class="ma-meta">Total<b>' + money(r.amount || 0) + '</b></div>'
-        + '<div class="ma-meta">Payé<b style="color:#16a34a;">' + money(r.paid || 0) + '</b></div></div>'
-        + '<div style="display:flex;gap:8px;margin-top:10px;">'
-        + '<button class="ma-act-btn" onclick="maCloseSheet();maViewRes(\'' + r.id + '\')">Voir location</button>'
-        + '<button class="ma-act-btn ok" onclick="maSubPay(\'' + id + '\',\'' + r.id + '\')">Marquer payé</button>'
-        + '</div></div>';
-    }).join('') : '<div class="ma-empty">✓ Aucun impayé.</div>';
-    openSheet(
-      '<div class="ma-sheet-title">Impayés — ' + esc(sub.name) + '</div>'
-      + '<div style="font-size:14px;font-weight:800;color:#C41E3A;margin-bottom:14px;">Total impayé : ' + money(total) + '</div>'
-      + rows
-    );
-  };
-
-  window.maSubPay = function (subId, resId) {
-    var r = (ASLDB.getReservations() || []).filter(function (x) { return x.id === resId; })[0];
-    if (!r) return;
-    var reste = Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
-    var amountStr = prompt('Montant encaissé (reste ' + money(reste) + ') :', String(Math.round(reste)));
-    if (amountStr === null) return;
-    var amount = parseFloat(amountStr) || 0;
-    if (amount <= 0) { alert('Montant invalide.'); return; }
-    if (amount > reste) amount = reste;
-    var newPaid = (Number(r.paid) || 0) + amount;
-    try { ASLDB.updateReservation(resId, { paid: newPaid, paymentStatus: newPaid >= (Number(r.amount) || 0) ? 'paid' : 'partial' }); } catch (e) {}
-    if (typeof showToast === 'function') showToast('Paiement de ' + money(amount) + ' enregistré ✓');
-    maCloseSheet();
-    maSubleaseFiche(subId);
-    maRenderSubleaseList();
-  };
-
   /* ============ CAISSE / PAIEMENTS (simplifiée) ============ */
   function renderCaisse() {
     var host = document.getElementById('ma-caisse');
@@ -807,39 +524,23 @@
       + '<div><div class="ma-cash-lbl">' + label + '</div><div class="ma-cash-num" style="color:' + color + ';">' + money(val) + '</div></div></div>';
   }
   window.maOpenLedger = function () {
-    if (typeof window.showPage !== 'function') return;
-    enterDesktopView();
-    // showPage('caisse') déclenche déjà renderCaisse via le dispatch desktop.
-    window.showPage('caisse', null);
-    // On bascule ensuite sur l'onglet Rapports (Grand Livre), une seule fois.
-    setTimeout(function () {
-      try { if (typeof window.caisseTab === 'function') window.caisseTab('rapports'); } catch (e) {}
-    }, 150);
-    maShowBackToApp();
+    if (typeof window.showPage === 'function') {
+      document.body.classList.add('ma-desktop-view');
+      window.showPage('caisse', null);
+      if (typeof window.caisseTab === 'function') setTimeout(function () { window.caisseTab('rapports'); }, 100);
+      maShowBackToApp();
+    }
   };
-  function enterDesktopView() {
-    document.body.classList.remove('ma-locked', 'ma-modal-open');
-    closeSheet();
-    document.body.classList.add('ma-desktop-view');
-  }
   function maShowBackToApp() {
     if (document.getElementById('ma-back-to-app')) return;
     var b = document.createElement('button');
     b.id = 'ma-back-to-app';
-    b.innerHTML = '&#8592; Retour au tableau de bord';
-    b.onclick = function () {
-      document.body.classList.remove('ma-desktop-view', 'ma-locked', 'ma-modal-open');
-      b.remove();
-      // Réinitialise l'onglet Caisse à « Résumé » pour qu'il soit toujours
-      // sain au prochain accès (évite les boutons bloqués après Grand Livre).
-      try { if (typeof window.caisseTab === 'function') window.caisseTab('resume'); } catch (e) {}
-      // Règle simple : toute vue desktop ponctuelle revient au tableau de bord.
-      try { window.maGo('dashboard'); } catch (e) {}
-    };
+    b.innerHTML = '&#8592; Retour à l\'application';
+    b.onclick = function () { document.body.classList.remove('ma-desktop-view'); b.remove(); };
     document.body.appendChild(b);
   }
   window.maExitToPage = function (page) {
-    enterDesktopView();
+    document.body.classList.add('ma-desktop-view');
     if (typeof window.showPage === 'function') window.showPage(page, null);
     maShowBackToApp();
   };
@@ -849,41 +550,36 @@
     var host = document.getElementById('ma-notifications');
     var r = reservations(), ts = todayISO();
     var notifs = [];
-    function add(icon, tone, title, sub, id) { notifs.push({ icon: icon, tone: tone, title: title, sub: sub, id: id }); }
+    function add(icon, tone, title, sub, id, action) { notifs.push({ icon: icon, tone: tone, title: title, sub: sub, id: id, action: action }); }
     r.filter(function (x) { return (x.endDate || '').slice(0, 10) === ts && x.status !== 'cancelled' && x.status !== 'completed'; })
       .forEach(function (x) { add('returns', 'orange', 'Retour aujourd\'hui', (x.car || '') + ' — ' + (x.client || ''), x.id); });
     var tmStr = plusDaysISO(1);
     r.filter(function (x) { return (x.endDate || '').slice(0, 10) === tmStr && x.status !== 'cancelled' && x.status !== 'completed'; })
       .forEach(function (x) { add('calendarClock', 'blue', 'Retour demain', (x.car || '') + ' — ' + (x.client || ''), x.id); });
-    r.filter(function (x) { return (x.endDate || '') < ts && (x.status === 'active' || x.status === 'confirmed'); })
-      .forEach(function (x) { add('alert', 'red', 'Véhicule en retard', (x.car || '') + ' — ' + (x.client || '') + ' (prévu le ' + (x.endDate || '') + ')', x.id); });
+    r.filter(function (x) { return (x.endDate || '') < ts && (x.status === 'active'); })
+      .forEach(function (x) { add('alert', 'red', 'Véhicule en retard — à traiter', (x.car || '') + ' — ' + (x.client || '') + ' (prévu le ' + (x.endDate || '') + ')', x.id, "maLateAction('" + x.id + "')"); });
     r.filter(function (x) { return x.status !== 'cancelled' && (Number(x.amount) || 0) > (Number(x.paid) || 0); })
       .forEach(function (x) { var reste = (Number(x.amount) || 0) - (Number(x.paid) || 0); add('card', 'red', 'Impayé : ' + money(reste), (x.client || '') + ' — ' + (x.car || ''), x.id); });
     var cutoff = Date.now() - 48 * 3600 * 1000;
     r.filter(function (x) { return x.createdAt && new Date(x.createdAt).getTime() > cutoff && x.status === 'pending'; })
       .forEach(function (x) { add('sparkle', 'green', 'Nouvelle réservation', (x.client || '') + ' — ' + (x.car || '') + (x.source === 'online' ? ' (site web)' : ''), x.id); });
-    r.filter(function (x) { return x.createdAt && new Date(x.createdAt).getTime() > cutoff && (x.status === 'active' || x.status === 'confirmed'); })
+    r.filter(function (x) { return x.createdAt && new Date(x.createdAt).getTime() > cutoff && (x.status === 'active'); })
       .forEach(function (x) { add('key', 'teal', 'Nouvelle location', (x.client || '') + ' — ' + (x.car || ''), x.id); });
     r.filter(function (x) { return x.createdAt && new Date(x.createdAt).getTime() > cutoff && (Number(x.paid) || 0) > 0 && (Number(x.paid) || 0) >= (Number(x.amount) || 0); })
       .forEach(function (x) { add('checkCircle', 'green', 'Paiement reçu', (x.client || '') + ' — ' + money(x.paid), x.id); });
 
-    /* Rappels de vérification vidange (tous les 20 jours) */
-    var MAINT = {};
-    try { MAINT = JSON.parse(localStorage.getItem('asl_maint_v1') || '{}'); } catch (e) {}
-    var fl = fleet();
-    var todayMs = (function () { var d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime(); })();
-    fl.forEach(function (c) {
-      var m = MAINT[String(c.id)] || {};
-      if (m.reminder_next && new Date(m.reminder_next).getTime() <= todayMs + 86400000) {
-        var kmTxt = m.km_vidange_next ? Number(m.km_vidange_next).toLocaleString('fr-FR') + ' km' : '—';
-        notifs.push({ icon: 'wrench', tone: 'orange', title: 'Vérifier le km de ' + (c.name || ''), sub: 'Prochaine vidange prévue à ' + kmTxt, id: '', maint: true });
-      }
-    });
+    // Rappel vidange : vérifier le kilométrage (tous les 20 jours, sans deviner)
+    try {
+      var MAINT = JSON.parse(localStorage.getItem('asl_maint_v1') || '{}');
+      fleet().forEach(function (c) {
+        var v = (typeof window.aslVidangeCheck === 'function') ? window.aslVidangeCheck(MAINT[String(c.id)]) : null;
+        if (v && v.due) add('wrench', 'orange', 'Vérifier le kilométrage — ' + (c.name || ''), 'Prochaine vidange prévue à ' + Number(v.km).toLocaleString('fr-FR') + ' km', '');
+      });
+    } catch (e) {}
 
     if (host) {
       host.innerHTML = notifs.length ? notifs.map(function (n) {
-        var clk = n.maint ? 'maExitToPage(\'maintenance\')' : 'maViewRes(\'' + String(n.id || '') + '\')';
-        return '<div class="ma-notif" onclick="' + clk + '"><div class="ma-notif-ico ' + n.tone + '">' + ic(n.icon) + '</div>'
+        return '<div class="ma-notif" onclick="' + (n.action ? n.action : ('maViewRes(\'' + String(n.id || '') + '\')')) + '"><div class="ma-notif-ico ' + n.tone + '">' + ic(n.icon) + '</div>'
           + '<div class="ma-notif-body"><div class="ma-notif-title">' + esc(n.title) + '</div><div class="ma-notif-sub">' + esc(n.sub) + '</div></div>'
           + '<span class="ma-notif-chev">' + ic('returns') + '</span></div>';
       }).join('') : '<div class="ma-empty">' + ic('checkCircle') + '<div style="margin-top:8px;">Aucune notification. Tout est à jour.</div></div>';
@@ -894,12 +590,95 @@
     if (hdot) hdot.style.display = notifs.length ? 'block' : 'none';
   }
 
+  /* ============ PARTENAIRES (sous-location) — mobile simple ============ */
+  function renderPartnersMobile() {
+    var host = document.getElementById('ma-partners');
+    if (!host) return;
+    if (window.ASLPartners && ASLPartners.refresh) { try { ASLPartners.refresh(); } catch (e) {} }
+    var P = (window.ASLPartners) ? ASLPartners.list() : [];
+    if (!P.length) {
+      host.innerHTML = '<div class="ma-empty">Aucun partenaire pour le moment.<div style="margin-top:6px;font-size:12.5px;">Ajoutez-les depuis le PC (onglet « Sous-location »).</div></div>';
+      return;
+    }
+    host.innerHTML = P.slice().sort(function (a, b) { return (a.name || '').localeCompare(b.name || ''); }).map(function (p) {
+      var s = ASLPartners.stats(p.id);
+      var enCours = s.items.filter(function (r) { return r.status === 'active' || r.status === 'confirmed' || r.status === 'reserved'; }).length;
+      var wa = String(p.whatsapp || p.phone || '').replace(/[^0-9]/g, '');
+      return '<div class="ma-card">'
+        + '<div class="ma-card-top"><div class="ma-card-ava">' + esc((p.name || '?').charAt(0).toUpperCase()) + '</div>'
+        + '<div class="ma-card-info"><div class="ma-card-name">' + esc(p.name) + '</div>'
+        + '<div class="ma-card-sub">' + esc(p.city || p.phone || '') + '</div></div>'
+        + (s.impaye > 0 ? '<span class="ma-badge red">Impayé ' + money(s.impaye) + '</span>' : '<span class="ma-badge green">À jour</span>') + '</div>'
+        + '<div class="ma-card-meta"><div class="ma-meta">Locations en cours<b>' + enCours + '</b></div>'
+        + '<div class="ma-meta">Impayé<b style="color:' + (s.impaye > 0 ? '#C41E3A' : '#16a34a') + ';">' + money(s.impaye) + '</b></div></div>'
+        + '<div class="ma-actions">'
+        + '<button class="ma-act-btn" onclick="maPartnerFiche(\'' + p.id + '\')">' + ic('file') + 'Fiche</button>'
+        + (p.phone ? '<a class="ma-act-btn" href="tel:' + esc(p.phone) + '">' + ic('phone') + 'Appeler</a>' : '')
+        + (wa ? '<a class="ma-act-btn" href="https://wa.me/' + esc(wa) + '" target="_blank" rel="noopener">' + ic('phone') + 'WhatsApp</a>' : '')
+        + '</div></div>';
+    }).join('');
+  }
+  window.maPartnerFiche = function (id) {
+    var p = ASLPartners.get(id); if (!p) return;
+    var s = ASLPartners.stats(id);
+    var wa = String(p.whatsapp || p.phone || '').replace(/[^0-9]/g, '');
+    var rows = s.items.sort(function (a, b) { return (b.startDate || '').localeCompare(a.startDate || ''); }).map(function (r) {
+      var reste = Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
+      return '<div class="ma-hist-row">'
+        + '<div style="min-width:0;"><div class="ma-hist-car">' + esc(r.car || '—') + '</div>'
+        + '<div class="ma-hist-dates">' + esc(r.clientFinal || r.client || '') + ' · ' + esc(r.startDate || '') + ' → ' + esc(r.endDate || '') + '</div></div>'
+        + (reste > 0 ? '<button class="ma-act-btn danger" style="flex:0 0 auto;min-width:0;padding:8px 12px;" onclick="maPartnerPay(\'' + r.id + '\')">Encaisser</button>' : '<span class="ma-badge green">Payé</span>')
+        + '</div>';
+    }).join('');
+    openSheet(
+      '<div class="ma-sheet-title">' + esc(p.name) + '</div>'
+      + '<div class="ma-sheet-sub">Total impayé : ' + money(s.impaye) + ' · ' + s.count + ' location(s)</div>'
+      + (p.phone ? '<a class="ma-action" style="text-decoration:none;" href="tel:' + esc(p.phone) + '">' + ic('phone') + ' Appeler</a>' : '')
+      + (wa ? '<a class="ma-act-btn" style="width:100%;min-height:46px;text-decoration:none;margin-bottom:6px;" href="https://wa.me/' + esc(wa) + '" target="_blank" rel="noopener">' + ic('phone') + ' WhatsApp</a>' : '')
+      + '<div class="ma-sheet-section">Locations liées</div>'
+      + (rows || '<div class="ma-empty" style="padding:18px;">Aucune location liée.</div>')
+    );
+  };
+  window.maPartnerPay = function (resId) {
+    if (typeof window.aslPartnerPay === 'function') {
+      closeSheet();
+      window.aslPartnerPay(resId);
+      setTimeout(function () { renderPartnersMobile(); }, 350);
+    }
+  };
+  window.renderPartnersMobile = renderPartnersMobile;
+
+  /* ============ RETARDS : actions (la notification disparaît une fois traitée) ============ */
+  window.maLateAction = function (resId) {
+    var r = reservations().filter(function (x) { return String(x.id) === String(resId); })[0];
+    if (!r) return;
+    openSheet(
+      '<div class="ma-sheet-title">Retour en retard</div>'
+      + '<div class="ma-sheet-sub">' + esc((r.car || '') + ' — ' + (r.client || '') + ' · prévu le ' + (r.endDate || '')) + '</div>'
+      + '<button class="ma-action" onclick="maConfirmReturn(\'' + resId + '\')">' + ic('check') + ' Confirmer le retour du véhicule</button>'
+      + '<button class="ma-act-btn" style="width:100%;min-height:48px;margin-top:6px;" onclick="maExtendLoc(\'' + resId + '\')">' + ic('calendarClock') + ' Prolonger la location</button>'
+      + '<button class="ma-act-btn" style="width:100%;min-height:46px;margin-top:6px;" onclick="maViewRes(\'' + resId + '\')">' + ic('eye') + ' Voir la location</button>'
+    );
+  };
+  window.maConfirmReturn = function (resId) {
+    closeSheet();
+    if (typeof window.terminerLocation === 'function') window.terminerLocation(resId); // confirme + libère + statut clôturé
+    setTimeout(function () { if (current === 'notifications') renderNotifications(); else renderScreen(current); }, 250);
+  };
+  window.maExtendLoc = function (resId) {
+    closeSheet();
+    if (typeof window.prolongerLocation === 'function') window.prolongerLocation(resId); // nouvelle date de retour
+    setTimeout(function () { if (current === 'notifications') renderNotifications(); else renderScreen(current); }, 250);
+  };
+
   /* ============ "PLUS" : modules mobiles autorisés ============ */
   window.maOpenMore = function () {
     var items = [
       { ico: 'key', label: 'Locations en cours', act: "maMore('rentals')", perm: null },
-      { ico: 'handshake', label: 'Sous-location', act: "maMore('sublease')", perm: 'sublease' },
-      { ico: 'users', label: 'Clients', act: "maMore('clients')", perm: null }
+      { ico: 'returns', label: 'Retours prévus', act: "maMore('returns')", perm: null },
+      { ico: 'users', label: 'Clients', act: "maMore('clients')", perm: null },
+      { ico: 'partner', label: 'Partenaires (sous-location)', act: "maMore('partners')", perm: null },
+      { ico: 'wallet', label: 'Paiements & Caisse', act: "maMore('caisse')", perm: 'caisse' }
     ];
     var visible = items.filter(function (it) { return !it.perm || can(it.perm); });
     var canCreate = can('reservations') || can('rentals');
@@ -935,28 +714,16 @@
   };
 
   /* ============ FEUILLE GÉNÉRIQUE (bottom-sheet) ============ */
-  function lockScroll() {
-    var app = document.getElementById('asl-mobile-app');
-    if (app) { window._maScrollY = app.scrollTop; }
-    document.body.classList.add('ma-locked');
-  }
-  function unlockScroll() {
-    document.body.classList.remove('ma-locked');
-  }
   function openSheet(innerHtml) {
     closeSheet();
     var sheet = document.createElement('div');
     sheet.className = 'ma-sheet';
     sheet.onclick = function (e) { if (e.target === sheet) closeSheet(); };
-    sheet.innerHTML = '<div class="ma-sheet-inner"><div class="ma-sheet-handle"></div><button class="ma-sheet-close" aria-label="Fermer" onclick="closeSheet()">' + ic('x') + '</button><div class="ma-sheet-scroll">' + innerHtml + '</div></div>';
+    sheet.innerHTML = '<div class="ma-sheet-inner"><div class="ma-sheet-handle"></div><button class="ma-sheet-close" aria-label="Fermer" onclick="closeSheet()">' + ic('x') + '</button>' + innerHtml + '</div>';
     document.body.appendChild(sheet);
     window._maSheet = sheet;
-    lockScroll();
   }
-  function closeSheet() {
-    if (window._maSheet) { window._maSheet.remove(); window._maSheet = null; unlockScroll(); }
-  }
-  window.maCloseSheet = closeSheet;
+  function closeSheet() { if (window._maSheet) { window._maSheet.remove(); window._maSheet = null; } }
   window.closeSheet = closeSheet;
 
   /* ============ INIT / SHELL ============ */
@@ -968,12 +735,14 @@
     app.id = 'asl-mobile-app';
     app.innerHTML =
       '<div class="ma-head">'
-      + '<button class="ma-head-back" id="ma-head-back" aria-label="Retour" onclick="window.maGo(\'dashboard\')" style="display:none;">' + ic('arrowLeft') + '</button>'
-      + '<img class="ma-head-logo" src="data:image/png;base64,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" alt="All Star Loc">'
+      + '<img class="ma-head-logo" src="logo-asl-mobile.png" alt="All Star Loc" onerror="this.onerror=null;this.src=\'../assets/logo-asl-admin.png\';">'
       + '<div class="ma-head-txt"><h1 id="ma-title">Tableau de bord</h1><div class="ma-greet">Bonjour ' + esc(greet) + '</div></div>'
-      + '<button class="ma-head-btn" aria-label="Notifications" onclick="maToggleNotifications()">' + ic('bell') + '<span class="ma-dot" id="ma-head-dot" style="display:none;"></span></button></div>'
-      + screen('dashboard') + screen('vehicles') + screen('available') + screen('reservations') + screen('rentals')
-      + screen('returns') + screen('late') + screen('clients') + screen('sublease') + screen('unpaid') + screen('revenue') + screen('caisse') + screen('notifications');
+      + '<button class="ma-head-btn" aria-label="Notifications" onclick="maToggleNotif()">' + ic('bell') + '<span class="ma-dot" id="ma-head-dot" style="display:none;"></span></button></div>'
+      + '<div class="ma-body" id="ma-body">'
+      + screen('dashboard') + screen('vehicles') + screen('reservations') + screen('rentals')
+      + screen('returns') + screen('clients') + screen('caisse') + screen('notifications')
+      + screen('partners')
+      + '</div>';
     document.body.appendChild(app);
 
     var tabsAll = [
@@ -991,9 +760,9 @@
       return '<button class="ma-tab' + (t[0] === 'dashboard' ? ' active' : '') + '" data-screen="' + t[0] + '" onclick="' + onclick + '">'
         + ic(t[2]) + '<span>' + t[1] + '</span></button>';
     }).join('');
-    document.body.appendChild(bar);
+    app.appendChild(bar);
 
-    var titles = { dashboard: 'Tableau de bord', vehicles: 'Véhicules', available: 'Disponibles', reservations: 'Réservations', rentals: 'Véhicules loués', returns: "Retours aujourd'hui", late: 'En retard', clients: 'Clients', sublease: 'Sous-location', unpaid: 'Impayés', revenue: 'Revenus', caisse: 'Paiements & Caisse', notifications: 'Notifications' };
+    var titles = { dashboard: 'Tableau de bord', vehicles: 'Véhicules', reservations: 'Réservations', rentals: 'Locations', returns: 'Retours prévus', clients: 'Clients', caisse: 'Paiements & Caisse', notifications: 'Notifications', partners: 'Partenaires' };
     window.maGo = function (s) {
       var titleEl = document.getElementById('ma-title');
       if (titleEl && titles[s]) titleEl.textContent = titles[s];
@@ -1037,6 +806,37 @@
   }
   function hideSyncError() { var b = document.getElementById('ma-sync-error'); if (b) b.style.display = 'none'; }
 
+  /* Robustesse cycle de vie : après retour d'une autre application, réveil du
+     téléphone, restauration bfcache ou changement d'onglet, on supprime tout
+     overlay orphelin susceptible de bloquer les clics, puis on re-render. */
+  function killOrphanOverlays() {
+    // Modale « charge » inline : si vide, on la neutralise.
+    var ch = document.getElementById('charge-modal-host');
+    if (ch && !ch.children.length) { ch.style.pointerEvents = 'none'; ch.style.display = 'none'; }
+    else if (ch && ch.children.length) { ch.style.pointerEvents = ''; ch.style.display = ''; }
+    // Modale desktop fermée : ne capte aucun clic.
+    document.querySelectorAll('.modal-overlay').forEach(function (m) {
+      if (!m.classList.contains('open')) m.style.pointerEvents = 'none';
+      else m.style.pointerEvents = '';
+    });
+    // Tiroirs (caisse / tableau de bord / clients / locations) : si le FOND
+    // plein écran est resté affiché alors que le panneau est masqué, c'est un
+    // calque orphelin qui bloque tous les clics → on le referme.
+    // (Cause des boutons Résumé/Charges/Grand Livre bloqués.)
+    ['rev', 'dash', 'cust', 'rental'].forEach(function (name) {
+      var bg = document.getElementById(name + '-drawer-bg');
+      var panel = document.getElementById(name + '-drawer');
+      if (!bg) return;
+      var panelHidden = !panel || panel.style.display === 'none' || (window.getComputedStyle && getComputedStyle(panel).display === 'none');
+      if (panelHidden && bg.style.display !== 'none') bg.style.display = 'none';
+    });
+  }
+  function reviveApp() {
+    if (!isMobile()) return;
+    killOrphanOverlays();
+    try { renderScreen(current); } catch (e) {}
+  }
+
   function start() {
     if (!isMobile()) return;
     buildShell();
@@ -1044,22 +844,16 @@
     try { if (typeof ASLDB !== 'undefined' && ASLDB.onChange) ASLDB.onChange(function () { if (isMobile()) renderScreen(current); }); } catch (e) {}
     setTimeout(function () { renderNotifications(); window.maGo('dashboard'); }, 200);
     watchSync();
-    hookModalLock();
-  }
-
-  /* Verrou de défilement quand la modale desktop (réservation/location)
-     est ouverte sur mobile : l'arrière-plan ne bouge plus. */
-  function hookModalLock() {
-    if (typeof window.openModal === 'function' && !window._maModalHooked) {
-      var origOpen = window.openModal;
-      window.openModal = function () { var r = origOpen.apply(this, arguments); if (isMobile()) document.body.classList.add('ma-modal-open'); return r; };
-      window._maModalHooked = true;
-    }
-    if (typeof window.closeModal === 'function' && !window._maCloseHooked) {
-      var origClose = window.closeModal;
-      window.closeModal = function () { document.body.classList.remove('ma-modal-open'); return origClose.apply(this, arguments); };
-      window._maCloseHooked = true;
-    }
+    document.addEventListener('visibilitychange', function () { if (!document.hidden) reviveApp(); });
+    window.addEventListener('pageshow', function () { reviveApp(); });
+    // Filet de sécurité : neutralise tout calque orphelin (plus besoin de
+    // rafraîchir la page si un bouton semblait bloqué).
+    setInterval(function () { if (isMobile()) killOrphanOverlays(); }, 3000);
+    // Auto-réparation immédiate au moindre contact : si un calque résiduel
+    // bloquait les onglets (Caisse / Grand Livre / Charges), il est retiré
+    // avant le prochain geste → navigation sans rafraîchissement.
+    document.addEventListener('touchstart', function () { if (isMobile()) killOrphanOverlays(); }, true);
+    document.addEventListener('pointerdown', function () { if (isMobile()) killOrphanOverlays(); }, true);
   }
 
   if (document.readyState !== 'loading') start();
