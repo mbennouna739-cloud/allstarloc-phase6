@@ -58,25 +58,16 @@ function updateBadges() {
     var el = document.getElementById('badge-res');
     if (el) el.textContent = pending;
 
-    var active = res.filter(function(r) { return r.status === 'active' || r.status === 'confirmed'; }).length;
+    var active = res.filter(function(r) { return r.status === 'active'; }).length;
     el = document.getElementById('badge-rentals');
     if (el) { el.textContent = active; el.style.display = active ? '' : 'none'; }
 
     var MAINT = {};
     try { MAINT = JSON.parse(localStorage.getItem('asl_maint_v1') || '{}'); } catch(e) {}
-    var today = new Date(); today.setHours(0,0,0,0);
     var mc = 0;
     Object.keys(MAINT).forEach(function(id) {
-      var m = MAINT[id] || {};
-      // Rappel vidange dû (20j) + visite technique proche
-      if (m.reminder_next) {
-        var dr = Math.round((new Date(m.reminder_next) - today) / 86400000);
-        if (dr <= 0) mc++;
-      }
-      if (m.vt_next) {
-        var dv = Math.round((new Date(m.vt_next) - today) / 86400000);
-        if (dv <= 7) mc++;
-      }
+      var v = (typeof window.aslVidangeCheck === 'function') ? window.aslVidangeCheck(MAINT[id]) : null;
+      if (v && v.due) mc++;
     });
     el = document.getElementById('badge-maint');
     if (el) { el.textContent = mc; el.style.display = mc ? '' : 'none'; }
@@ -92,9 +83,9 @@ function renderDashboard() {
     var ts = todayStr();
 
     var avail   = fleet.filter(function(c) { return c.status === 'available'; });
-    var rented  = res.filter(function(r) { return (r.status === 'active' || r.status === 'confirmed') && (r.startDate||'') <= ts && (r.endDate||'') >= ts; });
+    var rented  = res.filter(function(r) { return r.status === 'active'; });
     var returns = res.filter(function(r) { return (r.endDate||'').slice(0,10) === ts && r.status !== 'cancelled'; });
-    var late    = res.filter(function(r) { return (r.endDate||'') < ts && (r.status === 'active' || r.status === 'confirmed'); });
+    var late    = res.filter(function(r) { return (r.endDate||'') < ts && (r.status === 'active'); });
     var unpaid  = res.filter(function(r) { if (r.status === 'cancelled') return false; return (Number(r.amount)||0) > (Number(r.paid)||0); });
 
     function setV(id, val, col) {
@@ -167,7 +158,7 @@ function openDashDrawer(type) {
 
   } else if (type === 'rented') {
     title = '🔵 Véhicules loués actuellement';
-    res.filter(function(r) { return (r.status==='active'||r.status==='confirmed') && (r.startDate||'')<=ts && (r.endDate||'')>=ts; }).forEach(function(r) {
+    res.filter(function(r) { return r.status==='active'; }).forEach(function(r) {
       rows.push(
         '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);">' +
         '<div><div style="font-weight:700;">' + (r.car||'') + '</div>' +
@@ -219,14 +210,18 @@ function openDashDrawer(type) {
 
   } else if (type === 'late') {
     title = '🔴 Retards (date de retour dépassée)';
-    res.filter(function(r) { return (r.endDate||'')<ts && (r.status==='active'||r.status==='confirmed'); }).forEach(function(r) {
+    res.filter(function(r) { return (r.endDate||'')<ts && (r.status==='active'); }).forEach(function(r) {
       var diff = Math.round((today - new Date(r.endDate)) / 86400000);
       rows.push(
         '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);">' +
         '<div><div style="font-weight:700;color:var(--red);">' + (r.car||'') + ' — ' + diff + ' jour(s) de retard</div>' +
         '<div style="font-size:12px;color:var(--text3);">' + (r.client||'') + ' — devait revenir le ' + (r.endDate||'') + '</div>' +
         '<div style="font-size:12px;">' + (r.phone||'') + '</div></div>' +
-        '<div>' + (r.phone ? '<a href="tel:'+r.phone+'" class="btn-sm primary" style="text-decoration:none;">Appeler</a>' : '') + '</div>' +
+        '<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;align-items:center;">' +
+        (r.phone ? '<a href="tel:'+r.phone+'" class="btn-sm" style="text-decoration:none;">Appeler</a>' : '') +
+        '<button class="btn-sm" data-rid="' + r.id + '" onclick="prolongerLocation(this.dataset.rid); setTimeout(function(){ if(typeof openDashDrawer===\'function\') openDashDrawer(\'late\'); }, 300);">Prolonger</button>' +
+        '<button class="btn-sm primary" data-rid="' + r.id + '" onclick="terminerLocation(this.dataset.rid); setTimeout(function(){ if(typeof openDashDrawer===\'function\') openDashDrawer(\'late\'); }, 300);">Confirmer le retour</button>' +
+        '</div>' +
         '</div>'
       );
     });
@@ -271,45 +266,76 @@ function closeDashDrawer() {
 
 var _maintCarId = null;
 
+/* ---- Synchronisation SERVEUR de l'entretien (KV, multi-appareils) ----
+   Même logique de persistance que la flotte/les réservations : cache local
+   + KV serveur. Les données entretien ne sont donc plus uniquement locales :
+   elles sont visibles sur tous les appareils et tous les comptes. */
+(function () {
+  var MKEY = 'asl_maint_v1';
+  function adminKey() { try { return localStorage.getItem('asl_admin_key') || ''; } catch (e) { return ''; } }
+  function readMap() { try { return JSON.parse(localStorage.getItem(MKEY) || '{}'); } catch (e) { return {}; } }
+  function writeMap(m) { try { localStorage.setItem(MKEY, JSON.stringify(m)); } catch (e) {} }
+  function api(method, body) {
+    return fetch('/api/maintenance', { method: method, headers: { 'Content-Type': 'application/json', 'X-ASL-Key': adminKey() }, cache: 'no-store', body: body ? JSON.stringify(body) : undefined })
+      .then(function (r) { return r.json().then(function (d) { if (!r.ok || !d || d.ok === false) throw new Error((d && d.error) || ('HTTP ' + r.status)); return d; }); });
+  }
+  function pushAll() { try { api('PUT', { map: readMap() }).catch(function () {}); } catch (e) {} }
+  function pull() {
+    try {
+      api('GET').then(function (d) {
+        if (!d || typeof d.maintenance !== 'object') return;
+        var cur = readMap();
+        if (JSON.stringify(d.maintenance) === JSON.stringify(cur)) return;
+        if (Object.keys(d.maintenance).length === 0 && Object.keys(cur).length > 0) { pushAll(); return; }
+        writeMap(d.maintenance);
+        if (typeof renderMaintenance === 'function' && document.getElementById('maintenance-table')) renderMaintenance();
+        if (typeof renderDashboard === 'function') renderDashboard();
+        if (typeof window.renderNotifMobile === 'function') window.renderNotifMobile();
+      }).catch(function () {});
+    } catch (e) {}
+  }
+  window.ASLMaint = { read: readMap, write: writeMap, push: pushAll, pull: pull };
+  try {
+    if (document.readyState !== 'loading') setTimeout(function () { if (adminKey()) pull(); }, 700);
+    else document.addEventListener('DOMContentLoaded', function () { setTimeout(function () { if (adminKey()) pull(); }, 700); });
+    setInterval(function () { if (adminKey()) pull(); }, 15000);
+  } catch (e) {}
+})();
+
+/* Rappel vidange (logique simple, sans deviner le kilométrage) :
+   20 jours après la dernière saisie/modification du « km prochaine vidange »,
+   on rappelle de VÉRIFIER manuellement le kilométrage du véhicule.
+   Toute nouvelle saisie du km remet le compteur de 20 jours à zéro. */
+window.ASL_VIDANGE_DAYS = 20;
+window.aslVidangeCheck = function (m) {
+  if (!m || !m.km_vidange_next || !m.km_updated_at) return null;
+  var base = new Date(m.km_updated_at); if (isNaN(base)) return null;
+  var next = new Date(base.getTime()); next.setDate(next.getDate() + (window.ASL_VIDANGE_DAYS || 20));
+  var today = new Date(); today.setHours(0, 0, 0, 0);
+  var days = Math.round((next - today) / 86400000);
+  return { km: m.km_vidange_next, updatedAt: m.km_updated_at, nextISO: next.toISOString().slice(0, 10), days: days, due: days <= 0 };
+};
+
 function renderMaintenance() {
   try {
     var fleet = aslFleet();
     var MAINT = {};
     try { MAINT = JSON.parse(localStorage.getItem('asl_maint_v1') || '{}'); } catch(e) {}
-    var today = new Date(); today.setHours(0,0,0,0);
+    function fmtDate(iso){ if(!iso) return '—'; var d=new Date(iso); if(isNaN(d)) return iso; return d.toLocaleDateString('fr-FR'); }
 
-    function diffD(dateStr) {
-      if (!dateStr) return null;
-      var d = new Date(dateStr); if (isNaN(d)) return null;
-      return Math.round((d - today) / 86400000);
-    }
-    function dateCell(dateStr) {
-      if (!dateStr) return '<span style="color:var(--text3);">—</span>';
-      var dd = diffD(dateStr);
-      var cls = dd < 0 ? 'badge-red' : dd <= 7 ? 'badge-yellow' : 'badge-green';
-      var txt = dd < 0 ? Math.abs(dd)+'j retard' : dd === 0 ? 'Aujourd\'hui' : dd+'j';
-      return '<span class="badge ' + cls + '">● ' + txt + '</span><br><span style="font-size:11px;color:var(--text3);">' + dateStr + '</span>';
-    }
-
-    /* Barre alertes : rappels de vérification vidange dus (tous les 20 jours) */
-    var alerts = [];
-    fleet.forEach(function(c) {
-      var m = MAINT[String(c.id)] || {};
-      if (m.reminder_next) {
-        var dd = diffD(m.reminder_next.slice(0,10));
-        if (dd !== null && dd <= 0) alerts.push({ car: c.name, km: m.km_vidange_next });
-      }
+    /* Barre : véhicules dont la vérification du kilométrage est due (≥ 20 j) */
+    var due = [];
+    fleet.forEach(function(c){
+      var v = window.aslVidangeCheck(MAINT[String(c.id)]);
+      if (v && v.due) due.push({ car: c.name, km: v.km });
     });
     var bar = document.getElementById('maint-alerts-bar');
     if (bar) {
-      if (alerts.length) {
-        var atxt = alerts.map(function(a) {
-          return '<span style="color:#d97706;font-weight:600;">' + a.car + ' — vérifier le km' + (a.km ? ' (vidange prévue à ' + Number(a.km).toLocaleString('fr-FR') + ' km)' : '') + '</span>';
-        }).join(' &nbsp;·&nbsp; ');
-        bar.innerHTML = '<div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:10px 16px;font-size:13px;">' +
-          '<strong style="color:#d97706;">⚠ ' + alerts.length + ' vérification(s) de vidange à faire :</strong> ' + atxt + '</div>';
+      if (due.length) {
+        var atxt = due.map(function(a){ return '<span style="color:#d97706;font-weight:600;">' + a.car + ' — vérifier km (vidange à ' + Number(a.km).toLocaleString('fr-FR') + ' km)</span>'; }).join(' &nbsp;·&nbsp; ');
+        bar.innerHTML = '<div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:10px 16px;font-size:13px;"><strong style="color:#d97706;">⚠ ' + due.length + ' vérification(s) de kilométrage à faire :</strong> ' + atxt + '</div>';
       } else {
-        bar.innerHTML = '<div style="background:rgba(22,163,74,.07);border:1px solid rgba(22,163,74,.2);border-radius:10px;padding:10px 16px;font-size:13px;color:#22c55e;font-weight:600;">✓ Aucune vérification de vidange à faire pour le moment</div>';
+        bar.innerHTML = '<div style="background:rgba(22,163,74,.07);border:1px solid rgba(22,163,74,.2);border-radius:10px;padding:10px 16px;font-size:13px;color:#22c55e;font-weight:600;">✓ Aucune vérification de kilométrage en attente</div>';
       }
     }
 
@@ -317,25 +343,32 @@ function renderMaintenance() {
     if (!tbody) return;
     tbody.innerHTML = fleet.map(function(c) {
       var m = MAINT[String(c.id)] || {};
+      var v = window.aslVidangeCheck(m);
       var kmNext = m.km_vidange_next ? Number(m.km_vidange_next).toLocaleString('fr-FR') + ' km' : '<span style="color:var(--text3);">—</span>';
-      var maj = m.updated ? new Date(m.updated).toLocaleDateString('fr-FR') : '<span style="color:var(--text3);">—</span>';
-      var rappelCell = '<span style="color:var(--text3);">—</span>';
-      if (m.reminder_next) {
-        var dd = diffD(m.reminder_next.slice(0,10));
-        var cls = dd <= 0 ? 'badge-red' : dd <= 3 ? 'badge-yellow' : 'badge-green';
-        var txt = dd < 0 ? 'À vérifier (' + Math.abs(dd) + 'j)' : dd === 0 ? 'À vérifier auj.' : 'Dans ' + dd + 'j';
-        rappelCell = '<span class="badge ' + cls + '">● ' + txt + '</span><br><span style="font-size:11px;color:var(--text3);">' + m.reminder_next.slice(0,10) + '</span>';
+      var maj = m.km_updated_at ? fmtDate(m.km_updated_at) : '<span style="color:var(--text3);">—</span>';
+      var rappel;
+      if (!v) rappel = '<span style="color:var(--text3);">—</span>';
+      else if (v.due) rappel = '<span class="badge badge-yellow">● À vérifier maintenant</span>';
+      else rappel = '<span class="badge badge-green">● dans ' + v.days + 'j</span><br><span style="font-size:11px;color:var(--text3);">' + fmtDate(v.nextISO) + '</span>';
+      var vt;
+      if (!m.vt_next) vt = '<span style="color:var(--text3);">—</span>';
+      else {
+        var vd = new Date(m.vt_next); var td = new Date(); td.setHours(0,0,0,0);
+        var vdiff = Math.round((vd - td) / 86400000);
+        var vcls = vdiff < 0 ? 'badge-red' : (vdiff <= 15 ? 'badge-yellow' : 'badge-green');
+        vt = '<span class="badge ' + vcls + '">' + fmtDate(m.vt_next) + '</span>' + (vdiff < 0 ? '<br><span style="font-size:11px;color:var(--red);">en retard</span>' : '');
       }
       return '<tr>' +
         '<td><strong>' + c.name + '</strong></td>' +
         '<td style="font-size:12px;color:var(--text3);">' + (c.plate||'—') + '</td>' +
         '<td>' + kmNext + '</td>' +
         '<td style="font-size:12px;">' + maj + '</td>' +
-        '<td>' + rappelCell + '</td>' +
+        '<td>' + rappel + '</td>' +
+        '<td>' + vt + '</td>' +
         '<td><button class="btn-sm primary" data-cid="' + c.id + '" onclick="openMaintModal(parseInt(this.dataset.cid))">Modifier</button></td>' +
         '</tr>';
     }).join('');
-    updateBadges();
+    if (typeof updateBadges === 'function') updateBadges();
   } catch(e) { console.error('renderMaintenance:', e); }
 }
 
@@ -358,11 +391,16 @@ function openMaintModal(carId) {
       fleet.map(function(c) { return '<option value="' + c.id + '">' + c.name + ' (' + (c.plate||'') + ')</option>'; }).join('') +
       '</select></div>';
   }
+  var vinfo = (typeof window.aslVidangeCheck === 'function') ? window.aslVidangeCheck(m) : null;
+  var hint = (m.km_updated_at)
+    ? '<div style="font-size:12px;color:var(--text3);margin:-4px 0 12px;">Dernière mise à jour : ' + new Date(m.km_updated_at).toLocaleDateString('fr-FR') + (vinfo ? ' · Prochain rappel : ' + (vinfo.due ? 'à vérifier maintenant' : 'dans ' + vinfo.days + ' j') : '') + '</div>'
+    : '';
   bodyEl.innerHTML = carSel +
-    '<div class="form-group"><label class="form-label">Kilométrage actuel (info)</label><input class="form-input" type="number" id="maint-km" placeholder="ex : 42500" value="' + (m.km_current||'') + '"></div>' +
-    '<div class="form-group"><label class="form-label">Kilométrage de la prochaine vidange</label><input class="form-input" type="number" id="maint-km-next" placeholder="ex : 90000" value="' + (m.km_vidange_next||'') + '"><div style="font-size:11px;color:var(--text3);margin-top:4px;">Après l\'enregistrement, un rappel de vérification est créé automatiquement tous les 20 jours.</div></div>' +
-    '<div class="form-group"><label class="form-label">Date prochaine visite technique (facultatif)</label><input type="date" class="form-input" id="maint-vt" value="' + (m.vt_next||'') + '"></div>' +
-    '<div class="form-group"><label class="form-label">Notes d\'entretien</label><textarea class="form-input form-textarea" rows="3" id="maint-notes" placeholder="Observations, réparations...">' + (m.notes||'') + '</textarea></div>';
+    '<div class="form-group"><label class="form-label">Km prochaine vidange</label><input class="form-input" type="number" inputmode="numeric" id="maint-km-next" placeholder="ex : 90000" value="' + (m.km_vidange_next||'') + '"></div>' +
+    hint +
+    '<div style="font-size:12px;color:var(--text3);margin-bottom:14px;line-height:1.5;">Un rappel de vérification du kilométrage est créé automatiquement <strong>tous les 20 jours</strong>. Quand la vidange est faite, saisissez ici le <strong>nouveau</strong> km de prochaine vidange : le compteur de 20 jours repart à zéro.</div>' +
+    '<div class="form-group"><label class="form-label">Date prochaine visite technique</label><input type="date" class="form-input" id="maint-vt" value="' + (m.vt_next||'') + '"></div>' +
+    '<div class="form-group"><label class="form-label">Notes d\'entretien (facultatif)</label><textarea class="form-input form-textarea" rows="3" id="maint-notes" placeholder="Observations, réparations...">' + (m.notes||'') + '</textarea></div>';
 
   document.getElementById('maint-overlay').style.display = 'block';
   document.getElementById('maint-modal').style.display = 'block';
@@ -385,31 +423,29 @@ function saveMaintRecord() {
   }
   if (!id) { alert('Sélectionnez un véhicule'); return; }
   var prev = MAINT[String(id)] || {};
-  var kmNext = parseInt(document.getElementById('maint-km-next') && document.getElementById('maint-km-next').value) || null;
-  var now = new Date();
-  /* Rappel tous les 20 jours : si le km de prochaine vidange change (ou
-     première saisie), le compteur de 20 jours repart à zéro. */
-  var kmChanged = (kmNext !== (prev.km_vidange_next || null));
-  var reminderBase = (kmChanged || !prev.reminder_set) ? now.getTime() : (prev.reminder_set || now.getTime());
-  var nextReminder = new Date(reminderBase + 20 * 86400000);
-
+  var kmNextEl = document.getElementById('maint-km-next');
+  var newKmNext = (kmNextEl && parseInt(kmNextEl.value)) || null;
+  // Le compteur de 20 jours repart à zéro dès que le km de prochaine vidange
+  // est saisi ou modifié.
+  var kmChanged = (newKmNext !== (prev.km_vidange_next || null));
+  var kmUpdatedAt = newKmNext ? ((kmChanged || !prev.km_updated_at) ? new Date().toISOString() : prev.km_updated_at) : null;
   MAINT[String(id)] = {
-    km_current: parseInt(document.getElementById('maint-km') && document.getElementById('maint-km').value) || null,
-    km_vidange_next: kmNext,
-    vt_next:      (document.getElementById('maint-vt')      && document.getElementById('maint-vt').value)      || '',
-    notes:        (document.getElementById('maint-notes')   && document.getElementById('maint-notes').value)   || '',
-    reminder_set: kmChanged ? now.getTime() : reminderBase,       // date de base du compteur 20j
-    reminder_next: nextReminder.toISOString(),                    // prochaine vérification
-    updated: now.toISOString()
+    km_vidange_next: newKmNext,
+    km_updated_at: kmUpdatedAt,
+    vt_next: (document.getElementById('maint-vt') && document.getElementById('maint-vt').value) || prev.vt_next || '',
+    notes: (document.getElementById('maint-notes') && document.getElementById('maint-notes').value) || '',
+    // champs historiques préservés
+    km_current: prev.km_current != null ? prev.km_current : null,
+    vidange_next: prev.vidange_next || '',
+    assur: prev.assur || '',
+    updated: new Date().toISOString()
   };
   try { localStorage.setItem('asl_maint_v1', JSON.stringify(MAINT)); } catch(e) {}
-  try { if (typeof ASLDB !== 'undefined' && ASLDB.noteLocalChange) ASLDB.noteLocalChange('asl_maint_v1'); } catch(e) {}
-  try { if (typeof ASLDB !== 'undefined' && ASLDB.syncNow) ASLDB.syncNow(); } catch(e) {}
+  if (window.ASLMaint) ASLMaint.push();   // persistance serveur (KV) → multi-appareils
   closeMaintModal();
   renderMaintenance();
-  renderDashboard();
-  if (typeof updateBadges === 'function') updateBadges();
-  showToast('Entretien enregistré ✓ Rappel de vérification créé.');
+  if (typeof renderDashboard === 'function') renderDashboard();
+  showToast('Entretien enregistré et synchronisé ✓');
 }
 
 /* ==================== LOCATIONS EN COURS ==================== */
@@ -422,9 +458,9 @@ function renderRentals() {
     var ts = todayStr();
     var rows;
     if (filter === 'active') {
-      rows = res.filter(function(r) { return r.status === 'active' || r.status === 'confirmed'; });
+      rows = res.filter(function(r) { return r.status === 'active'; });
     } else if (filter === 'completed') {
-      rows = res.filter(function(r) { return r.status === 'completed'; });
+      rows = res.filter(function(r) { return r.status === 'completed' || r.status === 'closed'; });
     } else {
       rows = res.filter(function(r) { return r.status !== 'cancelled'; });
     }
@@ -443,7 +479,7 @@ function renderRentals() {
     }
     tbody.innerHTML = rows.map(function(r) {
       var total = Number(r.amount)||0, paid = Number(r.paid)||0, reste = Math.max(0, total-paid);
-      var isLate = (r.endDate||'') < ts && (r.status==='active'||r.status==='confirmed');
+      var isLate = (r.endDate||'') < ts && (r.status==='active');
       var payBadge = reste > 0
         ? '<span class="badge badge-red">● ' + fmtMAD(reste) + ' restant</span>'
         : '<span class="badge badge-green">● Soldé</span>';
@@ -703,18 +739,6 @@ function _buildNewLocationModal() {
   }).join('');
 
   if (bodyEl) bodyEl.innerHTML =
-    '<div class="form-group"><label class="form-label">Type de dossier</label>' +
-    '<select class="form-select" id="nl-doctype" onchange="nlToggleSublease()">' +
-    '<option value="direct">Client direct</option>' +
-    '<option value="sublease">Sous-location</option>' +
-    '</select></div>' +
-    '<div class="form-group" id="nl-sublease-box" style="display:none;background:rgba(196,30,58,.05);border:1px solid rgba(196,30,58,.18);border-radius:10px;padding:12px;">' +
-    '<label class="form-label">Sous-location</label>' +
-    '<div style="display:flex;gap:8px;align-items:center;">' +
-    '<select class="form-select" id="nl-sublease" style="flex:1;">' + (typeof ASLSublease!=='undefined'?ASLSublease.options():'') + '</select>' +
-    '<button type="button" class="btn-sm primary" style="white-space:nowrap;" onclick="nlQuickCreateSublease()">+ Créer</button>' +
-    '</div>' +
-    '<div style="font-size:11px;color:var(--text3);margin-top:5px;">Le « Prénom / Nom » ci-dessous = le client final de cette sous-location.</div></div>' +
     '<div class="form-group"><label class="form-label">N° Contrat / Référence</label>' +
     '<input class="form-input" id="nl-ref" placeholder="LOC-2026-001">' +
     '<div style="font-size:11px;color:var(--text3);margin-top:3px;">Modifiable — synchronisé avec Paiements, Clients et Tableau de bord</div></div>' +
@@ -745,14 +769,7 @@ function _buildNewLocationModal() {
     '<div class="form-group"><label class="form-label">Mode de paiement</label>' +
     '<select class="form-select" id="nl-mode"><option>Espèces</option><option>Carte bancaire</option><option>Virement</option><option>Chèque</option><option>Autre</option></select></div>' +
     '<div id="nl-rest" style="font-weight:700;font-size:13px;margin-top:4px;"></div></div>' +
-    '<div class="form-group"><label class="form-label">Notes internes</label><textarea class="form-input form-textarea" rows="2" id="nl-notes" placeholder="Notes..."></textarea></div>' +
-    '<div class="form-group"><label class="form-label">Documents (facultatif)</label>' +
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">' +
-    '<div><div style="font-size:12px;color:var(--text3);margin-bottom:4px;">Permis de conduire</div>' +
-    '<input type="file" accept="image/*" id="nl-doc-permis" class="form-input" style="padding:8px;" onchange="docPreview(this,\'nl-permis-prev\')"><div id="nl-permis-prev" style="margin-top:6px;"></div></div>' +
-    '<div><div style="font-size:12px;color:var(--text3);margin-bottom:4px;">CIN / Passeport</div>' +
-    '<input type="file" accept="image/*" id="nl-doc-identity" class="form-input" style="padding:8px;" onchange="docPreview(this,\'nl-identity-prev\')"><div id="nl-identity-prev" style="margin-top:6px;"></div></div>' +
-    '</div><div style="font-size:11px;color:var(--text3);margin-top:5px;">Ajoutables aussi plus tard depuis la fiche client.</div></div>';
+    '<div class="form-group"><label class="form-label">Notes internes</label><textarea class="form-input form-textarea" rows="2" id="nl-notes" placeholder="Notes..."></textarea></div>';
 
   overlay.classList.add('open');
 
@@ -838,15 +855,6 @@ function _saveNewLocation() {
   var payStatus = paid<=0 ? 'Non payé' : (paid>=total ? 'Paiement complet' : 'Paiement partiel');
   var mode  = document.getElementById('nl-mode')&&document.getElementById('nl-mode').value || 'Espèces';
 
-  /* Type de dossier : sous-location ? */
-  var docType = (document.getElementById('nl-doctype') && document.getElementById('nl-doctype').value) || 'direct';
-  var subleaseId = '';
-  if (docType === 'sublease') {
-    subleaseId = (document.getElementById('nl-sublease') && document.getElementById('nl-sublease').value) || '';
-    if (!subleaseId) { alert('Veuillez choisir une sous-location (ou la créer).'); return; }
-  }
-  var finalClientName = (fn + ' ' + (ln||'')).trim();
-
   /* ★ VÉRIFICATION DE CONFLIT avant d'enregistrer (disponibilité réelle) */
   if (typeof ASLDB !== 'undefined' && ASLDB.checkAvailability && car) {
     var chk = ASLDB.checkAvailability(car, start, end, '10:00', '10:00');
@@ -879,9 +887,7 @@ function _saveNewLocation() {
       startDate: start, endDate: end,
       pickup: (document.getElementById('nl-pickup')&&document.getElementById('nl-pickup').value)||'',
       source: 'manual', type: 'location', status: 'active',
-      subleaseId: subleaseId, finalClient: subleaseId ? finalClientName : '',
-      notes: (document.getElementById('nl-notes')&&document.getElementById('nl-notes').value)||'',
-      docs: (typeof collectDocs==='function' ? collectDocs('nl-doc-permis','nl-doc-identity') : {})
+      notes: (document.getElementById('nl-notes')&&document.getElementById('nl-notes').value)||''
     });
     if (car && plate && typeof ASLDB.setUnitStatusByPlate==='function') {
       ASLDB.setUnitStatusByPlate(carId, plate, 'active');
@@ -890,30 +896,11 @@ function _saveNewLocation() {
     }
   }
   if (typeof reloadData==='function') reloadData();
-  if (newLoc && newLoc.docs && newLoc.phone && typeof saveCustomerDocs==='function') saveCustomerDocs(newLoc.phone, newLoc.docs);
-  if (typeof clearPendingDocs==='function') clearPendingDocs();
   renderRentals(); renderDashboard();
   if (typeof renderPayments==='function') renderPayments();
-  if (typeof renderSubleases==='function') renderSubleases();
   updateBadges();
   if (typeof closeModal==='function') closeModal();
   showToast('Location ' + (newLoc ? newLoc.id : '') + ' créée et synchronisée ✓');
-}
-
-/* Affiche/masque le sélecteur de sous-location selon le type de dossier. */
-function nlToggleSublease() {
-  var box = document.getElementById('nl-sublease-box');
-  var type = (document.getElementById('nl-doctype') && document.getElementById('nl-doctype').value) || 'direct';
-  if (box) box.style.display = (type === 'sublease') ? 'block' : 'none';
-}
-
-/* Création rapide d'une sous-location depuis le formulaire de location. */
-function nlQuickCreateSublease() {
-  if (typeof openSubleaseModal !== 'function') return;
-  openSubleaseModal(null, function (saved) {
-    var sel = document.getElementById('nl-sublease');
-    if (sel && saved) { sel.innerHTML = ASLSublease.options(saved.id); }
-  });
 }
 
 /* ==================== viewRes AMÉLIORÉ (remplace la version originale) ==================== */
@@ -961,7 +948,6 @@ function viewRes(id) {
     '</select></div></div>' +
     '<div id="vr-rest" style="font-weight:700;font-size:13px;margin-top:6px;"></div></div>' +
     '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">' +
-    '<button class="topbar-btn secondary" style="flex:1;min-width:120px;" onclick="addDocsToReservation(\'' + r.id + '\')">📎 Documents</button>' +
     (r.phone ? '<a href="https://wa.me/' + r.phone.replace(/[^0-9]/g,'') + '" target="_blank" class="topbar-btn primary" style="flex:1;text-align:center;text-decoration:none;min-width:120px;">WhatsApp</a>' : '') +
     (r.phone ? '<a href="tel:' + r.phone + '" class="topbar-btn secondary" style="flex:1;text-align:center;text-decoration:none;min-width:120px;">Appeler</a>' : '') +
     '</div>';

@@ -23,8 +23,6 @@
   }
   function writeCharges(list) {
     try { localStorage.setItem(CHARGES_KEY, JSON.stringify(list)); } catch (e) {}
-    try { if (typeof ASLDB !== 'undefined' && ASLDB.noteLocalChange) ASLDB.noteLocalChange(CHARGES_KEY); } catch (e) {}
-    try { if (typeof ASLDB !== 'undefined' && ASLDB.syncNow) ASLDB.syncNow(); } catch (e) {}
   }
 
   /* Récupère toutes les réservations/locations via la base partagée. */

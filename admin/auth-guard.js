@@ -52,8 +52,9 @@
   /* Correspondance page → permission (doit rester cohérente avec admin-users.js). */
   var PAGE_PERM = {
     dashboard: 'dashboard', fleet: 'fleet', maintenance: 'maintenance',
-    reservations: 'reservations', rentals: 'rentals', customers: 'customers', sublease: 'sublease',
+    reservations: 'reservations', rentals: 'rentals', customers: 'customers',
     payments: 'payments', caisse: 'caisse', settings: 'settings',
+    partners: 'partners',
     options: 'fleet', bookopt: 'fleet'
   };
 

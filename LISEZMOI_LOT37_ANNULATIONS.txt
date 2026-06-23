@@ -1,0 +1,41 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — LOT 37 · ANNULATIONS & DISPONIBILITÉ
+═══════════════════════════════════════════════════════════════
+
+Fichiers modifiés : data.js · admin/index.html · index.html (site)
+
+OBJECTIF
+Annulation gérée uniquement depuis le back-office, qui libère
+réellement le véhicule et rouvre les dates — site client ET
+back-office — pour les réservations du site comme manuelles.
+
+1) AUCUNE ANNULATION CÔTÉ CLIENT
+   Vérifié : le site client ne propose aucun bouton d'annulation.
+   Le client doit contacter l'agence (appel / message / WhatsApp).
+   L'agence annule depuis le back-office.
+
+2) ANNULATION BACK-OFFICE (résa site + manuelle)
+   Action « Annuler la réservation » dans la liste :
+   • Confirmation demandée.
+   • Statut → Annulée (conservée dans l'historique, avec cancelledAt).
+   • Véhicule libéré (unité attribuée remise disponible + statut
+     recalculé) via le helper sûr releaseVehicleFromReservation.
+   • Notification interne (toast) + tableau de bord rafraîchi.
+   • Synchronisation immédiate (KV) → site client mis à jour.
+
+3) MOTEUR DE DISPONIBILITÉ — STATUTS
+   Bloquent le véhicule : confirmée, en attente, active, réservée,
+   location manuelle active, prolongation active.
+   Ne bloquent JAMAIS (dates rouvertes automatiquement) : annulée,
+   refusée, expirée, terminée, clôturée, no-show (variantes FR/EN).
+   → Appliqué dans le moteur central (_resForCar / checkAvailability)
+     ET dans le repli local du site client.
+
+4) MOBILE
+   L'action « Refuser » d'une réservation sur mobile utilise la même
+   fonction cancelRes : même libération, mêmes effets.
+
+VALIDATION À FAIRE (après déploiement Cloudflare)
+   A. Réservation depuis le site → annuler au back-office → la voiture
+      redevient disponible sur le site et au back-office.
+   B. Réservation manuelle → annuler au back-office → idem.

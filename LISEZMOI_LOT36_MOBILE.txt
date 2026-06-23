@@ -1,0 +1,66 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — LOT 36 · MOBILE : STRUCTURE FIXE + 403 + LOGO
+═══════════════════════════════════════════════════════════════
+
+Fichiers modifiés :
+  data.js                     → clé admin lue à chaque requête (corrige 403)
+  admin/admin-mobile.js       → structure 3 zones + robustesse cycle de vie
+  admin/admin-mobile.css      → header/nav fixes, overlay, bouton retour
+  admin/logo-asl-mobile.png   → vrai logo (A rouge, S/L noir, transparent)
+
+───────────────────────────────────────────────────────────────
+1) ERREUR 403 UPLOAD IMAGE (X-ASL-Key) — CORRIGÉE
+───────────────────────────────────────────────────────────────
+Cause : la clé admin était capturée UNE SEULE FOIS au chargement de
+data.js. Sur mobile, si la clé n'était pas encore en session à cet
+instant, l'en-tête X-ASL-Key n'était jamais envoyé → 403.
+Correctif : la clé est désormais lue À CHAQUE requête depuis la
+session (asl_admin_key). Mobile ET desktop utilisent exactement la
+même clé/session — aucune logique dupliquée. L'upload, le
+remplacement d'image et la persistance fonctionnent côté back-office
+et côté site client.
+
+───────────────────────────────────────────────────────────────
+2) STRUCTURE MOBILE UNIFORME (toutes les pages)
+───────────────────────────────────────────────────────────────
+L'app est une colonne fixe en 3 zones, identique partout :
+  • ZONE 1 — Header FIXE (logo, bonjour, notifications) : ne bouge
+    jamais, même hauteur partout, marge de sécurité haute (notch).
+  • ZONE 2 — Contenu SCROLLABLE : seule zone qui défile, verticalement.
+  • ZONE 3 — Navigation basse FIXE : toujours collée en bas, jamais
+    déplacée par le scroll, marge de sécurité basse.
+Header et nav font partie de l'app en position fixe → comportement
+natif, identique sur Tableau de bord, Flotte, Contrats, Retours,
+Clients, Caisse, Notifications, etc. Le contenu ne passe jamais sous
+le header ni sous la nav.
+
+───────────────────────────────────────────────────────────────
+3) BOUTONS BLOQUÉS APRÈS RETOUR D'UNE AUTRE APP — CORRIGÉ
+───────────────────────────────────────────────────────────────
+  • Cause principale : la modale « charge » vide restait un calque
+    plein écran invisible qui captait les clics → neutralisée
+    (#charge-modal-host:empty masqué ; conteneur non plein écran).
+  • À chaque retour (visibilitychange / pageshow / réveil / bfcache),
+    l'app supprime tout overlay orphelin et re-render l'écran courant
+    → tous les boutons redeviennent cliquables.
+
+───────────────────────────────────────────────────────────────
+4) BOUTON RETOUR (Grand Livre / desktop ponctuel)
+───────────────────────────────────────────────────────────────
+Repositionné en barre supérieure fine et discrète. Ne cache plus
+aucun texte ni bouton, ne se superpose jamais à la nav basse, et le
+contenu desktop est décalé pour rester entièrement visible.
+
+───────────────────────────────────────────────────────────────
+5) LOGO ALL STAR LOC
+───────────────────────────────────────────────────────────────
+Vrai logo officiel (A rouge, S et L noir, fond transparent) intégré
+au header mobile, dimensionné proprement (hauteur 30px), net et
+harmonieux sur fond blanc. Aucune inversion, aucun fond noir.
+
+───────────────────────────────────────────────────────────────
+STABILITÉ
+───────────────────────────────────────────────────────────────
+Scroll vertical uniquement, aucun mouvement horizontal, champs 16px
+(pas de zoom auto), cibles ≥ 44px, pop-ups bornées. iPhone Safari +
+Android Chrome.
