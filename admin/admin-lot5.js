@@ -686,6 +686,18 @@ function _buildNewLocationModal() {
   }).join('');
 
   if (bodyEl) bodyEl.innerHTML =
+    '<div class="form-group"><label class="form-label">Type de dossier</label>' +
+    '<select class="form-select" id="nl-doctype" onchange="nlToggleSublease()">' +
+    '<option value="direct">Client direct</option>' +
+    '<option value="sublease">Sous-location</option>' +
+    '</select></div>' +
+    '<div class="form-group" id="nl-sublease-box" style="display:none;background:rgba(196,30,58,.05);border:1px solid rgba(196,30,58,.18);border-radius:10px;padding:12px;">' +
+    '<label class="form-label">Sous-location</label>' +
+    '<div style="display:flex;gap:8px;align-items:center;">' +
+    '<select class="form-select" id="nl-sublease" style="flex:1;">' + (typeof ASLSublease!=='undefined'?ASLSublease.options():'') + '</select>' +
+    '<button type="button" class="btn-sm primary" style="white-space:nowrap;" onclick="nlQuickCreateSublease()">+ Créer</button>' +
+    '</div>' +
+    '<div style="font-size:11px;color:var(--text3);margin-top:5px;">Le « Prénom / Nom » ci-dessous = le client final de cette sous-location.</div></div>' +
     '<div class="form-group"><label class="form-label">N° Contrat / Référence</label>' +
     '<input class="form-input" id="nl-ref" placeholder="LOC-2026-001">' +
     '<div style="font-size:11px;color:var(--text3);margin-top:3px;">Modifiable — synchronisé avec Paiements, Clients et Tableau de bord</div></div>' +
@@ -802,6 +814,15 @@ function _saveNewLocation() {
   var payStatus = paid<=0 ? 'Non payé' : (paid>=total ? 'Paiement complet' : 'Paiement partiel');
   var mode  = document.getElementById('nl-mode')&&document.getElementById('nl-mode').value || 'Espèces';
 
+  /* Type de dossier : sous-location ? */
+  var docType = (document.getElementById('nl-doctype') && document.getElementById('nl-doctype').value) || 'direct';
+  var subleaseId = '';
+  if (docType === 'sublease') {
+    subleaseId = (document.getElementById('nl-sublease') && document.getElementById('nl-sublease').value) || '';
+    if (!subleaseId) { alert('Veuillez choisir une sous-location (ou la créer).'); return; }
+  }
+  var finalClientName = (fn + ' ' + (ln||'')).trim();
+
   /* ★ VÉRIFICATION DE CONFLIT avant d'enregistrer (disponibilité réelle) */
   if (typeof ASLDB !== 'undefined' && ASLDB.checkAvailability && car) {
     var chk = ASLDB.checkAvailability(car, start, end, '10:00', '10:00');
@@ -834,6 +855,7 @@ function _saveNewLocation() {
       startDate: start, endDate: end,
       pickup: (document.getElementById('nl-pickup')&&document.getElementById('nl-pickup').value)||'',
       source: 'manual', type: 'location', status: 'active',
+      subleaseId: subleaseId, finalClient: subleaseId ? finalClientName : '',
       notes: (document.getElementById('nl-notes')&&document.getElementById('nl-notes').value)||''
     });
     if (car && plate && typeof ASLDB.setUnitStatusByPlate==='function') {
@@ -845,9 +867,26 @@ function _saveNewLocation() {
   if (typeof reloadData==='function') reloadData();
   renderRentals(); renderDashboard();
   if (typeof renderPayments==='function') renderPayments();
+  if (typeof renderSubleases==='function') renderSubleases();
   updateBadges();
   if (typeof closeModal==='function') closeModal();
   showToast('Location ' + (newLoc ? newLoc.id : '') + ' créée et synchronisée ✓');
+}
+
+/* Affiche/masque le sélecteur de sous-location selon le type de dossier. */
+function nlToggleSublease() {
+  var box = document.getElementById('nl-sublease-box');
+  var type = (document.getElementById('nl-doctype') && document.getElementById('nl-doctype').value) || 'direct';
+  if (box) box.style.display = (type === 'sublease') ? 'block' : 'none';
+}
+
+/* Création rapide d'une sous-location depuis le formulaire de location. */
+function nlQuickCreateSublease() {
+  if (typeof openSubleaseModal !== 'function') return;
+  openSubleaseModal(null, function (saved) {
+    var sel = document.getElementById('nl-sublease');
+    if (sel && saved) { sel.innerHTML = ASLSublease.options(saved.id); }
+  });
 }
 
 /* ==================== viewRes AMÉLIORÉ (remplace la version originale) ==================== */

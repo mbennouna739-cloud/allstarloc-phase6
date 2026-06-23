@@ -49,6 +49,7 @@
     card: '<rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>',
     bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
     users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    handshake: '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/><circle cx="12" cy="12" r="3"/>',
     phone: '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"/>',
     file: '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><line x1="9" x2="15" y1="13" y2="13"/><line x1="9" x2="15" y1="17" y2="17"/>',
     logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/>',
@@ -120,6 +121,7 @@
     else if (screen === 'rentals') renderRentals();
     else if (screen === 'returns') renderReturns();
     else if (screen === 'clients') renderClients();
+    else if (screen === 'sublease') renderSubleaseM();
     else if (screen === 'caisse') renderCaisse();
     else if (screen === 'notifications') renderNotifications();
   }
@@ -459,6 +461,124 @@
     );
   };
 
+  /* ============ SOUS-LOCATION (mobile) ============ */
+  function renderSubleaseM() {
+    var host = document.getElementById('ma-sublease');
+    if (!host || typeof ASLSublease === 'undefined') return;
+    var list = ASLSublease.list();
+    var head = '<button class="ma-action" onclick="maNewSublease()">' + ic('plus') + ' Nouvelle sous-location</button>'
+      + '<input type="search" id="ma-sub-search" class="ma-search" placeholder="Rechercher…" oninput="maRenderSubleaseList()">';
+    host.innerHTML = head + '<div id="ma-sub-list"></div>';
+    maRenderSubleaseList();
+  }
+  window.maRenderSubleaseList = function () {
+    var box = document.getElementById('ma-sub-list');
+    if (!box) return;
+    var q = ((document.getElementById('ma-sub-search') || {}).value || '').toLowerCase().trim();
+    var list = ASLSublease.list();
+    if (q) list = list.filter(function (s) { return ((s.name || '') + ' ' + (s.phone || '')).toLowerCase().indexOf(q) >= 0; });
+    if (!list.length) { box.innerHTML = '<div class="ma-empty">Aucune sous-location.</div>'; return; }
+    box.innerHTML = list.map(function (s) {
+      var st = ASLSublease.stats(s.id);
+      return '<div class="ma-card" onclick="maSubleaseFiche(\'' + s.id + '\')">'
+        + '<div class="ma-card-top"><div class="ma-card-ava">' + esc((s.name || '?').charAt(0).toUpperCase()) + '</div>'
+        + '<div class="ma-card-info"><div class="ma-card-name">' + esc(s.name) + '</div>'
+        + '<div class="ma-card-sub">' + esc(s.phone || 'Pas de téléphone') + ' · ' + st.count + ' location(s)</div></div>'
+        + '<span class="ma-badge ' + (st.rest > 0 ? 'red' : 'green') + '">' + money(st.rest) + '</span></div>'
+        + '<div class="ma-card-meta"><div class="ma-meta">Facturé<b>' + money(st.total) + '</b></div>'
+        + '<div class="ma-meta">Payé<b style="color:#16a34a;">' + money(st.paid) + '</b></div>'
+        + '<div class="ma-meta">Restant<b style="color:' + (st.rest > 0 ? '#C41E3A' : '#16a34a') + ';">' + money(st.rest) + '</b></div></div>'
+        + '</div>';
+    }).join('');
+  };
+
+  window.maNewSublease = function () {
+    if (typeof openSubleaseModal === 'function') {
+      openSubleaseModal(null, function () { maRenderSubleaseList(); });
+    }
+  };
+
+  window.maSubleaseFiche = function (id) {
+    var sub = ASLSublease.get(id);
+    if (!sub) return;
+    var st = ASLSublease.stats(id);
+    var rows = ASLSublease.linkedRes(id);
+    var rowsHtml = rows.length ? rows.map(function (r) {
+      var reste = Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
+      var plate = r.assignedPlate || (function () { try { var f = ASLDB.getFleet().filter(function (c) { return c.name === r.car || c.id === r.carId; })[0]; return f ? (f.plate || '') : ''; } catch (e) { return ''; } })();
+      return '<div class="ma-card">'
+        + '<div class="ma-card-top"><div class="ma-card-info"><div class="ma-card-name">' + esc(r.finalClient || r.client || 'Client') + '</div>'
+        + '<div class="ma-card-sub">' + esc(r.car || '') + (plate ? ' · ' + esc(plate) : '') + '</div></div>'
+        + '<span class="ma-badge ' + (reste > 0 ? 'red' : 'green') + '">' + (reste > 0 ? money(reste) : 'Soldé') + '</span></div>'
+        + '<div class="ma-card-meta"><div class="ma-meta">Dates<b>' + esc(r.startDate || '') + ' → ' + esc(r.endDate || '') + '</b></div>'
+        + '<div class="ma-meta">Total<b>' + money(r.amount || 0) + '</b></div>'
+        + '<div class="ma-meta">Payé<b style="color:#16a34a;">' + money(r.paid || 0) + '</b></div></div>'
+        + '<div style="display:flex;gap:8px;margin-top:10px;">'
+        + '<button class="ma-act-btn" onclick="maCloseSheet();maViewRes(\'' + r.id + '\')">Voir</button>'
+        + (reste > 0 ? '<button class="ma-act-btn ok" onclick="maSubPay(\'' + id + '\',\'' + r.id + '\')">Marquer payé</button>' : '')
+        + '</div></div>';
+    }).join('') : '<div class="ma-empty">Aucune location liée.</div>';
+
+    openSheet(
+      '<div class="ma-sheet-title">' + esc(sub.name) + '</div>'
+      + '<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:#556;margin-bottom:14px;">'
+      + (sub.phone ? '<a href="tel:' + esc(sub.phone) + '" style="color:#2563eb;text-decoration:none;">📞 ' + esc(sub.phone) + '</a>' : '')
+      + (sub.whatsapp ? '<a href="https://wa.me/' + esc(sub.whatsapp.replace(/[^0-9]/g, '')) + '" target="_blank" style="color:#16a34a;text-decoration:none;">💬 WhatsApp</a>' : '')
+      + '</div>'
+      + (sub.notes ? '<div style="background:#f5f6f8;border-radius:10px;padding:11px;font-size:12.5px;color:#556;margin-bottom:14px;">📝 ' + esc(sub.notes) + '</div>' : '')
+      + '<div class="ma-stats" style="margin-bottom:8px;">'
+      + '<div class="ma-stat" style="cursor:default;"><div class="ma-stat-num" style="font-size:20px;">' + st.count + '</div><div class="ma-stat-lbl">Locations</div></div>'
+      + '<div class="ma-stat" style="cursor:default;"><div class="ma-stat-num green" style="font-size:18px;">' + money(st.paid) + '</div><div class="ma-stat-lbl">Payé</div></div>'
+      + '<div class="ma-stat" style="cursor:default;"><div class="ma-stat-num" style="font-size:18px;">' + money(st.total) + '</div><div class="ma-stat-lbl">Facturé</div></div>'
+      + '<div class="ma-stat" onclick="maSubUnpaid(\'' + id + '\')"><div class="ma-stat-num red" style="font-size:18px;">' + money(st.rest) + '</div><div class="ma-stat-lbl">Restant dû →</div></div>'
+      + '</div>'
+      + '<div class="ma-sheet-section">Historique</div>'
+      + rowsHtml
+    );
+  };
+
+  window.maSubUnpaid = function (id) {
+    var sub = ASLSublease.get(id);
+    if (!sub) return;
+    var unpaid = ASLSublease.linkedRes(id).filter(function (r) { return (Number(r.amount) || 0) > (Number(r.paid) || 0); });
+    var total = unpaid.reduce(function (s, r) { return s + ((Number(r.amount) || 0) - (Number(r.paid) || 0)); }, 0);
+    var rows = unpaid.length ? unpaid.map(function (r) {
+      var reste = (Number(r.amount) || 0) - (Number(r.paid) || 0);
+      return '<div class="ma-card">'
+        + '<div class="ma-card-top"><div class="ma-card-info"><div class="ma-card-name">' + esc(r.finalClient || r.client || 'Client') + '</div>'
+        + '<div class="ma-card-sub">' + esc(r.car || '') + ' · ' + esc(r.startDate || '') + ' → ' + esc(r.endDate || '') + '</div></div>'
+        + '<span class="ma-badge red">' + money(reste) + '</span></div>'
+        + '<div class="ma-card-meta"><div class="ma-meta">Total<b>' + money(r.amount || 0) + '</b></div>'
+        + '<div class="ma-meta">Payé<b style="color:#16a34a;">' + money(r.paid || 0) + '</b></div></div>'
+        + '<div style="display:flex;gap:8px;margin-top:10px;">'
+        + '<button class="ma-act-btn" onclick="maCloseSheet();maViewRes(\'' + r.id + '\')">Voir location</button>'
+        + '<button class="ma-act-btn ok" onclick="maSubPay(\'' + id + '\',\'' + r.id + '\')">Marquer payé</button>'
+        + '</div></div>';
+    }).join('') : '<div class="ma-empty">✓ Aucun impayé.</div>';
+    openSheet(
+      '<div class="ma-sheet-title">Impayés — ' + esc(sub.name) + '</div>'
+      + '<div style="font-size:14px;font-weight:800;color:#C41E3A;margin-bottom:14px;">Total impayé : ' + money(total) + '</div>'
+      + rows
+    );
+  };
+
+  window.maSubPay = function (subId, resId) {
+    var r = (ASLDB.getReservations() || []).filter(function (x) { return x.id === resId; })[0];
+    if (!r) return;
+    var reste = Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
+    var amountStr = prompt('Montant encaissé (reste ' + money(reste) + ') :', String(Math.round(reste)));
+    if (amountStr === null) return;
+    var amount = parseFloat(amountStr) || 0;
+    if (amount <= 0) { alert('Montant invalide.'); return; }
+    if (amount > reste) amount = reste;
+    var newPaid = (Number(r.paid) || 0) + amount;
+    try { ASLDB.updateReservation(resId, { paid: newPaid, paymentStatus: newPaid >= (Number(r.amount) || 0) ? 'paid' : 'partial' }); } catch (e) {}
+    if (typeof showToast === 'function') showToast('Paiement de ' + money(amount) + ' enregistré ✓');
+    maCloseSheet();
+    maSubleaseFiche(subId);
+    maRenderSubleaseList();
+  };
+
   /* ============ CAISSE / PAIEMENTS (simplifiée) ============ */
   function renderCaisse() {
     var host = document.getElementById('ma-caisse');
@@ -542,6 +662,7 @@
       { ico: 'key', label: 'Locations en cours', act: "maMore('rentals')", perm: null },
       { ico: 'returns', label: 'Retours prévus', act: "maMore('returns')", perm: null },
       { ico: 'users', label: 'Clients', act: "maMore('clients')", perm: null },
+      { ico: 'handshake', label: 'Sous-location', act: "maMore('sublease')", perm: null },
       { ico: 'wallet', label: 'Paiements & Caisse', act: "maMore('caisse')", perm: 'caisse' }
     ];
     var visible = items.filter(function (it) { return !it.perm || can(it.perm); });
@@ -588,6 +709,7 @@
     window._maSheet = sheet;
   }
   function closeSheet() { if (window._maSheet) { window._maSheet.remove(); window._maSheet = null; } }
+  window.maCloseSheet = closeSheet;
   window.closeSheet = closeSheet;
 
   /* ============ INIT / SHELL ============ */
@@ -603,7 +725,7 @@
       + '<div class="ma-head-txt"><h1 id="ma-title">Tableau de bord</h1><div class="ma-greet">Bonjour ' + esc(greet) + '</div></div>'
       + '<button class="ma-head-btn" aria-label="Notifications" onclick="maGo(\'notifications\')">' + ic('bell') + '<span class="ma-dot" id="ma-head-dot" style="display:none;"></span></button></div>'
       + screen('dashboard') + screen('vehicles') + screen('reservations') + screen('rentals')
-      + screen('returns') + screen('clients') + screen('caisse') + screen('notifications');
+      + screen('returns') + screen('clients') + screen('sublease') + screen('caisse') + screen('notifications');
     document.body.appendChild(app);
 
     var tabsAll = [
@@ -623,7 +745,7 @@
     }).join('');
     document.body.appendChild(bar);
 
-    var titles = { dashboard: 'Tableau de bord', vehicles: 'Véhicules', reservations: 'Réservations', rentals: 'Locations', returns: 'Retours prévus', clients: 'Clients', caisse: 'Paiements & Caisse', notifications: 'Notifications' };
+    var titles = { dashboard: 'Tableau de bord', vehicles: 'Véhicules', reservations: 'Réservations', rentals: 'Locations', returns: 'Retours prévus', clients: 'Clients', sublease: 'Sous-location', caisse: 'Paiements & Caisse', notifications: 'Notifications' };
     window.maGo = function (s) {
       var titleEl = document.getElementById('ma-title');
       if (titleEl && titles[s]) titleEl.textContent = titles[s];

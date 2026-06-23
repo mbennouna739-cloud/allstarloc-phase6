@@ -20,6 +20,7 @@
     { perm: 'reservations', label: 'Réservations',      page: 'reservations' },
     { perm: 'rentals',      label: 'Locations',         page: 'rentals' },
     { perm: 'customers',    label: 'Clients',           page: 'customers' },
+    { perm: 'sublease',     label: 'Sous-location',     page: 'sublease' },
     { perm: 'payments',     label: 'Paiements',         page: 'payments' },
     { perm: 'unpaid',       label: 'Impayés',           page: null },        // via dashboard/paiements
     { perm: 'caisse',       label: 'Caisse',            page: 'caisse' },
@@ -39,6 +40,7 @@
   var PAGE_PERM = {
     dashboard: 'dashboard', fleet: 'fleet', maintenance: 'maintenance',
     reservations: 'reservations', rentals: 'rentals', customers: 'customers',
+    sublease: 'sublease',
     payments: 'payments', caisse: 'caisse', settings: 'settings',
     options: 'fleet', bookopt: 'fleet'   // assurances/options rattachées aux véhicules
   };

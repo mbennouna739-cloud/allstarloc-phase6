@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <script src="auth-guard.js"></script>
 <script src="admin-users.js"></script>
+<script src="admin-sublease.js"></script>
 <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAFGUlEQVR4nLWXW48UVRDHf3VOd+/srIBscJcdCLqAgFFMEIgCChIURVC5uwJCTHz3S5j4CXzw3Xff/QpGMEYTL6gR2GXvCzv3yznlQ3fPzuzOzowxVHKSntPnVP2r6l9VPUIHGd22Uzvt/1+ZmfxLVu+1bTwpw92ANB/6Nd6KOL0gsrLRrwcpCAEYzY33bdy3GgZQRVUTIIIxpvm7J4ipvyXoEzACOCACbBKHBgphSGgtiOAaDaq1GtbavkFIP94LUEMZFcvX4RYyCBuCgM/n/mHo/Gm++vILvHrK5QoXLk0wNfWQKIr6AmGUOKTdlgBFlHdNlgMywIhYxgioiFIqlhgb28q2XI7du3Zy8eKH5ItFjLU99Spgeh9RHMoGhHN2kAIeBzxWxyMLi3OzeO9xzqGqXJu4yqaNG2g06omP3XWbXvaNQlGV12SAlySihBIBZfWUjLC89JhqpYK1Fu89e/c8z8kTx8nnC1jT2z/TT/5VlfN2iEAERTEIefWUjKG4nOfR42UAvPcA3Lg+gSbPPTnQy3gFZZcJOWEzFNRjECzwSB01K1RKJZaWlmJlSQmefvsUL+zbR7lcRmRN82sH0IMglFR5z2bZIpZGcikG4KkLVKtVFhYWmwqdc2QyGS5fvkChDzJ2TVIdZZMI52yWimqcDsCIMK+OhkCjUWdmbg7SdyYO6scTVxge3ky9XutivgsJrUJRPcdMhn0moow282WABXWoCuo8MzOz8QtVjDF47xl/7lneOnWSQr6ANfa/k1ABUbhoh5qet8q8eoS4/c7OzrbfTRrQrU+us2rerZGOAFLy7TURx+wgRfXYlvcOeKgN6uqp1uvcvz8Z30sIl7biN0+8wf79L1IqlZqp6QCgc17K6jkXZNkspkm+FFxdFaPKDhuya/w5rDVtACAmYxRFTFy9lACQNXZAkS1bd7RFN514EcK3mTF2SEAVbQ+kCNV6HTP8NLnvvsE+vZGBMGyZy3FPMMbwYHKKV48ep1qtJmXaIwUGKKjnuM2w24SUVxtPZABhUITs4CADUbQ2tMbgnGP7thzvvP0Wy8sFjLFrz62OiipYFS7Yp5qDqJNoEinfR8e7dfM6gQ1Qr92rwABlPC/akCM2Q1F911ap0HXkpmR8/dhRDhx4mWKpmHChzWYLIVAqqnxgh9goBrdKoQcGxfCTq/B+fZorc3c5fvZDDhw8wvc/3InPrIqIcw5rLdc+vkqlXEmqoZXwiQhQB0bFciYYoqS6xnsFAmDKO372NX6vl/nl19/48fYd7t27lwBoj4i1cd4vX7pALjdGrVZrq5bmLBAgr56TQZadJqSyDvkMsIAjQsiIIZvNEmQyzM3Pt8BcERHBOcfoyAhnz57h8XIeY1eoZ1rJFxGTz9G9f817h1fi5T3eeaanZ7rciOXmjWsMRBHeaSsJ48ZTxPOyiThkB8hrnEffYTlgThtI0wePMTA9PYP3HlWNQbWsNAqHDx3k8KFXKBTyzcZkYKW7fRRuYItYIoTBDiuLEAKL6mhSScFYw/z8PMYYwjDEGLNmWWsJAstnn31KrVZrVkOwMPtANo9s11FjGZeQ265KfZ38Q/xJPqOOMCGSqhIGIQ8mp/jj7p+kDq0WVQUR9uzeTS6XI5/P82jhYaxleGS7pj2qnw+pTg1KVRFjOk7OFFT6LQHgvGdx9sFKPWx+ZpvGB9dT0apqfWjrdc90P43E0tzkyl+zVIYTEE9aFhPjawA8aSCthlP5Fy1ovp57ATNiAAAAAElFTkSuQmCC">
@@ -502,6 +503,7 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
     <div class="sb-section">
       <div class="sb-section-label">Gestion</div>
 <a class="sb-item" onclick="showPage('customers',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Clients</a>
+<a class="sb-item" onclick="showPage('sublease',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/><circle cx="12" cy="12" r="3"/></svg></span>Sous-location</a>
 <a class="sb-item" onclick="showPage('payments',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg></span>Paiements</a>
 <a class="sb-item" onclick="showPage('caisse',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg></span>Caisse</a>
 <a class="sb-item" onclick="showPage('options',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg></span>Assurances</a>
@@ -759,6 +761,19 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
         </div>
         <div id="cust-drawer-body" style="overflow-y:auto;flex:1;padding:18px 22px;"></div>
       </div>
+    </div>
+
+    <!-- ===== SOUS-LOCATION ===== -->
+    <div id="page-sublease" class="page">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+        <div>
+          <h2 style="font-size:18px;font-weight:900;">Sous-location</h2>
+          <p style="font-size:12.5px;color:var(--text2);margin-top:2px;">Personnes et agences à qui vous confiez des véhicules. Indépendant des clients classiques.</p>
+        </div>
+        <button class="topbar-btn primary" onclick="openSubleaseModal()">+ Nouvelle sous-location</button>
+      </div>
+      <input type="search" id="sublease-search" class="form-input" placeholder="🔍 Rechercher une sous-location…" oninput="renderSubleases()" style="margin-bottom:16px;max-width:420px;">
+      <div id="sublease-list"></div>
     </div>
 
     <!-- ===== PAYMENTS ===== -->
@@ -1243,7 +1258,7 @@ function showPage(id, el) {
   const titles = {
     dashboard:'Tableau de bord', reservations:'Réservations',
     fleet:'Véhicules / Ma flotte', maintenance:'Entretien véhicules',
-    rentals:'Locations en cours', customers:'Clients',
+    rentals:'Locations en cours', customers:'Clients', sublease:'Sous-location',
     payments:'Paiements', options:'Assurances', bookopt:'Options de réservation', caisse:'Caisse', settings:'Paramètres système'
   };
   document.getElementById('topbar-title').textContent = titles[id] || id;
@@ -1255,6 +1270,7 @@ function showPage(id, el) {
   if(id==='maintenance') renderMaintenance();
   if(id==='rentals') renderRentals();
   if(id==='customers') renderCustomers();
+  if(id==='sublease' && typeof renderSubleases==='function') renderSubleases();
   if(id==='payments') renderPayments();
   if(id==='bookopt') renderBookOptMain();
   if(id==='caisse') renderCaisse();
@@ -1977,6 +1993,18 @@ function openModal(type) {
 
   if(type==='new-reservation') {
     document.getElementById('modal-body').innerHTML = `
+      <div class="form-group"><label class="form-label">Type de dossier</label>
+        <select class="form-select" id="nr-doctype" onchange="nrToggleSublease()">
+          <option value="direct">Client direct</option>
+          <option value="sublease">Sous-location</option>
+        </select></div>
+      <div class="form-group" id="nr-sublease-box" style="display:none;background:rgba(196,30,58,.05);border:1px solid rgba(196,30,58,.18);border-radius:10px;padding:12px;">
+        <label class="form-label">Sous-location</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select class="form-select" id="nr-sublease" style="flex:1;">${typeof ASLSublease!=='undefined'?ASLSublease.options():''}</select>
+          <button type="button" class="btn-sm primary" style="white-space:nowrap;" onclick="nrQuickCreateSublease()">+ Créer</button>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:5px;">Le « Prénom / Nom » ci-dessous = le client final.</div></div>
       <div class="form-group"><label class="form-label">N° de contrat / Référence</label><input class="form-input" id="nr-ref" placeholder="ASL-2026-001"><div style="font-size:11px;color:var(--text3,#888);margin-top:4px;">Pré-rempli automatiquement — modifiable. Se synchronise avec Paiements, Clients et le tableau de bord.</div></div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Prénom</label><input class="form-input" placeholder="Prénom" id="nr-firstname"></div>
@@ -2118,6 +2146,15 @@ function openModal(type) {
       else payStatus = 'Paiement partiel';
       const paymentMode = document.getElementById('nr-mode')?.value || 'Espèces';
 
+      /* Type de dossier : sous-location ? */
+      const nrDocType = document.getElementById('nr-doctype')?.value || 'direct';
+      let nrSubleaseId = '';
+      if (nrDocType === 'sublease') {
+        nrSubleaseId = document.getElementById('nr-sublease')?.value || '';
+        if (!nrSubleaseId) { alert('Veuillez choisir une sous-location (ou la créer).'); return; }
+      }
+      const nrFinalClient = `${fn} ${ln||''}`.trim();
+
       /* ★ VÉRIFICATION DE CONFLIT avant d'enregistrer la réservation manuelle */
       if (typeof ASLDB.checkAvailability === 'function' && car) {
         const chk = ASLDB.checkAvailability(car, start, end, startTime, endTime);
@@ -2148,6 +2185,7 @@ function openModal(type) {
         pickup: document.getElementById('nr-pickup')?.value||'',
         source: document.getElementById('nr-source')?.value||'phone',
         status: 'confirmed', type: 'reservation', payment: 'onsite', nationality: 'N/A',
+        subleaseId: nrSubleaseId, finalClient: nrSubleaseId ? nrFinalClient : '',
         notes: document.getElementById('nr-notes')?.value||'',
       });
       // Réservation = unité passe en "réservée" (pas encore louée)
@@ -2158,6 +2196,7 @@ function openModal(type) {
       }
       reloadData();
       renderAllReservations(); renderDashboard();
+      if (typeof renderSubleases === 'function') renderSubleases();
       if (typeof renderMobileDash === 'function') renderMobileDash();
       closeModal();
       alert(`Réservation ${newRes.id} créée et enregistrée !`);
@@ -2757,6 +2796,7 @@ document.addEventListener('DOMContentLoaded', function(){ setTimeout(renderMobil
 <script src="admin-caisse.js"></script>
 <script src="admin-archive.js"></script>
 <script src="admin-users-ui.js"></script>
+<script src="admin-sublease-ui.js"></script>
 <script src="admin-mobile.js"></script>
 </body>
 </html>
