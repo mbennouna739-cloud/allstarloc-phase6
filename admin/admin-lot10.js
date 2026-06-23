@@ -76,7 +76,7 @@ function buildNotifList() {
     });
   });
 
-  /* Entretien : vidange / visite technique / assurance */
+  /* Entretien : rappel de vérification vidange (tous les 20 jours) + visite technique */
   var MAINT = {};
   try { MAINT = JSON.parse(localStorage.getItem('asl_maint_v1') || '{}'); } catch(e) {}
   fleet.forEach(function(c){
@@ -86,16 +86,27 @@ function buildNotifList() {
       var diff = Math.round((new Date(date) - today) / 86400000);
       if (diff <= 7) {
         items.push({
-          type: type, icon: (type==='assur'?'🛡':'🔧'), color: (diff < 0 ? '#ef4444' : '#d97706'),
+          type: type, icon: '🔧', color: (diff < 0 ? '#ef4444' : '#d97706'),
           title: label + (diff < 0 ? ' — en retard' : ' — proche'),
           desc: c.name + (c.plate?' ('+c.plate+')':'') + ' · ' + (diff < 0 ? 'dépassé de ' + Math.abs(diff) + 'j' : 'dans ' + diff + 'j'),
           action: 'notifGoMaint', arg: c.id
         });
       }
     }
-    check(m.vidange_next, 'Vidange', 'vidange');
+    /* Rappel vidange : vérifier le km tous les 20 jours (pas de calcul auto). */
+    if (m.reminder_next) {
+      var dd = Math.round((new Date(m.reminder_next) - today) / 86400000);
+      if (dd <= 0) {
+        var kmTxt = m.km_vidange_next ? Number(m.km_vidange_next).toLocaleString('fr-FR') + ' km' : '—';
+        items.push({
+          type: 'vidange', icon: '🔧', color: '#d97706',
+          title: 'Vérifier le kilométrage de ' + c.name,
+          desc: 'Prochaine vidange prévue à ' + kmTxt + (c.plate ? ' · ' + c.plate : ''),
+          action: 'notifGoMaint', arg: c.id
+        });
+      }
+    }
     check(m.vt_next, 'Visite technique', 'vt');
-    check(m.assur, 'Assurance', 'assur');
   });
 
   /* Impayés importants */

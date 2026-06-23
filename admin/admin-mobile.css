@@ -75,7 +75,7 @@
     padding: 14px 16px 12px; border-bottom: 1px solid rgba(18,22,30,.07);
     display: flex; align-items: center; gap: 12px;
   }
-  .ma-head-logo { height: 26px; width: auto; max-width: 116px; flex-shrink: 0; display: block; object-fit: contain; }
+  .ma-head-logo { height: 30px; width: auto; max-width: 130px; flex-shrink: 0; display: block; object-fit: contain; }
   .ma-head-txt { flex: 1; min-width: 0; }
   .ma-head h1 { font-size: 18px; font-weight: 800; color: #101216; margin: 0; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ma-head .ma-greet { font-size: 12.5px; color: #8a909a; font-weight: 600; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -259,6 +259,11 @@
     position: fixed; inset: 0; z-index: 1700; background: rgba(10,12,18,.5);
     display: flex; align-items: flex-end;
   }
+  /* Quand une feuille/popup est ouverte, on fige l'app derrière : plus de
+     scroll de l'arrière-plan, plus de bande noire qui apparaît/disparaît. */
+  body.ma-locked #asl-mobile-app { overflow: hidden !important; }
+  body.ma-locked #asl-mobile-tabbar { display: none !important; }
+  .ma-sheet-scroll { max-height: calc(86vh - 60px); overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
   .ma-sheet-inner {
     position: relative; background: #fff; width: 100%; border-radius: 22px 22px 0 0;
     padding: 8px 18px calc(28px + env(safe-area-inset-bottom, 0px));
@@ -319,10 +324,16 @@
 
   /* ---- Bouton « Retour à l'application » (vue desktop ponctuelle) ---- */
   #ma-back-to-app {
-    position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 9999;
-    background: #101216; color: #fff; border: none; padding: 13px 24px; border-radius: 50px;
-    font-weight: 700; font-size: 14px; box-shadow: 0 6px 20px rgba(0,0,0,.25); cursor: pointer; font-family: inherit;
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 9999;
+    background: #101216; color: #fff; border: none; padding: 14px 24px calc(14px + env(safe-area-inset-bottom, 0px));
+    font-weight: 700; font-size: 14px; box-shadow: 0 -4px 20px rgba(0,0,0,.18); cursor: pointer; font-family: inherit;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
   }
+  /* Quand on est en vue desktop ponctuelle, on réserve de la place en bas
+     pour que la barre "Retour à l'application" ne masque jamais le contenu. */
+  body.ma-desktop-view .main > .content { padding-bottom: 84px !important; }
+  body.ma-desktop-view #modal-content,
+  body.ma-desktop-view .modal-overlay .modal { margin-bottom: 68px !important; }
 
   /* ============================================================
      MODALE RÉUTILISÉE (réservation / location manuelle)
@@ -330,6 +341,10 @@
      ============================================================ */
   .modal-overlay { z-index: 2200 !important; align-items: flex-end !important; padding: 0 !important; }
   .modal-overlay.open { -webkit-overflow-scrolling: touch; }
+  /* Modale ouverte : on fige l'app derrière et on masque la tabbar pour
+     éviter tout mouvement parasite / bande qui apparaît au scroll. */
+  body.ma-modal-open #asl-mobile-app { overflow: hidden !important; }
+  body.ma-modal-open #asl-mobile-tabbar { display: none !important; }
   #modal-content, .modal-overlay .modal {
     width: 100% !important; max-width: 100% !important; max-height: 94vh !important;
     border-radius: 22px 22px 0 0 !important; margin: 0 !important;

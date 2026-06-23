@@ -338,6 +338,27 @@ export async function onRequest(context) {
     return err(400, 'action inconnue (add | update | replace)');
   }
 
+  /* ---- Données auxiliaires synchronisées (sous-locations, charges,
+         entretien, documents) : GET (lecture) / PUT (admin).
+         name ∈ { subleases, charges, maint, docs } ---- */
+  if (path === 'misc' && request.method === 'GET') {
+    const name = url.searchParams.get('name') || '';
+    const allowed = ['subleases', 'charges', 'maint', 'docs', 'users'];
+    if (allowed.indexOf(name) < 0) return err(400, 'name invalide');
+    const doc = await readDoc(env, 'misc_' + name);
+    return json({ ok: true, name: name, doc: doc });
+  }
+  if (path === 'misc' && request.method === 'PUT') {
+    if (!authorized(request, env)) return err(403, 'Clé admin invalide ou absente (X-ASL-Key)');
+    let body;
+    try { body = await request.json(); } catch (e) { return err(400, 'JSON invalide'); }
+    const allowed = ['subleases', 'charges', 'maint', 'docs', 'users'];
+    if (allowed.indexOf(body.name) < 0) return err(400, 'name invalide');
+    if (JSON.stringify(body.value || '').length > 4_000_000) return err(413, 'Données trop volumineuses');
+    const rev = await writeDoc(env, 'misc_' + body.name, body.value);
+    return json({ ok: true, rev: rev });
+  }
+
   /* ---- Téléversement d'image (administration) ---- */
   if (path === 'upload' && request.method === 'POST') {
     if (!authorized(request, env)) return err(403, 'Clé admin invalide ou absente (X-ASL-Key)');

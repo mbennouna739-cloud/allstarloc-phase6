@@ -68,11 +68,15 @@ function updateBadges() {
     var mc = 0;
     Object.keys(MAINT).forEach(function(id) {
       var m = MAINT[id] || {};
-      [m.vidange_next, m.vt_next, m.assur].forEach(function(d) {
-        if (!d) return;
-        var diff = Math.round((new Date(d) - today) / 86400000);
-        if (diff <= 7) mc++;
-      });
+      // Rappel vidange dû (20j) + visite technique proche
+      if (m.reminder_next) {
+        var dr = Math.round((new Date(m.reminder_next) - today) / 86400000);
+        if (dr <= 0) mc++;
+      }
+      if (m.vt_next) {
+        var dv = Math.round((new Date(m.vt_next) - today) / 86400000);
+        if (dv <= 7) mc++;
+      }
     });
     el = document.getElementById('badge-maint');
     if (el) { el.textContent = mc; el.style.display = mc ? '' : 'none'; }
@@ -287,43 +291,47 @@ function renderMaintenance() {
       return '<span class="badge ' + cls + '">● ' + txt + '</span><br><span style="font-size:11px;color:var(--text3);">' + dateStr + '</span>';
     }
 
-    /* Barre alertes */
+    /* Barre alertes : rappels de vérification vidange dus (tous les 20 jours) */
     var alerts = [];
     fleet.forEach(function(c) {
       var m = MAINT[String(c.id)] || {};
-      [['Vidange', m.vidange_next], ['Visite technique', m.vt_next], ['Assurance', m.assur]].forEach(function(pair) {
-        var dd = diffD(pair[1]);
-        if (dd !== null && dd <= 7) alerts.push({ car: c.name, label: pair[0], days: dd });
-      });
+      if (m.reminder_next) {
+        var dd = diffD(m.reminder_next.slice(0,10));
+        if (dd !== null && dd <= 0) alerts.push({ car: c.name, km: m.km_vidange_next });
+      }
     });
     var bar = document.getElementById('maint-alerts-bar');
     if (bar) {
       if (alerts.length) {
         var atxt = alerts.map(function(a) {
-          var col = a.days < 0 ? 'var(--red)' : '#d97706';
-          return '<span style="color:' + col + ';font-weight:600;">' + a.car + ' — ' + a.label + (a.days < 0 ? ' (' + Math.abs(a.days) + 'j retard)' : ' (dans ' + a.days + 'j)') + '</span>';
+          return '<span style="color:#d97706;font-weight:600;">' + a.car + ' — vérifier le km' + (a.km ? ' (vidange prévue à ' + Number(a.km).toLocaleString('fr-FR') + ' km)' : '') + '</span>';
         }).join(' &nbsp;·&nbsp; ');
         bar.innerHTML = '<div style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);border-radius:10px;padding:10px 16px;font-size:13px;">' +
-          '<strong style="color:#d97706;">⚠ ' + alerts.length + ' alerte(s) dans les 7 jours :</strong> ' + atxt + '</div>';
+          '<strong style="color:#d97706;">⚠ ' + alerts.length + ' vérification(s) de vidange à faire :</strong> ' + atxt + '</div>';
       } else {
-        bar.innerHTML = '<div style="background:rgba(22,163,74,.07);border:1px solid rgba(22,163,74,.2);border-radius:10px;padding:10px 16px;font-size:13px;color:#22c55e;font-weight:600;">✓ Aucune alerte dans les 7 prochains jours</div>';
+        bar.innerHTML = '<div style="background:rgba(22,163,74,.07);border:1px solid rgba(22,163,74,.2);border-radius:10px;padding:10px 16px;font-size:13px;color:#22c55e;font-weight:600;">✓ Aucune vérification de vidange à faire pour le moment</div>';
       }
     }
 
-    var AVAIL = typeof AVAIL_LABELS !== 'undefined' ? AVAIL_LABELS : {};
     var tbody = document.getElementById('maintenance-table');
     if (!tbody) return;
     tbody.innerHTML = fleet.map(function(c) {
       var m = MAINT[String(c.id)] || {};
-      var av = AVAIL[c.status] || { label: c.status, class: 'badge-gray', emoji: '' };
+      var kmNext = m.km_vidange_next ? Number(m.km_vidange_next).toLocaleString('fr-FR') + ' km' : '<span style="color:var(--text3);">—</span>';
+      var maj = m.updated ? new Date(m.updated).toLocaleDateString('fr-FR') : '<span style="color:var(--text3);">—</span>';
+      var rappelCell = '<span style="color:var(--text3);">—</span>';
+      if (m.reminder_next) {
+        var dd = diffD(m.reminder_next.slice(0,10));
+        var cls = dd <= 0 ? 'badge-red' : dd <= 3 ? 'badge-yellow' : 'badge-green';
+        var txt = dd < 0 ? 'À vérifier (' + Math.abs(dd) + 'j)' : dd === 0 ? 'À vérifier auj.' : 'Dans ' + dd + 'j';
+        rappelCell = '<span class="badge ' + cls + '">● ' + txt + '</span><br><span style="font-size:11px;color:var(--text3);">' + m.reminder_next.slice(0,10) + '</span>';
+      }
       return '<tr>' +
         '<td><strong>' + c.name + '</strong></td>' +
         '<td style="font-size:12px;color:var(--text3);">' + (c.plate||'—') + '</td>' +
-        '<td>' + (m.km_current ? Number(m.km_current).toLocaleString('fr-FR') + ' km' : '<span style="color:var(--text3);">—</span>') + '</td>' +
-        '<td>' + dateCell(m.vidange_next) + '</td>' +
-        '<td>' + dateCell(m.vt_next) + '</td>' +
-        '<td>' + dateCell(m.assur) + '</td>' +
-        '<td><span class="badge ' + av.class + '">' + av.emoji + ' ' + av.label + '</span></td>' +
+        '<td>' + kmNext + '</td>' +
+        '<td style="font-size:12px;">' + maj + '</td>' +
+        '<td>' + rappelCell + '</td>' +
         '<td><button class="btn-sm primary" data-cid="' + c.id + '" onclick="openMaintModal(parseInt(this.dataset.cid))">Modifier</button></td>' +
         '</tr>';
     }).join('');
@@ -351,13 +359,9 @@ function openMaintModal(carId) {
       '</select></div>';
   }
   bodyEl.innerHTML = carSel +
-    '<div class="form-row">' +
-    '<div class="form-group"><label class="form-label">Kilométrage actuel</label><input class="form-input" type="number" id="maint-km" placeholder="ex : 42500" value="' + (m.km_current||'') + '"></div>' +
-    '<div class="form-group"><label class="form-label">Km prochaine vidange</label><input class="form-input" type="number" id="maint-km-next" placeholder="ex : 47500" value="' + (m.km_vidange_next||'') + '"></div>' +
-    '</div>' +
-    '<div class="form-group"><label class="form-label">Date prochaine vidange</label><input type="date" class="form-input" id="maint-vidange" value="' + (m.vidange_next||'') + '"></div>' +
-    '<div class="form-group"><label class="form-label">Date prochaine visite technique</label><input type="date" class="form-input" id="maint-vt" value="' + (m.vt_next||'') + '"></div>' +
-    '<div class="form-group"><label class="form-label">Échéance assurance</label><input type="date" class="form-input" id="maint-assur" value="' + (m.assur||'') + '"></div>' +
+    '<div class="form-group"><label class="form-label">Kilométrage actuel (info)</label><input class="form-input" type="number" id="maint-km" placeholder="ex : 42500" value="' + (m.km_current||'') + '"></div>' +
+    '<div class="form-group"><label class="form-label">Kilométrage de la prochaine vidange</label><input class="form-input" type="number" id="maint-km-next" placeholder="ex : 90000" value="' + (m.km_vidange_next||'') + '"><div style="font-size:11px;color:var(--text3);margin-top:4px;">Après l\'enregistrement, un rappel de vérification est créé automatiquement tous les 20 jours.</div></div>' +
+    '<div class="form-group"><label class="form-label">Date prochaine visite technique (facultatif)</label><input type="date" class="form-input" id="maint-vt" value="' + (m.vt_next||'') + '"></div>' +
     '<div class="form-group"><label class="form-label">Notes d\'entretien</label><textarea class="form-input form-textarea" rows="3" id="maint-notes" placeholder="Observations, réparations...">' + (m.notes||'') + '</textarea></div>';
 
   document.getElementById('maint-overlay').style.display = 'block';
@@ -380,19 +384,32 @@ function saveMaintRecord() {
     if (sel) id = parseInt(sel.value);
   }
   if (!id) { alert('Sélectionnez un véhicule'); return; }
+  var prev = MAINT[String(id)] || {};
+  var kmNext = parseInt(document.getElementById('maint-km-next') && document.getElementById('maint-km-next').value) || null;
+  var now = new Date();
+  /* Rappel tous les 20 jours : si le km de prochaine vidange change (ou
+     première saisie), le compteur de 20 jours repart à zéro. */
+  var kmChanged = (kmNext !== (prev.km_vidange_next || null));
+  var reminderBase = (kmChanged || !prev.reminder_set) ? now.getTime() : (prev.reminder_set || now.getTime());
+  var nextReminder = new Date(reminderBase + 20 * 86400000);
+
   MAINT[String(id)] = {
     km_current: parseInt(document.getElementById('maint-km') && document.getElementById('maint-km').value) || null,
-    km_vidange_next: parseInt(document.getElementById('maint-km-next') && document.getElementById('maint-km-next').value) || null,
-    vidange_next: (document.getElementById('maint-vidange') && document.getElementById('maint-vidange').value) || '',
+    km_vidange_next: kmNext,
     vt_next:      (document.getElementById('maint-vt')      && document.getElementById('maint-vt').value)      || '',
-    assur:        (document.getElementById('maint-assur')   && document.getElementById('maint-assur').value)   || '',
     notes:        (document.getElementById('maint-notes')   && document.getElementById('maint-notes').value)   || '',
-    updated: new Date().toISOString()
+    reminder_set: kmChanged ? now.getTime() : reminderBase,       // date de base du compteur 20j
+    reminder_next: nextReminder.toISOString(),                    // prochaine vérification
+    updated: now.toISOString()
   };
   try { localStorage.setItem('asl_maint_v1', JSON.stringify(MAINT)); } catch(e) {}
+  try { if (typeof ASLDB !== 'undefined' && ASLDB.noteLocalChange) ASLDB.noteLocalChange('asl_maint_v1'); } catch(e) {}
+  try { if (typeof ASLDB !== 'undefined' && ASLDB.syncNow) ASLDB.syncNow(); } catch(e) {}
   closeMaintModal();
   renderMaintenance();
-  showToast('Entretien enregistré et synchronisé ✓');
+  renderDashboard();
+  if (typeof updateBadges === 'function') updateBadges();
+  showToast('Entretien enregistré ✓ Rappel de vérification créé.');
 }
 
 /* ==================== LOCATIONS EN COURS ==================== */
@@ -728,7 +745,14 @@ function _buildNewLocationModal() {
     '<div class="form-group"><label class="form-label">Mode de paiement</label>' +
     '<select class="form-select" id="nl-mode"><option>Espèces</option><option>Carte bancaire</option><option>Virement</option><option>Chèque</option><option>Autre</option></select></div>' +
     '<div id="nl-rest" style="font-weight:700;font-size:13px;margin-top:4px;"></div></div>' +
-    '<div class="form-group"><label class="form-label">Notes internes</label><textarea class="form-input form-textarea" rows="2" id="nl-notes" placeholder="Notes..."></textarea></div>';
+    '<div class="form-group"><label class="form-label">Notes internes</label><textarea class="form-input form-textarea" rows="2" id="nl-notes" placeholder="Notes..."></textarea></div>' +
+    '<div class="form-group"><label class="form-label">Documents (facultatif)</label>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">' +
+    '<div><div style="font-size:12px;color:var(--text3);margin-bottom:4px;">Permis de conduire</div>' +
+    '<input type="file" accept="image/*" id="nl-doc-permis" class="form-input" style="padding:8px;" onchange="docPreview(this,\'nl-permis-prev\')"><div id="nl-permis-prev" style="margin-top:6px;"></div></div>' +
+    '<div><div style="font-size:12px;color:var(--text3);margin-bottom:4px;">CIN / Passeport</div>' +
+    '<input type="file" accept="image/*" id="nl-doc-identity" class="form-input" style="padding:8px;" onchange="docPreview(this,\'nl-identity-prev\')"><div id="nl-identity-prev" style="margin-top:6px;"></div></div>' +
+    '</div><div style="font-size:11px;color:var(--text3);margin-top:5px;">Ajoutables aussi plus tard depuis la fiche client.</div></div>';
 
   overlay.classList.add('open');
 
@@ -856,7 +880,8 @@ function _saveNewLocation() {
       pickup: (document.getElementById('nl-pickup')&&document.getElementById('nl-pickup').value)||'',
       source: 'manual', type: 'location', status: 'active',
       subleaseId: subleaseId, finalClient: subleaseId ? finalClientName : '',
-      notes: (document.getElementById('nl-notes')&&document.getElementById('nl-notes').value)||''
+      notes: (document.getElementById('nl-notes')&&document.getElementById('nl-notes').value)||'',
+      docs: (typeof collectDocs==='function' ? collectDocs('nl-doc-permis','nl-doc-identity') : {})
     });
     if (car && plate && typeof ASLDB.setUnitStatusByPlate==='function') {
       ASLDB.setUnitStatusByPlate(carId, plate, 'active');
@@ -865,6 +890,8 @@ function _saveNewLocation() {
     }
   }
   if (typeof reloadData==='function') reloadData();
+  if (newLoc && newLoc.docs && newLoc.phone && typeof saveCustomerDocs==='function') saveCustomerDocs(newLoc.phone, newLoc.docs);
+  if (typeof clearPendingDocs==='function') clearPendingDocs();
   renderRentals(); renderDashboard();
   if (typeof renderPayments==='function') renderPayments();
   if (typeof renderSubleases==='function') renderSubleases();
@@ -934,6 +961,7 @@ function viewRes(id) {
     '</select></div></div>' +
     '<div id="vr-rest" style="font-weight:700;font-size:13px;margin-top:6px;"></div></div>' +
     '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">' +
+    '<button class="topbar-btn secondary" style="flex:1;min-width:120px;" onclick="addDocsToReservation(\'' + r.id + '\')">📎 Documents</button>' +
     (r.phone ? '<a href="https://wa.me/' + r.phone.replace(/[^0-9]/g,'') + '" target="_blank" class="topbar-btn primary" style="flex:1;text-align:center;text-decoration:none;min-width:120px;">WhatsApp</a>' : '') +
     (r.phone ? '<a href="tel:' + r.phone + '" class="topbar-btn secondary" style="flex:1;text-align:center;text-decoration:none;min-width:120px;">Appeler</a>' : '') +
     '</div>';

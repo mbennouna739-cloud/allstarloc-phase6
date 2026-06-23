@@ -207,6 +207,58 @@
   let authError = false; // clé admin refusée par le serveur
   let syncChain = Promise.resolve(false);
   let cyclePlanned = false;
+  /* ----- Synchro des données auxiliaires (sous-locations, charges,
+     entretien, documents) entre tous les appareils. Chaque clé locale
+     est miroir d'un document serveur ; on pousse si on a modifié
+     localement (marqueur _dirty), sinon on tire la version serveur. ----- */
+  var MISC_MAP = {
+    subleases: 'asl_subleases_v1',
+    charges: 'asl_charges_v1',
+    maint: 'asl_maint_v1',
+    docs: 'asl_cust_docs_v1'
+  };
+  function miscDirtyKey(name) { return 'asl_misc_dirty_' + name; }
+  function miscRevKey(name) { return 'asl_misc_rev_' + name; }
+  function markMiscDirty(name) {
+    try { localStorage.setItem(miscDirtyKey(name), '1'); } catch (e) {}
+  }
+  /* Exposé : appelé par les modules quand ils écrivent une clé auxiliaire. */
+  function noteLocalChange(localKey) {
+    Object.keys(MISC_MAP).forEach(function (name) {
+      if (MISC_MAP[name] === localKey) markMiscDirty(name);
+    });
+  }
+  async function syncMisc() {
+    if (!remoteEnabled) return;
+    for (var name in MISC_MAP) {
+      if (!MISC_MAP.hasOwnProperty(name)) continue;
+      var localKey = MISC_MAP[name];
+      var dirty = localStorage.getItem(miscDirtyKey(name));
+      try {
+        if (dirty) {
+          // Pousser la version locale
+          var value = readJSON(localKey, null);
+          if (value !== null) {
+            var res = await apiFetch('/misc', {
+              method: 'PUT', headers: headers(true),
+              body: JSON.stringify({ name: name, value: value })
+            });
+            if (res && res.rev != null) writeNum(miscRevKey(name), res.rev);
+            try { localStorage.removeItem(miscDirtyKey(name)); } catch (e) {}
+          }
+        } else {
+          // Tirer la version serveur si plus récente
+          var got = await apiFetch('/misc?name=' + name, { method: 'GET' });
+          if (got && got.doc && typeof got.doc.rev === 'number' && got.doc.rev > readNum(miscRevKey(name))) {
+            write(localKey, got.doc.value);
+            writeNum(miscRevKey(name), got.doc.rev);
+            emit(localKey);
+          }
+        }
+      } catch (e) { /* hors-ligne ou non autorisé : on réessaiera */ }
+    }
+  }
+
   function syncNow() {
     if (!remoteEnabled) return Promise.resolve(online);
     if (cyclePlanned) return syncChain;
@@ -238,6 +290,7 @@
         }
       }
       await pullState();
+      try { await syncMisc(); } catch (e) {}
       // Si le pull vient de demander un seed (serveur vide), on l'envoie tout de suite
       if (!pushFailed && localStorage.getItem(KEY_PEND_F)) {
         try { await flushPending(); }
@@ -826,7 +879,7 @@
     // Gestion des unités de stock (couleur + immatriculation par unité)
     normalizeUnits, modelAvailability, assignUnit, releaseUnit, setUnitStatusByPlate,
     // Nouveaux utilitaires de synchronisation et d'images
-    syncNow, syncStatus, uploadImage,
+    syncNow, syncStatus, uploadImage, noteLocalChange,
     // ★ Tarification (source unique) : saison → durée → standard
     dailyRate, seasonalRate, normalizeSeasonalTiers, normalizeDurationTiers, monthOfISO,
     // ★ Moteur central de disponibilité & conflits (site + back-office)

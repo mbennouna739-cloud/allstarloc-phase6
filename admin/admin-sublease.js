@@ -20,6 +20,7 @@
   function getSubleases() { return rd(KEY, []); }
   function saveSubleases(list) {
     wr(KEY, list);
+    try { if (typeof ASLDB !== 'undefined' && ASLDB.noteLocalChange) ASLDB.noteLocalChange(KEY); } catch (e) {}
     try { if (typeof ASLDB !== 'undefined' && ASLDB.syncNow) ASLDB.syncNow(); } catch (e) {}
   }
 

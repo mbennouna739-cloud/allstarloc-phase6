@@ -1,0 +1,110 @@
+═══════════════════════════════════════════════════════════════
+  ALL STAR LOC — LOT 37 : corrections mobiles, vidange, documents,
+  synchronisation et cookies
+═══════════════════════════════════════════════════════════════
+
+───────────────────────────────────────────────────────────────
+1. LOGIQUE VIDANGE SIMPLIFIÉE
+───────────────────────────────────────────────────────────────
+• Dans la fiche entretien, on saisit UNIQUEMENT le kilométrage de
+  la prochaine vidange (ex : 90 000 km). Plus de calcul automatique
+  de date.
+• Après chaque saisie/modification, un rappel est créé tous les
+  20 jours : « Vérifier le kilométrage de [véhicule]. Prochaine
+  vidange prévue à [90 000 km]. »
+• Si on modifie le km de prochaine vidange, le compteur de 20 jours
+  repart à zéro.
+• Le système ne devine jamais si la voiture a atteint le km : il
+  rappelle simplement de vérifier.
+• Tableau Entretien allégé : Véhicule · Immatriculation ·
+  Km prochaine vidange · Dernière mise à jour · Prochain rappel.
+  (Colonnes Km actuel, Visite technique, Assurance, Statut retirées.)
+• Le rappel apparaît dans : Tableau de bord, Notifications, et la
+  version mobile.
+
+───────────────────────────────────────────────────────────────
+2. VERSION MOBILE — NAVIGATION & INTERFACE
+───────────────────────────────────────────────────────────────
+• Carte « Impayés » du tableau de bord → ouvre désormais la LISTE
+  COMPLÈTE des impayés (nouvel écran), avec bouton Encaisser par
+  dossier. La carte « Montants à encaisser » y mène aussi.
+• Menu « Plus » nettoyé (plus de doublons avec la barre du bas) :
+  Nouvelle réservation, Nouvelle location, Locations en cours,
+  Sous-location, Clients, Se déconnecter.
+• Bug de la bande noire au scroll quand « Plus » est ouvert :
+  corrigé (l'arrière-plan est figé, la barre du bas masquée tant
+  qu'une feuille est ouverte).
+• Popups : la page derrière ne défile plus (verrou de défilement).
+  Les pop-ups sont stables, sans élément caché ni mouvement
+  parasite.
+• Bouton « Retour à l'application » : transformé en barre fixe en
+  bas, qui ne touche jamais le contenu (place réservée). Corrige
+  aussi les bugs Résumé / Charges / Rapports (rafraîchissement au
+  retour) et l'édition de véhicule.
+• Logo ASL mobile : identique au desktop (fond blanc, A rouge,
+  SL noir), taille et position ajustées.
+
+───────────────────────────────────────────────────────────────
+3. ANNULATION DES RÉSERVATIONS SUR MOBILE
+───────────────────────────────────────────────────────────────
+• Une croix « Annuler » sur chaque carte de réservation.
+• Au clic : « Êtes-vous sûr de vouloir annuler cette réservation ? »
+• Après confirmation : la réservation passe en annulée et le
+  véhicule redevient disponible (même logique que le desktop).
+
+───────────────────────────────────────────────────────────────
+4. DOCUMENTS CLIENT (PERMIS + CIN/PASSEPORT)
+───────────────────────────────────────────────────────────────
+• Champs d'upload ajoutés dans Nouvelle réservation ET Nouvelle
+  location.
+• Sur téléphone : depuis la galerie photo ; sur desktop : par
+  téléchargement de fichier.
+• Si non remplis à la création, on peut les ajouter plus tard
+  depuis la fiche (bouton « 📎 Documents »), sur mobile ou desktop.
+• Les documents sont rattachés au dossier et au client (par
+  téléphone).
+
+───────────────────────────────────────────────────────────────
+5. SYNCHRONISATION SOUS-LOCATION (et charges, entretien, docs)
+───────────────────────────────────────────────────────────────
+• Une sous-location créée sur un appareil apparaît désormais sur
+  tous les appareils et pour tous les utilisateurs (et inversement
+  depuis le mobile).
+• Même mécanisme pour les charges, l'entretien et les documents.
+• Nouvel endpoint serveur /api/misc + synchronisation client.
+  IMPORTANT : la synchro temps réel nécessite le site déployé sur
+  Cloudflare (avec la clé admin). En local (file://), chaque
+  appareil garde ses données localement.
+
+───────────────────────────────────────────────────────────────
+6. COOKIES (SITE CLIENT)
+───────────────────────────────────────────────────────────────
+• Icône professionnelle (SVG dans une pastille) au lieu de l'emoji.
+• Titre + message clairs, dignes d'une grande entreprise.
+• Emplacement discret en bas, jamais gênant, ne couvre jamais le
+  pop-up de réservation.
+
+───────────────────────────────────────────────────────────────
+TESTS EFFECTUÉS (validés)
+───────────────────────────────────────────────────────────────
+• Vidange : 1ère saisie → rappel +20j ; re-save sans changement →
+  compteur préservé ; modification du km → compteur remis à zéro.
+• Documents : collecte permis+identité, sauvegarde et récupération
+  par téléphone, persistance.
+• Tous les fichiers JS validés (node --check).
+• Logique financière et synchro vérifiées.
+
+───────────────────────────────────────────────────────────────
+FICHIERS PRINCIPAUX MODIFIÉS / AJOUTÉS
+───────────────────────────────────────────────────────────────
+  admin/admin-mobile.js / .css  → navigation, impayés, verrous,
+                                  logo, annulation, bouton retour
+  admin/admin-lot5.js           → vidange, documents (location),
+                                  bouton Documents fiche
+  admin/admin-lot10.js          → notification vidange
+  admin/admin-docs.js (NOUVEAU) → upload permis/identité
+  admin/index.html              → vidange (tableau), documents
+                                  (réservation), scripts
+  data.js                       → synchro auxiliaire (syncMisc)
+  functions/api/[[route]].js    → endpoint /api/misc
+  cookie-consent.js             → icône + présentation pro

@@ -5,6 +5,7 @@
 <script src="auth-guard.js"></script>
 <script src="admin-users.js"></script>
 <script src="admin-sublease.js"></script>
+<script src="admin-docs.js"></script>
 <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAFGUlEQVR4nLWXW48UVRDHf3VOd+/srIBscJcdCLqAgFFMEIgCChIURVC5uwJCTHz3S5j4CXzw3Xff/QpGMEYTL6gR2GXvCzv3yznlQ3fPzuzOzowxVHKSntPnVP2r6l9VPUIHGd22Uzvt/1+ZmfxLVu+1bTwpw92ANB/6Nd6KOL0gsrLRrwcpCAEYzY33bdy3GgZQRVUTIIIxpvm7J4ipvyXoEzACOCACbBKHBgphSGgtiOAaDaq1GtbavkFIP94LUEMZFcvX4RYyCBuCgM/n/mHo/Gm++vILvHrK5QoXLk0wNfWQKIr6AmGUOKTdlgBFlHdNlgMywIhYxgioiFIqlhgb28q2XI7du3Zy8eKH5ItFjLU99Spgeh9RHMoGhHN2kAIeBzxWxyMLi3OzeO9xzqGqXJu4yqaNG2g06omP3XWbXvaNQlGV12SAlySihBIBZfWUjLC89JhqpYK1Fu89e/c8z8kTx8nnC1jT2z/TT/5VlfN2iEAERTEIefWUjKG4nOfR42UAvPcA3Lg+gSbPPTnQy3gFZZcJOWEzFNRjECzwSB01K1RKJZaWlmJlSQmefvsUL+zbR7lcRmRN82sH0IMglFR5z2bZIpZGcikG4KkLVKtVFhYWmwqdc2QyGS5fvkChDzJ2TVIdZZMI52yWimqcDsCIMK+OhkCjUWdmbg7SdyYO6scTVxge3ky9XutivgsJrUJRPcdMhn0moow282WABXWoCuo8MzOz8QtVjDF47xl/7lneOnWSQr6ANfa/k1ABUbhoh5qet8q8eoS4/c7OzrbfTRrQrU+us2rerZGOAFLy7TURx+wgRfXYlvcOeKgN6uqp1uvcvz8Z30sIl7biN0+8wf79L1IqlZqp6QCgc17K6jkXZNkspkm+FFxdFaPKDhuya/w5rDVtACAmYxRFTFy9lACQNXZAkS1bd7RFN514EcK3mTF2SEAVbQ+kCNV6HTP8NLnvvsE+vZGBMGyZy3FPMMbwYHKKV48ep1qtJmXaIwUGKKjnuM2w24SUVxtPZABhUITs4CADUbQ2tMbgnGP7thzvvP0Wy8sFjLFrz62OiipYFS7Yp5qDqJNoEinfR8e7dfM6gQ1Qr92rwABlPC/akCM2Q1F911ap0HXkpmR8/dhRDhx4mWKpmHChzWYLIVAqqnxgh9goBrdKoQcGxfCTq/B+fZorc3c5fvZDDhw8wvc/3InPrIqIcw5rLdc+vkqlXEmqoZXwiQhQB0bFciYYoqS6xnsFAmDKO372NX6vl/nl19/48fYd7t27lwBoj4i1cd4vX7pALjdGrVZrq5bmLBAgr56TQZadJqSyDvkMsIAjQsiIIZvNEmQyzM3Pt8BcERHBOcfoyAhnz57h8XIeY1eoZ1rJFxGTz9G9f817h1fi5T3eeaanZ7rciOXmjWsMRBHeaSsJ48ZTxPOyiThkB8hrnEffYTlgThtI0wePMTA9PYP3HlWNQbWsNAqHDx3k8KFXKBTyzcZkYKW7fRRuYItYIoTBDiuLEAKL6mhSScFYw/z8PMYYwjDEGLNmWWsJAstnn31KrVZrVkOwMPtANo9s11FjGZeQ265KfZ38Q/xJPqOOMCGSqhIGIQ8mp/jj7p+kDq0WVQUR9uzeTS6XI5/P82jhYaxleGS7pj2qnw+pTg1KVRFjOk7OFFT6LQHgvGdx9sFKPWx+ZpvGB9dT0apqfWjrdc90P43E0tzkyl+zVIYTEE9aFhPjawA8aSCthlP5Fy1ovp57ATNiAAAAAElFTkSuQmCC">
@@ -869,7 +870,7 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
         <div class="table-header"><div class="table-title">Suivi entretien flotte</div></div>
         <div style="overflow-x:auto;">
         <table>
-          <thead><tr><th>Véhicule</th><th>Immatriculation</th><th>Km actuel</th><th>Prochaine vidange</th><th>Visite technique</th><th>Assurance</th><th>Statut</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Véhicule</th><th>Immatriculation</th><th>Km prochaine vidange</th><th>Dernière mise à jour</th><th>Prochain rappel</th><th>Actions</th></tr></thead>
           <tbody id="maintenance-table"></tbody>
         </table>
         </div>
@@ -2057,6 +2058,17 @@ function openModal(type) {
         <div id="nr-rest" style="font-weight:700;font-size:13.5px;margin-top:4px;"></div>
       </div>
       <div class="form-group"><label class="form-label">Notes</label><textarea class="form-input form-textarea" rows="2" placeholder="Notes internes..." id="nr-notes"></textarea></div>
+      <div class="form-group"><label class="form-label">Documents (facultatif)</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div><div style="font-size:12px;color:var(--text3);margin-bottom:4px;">Permis de conduire</div>
+            <input type="file" accept="image/*" id="nr-doc-permis" class="form-input" style="padding:8px;" onchange="docPreview(this,'nr-permis-prev')">
+            <div id="nr-permis-prev" style="margin-top:6px;"></div></div>
+          <div><div style="font-size:12px;color:var(--text3);margin-bottom:4px;">CIN / Passeport</div>
+            <input type="file" accept="image/*" id="nr-doc-identity" class="form-input" style="padding:8px;" onchange="docPreview(this,'nr-identity-prev')">
+            <div id="nr-identity-prev" style="margin-top:6px;"></div></div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:5px;">Vous pouvez aussi les ajouter plus tard depuis la fiche client.</div>
+      </div>
     `;
     // Calcul auto du total à l'ouverture + à chaque changement de véhicule/dates
     setTimeout(function(){
@@ -2186,6 +2198,7 @@ function openModal(type) {
         source: document.getElementById('nr-source')?.value||'phone',
         status: 'confirmed', type: 'reservation', payment: 'onsite', nationality: 'N/A',
         subleaseId: nrSubleaseId, finalClient: nrSubleaseId ? nrFinalClient : '',
+        docs: (typeof collectDocs === 'function' ? collectDocs('nr-doc-permis', 'nr-doc-identity') : {}),
         notes: document.getElementById('nr-notes')?.value||'',
       });
       // Réservation = unité passe en "réservée" (pas encore louée)
@@ -2199,6 +2212,8 @@ function openModal(type) {
       if (typeof renderSubleases === 'function') renderSubleases();
       if (typeof renderMobileDash === 'function') renderMobileDash();
       closeModal();
+      if (typeof saveCustomerDocs === 'function' && newRes && newRes.docs && newRes.phone) saveCustomerDocs(newRes.phone, newRes.docs);
+      if (typeof clearPendingDocs === 'function') clearPendingDocs();
       alert(`Réservation ${newRes.id} créée et enregistrée !`);
     };
   }
