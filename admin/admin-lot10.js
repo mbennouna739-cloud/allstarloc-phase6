@@ -76,21 +76,37 @@ function buildNotifList() {
     });
   });
 
-  /* Entretien : rappel de VÉRIFICATION du kilométrage (tous les 20 jours).
-     On ne devine pas le km : on rappelle simplement de le vérifier. */
+  /* Entretien : rappel de vérification vidange (tous les 20 jours) + visite technique */
   var MAINT = {};
   try { MAINT = JSON.parse(localStorage.getItem('asl_maint_v1') || '{}'); } catch(e) {}
   fleet.forEach(function(c){
     var m = MAINT[String(c.id)] || {};
-    var v = (typeof window.aslVidangeCheck === 'function') ? window.aslVidangeCheck(m) : null;
-    if (v && v.due) {
-      items.push({
-        type: 'vidange', icon: '🔧', color: '#d97706',
-        title: 'Vérifier le kilométrage — ' + c.name,
-        desc: 'Prochaine vidange prévue à ' + Number(v.km).toLocaleString('fr-FR') + ' km' + (c.plate ? ' · ' + c.plate : ''),
-        action: 'notifGoMaint', arg: c.id
-      });
+    function check(date, label, type) {
+      if (!date) return;
+      var diff = Math.round((new Date(date) - today) / 86400000);
+      if (diff <= 7) {
+        items.push({
+          type: type, icon: '🔧', color: (diff < 0 ? '#ef4444' : '#d97706'),
+          title: label + (diff < 0 ? ' — en retard' : ' — proche'),
+          desc: c.name + (c.plate?' ('+c.plate+')':'') + ' · ' + (diff < 0 ? 'dépassé de ' + Math.abs(diff) + 'j' : 'dans ' + diff + 'j'),
+          action: 'notifGoMaint', arg: c.id
+        });
+      }
     }
+    /* Rappel vidange : vérifier le km tous les 20 jours (pas de calcul auto). */
+    if (m.reminder_next) {
+      var dd = Math.round((new Date(m.reminder_next) - today) / 86400000);
+      if (dd <= 0) {
+        var kmTxt = m.km_vidange_next ? Number(m.km_vidange_next).toLocaleString('fr-FR') + ' km' : '—';
+        items.push({
+          type: 'vidange', icon: '🔧', color: '#d97706',
+          title: 'Vérifier le kilométrage de ' + c.name,
+          desc: 'Prochaine vidange prévue à ' + kmTxt + (c.plate ? ' · ' + c.plate : ''),
+          action: 'notifGoMaint', arg: c.id
+        });
+      }
+    }
+    check(m.vt_next, 'Visite technique', 'vt');
   });
 
   /* Impayés importants */

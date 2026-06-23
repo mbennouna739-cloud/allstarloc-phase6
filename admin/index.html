@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <script src="auth-guard.js"></script>
 <script src="admin-users.js"></script>
+<script src="admin-sublease.js"></script>
+<script src="admin-docs.js"></script>
 <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAFGUlEQVR4nLWXW48UVRDHf3VOd+/srIBscJcdCLqAgFFMEIgCChIURVC5uwJCTHz3S5j4CXzw3Xff/QpGMEYTL6gR2GXvCzv3yznlQ3fPzuzOzowxVHKSntPnVP2r6l9VPUIHGd22Uzvt/1+ZmfxLVu+1bTwpw92ANB/6Nd6KOL0gsrLRrwcpCAEYzY33bdy3GgZQRVUTIIIxpvm7J4ipvyXoEzACOCACbBKHBgphSGgtiOAaDaq1GtbavkFIP94LUEMZFcvX4RYyCBuCgM/n/mHo/Gm++vILvHrK5QoXLk0wNfWQKIr6AmGUOKTdlgBFlHdNlgMywIhYxgioiFIqlhgb28q2XI7du3Zy8eKH5ItFjLU99Spgeh9RHMoGhHN2kAIeBzxWxyMLi3OzeO9xzqGqXJu4yqaNG2g06omP3XWbXvaNQlGV12SAlySihBIBZfWUjLC89JhqpYK1Fu89e/c8z8kTx8nnC1jT2z/TT/5VlfN2iEAERTEIefWUjKG4nOfR42UAvPcA3Lg+gSbPPTnQy3gFZZcJOWEzFNRjECzwSB01K1RKJZaWlmJlSQmefvsUL+zbR7lcRmRN82sH0IMglFR5z2bZIpZGcikG4KkLVKtVFhYWmwqdc2QyGS5fvkChDzJ2TVIdZZMI52yWimqcDsCIMK+OhkCjUWdmbg7SdyYO6scTVxge3ky9XutivgsJrUJRPcdMhn0moow282WABXWoCuo8MzOz8QtVjDF47xl/7lneOnWSQr6ANfa/k1ABUbhoh5qet8q8eoS4/c7OzrbfTRrQrU+us2rerZGOAFLy7TURx+wgRfXYlvcOeKgN6uqp1uvcvz8Z30sIl7biN0+8wf79L1IqlZqp6QCgc17K6jkXZNkspkm+FFxdFaPKDhuya/w5rDVtACAmYxRFTFy9lACQNXZAkS1bd7RFN514EcK3mTF2SEAVbQ+kCNV6HTP8NLnvvsE+vZGBMGyZy3FPMMbwYHKKV48ep1qtJmXaIwUGKKjnuM2w24SUVxtPZABhUITs4CADUbQ2tMbgnGP7thzvvP0Wy8sFjLFrz62OiipYFS7Yp5qDqJNoEinfR8e7dfM6gQ1Qr92rwABlPC/akCM2Q1F911ap0HXkpmR8/dhRDhx4mWKpmHChzWYLIVAqqnxgh9goBrdKoQcGxfCTq/B+fZorc3c5fvZDDhw8wvc/3InPrIqIcw5rLdc+vkqlXEmqoZXwiQhQB0bFciYYoqS6xnsFAmDKO372NX6vl/nl19/48fYd7t27lwBoj4i1cd4vX7pALjdGrVZrq5bmLBAgr56TQZadJqSyDvkMsIAjQsiIIZvNEmQyzM3Pt8BcERHBOcfoyAhnz57h8XIeY1eoZ1rJFxGTz9G9f817h1fi5T3eeaanZ7rciOXmjWsMRBHeaSsJ48ZTxPOyiThkB8hrnEffYTlgThtI0wePMTA9PYP3HlWNQbWsNAqHDx3k8KFXKBTyzcZkYKW7fRRuYItYIoTBDiuLEAKL6mhSScFYw/z8PMYYwjDEGLNmWWsJAstnn31KrVZrVkOwMPtANo9s11FjGZeQ265KfZ38Q/xJPqOOMCGSqhIGIQ8mp/jj7p+kDq0WVQUR9uzeTS6XI5/P82jhYaxleGS7pj2qnw+pTg1KVRFjOk7OFFT6LQHgvGdx9sFKPWx+ZpvGB9dT0apqfWjrdc90P43E0tzkyl+zVIYTEE9aFhPjawA8aSCthlP5Fy1ovp57ATNiAAAAAElFTkSuQmCC">
@@ -266,9 +268,6 @@ html, body { overflow-x: hidden; max-width: 100%; overscroll-behavior-x: none; }
 .table-card table { min-width: 640px; }
 .topbar { flex-wrap: wrap; row-gap: 10px; }
 .modal-overlay { background: rgba(15,18,24,0.45); }
-/* La modale ne dépasse jamais l'écran : le haut (titre/1er champ) reste
-   visible, le contenu défile à l'intérieur si nécessaire (desktop). */
-.modal-overlay .modal, .modal-overlay #modal-content { max-height: 92vh; overflow-y: auto; }
 img { max-width: 100%; }
 /* Lisibilité maximale : tailles et contrastes relevés, design conservé */
 table th { font-size: 12px; letter-spacing: 0.4px; }
@@ -505,7 +504,7 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
     <div class="sb-section">
       <div class="sb-section-label">Gestion</div>
 <a class="sb-item" onclick="showPage('customers',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Clients</a>
-<a class="sb-item" onclick="showPage('partners',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m17 11 2 2 4-4"/></svg></span>Sous-location</a>
+<a class="sb-item" onclick="showPage('sublease',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/><circle cx="12" cy="12" r="3"/></svg></span>Sous-location</a>
 <a class="sb-item" onclick="showPage('payments',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg></span>Paiements</a>
 <a class="sb-item" onclick="showPage('caisse',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg></span>Caisse</a>
 <a class="sb-item" onclick="showPage('options',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg></span>Assurances</a>
@@ -765,6 +764,19 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
       </div>
     </div>
 
+    <!-- ===== SOUS-LOCATION ===== -->
+    <div id="page-sublease" class="page">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+        <div>
+          <h2 style="font-size:18px;font-weight:900;">Sous-location</h2>
+          <p style="font-size:12.5px;color:var(--text2);margin-top:2px;">Personnes et agences à qui vous confiez des véhicules. Indépendant des clients classiques.</p>
+        </div>
+        <button class="topbar-btn primary" onclick="openSubleaseModal()">+ Nouvelle sous-location</button>
+      </div>
+      <input type="search" id="sublease-search" class="form-input" placeholder="🔍 Rechercher une sous-location…" oninput="renderSubleases()" style="margin-bottom:16px;max-width:420px;">
+      <div id="sublease-list"></div>
+    </div>
+
     <!-- ===== PAYMENTS ===== -->
     <div id="page-payments" class="page">
       <div class="stats-grid">
@@ -848,11 +860,6 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
     </div>
 
       
-    <!-- ===== SOUS-LOCATION / PARTENAIRES ===== -->
-    <div id="page-partners" class="page">
-      <div id="partners-root"></div>
-    </div>
-
     <!-- ===== ENTRETIEN VEHICULES ===== -->
     <div id="page-maintenance" class="page">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
@@ -863,7 +870,7 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
         <div class="table-header"><div class="table-title">Suivi entretien flotte</div></div>
         <div style="overflow-x:auto;">
         <table>
-          <thead><tr><th>Véhicule</th><th>Immatriculation</th><th>Km prochaine vidange</th><th>Dernière mise à jour</th><th>Prochain rappel vidange</th><th>Date prochaine visite technique</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Véhicule</th><th>Immatriculation</th><th>Km prochaine vidange</th><th>Dernière mise à jour</th><th>Prochain rappel</th><th>Actions</th></tr></thead>
           <tbody id="maintenance-table"></tbody>
         </table>
         </div>
@@ -1252,8 +1259,8 @@ function showPage(id, el) {
   const titles = {
     dashboard:'Tableau de bord', reservations:'Réservations',
     fleet:'Véhicules / Ma flotte', maintenance:'Entretien véhicules',
-    rentals:'Locations en cours', customers:'Clients',
-    payments:'Paiements', options:'Assurances', bookopt:'Options de réservation', caisse:'Caisse', settings:'Paramètres système', partners:'Sous-location'
+    rentals:'Locations en cours', customers:'Clients', sublease:'Sous-location',
+    payments:'Paiements', options:'Assurances', bookopt:'Options de réservation', caisse:'Caisse', settings:'Paramètres système'
   };
   document.getElementById('topbar-title').textContent = titles[id] || id;
   // Recharge les données partagées avant chaque affichage
@@ -1261,10 +1268,10 @@ function showPage(id, el) {
   // Render specific pages
   if(id==='reservations') renderAllReservations();
   if(id==='fleet'){ renderFleetPage(); var fl=document.getElementById('fleet-label'); if(fl) fl.textContent=FLEET.length+' véhicule(s)'; }
-  if(id==='maintenance'){ if(window.ASLMaint) ASLMaint.pull(); renderMaintenance(); }
+  if(id==='maintenance') renderMaintenance();
   if(id==='rentals') renderRentals();
   if(id==='customers') renderCustomers();
-  if(id==='partners' && typeof renderPartners==='function'){ if(window.ASLPartners) ASLPartners.refresh(); renderPartners(); }
+  if(id==='sublease' && typeof renderSubleases==='function') renderSubleases();
   if(id==='payments') renderPayments();
   if(id==='bookopt') renderBookOptMain();
   if(id==='caisse') renderCaisse();
@@ -1436,28 +1443,16 @@ function confirmRes(id) {
 }
 
 function cancelRes(id) {
-  if(confirm('Annuler cette réservation ? Le véhicule sera libéré et les dates rouvertes.')) {
+  if(confirm('Annuler cette réservation ?')) {
+    // Libère l'unité attribuée (l'immatriculation redevient disponible)
     var resv = (ASLDB.getReservations() || []).find(function(r){ return r.id === id; });
-    // Libère le véhicule (résa du site OU manuelle) : unité attribuée +
-    // recalcul du statut. Le moteur de dispo exclut déjà le statut "cancelled",
-    // donc les dates redeviennent disponibles immédiatement côté site client.
-    if (resv) {
-      if (typeof ASLDB.releaseVehicleFromReservation === 'function') {
-        ASLDB.releaseVehicleFromReservation(resv);
-      } else if (resv.carId != null && resv.assignedPlate && typeof ASLDB.releaseUnit === 'function') {
-        ASLDB.releaseUnit(resv.carId, resv.assignedPlate);
-      }
+    if (resv && resv.carId != null && resv.assignedPlate && typeof ASLDB.releaseUnit === 'function') {
+      ASLDB.releaseUnit(resv.carId, resv.assignedPlate);
     }
-    // Statut → Annulée (conservée dans l'historique), synchronisation immédiate.
-    ASLDB.updateReservation(id, { status: 'cancelled', cancelledAt: new Date().toISOString() });
+    ASLDB.updateReservation(id, { status: 'cancelled' });
     reloadData();
-    if (typeof renderAllReservations === 'function') renderAllReservations();
-    if (typeof renderDashboard === 'function') renderDashboard();
+    renderAllReservations(); renderDashboard();
     if (typeof renderFleetPage === 'function') renderFleetPage();
-    // Notification interne / confirmation.
-    if (typeof showToast === 'function') {
-      showToast('Réservation annulée — véhicule libéré et dates rouvertes' + (resv && resv.car ? ' (' + resv.car + ')' : ''));
-    }
   }
 }
 
@@ -1692,7 +1687,7 @@ function editCar(id) {
   openModal('edit-car');
   document.getElementById('modal-title').textContent = `Modifier: ${car.name}`;
   document.getElementById('modal-body').innerHTML = `
-    <div class="form-group"><label class="form-label">Marque</label><input class="form-input" value="${car.name}" id="edit-name"></div>
+    <div class="form-group"><label class="form-label">Nom</label><input class="form-input" value="${car.name}" id="edit-name"></div>
     <div class="form-row">
       <div class="form-group"><label class="form-label">Prix / jour (MAD)</label><input class="form-input" type="number" value="${car.priceMAD}" id="edit-price-mad"></div>
       <div class="form-group"><label class="form-label">Prix site client (€)</label><input class="form-input" type="number" value="${car.priceEUR}" id="edit-price-eur"></div>
@@ -1999,6 +1994,18 @@ function openModal(type) {
 
   if(type==='new-reservation') {
     document.getElementById('modal-body').innerHTML = `
+      <div class="form-group"><label class="form-label">Type de dossier</label>
+        <select class="form-select" id="nr-doctype" onchange="nrToggleSublease()">
+          <option value="direct">Client direct</option>
+          <option value="sublease">Sous-location</option>
+        </select></div>
+      <div class="form-group" id="nr-sublease-box" style="display:none;background:rgba(196,30,58,.05);border:1px solid rgba(196,30,58,.18);border-radius:10px;padding:12px;">
+        <label class="form-label">Sous-location</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select class="form-select" id="nr-sublease" style="flex:1;">${typeof ASLSublease!=='undefined'?ASLSublease.options():''}</select>
+          <button type="button" class="btn-sm primary" style="white-space:nowrap;" onclick="nrQuickCreateSublease()">+ Créer</button>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:5px;">Le « Prénom / Nom » ci-dessous = le client final.</div></div>
       <div class="form-group"><label class="form-label">N° de contrat / Référence</label><input class="form-input" id="nr-ref" placeholder="ASL-2026-001"><div style="font-size:11px;color:var(--text3,#888);margin-top:4px;">Pré-rempli automatiquement — modifiable. Se synchronise avec Paiements, Clients et le tableau de bord.</div></div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Prénom</label><input class="form-input" placeholder="Prénom" id="nr-firstname"></div>
@@ -2051,6 +2058,17 @@ function openModal(type) {
         <div id="nr-rest" style="font-weight:700;font-size:13.5px;margin-top:4px;"></div>
       </div>
       <div class="form-group"><label class="form-label">Notes</label><textarea class="form-input form-textarea" rows="2" placeholder="Notes internes..." id="nr-notes"></textarea></div>
+      <div class="form-group"><label class="form-label">Documents (facultatif)</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div><div style="font-size:12px;color:var(--text3);margin-bottom:4px;">Permis de conduire</div>
+            <input type="file" accept="image/*" id="nr-doc-permis" class="form-input" style="padding:8px;" onchange="docPreview(this,'nr-permis-prev')">
+            <div id="nr-permis-prev" style="margin-top:6px;"></div></div>
+          <div><div style="font-size:12px;color:var(--text3);margin-bottom:4px;">CIN / Passeport</div>
+            <input type="file" accept="image/*" id="nr-doc-identity" class="form-input" style="padding:8px;" onchange="docPreview(this,'nr-identity-prev')">
+            <div id="nr-identity-prev" style="margin-top:6px;"></div></div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:5px;">Vous pouvez aussi les ajouter plus tard depuis la fiche client.</div>
+      </div>
     `;
     // Calcul auto du total à l'ouverture + à chaque changement de véhicule/dates
     setTimeout(function(){
@@ -2140,6 +2158,15 @@ function openModal(type) {
       else payStatus = 'Paiement partiel';
       const paymentMode = document.getElementById('nr-mode')?.value || 'Espèces';
 
+      /* Type de dossier : sous-location ? */
+      const nrDocType = document.getElementById('nr-doctype')?.value || 'direct';
+      let nrSubleaseId = '';
+      if (nrDocType === 'sublease') {
+        nrSubleaseId = document.getElementById('nr-sublease')?.value || '';
+        if (!nrSubleaseId) { alert('Veuillez choisir une sous-location (ou la créer).'); return; }
+      }
+      const nrFinalClient = `${fn} ${ln||''}`.trim();
+
       /* ★ VÉRIFICATION DE CONFLIT avant d'enregistrer la réservation manuelle */
       if (typeof ASLDB.checkAvailability === 'function' && car) {
         const chk = ASLDB.checkAvailability(car, start, end, startTime, endTime);
@@ -2170,6 +2197,8 @@ function openModal(type) {
         pickup: document.getElementById('nr-pickup')?.value||'',
         source: document.getElementById('nr-source')?.value||'phone',
         status: 'confirmed', type: 'reservation', payment: 'onsite', nationality: 'N/A',
+        subleaseId: nrSubleaseId, finalClient: nrSubleaseId ? nrFinalClient : '',
+        docs: (typeof collectDocs === 'function' ? collectDocs('nr-doc-permis', 'nr-doc-identity') : {}),
         notes: document.getElementById('nr-notes')?.value||'',
       });
       // Réservation = unité passe en "réservée" (pas encore louée)
@@ -2180,15 +2209,18 @@ function openModal(type) {
       }
       reloadData();
       renderAllReservations(); renderDashboard();
+      if (typeof renderSubleases === 'function') renderSubleases();
       if (typeof renderMobileDash === 'function') renderMobileDash();
       closeModal();
+      if (typeof saveCustomerDocs === 'function' && newRes && newRes.docs && newRes.phone) saveCustomerDocs(newRes.phone, newRes.docs);
+      if (typeof clearPendingDocs === 'function') clearPendingDocs();
       alert(`Réservation ${newRes.id} créée et enregistrée !`);
     };
   }
 
   if(type==='add-car') {
     document.getElementById('modal-body').innerHTML = `
-      <div class="form-group"><label class="form-label">Marque</label><input class="form-input" placeholder="Ex: Dacia Logan" id="ac-name"></div>
+      <div class="form-group"><label class="form-label">Nom du véhicule</label><input class="form-input" placeholder="Ex: Dacia Logan" id="ac-name"></div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Prix / jour (MAD)</label><input class="form-input" type="number" placeholder="300" id="ac-price-mad"></div>
         <div class="form-group"><label class="form-label">Prix site client (€)</label><input class="form-input" type="number" placeholder="30" id="ac-price-eur"></div>
@@ -2355,7 +2387,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if(id==='maintenance') renderMaintenance();
     if(id==='rentals') renderRentals();
     if(id==='customers') renderCustomers();
-    if(id==='partners' && typeof renderPartners==='function') renderPartners();
     if(id==='payments') renderPayments();
     if(typeof updateBadges==='function') updateBadges();
   });
@@ -2776,11 +2807,11 @@ document.addEventListener('DOMContentLoaded', function(){ setTimeout(renderMobil
 <script src="admin-lot6.js"></script>
 <script src="admin-lot7.js"></script>
 <script src="admin-lot10.js"></script>
-<script src="admin-partners.js"></script>
 <script src="admin-bookopt.js"></script>
 <script src="admin-caisse.js"></script>
 <script src="admin-archive.js"></script>
 <script src="admin-users-ui.js"></script>
+<script src="admin-sublease-ui.js"></script>
 <script src="admin-mobile.js"></script>
 </body>
 </html>

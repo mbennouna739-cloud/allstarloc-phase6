@@ -29,13 +29,11 @@
        ici pour autoriser les écritures de l'administration.
      POLL_MS : fréquence de vérification des nouveautés serveur (ms).      */
   const REMOTE_URL = '/api';
-  // La clé admin n'est PLUS codée en dur et n'est PLUS capturée une seule fois :
-  // elle est lue À CHAQUE requête depuis la session déposée à la connexion
-  // (login serveur). Cela garantit que mobile ET desktop envoient toujours la
-  // clé courante (corrige les 403 « X-ASL-Key absente » sur mobile).
-  function currentAdminKey(){
+  // La clé admin n'est PLUS codée en dur : elle est récupérée depuis la session
+  // déposée lors de la connexion (login serveur). Repli sur '' si absente.
+  const ADMIN_KEY = (function(){
     try { return localStorage.getItem('asl_admin_key') || ''; } catch(e) { return ''; }
-  }
+  })();
   const POLL_MS    = 8000;
   /* ================================================= */
 
@@ -107,7 +105,7 @@
   function apiUrl(path) { return REMOTE_URL.replace(/\/$/, '') + path; }
   function headers(withKey) {
     const h = { 'Content-Type': 'application/json' };
-    if (withKey) { const k = currentAdminKey(); if (k) h['X-ASL-Key'] = k; }
+    if (withKey && ADMIN_KEY) h['X-ASL-Key'] = ADMIN_KEY;
     return h;
   }
 
@@ -209,6 +207,72 @@
   let authError = false; // clé admin refusée par le serveur
   let syncChain = Promise.resolve(false);
   let cyclePlanned = false;
+  /* ----- Synchro des données auxiliaires (sous-locations, charges,
+     entretien, documents) entre tous les appareils. Chaque clé locale
+     est miroir d'un document serveur ; on pousse si on a modifié
+     localement (marqueur _dirty), sinon on tire la version serveur. ----- */
+  var MISC_MAP = {
+    subleases: 'asl_subleases_v1',
+    charges: 'asl_charges_v1',
+    maint: 'asl_maint_v1',
+    docs: 'asl_cust_docs_v1'
+  };
+  function miscDirtyKey(name) { return 'asl_misc_dirty_' + name; }
+  function miscRevKey(name) { return 'asl_misc_rev_' + name; }
+  function markMiscDirty(name) {
+    try { localStorage.setItem(miscDirtyKey(name), '1'); } catch (e) {}
+  }
+  /* Exposé : appelé par les modules quand ils écrivent une clé auxiliaire. */
+  function noteLocalChange(localKey) {
+    Object.keys(MISC_MAP).forEach(function (name) {
+      if (MISC_MAP[name] === localKey) markMiscDirty(name);
+    });
+  }
+  async function syncMisc() {
+    if (!remoteEnabled) return;
+    for (var name in MISC_MAP) {
+      if (!MISC_MAP.hasOwnProperty(name)) continue;
+      var localKey = MISC_MAP[name];
+      var dirty = localStorage.getItem(miscDirtyKey(name));
+      try {
+        if (dirty) {
+          // Pousser la version locale
+          var value = readJSON(localKey, null);
+          if (value !== null) {
+            try {
+              var res = await apiFetch('/misc', {
+                method: 'PUT', headers: headers(true),
+                body: JSON.stringify({ name: name, value: value })
+              });
+              if (res && res.rev != null) writeNum(miscRevKey(name), res.rev);
+              try { localStorage.removeItem(miscDirtyKey(name)); } catch (e) {}
+            } catch (ePush) {
+              // Pas de clé admin (employé) : on ne peut pas pousser. On abandonne
+              // le marqueur et on récupère plutôt la version serveur pour rester à jour.
+              if (ePush && (ePush.status === 401 || ePush.status === 403)) {
+                try { localStorage.removeItem(miscDirtyKey(name)); } catch (e) {}
+                var pulled = await apiFetch('/misc?name=' + name, { method: 'GET' });
+                if (pulled && pulled.doc && typeof pulled.doc.rev === 'number' && pulled.doc.rev > readNum(miscRevKey(name))) {
+                  write(localKey, pulled.doc.value);
+                  writeNum(miscRevKey(name), pulled.doc.rev);
+                  emit(localKey);
+                }
+              }
+            }
+          }
+        } else {
+          // Tirer la version serveur si plus récente
+          var got = await apiFetch('/misc?name=' + name, { method: 'GET' });
+          if (got && got.doc && typeof got.doc.rev === 'number' && got.doc.rev > readNum(miscRevKey(name))) {
+            write(localKey, got.doc.value);
+            writeNum(miscRevKey(name), got.doc.rev);
+            emit(localKey);
+          }
+        }
+      } catch (e) { /* hors-ligne : on réessaiera */ }
+    }
+  }
+
   function syncNow() {
     if (!remoteEnabled) return Promise.resolve(online);
     if (cyclePlanned) return syncChain;
@@ -240,6 +304,7 @@
         }
       }
       await pullState();
+      try { await syncMisc(); } catch (e) {}
       // Si le pull vient de demander un seed (serveur vide), on l'envoie tout de suite
       if (!pushFailed && localStorage.getItem(KEY_PEND_F)) {
         try { await flushPending(); }
@@ -427,21 +492,13 @@
     return aStart < bEnd && bStart < aEnd;
   }
 
-  /* Statuts « terminaux » qui ne bloquent JAMAIS un véhicule : les dates
-     concernées sont automatiquement réouvertes (site client + back-office).
-     Couvre annulée, refusée, expirée, terminée, clôturée, no-show
-     (variantes FR/EN). Seuls confirmée / en attente / active / réservée /
-     prolongation bloquent encore le véhicule. */
-  var TERMINAL_RES_STATUSES = ['cancelled', 'canceled', 'annulee', 'annulée', 'refused', 'rejected', 'declined', 'refusee', 'refusée', 'expired', 'expiree', 'expirée', 'completed', 'closed', 'terminee', 'terminée', 'cloturee', 'cloturée', 'clôturée', 'noshow', 'no-show'];
-  function _isTerminalRes(s) { return TERMINAL_RES_STATUSES.indexOf(String(s || '').toLowerCase()) >= 0; }
-
   /* Réservations actives (confirmées/en cours/en attente) pour un véhicule donné. */
   function _resForCar(car) {
     var unitIds = (car && car.unitIds) || [car && car.id];
     var name = car && car.name;
     return read(KEY_RES, []).filter(function (r) {
       if (!r.startDate || !r.endDate) return false;
-      if (_isTerminalRes(r.status)) return false;
+      if (r.status === 'cancelled' || r.status === 'completed') return false;
       return (r.car === name) || (unitIds.indexOf(r.carId) >= 0);
     });
   }
@@ -731,29 +788,6 @@
     return car.units[idx];
   }
 
-  /* Libère le véhicule rattaché à une réservation annulée/terminée.
-     SÛR : ne touche que l'unité réellement attribuée (par plaque), puis
-     recalcule le statut agrégé. Pour une résa sans unité attribuée
-     (ex. en attente, ou location manuelle sans plaque), on recalcule le
-     statut depuis les unités. Résultat : la voiture redevient disponible
-     dès qu'aucune unité n'est occupée — site client + back-office. */
-  function releaseVehicleFromReservation(resv) {
-    if (!resv) return null;
-    var fleet = getFleet();
-    var car = (resv.carId != null && fleet.find(function (c) { return c.id === resv.carId; }))
-      || fleet.find(function (c) { return c.name === resv.car; });
-    if (!car) return null;
-    car.units = normalizeUnits(car);
-    if (resv.assignedPlate) {
-      var i = car.units.findIndex(function (u) { return u.plate === resv.assignedPlate; });
-      if (i >= 0) car.units[i].status = 'available';
-    }
-    // Recalcul du statut agrégé d'après l'état réel des unités.
-    car.status = modelAvailability(car).isAvailable ? 'available' : car.status;
-    saveFleet(fleet);
-    return car;
-  }
-
   /* ============================================================
      TARIFS — SOURCE UNIQUE DE VÉRITÉ DU PRIX/JOUR
      Priorité : tarif saisonnier (mois + durée) → tranche par durée
@@ -858,9 +892,8 @@
     onChange,
     // Gestion des unités de stock (couleur + immatriculation par unité)
     normalizeUnits, modelAvailability, assignUnit, releaseUnit, setUnitStatusByPlate,
-    releaseVehicleFromReservation, isTerminalReservationStatus: _isTerminalRes,
     // Nouveaux utilitaires de synchronisation et d'images
-    syncNow, syncStatus, uploadImage,
+    syncNow, syncStatus, uploadImage, noteLocalChange,
     // ★ Tarification (source unique) : saison → durée → standard
     dailyRate, seasonalRate, normalizeSeasonalTiers, normalizeDurationTiers, monthOfISO,
     // ★ Moteur central de disponibilité & conflits (site + back-office)
