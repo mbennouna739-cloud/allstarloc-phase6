@@ -16,6 +16,13 @@
   #asl-mobile-app, #asl-mobile-app * , #asl-mobile-tabbar, #asl-mobile-tabbar *,
   .ma-sheet, .ma-sheet * { box-sizing: border-box; }
   html, body { max-width: 100%; overflow-x: hidden; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+  /* Chrome mobile : empêche l'inflation automatique du texte lors de la
+     rotation portrait↔paysage (le contenu restait « zoomé »). Safari n'a
+     jamais le souci ; cette règle est neutre pour lui. */
+  #asl-mobile-app, #asl-mobile-app *, #asl-mobile-tabbar, #asl-mobile-tabbar *,
+  .ma-sheet, .ma-sheet *, .modal-overlay, .modal-overlay * {
+    -webkit-text-size-adjust: 100%; -moz-text-size-adjust: 100%; text-size-adjust: 100%;
+  }
   /* Stabilité tactile globale de l'app : pas de double-tap zoom, pas de
      chaînage de scroll qui décale la page, pas de surlignage tactile. */
   #asl-mobile-app, #asl-mobile-app * { -webkit-tap-highlight-color: transparent; }
@@ -224,7 +231,7 @@
   .ma-cash-lbl { font-size: 13px; color: #5d6470; font-weight: 600; }
   .ma-cash-num { font-size: 23px; font-weight: 800; margin-top: 2px; }
   .ma-cash-note { font-size: 11.5px; color: #9aa0ab; margin-top: 3px; }
-  .ma-card-note { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(18,22,30,.07); }
+  .ma-card-note { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12.5px; font-weight: 600; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(18,22,30,.07); line-height: 1.4; }
   .ma-card-note.orange { color: #d97706; }
   .ma-card-note.blue { color: #1d4ed8; }
   .ma-card-note svg { width: 15px; height: 15px; flex-shrink: 0; }
@@ -272,8 +279,12 @@
     position: fixed; inset: 0; z-index: 1700; background: rgba(15,18,24,.44);
     display: flex; align-items: flex-end;
     animation: maSheetFade .22s ease;
+    will-change: opacity;
   }
-  @keyframes maSheetFade { from { background: rgba(15,18,24,0); } to { background: rgba(15,18,24,.44); } }
+  /* On anime l'opacité d'un fond plein (et non la couleur de fond) : le
+     voile apparaît de façon parfaitement homogène, sans zone du haut qui
+     paraît s'éclaircir pendant l'animation. */
+  @keyframes maSheetFade { from { opacity: 0; } to { opacity: 1; } }
   /* Quand une feuille/popup est ouverte, on fige l'app derrière : plus de
      scroll de l'arrière-plan, plus de bande noire qui apparaît/disparaît. */
   body.ma-locked #asl-mobile-app { overflow: hidden !important; }
@@ -425,7 +436,11 @@
   html, body { overflow-x: hidden !important; width: 100%; position: relative; }
 
   /* Modale « charge » (overlay inline, hors .modal-overlay) */
-  #charge-modal-host { position: fixed; inset: 0; max-width: 100vw; overflow-x: hidden; }
+  /* Le conteneur n'est PAS positionné en plein écran : c'est la modale
+     interne (son propre position:fixed) qui couvre l'écran. Ainsi, une fois
+     la modale fermée (host vidé), il ne reste AUCUNE couche invisible qui
+     intercepte les clics → plus de blocage de navigation après une charge. */
+  #charge-modal-host:empty { display: none !important; }
   #charge-modal-host > div { padding-left: 12px !important; padding-right: 12px !important; overflow-x: hidden !important; }
   #charge-modal-host input, #charge-modal-host select, #charge-modal-host textarea, #charge-modal-host .form-input {
     width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; font-size: 16px !important;

@@ -345,8 +345,13 @@
       var idArg = (typeof id === 'number' ? id : "'" + String(id) + "'");
       openSheet(
         '<div class="ma-sheet-title">Photo du véhicule</div>'
-        + '<div class="ma-sheet-sub">Vérifiez l\'aperçu avant d\'enregistrer.</div>'
+        + '<div class="ma-sheet-sub">Traitement auto (recadrage + fond). Vérifiez l\'aperçu.</div>'
         + '<div class="ma-photo-preview"><img src="' + reader.result + '" alt=""></div>'
+        + '<div style="display:flex;align-items:center;gap:8px;margin:10px 0;flex-wrap:wrap;">'
+        + '<label style="font-size:13px;color:#6b7280;font-weight:600;">Fond :</label>'
+        + '<select id="ma-photo-bg" class="form-input" style="width:auto;flex:1;min-height:44px;font-size:16px;">'
+        + '<option value="white">Blanc (défaut)</option><option value="black">Noir</option>'
+        + '<option value="transparent">Transparent</option></select></div>'
         + '<button class="ma-action" id="ma-photo-save">' + ic('check') + ' Enregistrer la photo</button>'
         + '<button class="ma-act-btn ma-photo-retake" onclick="maVehiclePhoto(' + idArg + ')">' + ic('camera') + ' Reprendre / changer</button>'
       );
@@ -356,7 +361,7 @@
     reader.readAsDataURL(file);
   }
   function maPhotoSave(id, file, btn) {
-    if (btn) { btn.disabled = true; btn.innerHTML = ic('clock') + ' Envoi en cours…'; }
+    if (btn) { btn.disabled = true; btn.innerHTML = ic('clock') + ' Traitement…'; }
     function finish(url) {
       try { if (ASLDB && ASLDB.updateVehicle) ASLDB.updateVehicle(id, { img: url, image: url, photo: url }); } catch (e) {}
       closeSheet();
@@ -367,13 +372,30 @@
       if (btn) { btn.disabled = false; btn.innerHTML = ic('check') + ' Enregistrer la photo'; }
       alert(msg || 'Échec de l\'envoi de la photo. Réessayez.');
     }
-    try {
-      if (ASLDB && typeof ASLDB.uploadImage === 'function') {
-        ASLDB.uploadImage(file).then(finish).catch(function (err) { fail(err && err.message ? err.message : null); });
-      } else {
-        fail('Téléversement indisponible. Déployez le site sur Cloudflare pour activer les photos.');
-      }
-    } catch (e) { fail(e && e.message ? e.message : null); }
+    function doUpload(toUpload) {
+      try {
+        if (ASLDB && typeof ASLDB.uploadImage === 'function') {
+          if (btn) btn.innerHTML = ic('clock') + ' Envoi en cours…';
+          ASLDB.uploadImage(toUpload).then(finish).catch(function (err) { fail(err && err.message ? err.message : null); });
+        } else {
+          fail('Téléversement indisponible. Déployez le site sur Cloudflare pour activer les photos.');
+        }
+      } catch (e) { fail(e && e.message ? e.message : null); }
+    }
+    // Traitement automatique puis envoi ; en cas d'échec → image d'origine.
+    var bgEl = document.getElementById('ma-photo-bg');
+    var bg = bgEl ? bgEl.value : 'white';
+    if (window.ASLPhoto && typeof window.ASLPhoto.process === 'function') {
+      window.ASLPhoto.process(file, { background: bg }).then(function (processed) {
+        if (!processed) { doUpload(file); return; }
+        fetch(processed).then(function (r) { return r.blob(); }).then(function (blob) {
+          var nf = new File([blob], (file.name || 'photo').replace(/\.[^.]+$/, '') + (bg === 'transparent' ? '.png' : '.jpg'), { type: blob.type || 'image/jpeg' });
+          doUpload(nf);
+        }).catch(function () { doUpload(file); });
+      }).catch(function () { doUpload(file); });
+    } else {
+      doUpload(file);
+    }
   }
 
   /* ============ RÉSERVATIONS ============ */
@@ -409,8 +431,8 @@
         + '<div class="ma-card-sub">' + esc(r.client || 'Client') + (plate ? ' · ' + esc(plate) : '') + '</div></div>'
         + payBadge + '</div>'
         + '<div class="ma-card-meta">'
-        + '<div class="ma-meta">Départ<b>' + esc(r.startDate || '—') + (r.startTime ? ' ' + r.startTime : '') + '</b></div>'
-        + '<div class="ma-meta">Retour<b>' + esc(r.endDate || '—') + (r.endTime ? ' ' + r.endTime : '') + '</b></div>'
+        + '<div class="ma-meta">Départ<b>' + fmtDateT(r.startDate, r.startTime, '10:00') + '</b></div>'
+        + '<div class="ma-meta">Retour<b>' + fmtDateT(r.endDate, r.endTime, '18:00') + '</b></div>'
         + '<div class="ma-meta">Total<b>' + money(r.amount || 0) + '</b></div>'
         + '<div class="ma-meta">Reste<b style="color:' + (reste > 0 ? '#C41E3A' : '#16a34a') + ';">' + money(reste) + '</b></div></div>'
         + '<div class="ma-actions">'
@@ -436,8 +458,8 @@
       + '<div class="ma-card-sub">' + esc(r.car || '') + ' · ' + esc(r.contractRef || r.id || '') + '</div></div>'
       + '<span class="ma-badge ' + st[0] + '">' + st[1] + '</span></div>'
       + '<div class="ma-card-meta">'
-      + '<div class="ma-meta">Départ<b>' + esc(r.startDate || '—') + (r.startTime ? ' ' + r.startTime : '') + '</b></div>'
-      + '<div class="ma-meta">Retour<b>' + esc(r.endDate || '—') + (r.endTime ? ' ' + r.endTime : '') + '</b></div>'
+      + '<div class="ma-meta">Départ<b>' + fmtDateT(r.startDate, r.startTime, '10:00') + '</b></div>'
+      + '<div class="ma-meta">Retour<b>' + fmtDateT(r.endDate, r.endTime, '18:00') + '</b></div>'
       + '<div class="ma-meta">Total<b>' + money(r.amount || 0) + '</b></div></div>'
       + '<div class="ma-pay-line">' + payBadge + '</div>'
       + actions + '</div>';
@@ -459,8 +481,8 @@
       + row('Client', esc(r.client || '—'))
       + (r.phone ? row('Téléphone', '<a href="tel:' + esc(r.phone) + '" style="color:#2563eb;text-decoration:none;">' + esc(r.phone) + '</a>') : '')
       + row('Contrat', esc(r.contractRef || r.id || '—'))
-      + row('Départ', esc(r.startDate || '—') + (r.startTime ? ' ' + r.startTime : ''))
-      + row('Retour', esc(r.endDate || '—') + (r.endTime ? ' ' + r.endTime : ''))
+      + row('Départ', fmtDateT(r.startDate, r.startTime, '10:00'))
+      + row('Retour', fmtDateT(r.endDate, r.endTime, '18:00'))
       + row('Total', money(r.amount || 0))
       + row('Payé', money(r.paid || 0), '#16a34a')
       + row('Reste à payer', money(reste), reste > 0 ? '#C41E3A' : '#16a34a')
@@ -528,7 +550,7 @@
         + '<div class="ma-card-info"><div class="ma-card-name">' + esc(r.car || 'Véhicule') + '</div>'
         + '<div class="ma-card-sub">' + esc(r.client || '') + (r.endTime ? ' · retour ' + esc(r.endTime) : '') + '</div></div>'
         + (reste > 0 ? '<span class="ma-badge red">Reste ' + money(reste) + '</span>' : '<span class="ma-badge green">Payé</span>') + '</div>'
-        + '<div class="ma-return-foot"><span>' + ic('eye') + ' Ouvrir la fiche</span><span class="ma-return-date">' + esc(r.endDate || '') + '</span></div>'
+        + '<div class="ma-return-foot"><span>' + ic('eye') + ' Ouvrir la fiche</span><span class="ma-return-date">' + fmtDateT(r.endDate, r.endTime, '18:00') + '</span></div>'
         + '</div>';
     }).join('') : '<div class="ma-empty">Aucun retour prévu pour cette date.</div>';
     host.innerHTML = head + body;
@@ -553,7 +575,7 @@
         + '<div class="ma-card-info"><div class="ma-card-name">' + esc(c.name || 'Véhicule') + '</div>'
         + '<div class="ma-card-sub">' + esc(c.plate || '—') + '</div></div>'
         + '<span class="ma-badge green">Disponible</span></div>'
-        + (fut ? '<div class="ma-card-note orange">' + ic('calendar') + ' Réservée du ' + fmtDM(fut.startDate) + ' au ' + fmtDM(fut.endDate) + '</div>' : '')
+        + (fut ? '<div class="ma-card-note orange">' + ic('calendar') + ' Réservée du ' + fmtDMT(fut.startDate, fut.startTime, '10:00') + ' au ' + fmtDMT(fut.endDate, fut.endTime, '18:00') + '</div>' : '')
         + '</div>';
     }).join('') : '<div class="ma-empty">Aucun véhicule disponible en ce moment.</div>';
   }
@@ -575,7 +597,7 @@
         + '<div class="ma-card-info"><div class="ma-card-name">' + esc(r.car || 'Véhicule') + '</div>'
         + '<div class="ma-card-sub">' + esc(plate || '—') + '</div></div>'
         + '<span class="ma-badge purple">Réservé</span></div>'
-        + '<div class="ma-card-note blue">' + ic('calendar') + ' Réservée du ' + fmtDM(r.startDate) + ' au ' + fmtDM(r.endDate) + '</div>'
+        + '<div class="ma-card-note blue">' + ic('calendar') + ' Réservée du ' + fmtDMT(r.startDate, r.startTime, '10:00') + ' au ' + fmtDMT(r.endDate, r.endTime, '18:00') + '</div>'
         + '<div class="ma-card-note">' + ic('user') + ' ' + esc(r.client || r.finalClient || 'Client') + '</div>'
         + '</div>';
     }).join('') : '<div class="ma-empty">Aucun véhicule réservé.</div>';
@@ -656,7 +678,7 @@
       return '<div class="ma-card">'
         + '<div class="ma-card-top"><div class="ma-card-ico-box red">' + ic('alert') + '</div>'
         + '<div class="ma-card-info"><div class="ma-card-name">' + esc(r.car || 'Véhicule') + '</div>'
-        + '<div class="ma-card-sub">' + esc(r.client || '') + ' · retour prévu ' + esc(r.endDate || '') + '</div></div>'
+        + '<div class="ma-card-sub">' + esc(r.client || '') + ' · retour prévu ' + fmtDateT(r.endDate, r.endTime, '18:00') + '</div></div>'
         + '<span class="ma-badge red">' + days + ' j</span></div>'
         + '<div class="ma-actions">'
         + '<button class="ma-act-btn" onclick="maViewRental(' + idStr + ')">' + ic('eye') + 'Fiche</button>'
@@ -701,6 +723,28 @@
     if (!d) return '';
     var p = String(d).slice(0, 10).split('-');
     return p.length === 3 ? (p[2] + '/' + p[1]) : d;
+  }
+  /* Heure : on prend l'heure stockée si présente, sinon valeur par défaut
+     métier (départ 10:00, retour 18:00) pour ne JAMAIS afficher une date
+     seule. N'altère aucune donnée, c'est uniquement de l'affichage. */
+  function timeOr(t, def) {
+    var s = (t == null ? '' : String(t)).trim();
+    return s ? s : (def || '');
+  }
+  /* Date complète JJ/MM/AAAA + heure. */
+  function fmtDateT(d, t, def) {
+    if (!d) return '—';
+    var p = String(d).slice(0, 10).split('-');
+    var date = p.length === 3 ? (p[2] + '/' + p[1] + '/' + p[0]) : String(d);
+    var h = timeOr(t, def);
+    return h ? (date + ' à ' + h) : date;
+  }
+  /* Date courte JJ/MM + heure (pour les notes compactes « Réservée du… »). */
+  function fmtDMT(d, t, def) {
+    if (!d) return '';
+    var dm = fmtDM(d);
+    var h = timeOr(t, def);
+    return h ? (dm + ' à ' + h) : dm;
   }
 
   /* ============ CLIENTS ============ */
@@ -756,7 +800,7 @@
       var reste = Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
       return '<button class="ma-hist-row" onclick="closeSheet();maViewRes(\'' + String(r.id || '') + '\')">'
         + '<div><div class="ma-hist-car">' + esc(r.car || '—') + '</div>'
-        + '<div class="ma-hist-dates">' + esc(r.startDate || '') + ' → ' + esc(r.endDate || '') + '</div></div>'
+        + '<div class="ma-hist-dates">' + fmtDMT(r.startDate, r.startTime, '10:00') + ' → ' + fmtDMT(r.endDate, r.endTime, '18:00') + '</div></div>'
         + (reste > 0 ? '<span class="ma-badge red">Reste ' + money(reste) + '</span>' : '<span class="ma-badge green">Payé</span>')
         + '</button>';
     }).join('');
@@ -792,7 +836,7 @@
           + '<span class="ma-badge red">' + money(reste) + '</span></div>'
           + '<div class="ma-card-meta"><div class="ma-meta">Total<b>' + money(r.amount || 0) + '</b></div>'
           + '<div class="ma-meta">Payé<b style="color:#16a34a;">' + money(r.paid || 0) + '</b></div>'
-          + '<div class="ma-meta">Retour<b' + (late ? ' style="color:#C41E3A;"' : '') + '>' + esc(r.endDate || '—') + (late ? ' (retard)' : '') + '</b></div></div>'
+          + '<div class="ma-meta">Retour<b' + (late ? ' style="color:#C41E3A;"' : '') + '>' + fmtDateT(r.endDate, r.endTime, '18:00') + (late ? ' (retard)' : '') + '</b></div></div>'
           + '<div style="display:flex;gap:8px;margin-top:10px;">'
           + '<button class="ma-act-btn" onclick="maViewRes(\'' + r.id + '\')">Voir la fiche</button>'
           + '<button class="ma-act-btn ok" onclick="maPayUnpaid(\'' + r.id + '\')">Encaisser</button>'
@@ -863,7 +907,7 @@
         + '<div class="ma-card-top"><div class="ma-card-info"><div class="ma-card-name">' + esc(r.finalClient || r.client || 'Client') + '</div>'
         + '<div class="ma-card-sub">' + esc(r.car || '') + (plate ? ' · ' + esc(plate) : '') + '</div></div>'
         + '<span class="ma-badge ' + (reste > 0 ? 'red' : 'green') + '">' + (reste > 0 ? money(reste) : 'Soldé') + '</span></div>'
-        + '<div class="ma-card-meta"><div class="ma-meta">Dates<b>' + esc(r.startDate || '') + ' → ' + esc(r.endDate || '') + '</b></div>'
+        + '<div class="ma-card-meta"><div class="ma-meta">Dates<b>' + fmtDMT(r.startDate, r.startTime, '10:00') + ' → ' + fmtDMT(r.endDate, r.endTime, '18:00') + '</b></div>'
         + '<div class="ma-meta">Total<b>' + money(r.amount || 0) + '</b></div>'
         + '<div class="ma-meta">Payé<b style="color:#16a34a;">' + money(r.paid || 0) + '</b></div></div>'
         + '<div style="display:flex;gap:8px;margin-top:10px;">'
@@ -899,7 +943,7 @@
       var reste = (Number(r.amount) || 0) - (Number(r.paid) || 0);
       return '<div class="ma-card">'
         + '<div class="ma-card-top"><div class="ma-card-info"><div class="ma-card-name">' + esc(r.finalClient || r.client || 'Client') + '</div>'
-        + '<div class="ma-card-sub">' + esc(r.car || '') + ' · ' + esc(r.startDate || '') + ' → ' + esc(r.endDate || '') + '</div></div>'
+        + '<div class="ma-card-sub">' + esc(r.car || '') + ' · ' + fmtDMT(r.startDate, r.startTime, '10:00') + ' → ' + fmtDMT(r.endDate, r.endTime, '18:00') + '</div></div>'
         + '<span class="ma-badge red">' + money(reste) + '</span></div>'
         + '<div class="ma-card-meta"><div class="ma-meta">Total<b>' + money(r.amount || 0) + '</b></div>'
         + '<div class="ma-meta">Payé<b style="color:#16a34a;">' + money(r.paid || 0) + '</b></div></div>'

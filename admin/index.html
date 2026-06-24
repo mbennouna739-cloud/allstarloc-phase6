@@ -5,6 +5,7 @@
 <script src="auth-guard.js"></script>
 <script src="admin-users.js"></script>
 <script src="admin-sublease.js"></script>
+<script src="admin-photo.js"></script>
 <script src="admin-docs.js"></script>
 <meta name="robots" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1717,6 +1718,7 @@ function editCar(id) {
         <button type="button" class="btn-sm primary" id="edit-upload-btn"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg> Téléverser une image</button>
         <input type="file" id="edit-file" accept="image/*" style="display:none;">
         <span id="edit-upload-status" style="font-size:12px;color:var(--text3);"></span>
+        <div style="margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><label style="font-size:12px;color:var(--text3);font-weight:600;">Traitement auto — fond :</label><select id="edit-bg" class="form-input" style="width:auto;padding:5px 8px;font-size:13px;"><option value="white">Blanc (défaut)</option><option value="black">Noir</option><option value="transparent">Transparent</option><option value="custom">Personnalisé…</option></select><input type="file" id="edit-bgfile" accept="image/*" style="display:none;"><button type="button" id="edit-bgbtn" class="btn-sm" style="display:none;">Choisir le fond</button></div>
       </div>
       <img id="edit-preview" alt="Aperçu du véhicule" style="display:none;margin-top:10px;width:100%;max-width:280px;height:130px;object-fit:cover;border-radius:10px;border:1px solid rgba(18,22,30,0.14);">
     </div>
@@ -1844,18 +1846,53 @@ function wireImageUpload(prefix) {
   showPreview(urlInput.value.trim());
   urlInput.addEventListener('input', () => showPreview(urlInput.value.trim()));
   btn.onclick = () => file.click();
+  // Fond personnalisé : mémorise l'image téléversée par l'admin
+  const bgSel = document.getElementById(prefix + '-bg');
+  const bgFile = document.getElementById(prefix + '-bgfile');
+  const bgBtn = document.getElementById(prefix + '-bgbtn');
+  let customBg = '';
+  if (bgSel && bgBtn && bgFile) {
+    bgSel.addEventListener('change', () => {
+      const isCustom = bgSel.value === 'custom';
+      bgBtn.style.display = isCustom ? '' : 'none';
+    });
+    bgBtn.onclick = () => bgFile.click();
+    bgFile.onchange = (e) => {
+      const cf = e.target.files && e.target.files[0];
+      if (!cf) return;
+      const r = new FileReader();
+      r.onload = () => { customBg = r.result; if (status) { status.style.color = 'var(--text3)'; status.textContent = 'Fond personnalisé chargé.'; } };
+      r.readAsDataURL(cf);
+    };
+  }
   file.onchange = async (e) => {
     const f = e.target.files && e.target.files[0];
     if (!f) return;
     btn.disabled = true;
     status.style.color = 'var(--text3)';
-    status.textContent = 'Compression et envoi en cours…';
+    status.textContent = 'Traitement de la photo…';
     try {
-      const url = await ASLDB.uploadImage(f);
+      // Traitement automatique (recadrage + centrage + fond). Si indisponible
+      // ou en échec, on retombe proprement sur l'image d'origine.
+      let toUpload = f;
+      try {
+        if (window.ASLPhoto && typeof window.ASLPhoto.process === 'function') {
+          const bg = bgSel ? bgSel.value : 'white';
+          const processed = await window.ASLPhoto.process(f, { background: bg, customBackground: customBg });
+          if (processed) {
+            // dataURL → Blob (uploadImage attend un fichier/blob)
+            const resp = await fetch(processed);
+            const blob = await resp.blob();
+            toUpload = new File([blob], (f.name || 'photo').replace(/\.[^.]+$/, '') + (bg === 'transparent' ? '.png' : '.jpg'), { type: blob.type || (bg === 'transparent' ? 'image/png' : 'image/jpeg') });
+            status.textContent = 'Compression et envoi en cours…';
+          }
+        }
+      } catch (procErr) { /* on garde l'image d'origine */ }
+      const url = await ASLDB.uploadImage(toUpload);
       urlInput.value = url;
       showPreview(url);
       status.style.color = 'var(--green)';
-      status.textContent = 'Image téléversée — elle sera visible sur le site client.';
+      status.textContent = 'Image traitée et téléversée — visible sur le site client.';
     } catch (err) {
       status.style.color = '#ef4444';
       status.textContent = err && err.message ? err.message : "Échec du téléversement — réessayez ou utilisez le champ URL.";
@@ -2250,6 +2287,7 @@ function openModal(type) {
         <button type="button" class="btn-sm primary" id="ac-upload-btn"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg> Téléverser une image</button>
         <input type="file" id="ac-file" accept="image/*" style="display:none;">
         <span id="ac-upload-status" style="font-size:12px;color:var(--text3);"></span>
+        <div style="margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><label style="font-size:12px;color:var(--text3);font-weight:600;">Traitement auto — fond :</label><select id="ac-bg" class="form-input" style="width:auto;padding:5px 8px;font-size:13px;"><option value="white">Blanc (défaut)</option><option value="black">Noir</option><option value="transparent">Transparent</option><option value="custom">Personnalisé…</option></select><input type="file" id="ac-bgfile" accept="image/*" style="display:none;"><button type="button" id="ac-bgbtn" class="btn-sm" style="display:none;">Choisir le fond</button></div>
       </div>
       <img id="ac-preview" alt="Aperçu du véhicule" style="display:none;margin-top:10px;width:100%;max-width:280px;height:130px;object-fit:cover;border-radius:10px;border:1px solid rgba(18,22,30,0.14);">
     </div>
