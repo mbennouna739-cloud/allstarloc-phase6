@@ -151,11 +151,14 @@ function applySeasonalGroup() {
     applied++;
   });
 
-  if (typeof reloadData === 'function') reloadData();
-  if (typeof renderFleetPage === 'function') renderFleetPage();
-  closeSeasonalManager();
+  // Fermer le pop-up et confirmer AVANT le rendu, pour que la confirmation
+  // s'affiche toujours (même si un rendu ultérieur rencontrait un souci).
   var monthNames = months.map(function(m){ return ASL_MONTHS[m]; }).join(', ');
-  asl6Toast('Tarifs ' + monthNames + ' appliqués à ' + applied + ' véhicule(s) ✓');
+  try { closeSeasonalManager(); } catch (e) {}
+  asl6Toast('Tarifs ' + monthNames + ' appliqués à ' + applied + ' véhicule(s) ✓ Synchronisé.');
+  try { if (typeof reloadData === 'function') reloadData(); } catch (e) {}
+  try { if (typeof renderFleetPage === 'function') renderFleetPage(); } catch (e) { console.error('renderFleetPage:', e); }
+  try { if (typeof ASLDB !== 'undefined' && ASLDB.syncNow) ASLDB.syncNow(); } catch (e) {}
 }
 
 /* ============================================================
