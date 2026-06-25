@@ -215,7 +215,8 @@
     subleases: 'asl_subleases_v1',
     charges: 'asl_charges_v1',
     maint: 'asl_maint_v1',
-    docs: 'asl_cust_docs_v1'
+    docs: 'asl_cust_docs_v1',
+    lld: 'asl_lld_v1'
   };
   function miscDirtyKey(name) { return 'asl_misc_dirty_' + name; }
   function miscRevKey(name) { return 'asl_misc_rev_' + name; }
@@ -403,7 +404,7 @@
   }
   async function uploadImage(file) {
     if (!remoteEnabled) throw new Error("Téléversement indisponible en mode local : déployez le site sur Cloudflare Pages (ou utilisez le champ URL).");
-    const blob = await downscaleImage(file, 1280, 0.82);
+    const blob = await downscaleImage(file, 1600, 0.92);
     const data = await blobToBase64(blob);
     const out = await apiFetch('/upload', {
       method: 'POST',

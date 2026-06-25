@@ -19,7 +19,7 @@
 (function () {
   'use strict';
 
-  var OUT_W = 1200, OUT_H = 900;     // format catalogue uniforme (4:3)
+  var OUT_W = 1600, OUT_H = 1200;    // format catalogue uniforme (4:3), haute définition
   var MARGIN_RATIO = 0.08;           // marge mini autour de la voiture (8 %)
 
   /* Charge un fichier (ou dataURL) en élément Image. */
@@ -143,7 +143,7 @@
 
         // 5) Export : PNG si transparent (préserve l'alpha), sinon JPEG (léger)
         if (bg === 'transparent') return out.toDataURL('image/png');
-        return out.toDataURL('image/jpeg', 0.9);
+        return out.toDataURL('image/jpeg', 0.95);
       });
     });
   }

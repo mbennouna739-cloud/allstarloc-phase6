@@ -5,6 +5,8 @@
 <script src="auth-guard.js"></script>
 <script src="admin-users.js"></script>
 <script src="admin-sublease.js"></script>
+<script src="admin-lld.js"></script>
+<script src="../asl-translate.js"></script>
 <script src="admin-photo.js"></script>
 <script src="admin-docs.js"></script>
 <meta name="robots" content="noindex, nofollow">
@@ -506,6 +508,7 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
       <div class="sb-section-label">Gestion</div>
 <a class="sb-item" onclick="showPage('customers',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Clients</a>
 <a class="sb-item" onclick="showPage('sublease',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/><circle cx="12" cy="12" r="3"/></svg></span>Sous-location</a>
+<a class="sb-item" onclick="showPage('lld',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>Location longue durée</a>
 <a class="sb-item" onclick="showPage('payments',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg></span>Paiements</a>
 <a class="sb-item" onclick="showPage('caisse',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg></span>Caisse</a>
 <a class="sb-item" onclick="showPage('options',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg></span>Assurances</a>
@@ -776,6 +779,19 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
       </div>
       <input type="search" id="sublease-search" class="form-input" placeholder="🔍 Rechercher une sous-location…" oninput="renderSubleases()" style="margin-bottom:16px;max-width:420px;">
       <div id="sublease-list"></div>
+    </div>
+
+    <!-- ===== LOCATION LONGUE DURÉE ===== -->
+    <div id="page-lld" class="page">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+        <div>
+          <h2 style="font-size:18px;font-weight:900;">Location longue durée</h2>
+          <p style="font-size:12.5px;color:var(--text2);margin-top:2px;">Contrats mensuels. Un véhicule en LLD active est masqué du site client et non réservable.</p>
+        </div>
+        <button class="topbar-btn primary" onclick="openLLDModal()">+ Nouveau contrat LLD</button>
+      </div>
+      <input type="search" id="lld-search" class="form-input" placeholder="🔍 Rechercher un contrat (client, véhicule)…" oninput="renderLLD()" style="margin-bottom:16px;max-width:420px;">
+      <div id="lld-list"></div>
     </div>
 
     <!-- ===== PAYMENTS ===== -->
@@ -1230,6 +1246,7 @@ const AVAIL_LABELS = {
   reserved: { label:'Réservé', class:'badge-blue', emoji:`<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3b82f6;flex-shrink:0;"></span>` },
   maintenance: { label:'Maintenance', class:'badge-yellow', emoji:`<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;flex-shrink:0;"></span>` },
   offroad: { label:'Hors service', class:'badge-red', emoji:`<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444;flex-shrink:0;"></span>` },
+  lld: { label:'Location longue durée', class:'badge-purple', emoji:`<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#7c3aed;flex-shrink:0;"></span>` },
 };
 
 // ==================== NAVIGATION ====================
@@ -1266,7 +1283,7 @@ function showPage(id, el) {
   const titles = {
     dashboard:'Tableau de bord', reservations:'Réservations',
     fleet:'Véhicules / Ma flotte', maintenance:'Entretien véhicules',
-    rentals:'Locations en cours', customers:'Clients', sublease:'Sous-location',
+    rentals:'Locations en cours', customers:'Clients', sublease:'Sous-location', lld:'Location longue durée',
     payments:'Paiements', options:'Assurances', bookopt:'Options de réservation', caisse:'Caisse', settings:'Paramètres système'
   };
   document.getElementById('topbar-title').textContent = titles[id] || id;
@@ -1279,6 +1296,7 @@ function showPage(id, el) {
   if(id==='rentals') renderRentals();
   if(id==='customers') renderCustomers();
   if(id==='sublease' && typeof renderSubleases==='function') renderSubleases();
+  if(id==='lld' && typeof renderLLD==='function') renderLLD();
   if(id==='payments') renderPayments();
   if(id==='bookopt') renderBookOptMain();
   if(id==='caisse') renderCaisse();
@@ -1614,6 +1632,29 @@ function calDayClick(d) {
 }
 
 // ==================== FLEET PAGE ====================
+/* Traduit le texte ALT (FR) dans toutes les langues du site (EN, ES, AR)
+   via le module de traduction, comme pour les autres contenus. */
+async function translateAltAll(prefix) {
+  var input = document.getElementById(prefix + '-imgalt');
+  var hidden = document.getElementById(prefix + '-imgalt-i18n');
+  var status = document.getElementById(prefix + '-imgalt-tr-status');
+  var fr = (input && input.value || '').trim();
+  if (!fr) { if (status) { status.style.color = '#ef4444'; status.textContent = 'Saisissez d\'abord le texte ALT en français.'; } return; }
+  if (typeof ASLTranslate === 'undefined' || !ASLTranslate.one) { if (status) { status.style.color = '#ef4444'; status.textContent = 'Module de traduction indisponible.'; } return; }
+  if (status) { status.style.color = 'var(--text3,#888)'; status.textContent = 'Traduction en cours…'; }
+  try {
+    var out = { fr: fr };
+    var langs = ASLTranslate.LANGS || ['en', 'es', 'ar'];
+    for (var i = 0; i < langs.length; i++) {
+      out[langs[i]] = await ASLTranslate.one(fr, langs[i]);
+    }
+    if (hidden) hidden.value = JSON.stringify(out);
+    if (status) { status.style.color = 'var(--green,#22c55e)'; status.textContent = '✓ Traduit (FR, EN, ES, AR). Enregistrez pour appliquer.'; }
+  } catch (e) {
+    if (status) { status.style.color = '#ef4444'; status.textContent = 'Échec de la traduction — réessayez.'; }
+  }
+}
+
 function renderFleetPage() {
   const grid = document.getElementById('fleet-grid');
   if (!grid) return;
@@ -1713,10 +1754,10 @@ function editCar(id) {
   openModal('edit-car');
   document.getElementById('modal-title').textContent = `Modifier: ${car.name}`;
   document.getElementById('modal-body').innerHTML = `
-    <div class="form-group"><label class="form-label">Nom</label><input class="form-input" value="${car.name}" id="edit-name"></div>
+    <div class="form-group"><label class="form-label">Marque du véhicule</label><input class="form-input" value="${car.name}" id="edit-name"></div>
     <div class="form-row">
-      <div class="form-group"><label class="form-label">Prix / jour (MAD)</label><input class="form-input" type="number" value="${car.priceMAD}" id="edit-price-mad"></div>
-      <div class="form-group"><label class="form-label">Prix site client (€)</label><input class="form-input" type="number" value="${car.priceEUR}" id="edit-price-eur"></div>
+      <div class="form-group"><label class="form-label">Prix à partir de (MAD / jour)</label><input class="form-input" type="number" value="${car.priceMAD}" id="edit-price-mad"><div style="font-size:11px;color:var(--text3,#888);margin-top:4px;">Prix indicatif affiché sur le site (« À partir de … »). Le prix réel est calculé selon les dates, la durée et les tranches saisonnières.</div></div>
+      <input type="hidden" id="edit-price-eur" value="${car.priceEUR}">
     </div>
     <div class="form-group" id="edit-units-wrap"><label class="form-label">Unités du stock (couleur + immatriculation)</label>
       <div id="edit-units-list" style="display:flex;flex-direction:column;gap:10px;"></div>
@@ -1779,14 +1820,19 @@ function editCar(id) {
       <button type="button" class="btn-sm" style="background:rgba(196,30,58,0.1);color:var(--red);border:1px solid rgba(196,30,58,0.25);border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;" onclick="addTierRow('edit')">+ Ajouter une tranche</button>
     </div>
     <div class="form-group" style="grid-column:1/-1;background:rgba(18,22,30,.03);border-radius:10px;padding:14px;">
-      <label class="form-label" style="color:var(--red);">Tarifs saisonniers (mois · durée · prix/jour)</label>
-      <div style="font-size:11px;color:var(--text3,#888);margin:-2px 0 8px;">Prioritaire sur les tarifs par durée. Si aucune règle ne correspond au mois de départ, le tarif par durée puis le prix standard s'appliquent automatiquement.</div>
-      <div id="edit-seasons-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;"></div>
-      <button type="button" class="btn-sm" style="background:rgba(196,30,58,0.1);color:var(--red);border:1px solid rgba(196,30,58,0.25);border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;" onclick="addSeasonRow('edit')">+ Ajouter une tranche saisonnière</button>
+      <label class="form-label" style="color:var(--red);">Tarifs saisonniers</label>
+      <div style="font-size:13px;color:var(--text2,#555);line-height:1.5;">Les tarifs saisonniers sont gérés depuis le module <strong>« Gérer les tranches saisonnières »</strong> (bouton en haut de la page Ma flotte). Les tranches déjà appliquées à ce véhicule sont conservées.</div>
     </div>
     </div>
     <div class="form-group"><label class="form-label">URL Photo (option secondaire)</label><input class="form-input" placeholder="https://..." value="${car.img||''}" id="edit-img"></div>
-    <div class="form-group" style="grid-column:1/-1;"><label class="form-label">Texte ALT de l'image (SEO)</label><input class="form-input" placeholder="Ex : Renault Clio 5 blanche location Marrakech" value="${(car.imgAlt||'').replace(/"/g,'&quot;')}" id="edit-imgalt"><div style="font-size:11px;color:var(--text3,#888);margin-top:4px;">Décrit l'image pour Google et l'accessibilité. Améliore le référencement.</div></div>
+    <div class="form-group" style="grid-column:1/-1;"><label class="form-label">Texte ALT de l'image (SEO)</label><input class="form-input" placeholder="Ex : Renault Clio 5 blanche location Marrakech" value="${(car.imgAlt||'').replace(/"/g,'&quot;')}" id="edit-imgalt">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px;">
+        <button type="button" class="btn-sm" style="background:rgba(37,99,235,.1);color:#1d4ed8;border:1px solid rgba(37,99,235,.25);border-radius:8px;padding:6px 12px;font-size:12.5px;font-weight:600;cursor:pointer;" onclick="translateAltAll('edit')">🌐 Traduire dans toutes les langues</button>
+        <span id="edit-imgalt-tr-status" style="font-size:11px;color:var(--text3,#888);"></span>
+      </div>
+      <div style="font-size:11px;color:var(--text3,#888);margin-top:4px;">Saisissez l'ALT en français puis traduisez. Décrit l'image pour Google et l'accessibilité (FR, EN, ES, AR).</div>
+      <input type="hidden" id="edit-imgalt-i18n" value='${JSON.stringify(car.imgAltI18n||{}).replace(/'/g,"&#39;")}'>
+    </div>
     <div class="form-group"><label class="form-label">Statut</label>
       <select class="form-select" id="edit-status">
         <option value="available" ${car.status==='available'?'selected':''}>Disponible</option>
@@ -1802,7 +1848,7 @@ function editCar(id) {
   });
   wireImageUpload('edit');
   setTimeout(() => seedTiers('edit', car.tiers), 0);
-  setTimeout(() => seedSeasons('edit', car.seasonalTiers), 0);
+  // (Tarifs saisonniers gérés via le module dédié — éditeur retiré du pop-up)
   // Unités dynamiques : initialise puis régénère quand le stock change
   (function(){
     var initialUnits = ASLDB.normalizeUnits(car);
@@ -1841,9 +1887,10 @@ function editCar(id) {
       features: { ac: fc('edit-feat-ac'), bluetooth: fc('edit-feat-bt'), gps: fc('edit-feat-gps'),
                   camera: fc('edit-feat-cam'), insurance: fc('edit-feat-ins'), airport: fc('edit-feat-air') },
       tiers: collectTiers('edit'),
-      seasonalTiers: collectSeasons('edit'),
+      seasonalTiers: Array.isArray(car.seasonalTiers) ? car.seasonalTiers : [],
       img: document.getElementById('edit-img').value || car.img,
       imgAlt: document.getElementById('edit-imgalt')?.value || car.imgAlt || '',
+      imgAltI18n: (function(){ try { return JSON.parse(document.getElementById('edit-imgalt-i18n')?.value || '{}'); } catch(e){ return car.imgAltI18n || {}; } })(),
       status: _agg,
     });
     reloadData();
@@ -2875,6 +2922,7 @@ document.addEventListener('DOMContentLoaded', function(){ setTimeout(renderMobil
 <script src="admin-archive.js"></script>
 <script src="admin-users-ui.js"></script>
 <script src="admin-sublease-ui.js"></script>
+<script src="admin-lld-ui.js"></script>
 <script src="admin-mobile.js"></script>
 </body>
 </html>

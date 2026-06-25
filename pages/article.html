@@ -25,7 +25,8 @@
 <meta name="twitter:description" content="Guide complet 2026 pour louer une voiture à Marrakech : documents, assurance, caution, conseils de conduite et pièges à éviter.">
 >
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap"></noscript>
 <link rel="stylesheet" href="page.css">
 <script src="../i18n.js" defer></script>
 <script src="../blog-seed.js" defer></script>
@@ -204,5 +205,31 @@
     </div>
   </div>
 </footer>
+<script>
+/* Préchargement intelligent des pages internes (survol + inactivité).
+   Améliore la fluidité sans changer le comportement du site. */
+(function(){
+  if (!('requestIdleCallback' in window)) { window.requestIdleCallback = function(cb){ return setTimeout(cb, 200); }; }
+  var done = {};
+  function prefetch(href){
+    if (!href || done[href]) return;
+    if (href.indexOf('#') === 0 || href.indexOf('mailto:') === 0 || href.indexOf('tel:') === 0) return;
+    if (/^https?:/i.test(href) && href.indexOf(location.host) < 0) return; // pas les domaines externes
+    done[href] = 1;
+    try { var l = document.createElement('link'); l.rel = 'prefetch'; l.href = href; document.head.appendChild(l); } catch(e){}
+  }
+  // Au survol/touch d'un lien interne : on précharge immédiatement
+  function onHover(e){ var a = e.target.closest && e.target.closest('a[href]'); if (a) prefetch(a.getAttribute('href')); }
+  document.addEventListener('mouseover', onHover, {passive:true});
+  document.addEventListener('touchstart', onHover, {passive:true});
+  // À l'inactivité : on précharge tous les liens internes visibles
+  requestIdleCallback(function(){
+    try {
+      var links = document.querySelectorAll('a[href]');
+      for (var i=0; i<links.length; i++){ prefetch(links[i].getAttribute('href')); }
+    } catch(e){}
+  });
+})();
+</script>
 </body>
 </html>

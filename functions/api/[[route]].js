@@ -343,7 +343,7 @@ export async function onRequest(context) {
          name ∈ { subleases, charges, maint, docs } ---- */
   if (path === 'misc' && request.method === 'GET') {
     const name = url.searchParams.get('name') || '';
-    const allowed = ['subleases', 'charges', 'maint', 'docs', 'users'];
+    const allowed = ['subleases', 'charges', 'maint', 'docs', 'users', 'lld'];
     if (allowed.indexOf(name) < 0) return err(400, 'name invalide');
     const raw = await env.ASL_DB.get('misc_' + name);
     let doc = null;
@@ -360,7 +360,7 @@ export async function onRequest(context) {
     if (!authorized(request, env)) return err(403, 'Clé admin invalide ou absente (X-ASL-Key)');
     let body;
     try { body = await request.json(); } catch (e) { return err(400, 'JSON invalide'); }
-    const allowed = ['subleases', 'charges', 'maint', 'docs', 'users'];
+    const allowed = ['subleases', 'charges', 'maint', 'docs', 'users', 'lld'];
     if (allowed.indexOf(body.name) < 0) return err(400, 'name invalide');
     if (JSON.stringify(body.value || '').length > 4_000_000) return err(413, 'Données trop volumineuses');
     const rev = Date.now();

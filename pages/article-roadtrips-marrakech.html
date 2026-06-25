@@ -12,5 +12,31 @@
 </head>
 <body>
 <p>Redirection vers l'article… <a href="article.html?slug=roadtrips-marrakech">Cliquez ici si rien ne se passe</a>.</p>
+<script>
+/* Préchargement intelligent des pages internes (survol + inactivité).
+   Améliore la fluidité sans changer le comportement du site. */
+(function(){
+  if (!('requestIdleCallback' in window)) { window.requestIdleCallback = function(cb){ return setTimeout(cb, 200); }; }
+  var done = {};
+  function prefetch(href){
+    if (!href || done[href]) return;
+    if (href.indexOf('#') === 0 || href.indexOf('mailto:') === 0 || href.indexOf('tel:') === 0) return;
+    if (/^https?:/i.test(href) && href.indexOf(location.host) < 0) return; // pas les domaines externes
+    done[href] = 1;
+    try { var l = document.createElement('link'); l.rel = 'prefetch'; l.href = href; document.head.appendChild(l); } catch(e){}
+  }
+  // Au survol/touch d'un lien interne : on précharge immédiatement
+  function onHover(e){ var a = e.target.closest && e.target.closest('a[href]'); if (a) prefetch(a.getAttribute('href')); }
+  document.addEventListener('mouseover', onHover, {passive:true});
+  document.addEventListener('touchstart', onHover, {passive:true});
+  // À l'inactivité : on précharge tous les liens internes visibles
+  requestIdleCallback(function(){
+    try {
+      var links = document.querySelectorAll('a[href]');
+      for (var i=0; i<links.length; i++){ prefetch(links[i].getAttribute('href')); }
+    } catch(e){}
+  });
+})();
+</script>
 </body>
 </html>

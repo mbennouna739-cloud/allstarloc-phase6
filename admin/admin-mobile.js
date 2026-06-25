@@ -159,6 +159,7 @@
     else if (screen === 'late') renderLateM();
     else if (screen === 'clients') renderClients();
     else if (screen === 'sublease') renderSubleaseM();
+    else if (screen === 'lld') renderLLDM();
     else if (screen === 'unpaid') renderUnpaidM();
     else if (screen === 'revenue') renderRevenueM();
     else if (screen === 'caisse') renderCaisse();
@@ -976,6 +977,96 @@
     maRenderSubleaseList();
   };
 
+  /* ============ LOCATION LONGUE DURÉE (mobile) ============ */
+  function renderLLDM() {
+    var host = document.getElementById('ma-lld');
+    if (!host || typeof ASLLLD === 'undefined') return;
+    var head = '<button class="ma-action" onclick="maNewLLD()">' + ic('plus') + ' Nouveau contrat LLD</button>'
+      + '<input type="search" id="ma-lld-search" class="ma-search" placeholder="Rechercher (client, véhicule)…" oninput="maRenderLLDList()">';
+    host.innerHTML = head + '<div id="ma-lld-list"></div>';
+    maRenderLLDList();
+  }
+  function lldCarName(id) { try { var c = fleet().filter(function (x) { return String(x.id) === String(id); })[0]; return c ? c.name : '—'; } catch (e) { return '—'; } }
+  function lldCarPlate(id) { try { var c = fleet().filter(function (x) { return String(x.id) === String(id); })[0]; return c ? (c.plate || '') : ''; } catch (e) { return ''; } }
+  window.maRenderLLDList = function () {
+    var box = document.getElementById('ma-lld-list');
+    if (!box) return;
+    var q = ((document.getElementById('ma-lld-search') || {}).value || '').toLowerCase().trim();
+    var list = ASLLLD.list();
+    if (q) list = list.filter(function (c) { return ((c.client || '') + ' ' + lldCarName(c.carId)).toLowerCase().indexOf(q) >= 0; });
+    if (!list.length) { box.innerHTML = '<div class="ma-empty">Aucun contrat de location longue durée.</div>'; return; }
+    box.innerHTML = list.map(function (c) {
+      var t = ASLLLD.totals(c);
+      return '<div class="ma-card" onclick="maLLDFiche(\'' + c.id + '\')">'
+        + '<div class="ma-card-top"><div class="ma-card-ico-box purple">' + ic('calendar') + '</div>'
+        + '<div class="ma-card-info"><div class="ma-card-name">' + esc(c.client || 'Client') + '</div>'
+        + '<div class="ma-card-sub">' + esc(lldCarName(c.carId)) + (lldCarPlate(c.carId) ? ' · ' + esc(lldCarPlate(c.carId)) : '') + '</div></div>'
+        + '<span class="ma-badge ' + (t.rest > 0 ? 'red' : 'green') + '">' + (t.rest > 0 ? money(t.rest) : 'À jour') + '</span></div>'
+        + '<div class="ma-card-meta">'
+        + '<div class="ma-meta">Début<b>' + esc(c.startDate || '—') + '</b></div>'
+        + '<div class="ma-meta">Durée<b>' + (c.durationMonths || 0) + ' mois</b></div>'
+        + '<div class="ma-meta">Mensualité<b>' + money(c.monthlyAmount) + '</b></div>'
+        + '<div class="ma-meta">Reste<b style="color:' + (t.rest > 0 ? '#C41E3A' : '#16a34a') + ';">' + money(t.rest) + '</b></div></div>'
+        + '</div>';
+    }).join('');
+  };
+  window.maNewLLD = function () {
+    // On réutilise le formulaire desktop via une vue desktop ponctuelle
+    enterDesktopView();
+    if (typeof window.showPage === 'function') window.showPage('lld', null);
+    setTimeout(function () { if (typeof window.openLLDModal === 'function') window.openLLDModal(); }, 120);
+    maShowBackToApp();
+  };
+  window.maLLDFiche = function (id) {
+    var c = ASLLLD.get(id);
+    if (!c) return;
+    var t = ASLLLD.totals(c);
+    function row(label, val, color) {
+      return '<div class="ma-fiche-row"><span class="ma-fiche-lbl">' + label + '</span><span class="ma-fiche-val"' + (color ? ' style="color:' + color + ';"' : '') + '>' + val + '</span></div>';
+    }
+    var monthsHtml = t.months.map(function (m) {
+      var col = m.status === 'paid' ? '#16a34a' : (m.status === 'partial' ? '#d97706' : '#9ca3af');
+      var lbl = m.status === 'paid' ? 'Payé' : (m.status === 'partial' ? 'Partiel' : 'En attente');
+      return '<div class="ma-card" style="margin-bottom:8px;"><div class="ma-card-top">'
+        + '<div class="ma-card-info"><div class="ma-card-name" style="text-transform:capitalize;font-size:14px;">' + esc(m.label) + '</div>'
+        + '<div class="ma-card-sub">Dû ' + money(m.due) + ' · Payé ' + money(m.paid) + '</div></div>'
+        + '<span class="ma-badge" style="background:' + col + '22;color:' + col + ';">' + lbl + '</span></div>'
+        + (m.rest > 0 ? '<div class="ma-actions"><button class="ma-act-btn ok" onclick="event.stopPropagation();maLLDPay(\'' + c.id + '\',' + m.index + ')">' + ic('check') + 'Encaisser (' + money(m.rest) + ')</button></div>' : '')
+        + '</div>';
+    }).join('');
+    openSheet(
+      '<div class="ma-sheet-title">' + esc(c.client || 'Contrat LLD') + '</div>'
+      + '<div style="font-size:13px;color:#6b7280;margin:-6px 0 14px;">' + esc(lldCarName(c.carId)) + (lldCarPlate(c.carId) ? ' · ' + esc(lldCarPlate(c.carId)) : '') + '</div>'
+      + row('Début', esc(c.startDate || '—'))
+      + row('Durée', (c.durationMonths || 0) + ' mois')
+      + row('Mensualité', money(c.monthlyAmount))
+      + (c.phone ? row('Téléphone', '<a href="tel:' + esc(c.phone) + '" style="color:#2563eb;text-decoration:none;">' + esc(c.phone) + '</a>') : '')
+      + row('Total dû', money(t.totalDue))
+      + row('Total encaissé', money(t.totalPaid), '#16a34a')
+      + row('Reste à payer', money(t.rest), t.rest > 0 ? '#C41E3A' : '#16a34a')
+      + '<div class="ma-sheet-section">Suivi mois par mois</div>'
+      + monthsHtml
+      + (c.phone ? '<a class="ma-act-btn" style="margin-top:10px;text-decoration:none;background:#25D366;color:#fff;border:none;" href="https://wa.me/' + esc(c.phone.replace(/[^0-9]/g, '')) + '" target="_blank">' + ic('phone') + 'WhatsApp</a>' : '')
+    );
+  };
+  window.maLLDPay = function (id, monthIndex) {
+    var c = ASLLLD.get(id);
+    if (!c) return;
+    var sch = ASLLLD.schedule(c)[monthIndex];
+    if (!sch) return;
+    var val = prompt('Montant encaissé pour ' + sch.label + ' (reste ' + (Number(sch.rest)).toLocaleString('fr-FR') + ' MAD) :', String(sch.rest));
+    if (val == null) return;
+    var amount = parseFloat(val) || 0;
+    if (amount <= 0) return;
+    var payments = (c.payments || []).slice();
+    payments.push({ monthIndex: monthIndex, amount: amount, date: new Date().toISOString().slice(0, 10) });
+    ASLLLD.update(id, { payments: payments });
+    if (typeof showToast === 'function') showToast('Paiement enregistré ✓');
+    maCloseSheet();
+    setTimeout(function () { maLLDFiche(id); }, 100);
+    maRenderLLDList();
+  };
+
   /* ============ CAISSE / PAIEMENTS (simplifiée) ============ */
   function renderCaisse() {
     var host = document.getElementById('ma-caisse');
@@ -1088,6 +1179,7 @@
     var items = [
       { ico: 'key', label: 'Locations en cours', act: "maMore('rentals')", perm: null },
       { ico: 'handshake', label: 'Sous-location', act: "maMore('sublease')", perm: 'sublease' },
+      { ico: 'calendar', label: 'Location longue durée', act: "maMore('lld')", perm: 'sublease' },
       { ico: 'users', label: 'Clients', act: "maMore('clients')", perm: null }
     ];
     var visible = items.filter(function (it) { return !it.perm || can(it.perm); });
@@ -1162,7 +1254,7 @@
       + '<div class="ma-head-txt"><h1 id="ma-title">Tableau de bord</h1><div class="ma-greet">Bonjour ' + esc(greet) + '</div></div>'
       + '<button class="ma-head-btn" aria-label="Notifications" onclick="maToggleNotifications()">' + ic('bell') + '<span class="ma-dot" id="ma-head-dot" style="display:none;"></span></button></div>'
       + screen('dashboard') + screen('vehicles') + screen('available') + screen('reserved') + screen('activites') + screen('reservations') + screen('rentals')
-      + screen('returns') + screen('late') + screen('clients') + screen('sublease') + screen('unpaid') + screen('revenue') + screen('caisse') + screen('notifications');
+      + screen('returns') + screen('late') + screen('clients') + screen('sublease') + screen('lld') + screen('unpaid') + screen('revenue') + screen('caisse') + screen('notifications');
     document.body.appendChild(app);
 
     var tabsAll = [
@@ -1182,7 +1274,7 @@
     }).join('');
     document.body.appendChild(bar);
 
-    var titles = { dashboard: 'Tableau de bord', vehicles: 'Véhicules', available: 'Disponibles', reserved: 'Véhicules réservés', activites: 'Activités du jour', reservations: 'Réservations', rentals: 'Véhicules loués', returns: "Retours aujourd'hui", late: 'En retard', clients: 'Clients', sublease: 'Sous-location', unpaid: 'Impayés', revenue: 'Revenus', caisse: 'Paiements & Caisse', notifications: 'Notifications' };
+    var titles = { dashboard: 'Tableau de bord', vehicles: 'Véhicules', available: 'Disponibles', reserved: 'Véhicules réservés', activites: 'Activités du jour', reservations: 'Réservations', rentals: 'Véhicules loués', returns: "Retours aujourd'hui", late: 'En retard', clients: 'Clients', sublease: 'Sous-location', lld: 'Location longue durée', unpaid: 'Impayés', revenue: 'Revenus', caisse: 'Paiements & Caisse', notifications: 'Notifications' };
     window.maGo = function (s) {
       var titleEl = document.getElementById('ma-title');
       if (titleEl && titles[s]) titleEl.textContent = titles[s];

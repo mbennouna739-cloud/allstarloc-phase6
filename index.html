@@ -24,7 +24,8 @@
 <meta property="og:title" content="ALL STAR LOC — Location de Voiture Marrakech">
 <meta property="og:description" content="Location de voiture à Marrakech dès 25€/jour. Livraison aéroport gratuite.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap"></noscript>
 <style>
 /* === Stabilité header : scrollbar toujours réservée (pas de décalage entre pages) === */
 html { scrollbar-gutter: stable; overflow-y: scroll; }
@@ -1648,6 +1649,7 @@ function loadCars() {
       fuel: c.fuel,
       img: c.img,
       imgAlt: c.imgAlt || '',
+      imgAltI18n: c.imgAltI18n || {},
       badge: c.badge || c.category,
       featured: !!c.featured,
       services: c.services && c.services.length ? c.services : ['Clim'],
@@ -1770,7 +1772,7 @@ function renderCars(filter) {
     <div class="car-card ${av.available ? '' : 'unavailable'}" onclick="${av.available ? `selectCar(${car.id})` : 'scrollToDates()'}">
       <div class="car-card-img">
         ${av.available ? '' : `<div class="unavail-badge">${t('fleet.unavail')}</div>`}
-        <img src="${car.img}" alt="${car.imgAlt || (car.name + ' location Marrakech ALL STAR LOC')}" loading="lazy">
+        <img src="${car.img}" alt="${(function(){var L=(localStorage.getItem('asl_lang')||'fr');var t=(car.imgAltI18n&&car.imgAltI18n[L])||car.imgAlt||(car.name+' location Marrakech ALL STAR LOC');return String(t).replace(/"/g,'&quot;');})()}" loading="lazy">
         <div class="car-badge ${car.featured?'featured':''}">${car.badge}</div>
       </div>
       <div class="car-card-body">
@@ -2463,7 +2465,7 @@ function vehicleRecapHTML() {
   if (!state.car) return '';
   return `
     <div class="vehicle-recap">
-      <img src="${state.car.img}" alt="${state.car.imgAlt || (state.car.name + ' location Marrakech ALL STAR LOC')}">
+      <img src="${state.car.img}" alt="${(function(){var L=(localStorage.getItem('asl_lang')||'fr');var t=(state.car.imgAltI18n&&state.car.imgAltI18n[L])||state.car.imgAlt||(state.car.name+' location Marrakech ALL STAR LOC');return String(t).replace(/"/g,'&quot;');})()}">
       <div class="vehicle-recap-info">
         <div class="vehicle-recap-name">${state.car.name}</div>
         <div class="vehicle-recap-dates">${state.days} ${t(state.days>1?'u.days':'u.day')} · ${state.pickupLoc || 'Aéroport RAK'}</div>
@@ -3008,6 +3010,32 @@ document.addEventListener('DOMContentLoaded', () => {
     renderCars(); // ré-affiche avec le filtre courant (indépendant de la langue affichée)
   });
 });
+</script>
+<script>
+/* Préchargement intelligent des pages internes (survol + inactivité).
+   Améliore la fluidité sans changer le comportement du site. */
+(function(){
+  if (!('requestIdleCallback' in window)) { window.requestIdleCallback = function(cb){ return setTimeout(cb, 200); }; }
+  var done = {};
+  function prefetch(href){
+    if (!href || done[href]) return;
+    if (href.indexOf('#') === 0 || href.indexOf('mailto:') === 0 || href.indexOf('tel:') === 0) return;
+    if (/^https?:/i.test(href) && href.indexOf(location.host) < 0) return; // pas les domaines externes
+    done[href] = 1;
+    try { var l = document.createElement('link'); l.rel = 'prefetch'; l.href = href; document.head.appendChild(l); } catch(e){}
+  }
+  // Au survol/touch d'un lien interne : on précharge immédiatement
+  function onHover(e){ var a = e.target.closest && e.target.closest('a[href]'); if (a) prefetch(a.getAttribute('href')); }
+  document.addEventListener('mouseover', onHover, {passive:true});
+  document.addEventListener('touchstart', onHover, {passive:true});
+  // À l'inactivité : on précharge tous les liens internes visibles
+  requestIdleCallback(function(){
+    try {
+      var links = document.querySelectorAll('a[href]');
+      for (var i=0; i<links.length; i++){ prefetch(links[i].getAttribute('href')); }
+    } catch(e){}
+  });
+})();
 </script>
 </body>
 </html>
