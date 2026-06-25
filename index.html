@@ -488,6 +488,10 @@ html[dir="rtl"] .bk-time { border-left: none; border-right: 1.5px solid var(--gr
   line-height: 1; letter-spacing: -0.5px;
 }
 .car-price-unit { font-size: 12px; font-weight: 500; color: var(--text2); }
+.car-price-from {
+  font-size: 11.5px; font-weight: 700; color: var(--text2);
+  text-transform: uppercase; letter-spacing: 0.4px; align-self: center;
+}
 .car-tier-label {
   font-size: 11.5px; font-weight: 600; color: var(--red); margin-bottom: 12px;
   opacity: .82;
@@ -1628,8 +1632,17 @@ body.scrolled .fade-in { animation: none !important; opacity: 1 !important; tran
 let CARS = [];
 
 function loadCars() {
+  // Unité « louable » = ni maintenance, ni hors service, ni location longue durée.
+  const isRentable = (s) => { s = s || 'available'; return s !== 'maintenance' && s !== 'offroad' && s !== 'lld'; };
+  const rentableUnits = (c) => {
+    let units = (typeof ASLDB !== 'undefined' && ASLDB.normalizeUnits) ? ASLDB.normalizeUnits(c) : null;
+    if (units && units.length) return units.filter(u => isRentable(u && u.status)).length;
+    return (c.status === 'available' || c.status === 'reserved') ? Math.max(1, c.stock || 1) : 0;
+  };
   CARS = ASLDB.getFleet()
-    .filter(c => c.status === 'available' || c.status === 'reserved')
+    // Un modèle reste au catalogue tant qu'il possède AU MOINS une unité louable.
+    // (La location longue durée 'lld' est toujours masquée.)
+    .filter(c => c.status !== 'lld' && rentableUnits(c) > 0)
     .map(c => ({
       id: c.id,
       name: c.name,
@@ -1653,7 +1666,9 @@ function loadCars() {
       badge: c.badge || c.category,
       featured: !!c.featured,
       services: c.services && c.services.length ? c.services : ['Clim'],
-      stock: c.stock || 1,
+      // ★ Stock = nombre d'unités RÉELLEMENT louables (les unités en maintenance /
+      //   hors service ne réduisent pas l'affichage du modèle mais réduisent le stock).
+      stock: Math.max(1, rentableUnits(c)),
       unitIds: [c.id],
     }));
 
@@ -1662,7 +1677,7 @@ function loadCars() {
   CARS.forEach(function(car) {
     const ex = _grouped.find(function(g){ return g.name === car.name; });
     if (ex) {
-      ex.stock = (ex.stock || 1) + 1;
+      ex.stock = (ex.stock || 1) + (car.stock || 1);
       if (car.unitIds) ex.unitIds = ex.unitIds.concat(car.unitIds);
       if ((!ex.tiers || !ex.tiers.length) && car.tiers && car.tiers.length) ex.tiers = car.tiers;
       if ((!ex.seasonalTiers || !ex.seasonalTiers.length) && car.seasonalTiers && car.seasonalTiers.length) ex.seasonalTiers = car.seasonalTiers;
@@ -1777,10 +1792,13 @@ function renderCars(filter) {
       </div>
       <div class="car-card-body">
         <div class="car-price-block">
+          ${searchActive ? '' : `<span class="car-price-from">${t('car.fromPrice')}</span>`}
           <span class="car-price-amount">${price(dailyRate(car, rateDays))}</span>
           <span class="car-price-unit">${t('u.perDayLong')}</span>
         </div>
-        ${(normalizeTiers(car.tiers).length ? `<div class="car-tier-label">${t('car.tierHint')}</div>` : '')}
+        ${searchActive
+          ? (normalizeTiers(car.tiers).length ? `<div class="car-tier-label">${t('car.tierHint')}</div>` : '')
+          : `<div class="car-tier-label">${t('vp.degressive')}</div>`}
         <div class="car-name">${car.name}</div>
         <div class="car-specs">
           <div class="car-spec"><div class="car-spec-icon"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div> ${t('car.seats',{n:car.seats})}</div>

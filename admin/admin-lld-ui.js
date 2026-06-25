@@ -76,8 +76,10 @@
         + (c ? '<button class="topbar-btn" style="color:#ef4444;" onclick="deleteLLD(\'' + c.id + '\')">Supprimer</button>' : '')
         + '<button class="topbar-btn primary" onclick="saveLLD(' + (c ? "'" + c.id + "'" : 'null') + ')">Enregistrer</button>';
     }
-    if (typeof openModal === 'function') openModal();
-    else { var ov = document.getElementById('modal-overlay'); if (ov) ov.classList.add('open'); }
+    // Ouvre l'overlay SANS passer par openModal() : ce module a son propre pied
+    // de page (boutons specifiques). openModal() restaurerait le pied de page
+    // standard et ecraserait ces boutons.
+    var _ov = document.getElementById('modal-overlay'); if (_ov) _ov.classList.add('open');
   };
 
   window.saveLLD = function (id) {
@@ -171,8 +173,10 @@
         + '<button class="topbar-btn" onclick="openLLDModal(\'' + c.id + '\')">Modifier le contrat</button>'
         + (c.phone ? '<a class="topbar-btn primary" style="text-decoration:none;" href="https://wa.me/' + esc(c.phone.replace(/[^0-9]/g, '')) + '" target="_blank">WhatsApp</a>' : '');
     }
-    if (typeof openModal === 'function') openModal();
-    else { var ov = document.getElementById('modal-overlay'); if (ov) ov.classList.add('open'); }
+    // Ouvre l'overlay SANS passer par openModal() : ce module a son propre pied
+    // de page (boutons specifiques). openModal() restaurerait le pied de page
+    // standard et ecraserait ces boutons.
+    var _ov = document.getElementById('modal-overlay'); if (_ov) _ov.classList.add('open');
   };
 
   window.addLLDPayment = function (id, monthIndex) {

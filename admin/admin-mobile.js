@@ -105,7 +105,10 @@
       if (m.reminder_next && new Date(m.reminder_next).getTime() <= todayMs + 86400000) vid++;
     });
     return {
-      available: f.filter(function (c) { return c.status === 'available'; }).length,
+      available: f.reduce(function (n, c) {
+        var ma = (typeof ASLDB !== 'undefined' && ASLDB.modelAvailability) ? ASLDB.modelAvailability(c) : null;
+        return n + (ma ? ma.available : (c.status === 'available' ? 1 : 0));
+      }, 0),
       // Loués = réservations actives/confirmées en cours aujourd'hui (logique desktop)
       rented: r.filter(function (x) { return (x.status === 'active' || x.status === 'confirmed') && (x.startDate || '') <= ts && (x.endDate || '') >= ts; }).length,
       // Réservés = réservations futures non encore commencées (à venir)
@@ -562,7 +565,11 @@
     var host = document.getElementById('ma-available');
     if (!host) return;
     var ts = todayISO();
-    var f = fleet().filter(function (c) { return c.status === 'available'; });
+    var f = fleet().filter(function (c) {
+      if (c.status === 'lld') return false;
+      if (typeof ASLDB !== 'undefined' && ASLDB.modelAvailability) return ASLDB.modelAvailability(c).available > 0;
+      return c.status === 'available';
+    });
     var res = reservations();
     host.innerHTML = f.length ? f.map(function (c) {
       // Réservation future éventuelle (libre aujourd'hui mais réservé plus tard)

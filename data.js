@@ -526,7 +526,20 @@
     var reqEnd = _toDateTime(endISO, endTime, '10:00');
     if (!reqStart || !reqEnd) return out;
 
-    var stock = Math.max(1, car.stock || (car.unitIds ? car.unitIds.length : 1) || 1);
+    // ★ Nombre d'unités RÉELLEMENT louables. Si le véhicule possède des unités
+    //   détaillées, on s'appuie dessus (une unité en maintenance / hors service /
+    //   LLD ne compte pas dans le stock disponible). Sinon, repli sur car.stock.
+    //   Le système « raisonne sur le nombre d'unités disponibles » : tant qu'il
+    //   reste au moins une unité libre sur la période, le véhicule reste réservable.
+    var stock;
+    if (Array.isArray(car.units) && car.units.length) {
+      stock = car.units.filter(function (u) {
+        var s = (u && u.status) || 'available';
+        return s !== 'maintenance' && s !== 'offroad' && s !== 'lld';
+      }).length;
+    } else {
+      stock = Math.max(1, car.stock || (car.unitIds ? car.unitIds.length : 1) || 1);
+    }
     var list = _resForCar(car).filter(function (r) { return r.id !== opts.excludeId; });
 
     var overlapCount = 0;
@@ -643,9 +656,21 @@
     saveReservations([]);                       // réservations / locations / paiements → 0
     try { localStorage.setItem(KEY_CHARGES, '[]'); } catch (e) {}  // charges → 0
 
-    // Tous les véhicules redeviennent disponibles (élément permanent, jamais supprimé)
+    // Tous les véhicules redeviennent disponibles (élément permanent, jamais supprimé).
+    // ★ On libère AUSSI chaque unité du stock : sans cela, une unité restée
+    //   'reserved'/'active' après la clôture continuait d'être comptée comme
+    //   occupée → un modèle « Stock 2 » n'affichait qu'1 unité disponible.
+    //   On préserve volontairement les unités mises en maintenance / hors
+    //   service / location longue durée par l'administration.
     const fleet = read(KEY_FLEET, []);
     fleet.forEach(function (c) {
+      if (Array.isArray(c.units)) {
+        c.units.forEach(function (u) {
+          if (!u) return;
+          var s = u.status || 'available';
+          if (s !== 'maintenance' && s !== 'offroad' && s !== 'lld') u.status = 'available';
+        });
+      }
       if (c.status === 'rented' || c.status === 'active' || c.status === 'reserved') c.status = 'available';
     });
     write(KEY_FLEET, fleet);

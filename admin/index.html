@@ -1314,6 +1314,27 @@ function switchTab(group, tab) {
 }
 
 // ==================== DASHBOARD ====================
+/* ★ Statistiques par UNITÉ de stock (et non par modèle) : un modèle « Stock 2 »
+   compte pour 2 véhicules réels. Source unique : ASLDB.normalizeUnits, de sorte
+   que le back-office reflète exactement le stock saisi dans le pop-up. */
+function fleetUnitStats() {
+  const counts = { available:0, reserved:0, maintenance:0, offroad:0, lld:0 };
+  let total = 0;
+  (FLEET || []).forEach(c => {
+    let units = (typeof ASLDB !== 'undefined' && ASLDB.normalizeUnits) ? ASLDB.normalizeUnits(c) : null;
+    if (!units || !units.length) units = [{ status: c.status || 'available' }];
+    units.forEach(u => {
+      total++;
+      let s = (u && u.status) || 'available';
+      if (s === 'rented' || s === 'active') s = 'reserved'; // occupée → comptée comme réservée
+      if (counts[s] == null) counts[s] = 0;
+      counts[s]++;
+    });
+  });
+  const rentable = total - counts.maintenance - counts.offroad - counts.lld;
+  return { total, rentable, counts };
+}
+
 function renderDashboard() {
   const now = new Date();
   const monthPrefix = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
@@ -1327,8 +1348,8 @@ function renderDashboard() {
   document.getElementById('badge-res').textContent = pending.length;
   const revenue = monthRes.reduce((s,r)=>s+(r.amount||0),0);
   document.getElementById('stat-revenue').innerHTML = `${revenue.toLocaleString('fr-FR')} <span style="font-size:14px;color:var(--text2);">MAD</span>`;
-  const activeVehicles = FLEET.filter(c=>c.status==='available'||c.status==='reserved').length;
-  document.getElementById('stat-vehicles').textContent = `${activeVehicles}/${FLEET.length}`;
+  const _us = fleetUnitStats();
+  document.getElementById('stat-vehicles').textContent = `${_us.rentable}/${_us.total}`;
 
   // Graphique hebdomadaire réel (réservations créées par jour, semaine en cours)
   const monday = new Date(now);
@@ -1375,8 +1396,7 @@ function renderDashboard() {
   }
 
   const fsl = document.getElementById('fleet-status-list');
-  const counts = {};
-  FLEET.forEach(c=>{ counts[c.status]=(counts[c.status]||0)+1; });
+  const counts = fleetUnitStats().counts;
   fsl.innerHTML = Object.entries(AVAIL_LABELS).map(([k,v]) => `
     <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
       <div style="display:flex;align-items:center;gap:8px;">
@@ -1671,6 +1691,10 @@ function renderFleetPage() {
     try {
     const avail = statusLabel(c.status);
     const img = c.img || c.image || c.photo || '';
+    const ma = (typeof ASLDB!=='undefined' && ASLDB.modelAvailability) ? ASLDB.modelAvailability(c) : null;
+    const stockBadge = (ma && ma.total > 1)
+      ? `<div style="font-size:11px;color:var(--text2);margin-bottom:8px;">Stock : <strong>${ma.total}</strong> unités · <strong style="color:${ma.available>0?'var(--green,#22C55E)':'#ef4444'};">${ma.available}</strong> disponible(s)</div>`
+      : '';
     const priceMAD = (c.priceMAD != null ? c.priceMAD : (c.price != null ? c.price : '—'));
     const priceEUR = (c.priceEUR != null ? c.priceEUR : '');
     return `
@@ -1682,6 +1706,7 @@ function renderFleetPage() {
         <div class="fleet-body">
           <div class="fleet-name">${esc(c.name || 'Véhicule')}</div>
           <div class="fleet-price">${priceMAD} MAD / jour ${priceEUR !== '' ? `<span style="font-size:11px;color:var(--text3);font-weight:400;">(${priceEUR} € sur le site)</span>` : ''}</div>
+          ${stockBadge}
           <div class="fleet-specs">
             <span class="fleet-spec"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg> ${esc(c.transmission || '')}</span>
             <span class="fleet-spec"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><line x1="3" x2="15" y1="22" y2="22"/><line x1="4" x2="14" y1="9" y2="9"/><path d="M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18"/><path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2 2 2 0 0 0 2-2V9.83a2 2 0 0 0-.59-1.42L18 5"/></svg> ${esc(c.fuel || '')}</span>
@@ -1977,27 +2002,42 @@ function wireImageUpload(prefix) {
 
 // ==================== AVAILABILITY ====================
 function renderAvailability() {
-  const counts = {};
-  FLEET.forEach(c=>{ counts[c.status]=(counts[c.status]||0)+1; });
+  const counts = fleetUnitStats().counts;
   document.getElementById('avail-count').textContent = counts.available||0;
   document.getElementById('reserved-count').textContent = counts.reserved||0;
   document.getElementById('maint-count').textContent = counts.maintenance||0;
   document.getElementById('offroad-count').textContent = counts.offroad||0;
 
+  const labelOf = (st) => AVAIL_LABELS[st]
+    || (st==='rented'||st==='active' ? { label:'Loué', class:'badge-blue', emoji:'<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3b82f6;flex-shrink:0;"></span>' }
+       : { label:(st||'Indéfini'), class:'badge-gray', emoji:'<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#9ca3af;flex-shrink:0;"></span>' });
+
   const tbody = document.getElementById('availability-table');
   tbody.innerHTML = FLEET.map(c => {
-    const avail = AVAIL_LABELS[c.status];
-    const nextRes = RESERVATIONS.filter(r=>r.carId===c.id && r.status!=='cancelled' && r.endDate >= new Date().toISOString().split('T')[0]).sort((a,b)=>a.startDate.localeCompare(b.startDate))[0];
-    return `
+    try {
+      const units = (typeof ASLDB!=='undefined' && ASLDB.normalizeUnits) ? ASLDB.normalizeUnits(c) : [{plate:c.plate,color:'',status:c.status||'available'}];
+      const ma = (typeof ASLDB!=='undefined' && ASLDB.modelAvailability) ? ASLDB.modelAvailability(c) : { total:units.length, available:units.filter(u=>(u.status||'available')==='available').length };
+      const avail = labelOf(c.status);
+      const nextRes = RESERVATIONS.filter(r=>r.carId===c.id && r.status!=='cancelled' && r.endDate >= new Date().toISOString().split('T')[0]).sort((a,b)=>a.startDate.localeCompare(b.startDate))[0];
+      // Détail des unités : plaque + couleur + statut (vérification de la synchro du stock)
+      const unitChips = units.map(u => {
+        const us = (u.status||'available');
+        const ul = labelOf(us);
+        const col = u.color ? ` · ${esc(u.color)}` : '';
+        const pl = u.plate ? esc(u.plate) : '—';
+        return `<span class="badge ${ul.class}" style="margin:2px 4px 2px 0;font-size:10.5px;">${pl}${col} — ${UNIT_STATUS_LABELS[us]||ul.label}</span>`;
+      }).join('');
+      const stockLine = `<div style="font-size:11px;color:var(--text2);margin-top:4px;"><strong>${ma.available}</strong> dispo / ${ma.total} en stock</div>`;
+      return `
       <tr>
-        <td><strong>${c.name}</strong></td>
-        <td style="color:var(--text2);font-size:12px;">${c.plate}</td>
+        <td><strong>${esc(c.name)}</strong>${stockLine}<div style="margin-top:4px;">${unitChips}</div></td>
+        <td style="color:var(--text2);font-size:12px;">${esc(c.plate||'')}</td>
         <td><span class="badge ${avail.class}">${avail.emoji} ${avail.label}</span></td>
-        <td style="font-size:12px;color:var(--text2);">${nextRes ? (c.status==='reserved'?`Libre dès ${nextRes.endDate}`: nextRes.startDate) : 'Aucune réservation'}</td>
+        <td style="font-size:12px;color:var(--text2);">${nextRes ? (ma.available>0 ? 'Unité disponible' : `Libre dès ${nextRes.endDate}`) : 'Aucune réservation'}</td>
         <td style="font-size:12px;color:var(--text2);">Marrakech</td>
         <td>
           <select class="form-select" style="width:150px;padding:6px 10px;font-size:12px;" onchange="changeStatus(${c.id}, this.value)">
-            <option value="">Changer</option>
+            <option value="">Changer (modèle)</option>
             <option value="available">Disponible</option>
             <option value="reserved">Réservé</option>
             <option value="maintenance">Maintenance</option>
@@ -2006,6 +2046,10 @@ function renderAvailability() {
         </td>
       </tr>
     `;
+    } catch (e) {
+      console.error('Ligne disponibilité ignorée :', e, c);
+      return '';
+    }
   }).join('');
 }
 
@@ -2090,7 +2134,25 @@ function renderPayments() {
 }
 
 // ==================== MODALS ====================
+/* ★ Restaure le pied de page CANONIQUE du pop-up partagé (bouton « Annuler »
+   + bouton « Enregistrer » #modal-save). Indispensable car certains modules
+   (Location longue durée…) remplacent le contenu du pied de page : sans cette
+   remise à zéro, le bouton #modal-save disparaissait et le pop-up « Modifier
+   véhicule » héritait du bouton d'un autre module (d'où le message parasite
+   « Indiquez le nom du client »). */
+function restoreModalFooter() {
+  const footer = document.getElementById('modal-footer');
+  if (!footer) return;
+  if (!document.getElementById('modal-save')) {
+    footer.innerHTML =
+      '<button class="topbar-btn secondary" onclick="closeModal()">Annuler</button>'
+      + '<button class="topbar-btn primary" id="modal-save" onclick="saveModal()">Enregistrer</button>';
+  }
+  footer.style.display = 'flex';
+}
+
 function openModal(type) {
+  restoreModalFooter();
   document.getElementById('modal-overlay').classList.add('open');
   const titles = {
     'new-reservation':'Nouvelle réservation manuelle',
@@ -2476,6 +2538,9 @@ function openModal(type) {
 function closeModal(e) {
   if(e && e.target !== document.getElementById('modal-overlay')) return;
   document.getElementById('modal-overlay').classList.remove('open');
+  // Remet le pied de page partagé dans son état standard pour le prochain pop-up
+  // (un module a pu le remplacer par ses propres boutons).
+  restoreModalFooter();
 }
 function saveModal() { /* handled per modal */ }
 

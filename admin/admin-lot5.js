@@ -714,6 +714,9 @@ function nlEndToDays() {
 }
 
 function _buildNewLocationModal() {
+  // Garantit la présence du bouton #modal-save même si un autre module (LLD…)
+  // a remplacé le pied de page du pop-up partagé juste avant.
+  if (typeof restoreModalFooter === 'function') restoreModalFooter();
   var fleet = aslFleet();
   var overlay = document.getElementById('modal-overlay');
   var titleEl = document.getElementById('modal-title');
