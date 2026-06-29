@@ -432,7 +432,7 @@
       return '<div class="ma-card">'
         + '<div class="ma-card-top"><div class="ma-card-ico-box blue">' + ic('key') + '</div>'
         + '<div class="ma-card-info"><div class="ma-card-name">' + esc(r.car || 'Véhicule') + '</div>'
-        + '<div class="ma-card-sub">' + esc(r.client || 'Client') + (plate ? ' · ' + esc(plate) : '') + '</div></div>'
+        + '<div class="ma-card-sub">' + esc(r.client || 'Client') + (plate ? ' · ' + esc(plate) + (r.assignedColor ? ' — ' + esc(r.assignedColor) : '') : '') + '</div></div>'
         + payBadge + '</div>'
         + '<div class="ma-card-meta">'
         + '<div class="ma-meta">Départ<b>' + fmtDateT(r.startDate, r.startTime, '10:00') + '</b></div>'
@@ -666,7 +666,7 @@
     var idStr = "'" + String(x.id || '') + "'";
     return '<div class="ma-card"><div class="ma-card-top"><div class="ma-card-ico-box ' + (kind === 'sortant' ? 'blue' : 'orange') + '">' + ic(kind === 'sortant' ? 'key' : 'returns') + '</div>'
       + '<div class="ma-card-info"><div class="ma-card-name">' + esc(x.car || 'Véhicule') + '</div>'
-      + '<div class="ma-card-sub">' + esc(x.client || '') + (plate ? ' · ' + esc(plate) : '') + '</div></div>'
+      + '<div class="ma-card-sub">' + esc(x.client || '') + (plate ? ' · ' + esc(plate) + (r.assignedColor ? ' — ' + esc(r.assignedColor) : '') : '') + '</div></div>'
       + '<span class="ma-badge ' + (kind === 'sortant' ? 'blue' : 'orange') + '">' + (kind === 'sortant' ? 'Départ' : 'Retour') + '</span></div>'
       + '<div class="ma-actions"><button class="ma-act-btn" onclick="maViewRental(' + idStr + ')">' + ic('eye') + 'Fiche</button></div></div>';
   }
@@ -913,7 +913,7 @@
       var plate = r.assignedPlate || (function () { try { var f = ASLDB.getFleet().filter(function (c) { return c.name === r.car || c.id === r.carId; })[0]; return f ? (f.plate || '') : ''; } catch (e) { return ''; } })();
       return '<div class="ma-card">'
         + '<div class="ma-card-top"><div class="ma-card-info"><div class="ma-card-name">' + esc(r.finalClient || r.client || 'Client') + '</div>'
-        + '<div class="ma-card-sub">' + esc(r.car || '') + (plate ? ' · ' + esc(plate) : '') + '</div></div>'
+        + '<div class="ma-card-sub">' + esc(r.car || '') + (plate ? ' · ' + esc(plate) + (r.assignedColor ? ' — ' + esc(r.assignedColor) : '') : '') + '</div></div>'
         + '<span class="ma-badge ' + (reste > 0 ? 'red' : 'green') + '">' + (reste > 0 ? money(reste) : 'Soldé') + '</span></div>'
         + '<div class="ma-card-meta"><div class="ma-meta">Dates<b>' + fmtDMT(r.startDate, r.startTime, '10:00') + ' → ' + fmtDMT(r.endDate, r.endTime, '18:00') + '</b></div>'
         + '<div class="ma-meta">Total<b>' + money(r.amount || 0) + '</b></div>'

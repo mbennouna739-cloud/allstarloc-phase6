@@ -180,32 +180,48 @@ function openDashDrawer(type) {
   if (type === 'available') {
     title = '🟢 Véhicules disponibles';
     fleet.filter(function(c) { return c.status === 'available'; }).forEach(function(c) {
-      var future = nextFutureReservation(c, res, ts);
-      var av = 1, tot = 1;
-      try { if (ASLDB.modelAvailability) { var m = ASLDB.modelAvailability(c); av = m.available; tot = m.total; } } catch (e) {}
-      var unitBadge = (tot > 1) ? '<span class="badge badge-green">● ' + av + ' / ' + tot + ' dispo</span>' : '<span class="badge badge-green">● Disponible</span>';
-      rows.push(
-        '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);gap:10px;">' +
-        '<div style="min-width:0;"><div style="font-weight:700;">' + c.name + (tot > 1 ? ' <span style="font-size:11px;color:var(--text3);font-weight:500;">(stock ' + tot + ')</span>' : '') + '</div>' +
-        '<div style="font-size:12px;color:var(--text3);">' + (c.plate||'') + ' · ' + (c.fuel||'') + ' · ' + (c.transmission||'') + '</div>' +
-        (future ? '<div style="font-size:12px;color:#d97706;margin-top:2px;">Réservée du ' + fmtD(future.startDate) + ' au ' + fmtD(future.endDate) + '</div>' : '') +
-        '</div>' +
-        '<div style="text-align:right;flex-shrink:0;">' + unitBadge + '</div>' +
-        '</div>'
-      );
+      var units = [];
+      try { if (typeof ASLDB !== 'undefined' && ASLDB.normalizeUnits) units = ASLDB.normalizeUnits(c); } catch(e) {}
+      if (!units || !units.length) units = [{ plate: c.plate||'', color: c.color||'', status: c.status||'available' }];
+      var availUnits = units.filter(function(u) { return !u.status || u.status === 'available'; });
+      availUnits.forEach(function(u) {
+        var plateLabel = u.plate || '';
+        if (u.color) plateLabel += (plateLabel ? ' — ' : '') + u.color;
+        var future = nextFutureReservation(c, res, ts);
+        rows.push(
+          '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);gap:10px;">'
+          + '<div style="min-width:0;">'
+          + '<div style="font-weight:700;">' + c.name + '</div>'
+          + '<div style="font-size:12px;color:var(--text3);">' + (plateLabel||'') + (plateLabel && c.fuel ? ' · ' : '') + (c.fuel||'') + (c.transmission ? ' · ' + c.transmission : '') + '</div>'
+          + (future ? '<div style="font-size:12px;color:#d97706;margin-top:2px;">Réservée du ' + fmtD(future.startDate) + ' au ' + fmtD(future.endDate) + '</div>' : '')
+          + '</div>'
+          + '<div style="text-align:right;flex-shrink:0;"><span class="badge badge-green">● Disponible</span></div>'
+          + '</div>'
+        );
+      });
     });
     if (!rows.length) rows.push('<div style="color:var(--text3);text-align:center;padding:30px;">Aucun véhicule disponible en ce moment</div>');
 
   } else if (type === 'rented') {
     title = '🔵 Véhicules loués actuellement';
     res.filter(function(r) { return (r.status==='active'||r.status==='confirmed') && (r.startDate||'')<=ts && (r.endDate||'')>=ts; }).forEach(function(r) {
+      var plateColor = '';
+      if (r.assignedPlate) {
+        plateColor = r.assignedPlate + (r.assignedColor ? ' — ' + r.assignedColor : '');
+      } else {
+        var fc2 = fleet.filter(function(c){ return c.name===r.car || c.id===r.carId; })[0];
+        if (fc2) plateColor = (fc2.plate||'') + (fc2.color ? ' — ' + fc2.color : '');
+      }
       rows.push(
-        '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);">' +
-        '<div><div style="font-weight:700;">' + (r.car||'') + '</div>' +
-        '<div style="font-size:12px;color:var(--text3);">' + (r.client||'') + ' · ' + (r.contractRef||r.id) + '</div>' +
-        '<div style="font-size:12px;">Retour : <strong>' + (r.endDate||'') + '</strong></div></div>' +
-        '<div><button class="btn-sm ghost" data-rid="' + r.id + '" onclick="closeDashDrawer();showPage(\'rentals\',null);setTimeout(function(){viewRental(document.querySelector(\'[data-rid=' + r.id + ']\')&&document.querySelector(\'[data-rid=' + r.id + ']\').dataset.rid)},400)">Voir →</button></div>' +
-        '</div>'
+        '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);gap:10px;">'
+        + '<div style="min-width:0;">'
+        + '<div style="font-weight:700;">' + (r.car||'') + '</div>'
+        + (plateColor ? '<div style="font-size:12px;color:var(--text3);">🚗 ' + plateColor + '</div>' : '')
+        + '<div style="font-size:12px;color:var(--text3);">' + (r.client||'') + ' · ' + (r.contractRef||r.id) + '</div>'
+        + '<div style="font-size:12px;">Retour : <strong>' + (r.endDate||'') + '</strong></div>'
+        + '</div>'
+        + '<div style="flex-shrink:0;"><button class="btn-sm ghost" data-rid="' + r.id + '" onclick="closeDashDrawer();showPage(\'rentals\',null);setTimeout(function(){viewRental(document.querySelector(\'[data-rid=' + r.id + ']\')&&document.querySelector(\'[data-rid=' + r.id + ']\').dataset.rid)},400)">Voir →</button></div>'
+        + '</div>'
       );
     });
     if (!rows.length) rows.push('<div style="color:var(--text3);text-align:center;padding:30px;">Aucune location active à ce jour</div>');
@@ -237,10 +253,12 @@ function openDashDrawer(type) {
       var fc = fleet.filter(function(c){ return c.name===r.car || c.id===r.carId; })[0];
       if (fc) plate = fc.plate || '';
       if (r.assignedPlate) plate = r.assignedPlate;
+      var retColor = (r.assignedColor || (fc && fc.color) || '');
+      var plateWithColor = plate + (retColor ? ' — ' + retColor : '');
       rows.push(
         '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);gap:10px;">' +
         '<div style="min-width:0;"><div style="font-weight:700;">' + (r.car||'') + '</div>' +
-        '<div style="font-size:12px;color:var(--text3);">' + (plate ? '🚗 ' + plate + ' · ' : '') + (r.client||'') + '</div>' +
+        '<div style="font-size:12px;color:var(--text3);">' + (plateWithColor ? '🚗 ' + plateWithColor + ' · ' : '') + (r.client||'') + '</div>' +
         '<div style="font-size:12px;">Retour prévu : <strong>' + (r.endDate||'') + '</strong>' + (r.endTime ? ' à <strong>' + r.endTime + '</strong>' : '') + '</div></div>' +
         '<div style="flex-shrink:0;"><button class="btn-sm primary" data-rid="' + r.id + '" onclick="closeDashDrawer();viewRes(this.dataset.rid)">Fiche →</button></div>' +
         '</div>'
@@ -485,7 +503,7 @@ function renderRentals() {
       return '<tr' + (isLate ? ' style="background:rgba(196,30,58,.04);"' : '') + '>' +
         '<td><strong>' + (r.contractRef||r.id||'') + '</strong>' + manualTag + '</td>' +
         '<td><div style="font-weight:600;">' + (r.client||'—') + '</div><div style="font-size:11px;color:var(--text3);">' + (r.phone||'') + '</div></td>' +
-        '<td style="font-size:13px;">' + (r.car||'—') + '</td>' +
+        '<td style="font-size:13px;">' + (r.car||'—') + (r.assignedPlate ? '<div style="font-size:11px;color:var(--text3);margin-top:1px;">🚗 ' + r.assignedPlate + (r.assignedColor ? ' — ' + r.assignedColor : '') + '</div>' : '') + '</td>' +
         '<td style="font-size:12px;">' + (r.startDate||'') + '</td>' +
         '<td style="font-size:12px;' + (isLate ? 'color:var(--red);font-weight:700;' : '') + '">' + (r.endDate||'') + (isLate ? ' ⚠' : '') + '</td>' +
         '<td style="text-align:center;">' + (r.days||'—') + '</td>' +

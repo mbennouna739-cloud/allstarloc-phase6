@@ -11,7 +11,7 @@
 (function(){
   var CONSENT_KEY = 'asl_cookie_consent_v1';
   var DEFAULT_CFG = {
-    enabled: true,
+    enabled: false,  /* Désactivé par défaut — activer depuis Marketing → Cookies */
     text: {
       fr: 'Nous utilisons des cookies pour améliorer votre expérience, analyser le trafic et personnaliser le contenu. Vous pouvez accepter, refuser ou personnaliser vos choix.',
       en: 'We use cookies to improve your experience, analyse traffic and personalise content. You can accept, decline or customise your choices.',
@@ -226,6 +226,17 @@
 
   /* Permet de rouvrir les préférences depuis un lien du pied de page :
      <a href="#" onclick="ASLCookies.open()">Gérer les cookies</a> */
+  var _shown = false;
+
+  function tryShow() {
+    if (_shown) return;
+    var cfg = getCfg();
+    if (!cfg.enabled) return;       // désactivé → on reste en veille
+    if (getConsent()) { applyTrackers(getConsent()); _shown = true; return; }
+    _shown = true;
+    show();
+  }
+
   window.ASLCookies = {
     open: function(){
       removeBanner();
@@ -242,12 +253,17 @@
         saveConsent(consent); removeModal();
       };
     },
-    reset: function(){ try{ localStorage.removeItem(CONSENT_KEY); }catch(e){} location.reload(); }
+    reset: function(){ try{ localStorage.removeItem(CONSENT_KEY); }catch(e){} location.reload(); },
+    /* Appelé par content-bridge après réception des données serveur */
+    refresh: function() { tryShow(); }
   };
 
-  // Le content-bridge expose la config serveur dans window._ASL_COOKIES ;
-  // on attend un court instant pour la récupérer, sinon on utilise le cache local.
-  function init(){ setTimeout(show, 400); }
+  /* Premier essai à 300ms (localStorage déjà dispo) */
+  function init() {
+    setTimeout(tryShow, 300);
+    /* Deuxième essai à 1500ms au cas où content-bridge met du temps */
+    setTimeout(tryShow, 1500);
+  }
   if (document.readyState !== 'loading') init();
   else document.addEventListener('DOMContentLoaded', init);
 })();

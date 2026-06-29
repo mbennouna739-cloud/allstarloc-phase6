@@ -457,6 +457,10 @@
     /* Configuration de la bannière cookies (gérée depuis le back-office). */
     if (data.cookies) {
       window._ASL_COOKIES = data.cookies;
+      /* Notifier cookie-consent.js pour qu'il réévalue l'affichage */
+      if (window.ASLCookies && typeof window.ASLCookies.refresh === 'function') {
+        try { window.ASLCookies.refresh(); } catch(e) {}
+      }
     }
 
     /* Avis clients gérés depuis le back-office (multilingues). */

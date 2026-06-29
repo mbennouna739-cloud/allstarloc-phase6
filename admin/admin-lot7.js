@@ -191,17 +191,22 @@ function confirmReset() {
   /* Effacer les alertes opérationnelles d'entretien en cours (historique flotte conservé ailleurs) */
   /* On NE touche PAS aux documents clients ni aux paiements. */
 
+  /* Remise à zéro des charges */
+  try { localStorage.removeItem('asl_charges_v1'); } catch(e) {}
+
   if (typeof reloadData === 'function') reloadData();
   if (typeof renderDashboard === 'function') renderDashboard();
   if (typeof renderRentals === 'function') renderRentals();
   if (typeof renderFleetPage === 'function') renderFleetPage();
   if (typeof renderCustomers === 'function') renderCustomers();
   if (typeof updateBadges === 'function') updateBadges();
+  if (typeof renderCaisse === 'function') renderCaisse();
 
   asl7Toast('Réinitialisation effectuée — parc redevenu disponible ✓');
   alert('✓ Réinitialisation terminée.\n\n' +
         archived + ' dossier(s) d\'exploitation archivé(s).\n' +
-        fleet.length + ' véhicule(s) repassés disponibles.\n\n' +
+        fleet.length + ' véhicule(s) repassés disponibles.\n' +
+        'Charges / Dépenses remises à zéro.\n\n' +
         'L\'historique reste consultable. Aucune donnée supprimée.');
 }
 
