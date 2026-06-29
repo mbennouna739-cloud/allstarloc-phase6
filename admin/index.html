@@ -717,6 +717,10 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/></svg>
             Gérer les tranches saisonnières
           </button>
+          <button class="topbar-btn secondary" onclick="openSeasonalPreview()" title="Consulter et modifier les tarifs saisonniers d'une voiture précise">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            Aperçu tarifs saisonniers
+          </button>
           <button class="topbar-btn primary" onclick="openModal('add-car')">+ Ajouter un véhicule</button>
         </div>
       </div>
@@ -1840,13 +1844,9 @@ function editCar(id) {
       </div>
     </div>
     
-    <div class="form-group"><label class="form-label">Tarifs par durée (MAD/jour)</label>
-      <div id="edit-tiers-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;"></div>
-      <button type="button" class="btn-sm" style="background:rgba(196,30,58,0.1);color:var(--red);border:1px solid rgba(196,30,58,0.25);border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;" onclick="addTierRow('edit')">+ Ajouter une tranche</button>
-    </div>
-    <div class="form-group" style="grid-column:1/-1;background:rgba(18,22,30,.03);border-radius:10px;padding:14px;">
-      <label class="form-label" style="color:var(--red);">Tarifs saisonniers</label>
-      <div style="font-size:13px;color:var(--text2,#555);line-height:1.5;">Les tarifs saisonniers sont gérés depuis le module <strong>« Gérer les tranches saisonnières »</strong> (bouton en haut de la page Ma flotte). Les tranches déjà appliquées à ce véhicule sont conservées.</div>
+    <div class="form-group" style="grid-column:1/-1;background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.18);border-radius:10px;padding:14px;">
+      <div style="font-size:13px;color:#1d4ed8;font-weight:600;display:flex;align-items:center;gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Tarifs</div>
+      <div style="font-size:12.5px;color:var(--text2,#555);line-height:1.5;margin-top:6px;">Les tarifs saisonniers sont gérés depuis <strong>« Gérer les tranches saisonnières »</strong> et consultables depuis <strong>« Aperçu tarifs saisonniers »</strong>. Les tarifs déjà appliqués à ce véhicule sont conservés.</div>
     </div>
     </div>
     <div class="form-group"><label class="form-label">URL Photo (option secondaire)</label><input class="form-input" placeholder="https://..." value="${car.img||''}" id="edit-img"></div>
@@ -1872,7 +1872,7 @@ function editCar(id) {
     document.getElementById('edit-price-eur').value = Math.round(parseInt(e.target.value||0) / ASLDB.RATE_MAD);
   });
   wireImageUpload('edit');
-  setTimeout(() => seedTiers('edit', car.tiers), 0);
+  // (Tarifs gérés via les modules dédiés — éditeurs retirés du pop-up véhicule)
   // (Tarifs saisonniers gérés via le module dédié — éditeur retiré du pop-up)
   // Unités dynamiques : initialise puis régénère quand le stock change
   (function(){
@@ -1911,7 +1911,7 @@ function editCar(id) {
       deposit: parseInt(fv('edit-deposit')) || null, depositShow: fc('edit-deposit-show'), extras: fv('edit-extras'),
       features: { ac: fc('edit-feat-ac'), bluetooth: fc('edit-feat-bt'), gps: fc('edit-feat-gps'),
                   camera: fc('edit-feat-cam'), insurance: fc('edit-feat-ins'), airport: fc('edit-feat-air') },
-      tiers: collectTiers('edit'),
+      tiers: Array.isArray(car.tiers) ? car.tiers : [],
       seasonalTiers: Array.isArray(car.seasonalTiers) ? car.seasonalTiers : [],
       img: document.getElementById('edit-img').value || car.img,
       imgAlt: document.getElementById('edit-imgalt')?.value || car.imgAlt || '',
@@ -2143,11 +2143,13 @@ function renderPayments() {
 function restoreModalFooter() {
   const footer = document.getElementById('modal-footer');
   if (!footer) return;
-  if (!document.getElementById('modal-save')) {
-    footer.innerHTML =
-      '<button class="topbar-btn secondary" onclick="closeModal()">Annuler</button>'
-      + '<button class="topbar-btn primary" id="modal-save" onclick="saveModal()">Enregistrer</button>';
-  }
+  // Reconstruction SYSTÉMATIQUE du pied standard : on remplace le bouton
+  // d'enregistrement par un bouton neuf (clone) pour purger tout gestionnaire
+  // onclick laissé par un autre module (LLD, sous-location…). C'était la cause
+  // du message parasite « Indiquez le nom du client » en modifiant un véhicule.
+  footer.innerHTML =
+    '<button class="topbar-btn secondary" onclick="closeModal()">Annuler</button>'
+    + '<button class="topbar-btn primary" id="modal-save" onclick="saveModal()">Enregistrer</button>';
   footer.style.display = 'flex';
 }
 
@@ -2452,15 +2454,9 @@ function openModal(type) {
       </div>
     </div>
 
-    <div class="form-group"><label class="form-label">Tarifs par durée (MAD/jour)</label>
-      <div id="ac-tiers-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;"></div>
-      <button type="button" class="btn-sm" style="background:rgba(196,30,58,0.1);color:var(--red);border:1px solid rgba(196,30,58,0.25);border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;" onclick="addTierRow('ac')">+ Ajouter une tranche</button>
-    </div>
-    <div class="form-group" style="grid-column:1/-1;background:rgba(18,22,30,.03);border-radius:10px;padding:14px;">
-      <label class="form-label" style="color:var(--red);">Tarifs saisonniers (mois · durée · prix/jour)</label>
-      <div style="font-size:11px;color:var(--text3,#888);margin:-2px 0 8px;">Prioritaire sur les tarifs par durée. Si aucune règle ne correspond au mois de départ, le tarif par durée puis le prix standard s'appliquent automatiquement.</div>
-      <div id="ac-seasons-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;"></div>
-      <button type="button" class="btn-sm" style="background:rgba(196,30,58,0.1);color:var(--red);border:1px solid rgba(196,30,58,0.25);border-radius:8px;padding:7px 14px;font-size:13px;font-weight:600;cursor:pointer;" onclick="addSeasonRow('ac')">+ Ajouter une tranche saisonnière</button>
+    <div class="form-group" style="grid-column:1/-1;background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.18);border-radius:10px;padding:14px;">
+      <div style="font-size:13px;color:#1d4ed8;font-weight:600;display:flex;align-items:center;gap:8px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg> Tarifs</div>
+      <div style="font-size:12.5px;color:var(--text2,#555);line-height:1.5;margin-top:6px;">Les tarifs saisonniers sont gérés depuis <strong>« Gérer les tranches saisonnières »</strong> et consultables depuis <strong>« Aperçu tarifs saisonniers »</strong>. Enregistrez d'abord le véhicule, puis configurez ses tarifs depuis ces modules.</div>
     </div>
     <div class="form-group"><label class="form-label">URL Photo (option secondaire)</label><input class="form-input" placeholder="https://..." id="ac-img"></div>
     <div class="form-group" style="grid-column:1/-1;"><label class="form-label">Texte ALT de l'image (SEO)</label><input class="form-input" placeholder="Ex : Renault Clio 5 blanche location Marrakech" id="ac-imgalt"><div style="font-size:11px;color:var(--text3,#888);margin-top:4px;">Décrit l'image pour Google et l'accessibilité. Améliore le référencement.</div></div>
@@ -2509,8 +2505,8 @@ function openModal(type) {
         deposit: parseInt(fv('ac-deposit')) || null, depositShow: fc('ac-deposit-show'), extras: fv('ac-extras'),
         features: { ac: fc('ac-feat-ac'), bluetooth: fc('ac-feat-bt'), gps: fc('ac-feat-gps'),
                     camera: fc('ac-feat-cam'), insurance: fc('ac-feat-ins'), airport: fc('ac-feat-air') },
-        tiers: collectTiers('ac'),
-        seasonalTiers: collectSeasons('ac'),
+        tiers: [],
+        seasonalTiers: [],
         featured: false,
         services: ['Clim','Radio'],
         img: document.getElementById('ac-img')?.value || 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=600&q=80',
@@ -2987,6 +2983,7 @@ document.addEventListener('DOMContentLoaded', function(){ setTimeout(renderMobil
 <script src="admin-archive.js"></script>
 <script src="admin-users-ui.js"></script>
 <script src="admin-sublease-ui.js"></script>
+<script src="admin-seasonal-preview.js"></script>
 <script src="admin-lld-ui.js"></script>
 <script src="admin-mobile.js"></script>
 </body>

@@ -107,6 +107,15 @@ function renderDashboard() {
     var res = aslRes();
     var ts = todayStr();
 
+    // Compter les UNITÉS réellement disponibles (un modèle « Stock 2 »
+    // compte pour 2). On utilise modelAvailability si présent, sinon repli.
+    function _avUnits(c) {
+      try {
+        if (typeof ASLDB !== 'undefined' && ASLDB.modelAvailability) return ASLDB.modelAvailability(c).available;
+      } catch (e) {}
+      return (c.status === 'available') ? Math.max(1, parseInt(c.stock) || 1) : 0;
+    }
+    var availUnitsTotal = fleet.reduce(function (s, c) { return s + _avUnits(c); }, 0);
     var avail   = fleet.filter(function(c) { return c.status === 'available'; });
     var rented  = res.filter(function(r) { return (r.status === 'active' || r.status === 'confirmed') && (r.startDate||'') <= ts && (r.endDate||'') >= ts; });
     var returns = res.filter(function(r) { return (r.endDate||'').slice(0,10) === ts && r.status !== 'cancelled'; });
@@ -117,7 +126,7 @@ function renderDashboard() {
       var el = document.getElementById(id);
       if (el) { el.textContent = val; if (col) el.style.color = col; }
     }
-    setV('dash-available', avail.length,   avail.length   ? '#22c55e'    : '');
+    setV('dash-available', availUnitsTotal, availUnitsTotal ? '#22c55e'    : '');
     setV('dash-rented',    rented.length,  rented.length  ? '#3b82f6'    : '');
     setV('dash-returns',   returns.length, returns.length ? '#f59e0b'    : '');
     setV('dash-late',      late.length,    late.length    ? 'var(--red)' : '');
@@ -172,13 +181,16 @@ function openDashDrawer(type) {
     title = '🟢 Véhicules disponibles';
     fleet.filter(function(c) { return c.status === 'available'; }).forEach(function(c) {
       var future = nextFutureReservation(c, res, ts);
+      var av = 1, tot = 1;
+      try { if (ASLDB.modelAvailability) { var m = ASLDB.modelAvailability(c); av = m.available; tot = m.total; } } catch (e) {}
+      var unitBadge = (tot > 1) ? '<span class="badge badge-green">● ' + av + ' / ' + tot + ' dispo</span>' : '<span class="badge badge-green">● Disponible</span>';
       rows.push(
         '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);gap:10px;">' +
-        '<div style="min-width:0;"><div style="font-weight:700;">' + c.name + '</div>' +
+        '<div style="min-width:0;"><div style="font-weight:700;">' + c.name + (tot > 1 ? ' <span style="font-size:11px;color:var(--text3);font-weight:500;">(stock ' + tot + ')</span>' : '') + '</div>' +
         '<div style="font-size:12px;color:var(--text3);">' + (c.plate||'') + ' · ' + (c.fuel||'') + ' · ' + (c.transmission||'') + '</div>' +
         (future ? '<div style="font-size:12px;color:#d97706;margin-top:2px;">Réservée du ' + fmtD(future.startDate) + ' au ' + fmtD(future.endDate) + '</div>' : '') +
         '</div>' +
-        '<div style="text-align:right;flex-shrink:0;"><span class="badge badge-green">● Disponible</span></div>' +
+        '<div style="text-align:right;flex-shrink:0;">' + unitBadge + '</div>' +
         '</div>'
       );
     });

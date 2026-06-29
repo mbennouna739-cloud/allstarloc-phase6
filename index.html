@@ -1795,6 +1795,7 @@ function renderCars(filter) {
           ${searchActive ? '' : `<span class="car-price-from">${t('car.fromPrice')}</span>`}
           <span class="car-price-amount">${price(dailyRate(car, rateDays))}</span>
           <span class="car-price-unit">${t('u.perDayLong')}</span>
+          ${searchActive ? '' : `<div class="car-price-hint" style="font-size:11px;color:var(--text2);font-weight:500;margin-top:2px;">${t('vp.degressive')}</div>`}
         </div>
         ${searchActive
           ? (normalizeTiers(car.tiers).length ? `<div class="car-tier-label">${t('car.tierHint')}</div>` : '')

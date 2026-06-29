@@ -675,6 +675,23 @@
     });
     write(KEY_FLEET, fleet);
 
+    // ★ PROPAGATION GLOBALE : pousser l'état vidé au serveur pour que TOUS les
+    //   appareils (mobiles, autres salariés, site client) voient la
+    //   réinitialisation. Sans cela, le serveur gardait les anciennes
+    //   réservations et les renvoyait au prochain pull (mobile non réinitialisé).
+    markFleetDirty();                 // force le push de la flotte (unités remises à dispo)
+    try {
+      if (remoteEnabled) {
+        // Remplacement explicite de la liste des réservations côté serveur (vidée)
+        apiFetch('/reservations', {
+          method: 'POST', headers: headers(true),
+          body: JSON.stringify({ action: 'replace', items: [] })
+        }).then(function (out) {
+          if (out && out.rev) writeNum(KEY_REV_R, out.rev);
+        }).catch(function () {});
+      }
+    } catch (e) {}
+
     emit(KEY_RES); emit(KEY_FLEET); syncNow();
     return snapshot;
   }
