@@ -15,7 +15,7 @@
 // Workers & Pages → votre Worker → Settings → Variables and Secrets.
 // ============================================================
 {
-  "name": "allstarloc",
+  "name": "allstarloc-phase6",
   "compatibility_date": "2026-05-01",
 
   // Point d'entrée serveur : gère /api/* (synchronisation + images)
