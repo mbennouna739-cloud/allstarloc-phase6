@@ -216,7 +216,9 @@
     charges: 'asl_charges_v1',
     maint: 'asl_maint_v1',
     docs: 'asl_cust_docs_v1',
-    lld: 'asl_lld_v1'
+    lld: 'asl_lld_v1',
+    customfeatures: 'asl_custom_features_v1',
+    archives: 'asl_archives_v1'
   };
   function miscDirtyKey(name) { return 'asl_misc_dirty_' + name; }
   function miscRevKey(name) { return 'asl_misc_rev_' + name; }
@@ -651,10 +653,14 @@
     const archives = getArchives();
     archives.unshift(snapshot);
     try { localStorage.setItem(KEY_ARCHIVES, JSON.stringify(archives)); } catch (e) {}
+    // Synchroniser les archives vers le serveur (tous appareils)
+    noteLocalChange(KEY_ARCHIVES);
 
     // Vider les données opérationnelles actives
     saveReservations([]);                       // réservations / locations / paiements → 0
     try { localStorage.setItem(KEY_CHARGES, '[]'); } catch (e) {}  // charges → 0
+    // Synchroniser les charges vidées vers le serveur
+    noteLocalChange(KEY_CHARGES);
 
     // Tous les véhicules redeviennent disponibles (élément permanent, jamais supprimé).
     // ★ On libère AUSSI chaque unité du stock : sans cela, une unité restée
@@ -697,13 +703,15 @@
   }
 
   /* Restaure une période archivée : réinjecte ses réservations et charges
-     dans les données actives (fusion, sans doublon par id). */
-  function restoreArchive(archiveId) {
+     dans les données actives (fusion, sans doublon par id).
+     ★ MULTI-APPAREILS : pousse immédiatement vers le serveur pour que
+       mobile et autres appareils reçoivent la restauration au prochain poll. */
+  async function restoreArchive(archiveId) {
     const archives = getArchives();
     const arch = archives.find(function (a) { return a.id === archiveId; });
     if (!arch) return false;
 
-    // Réservations : fusion
+    // Réservations : fusion sans doublon
     const current = read(KEY_RES, []);
     const ids = current.map(function (r) { return r.id; });
     (arch.reservations || []).forEach(function (r) {
@@ -711,7 +719,20 @@
     });
     saveReservations(current);
 
-    // Charges : fusion
+    // ★ PUSH immédiat et ATTENDU des réservations restaurées vers le serveur.
+    // On attend la réponse avant d'appeler syncNow() pour éviter que pullState()
+    // ne parte avant que le serveur ait le bon rev et n'écrase la restauration.
+    if (remoteEnabled) {
+      try {
+        const out = await apiFetch('/reservations', {
+          method: 'POST', headers: headers(true),
+          body: JSON.stringify({ action: 'replace', items: current })
+        });
+        if (out && out.rev) writeNum(KEY_REV_R, out.rev);
+      } catch (e) { /* hors-ligne : le pull suivant sera cohérent */ }
+    }
+
+    // Charges : fusion sans doublon
     let charges = [];
     try { charges = JSON.parse(localStorage.getItem(KEY_CHARGES) || '[]'); } catch (e) { charges = []; }
     const cIds = charges.map(function (c) { return c.id; });
@@ -719,6 +740,8 @@
       if (cIds.indexOf(c.id) < 0) charges.push(c);
     });
     try { localStorage.setItem(KEY_CHARGES, JSON.stringify(charges)); } catch (e) {}
+    // ★ Synchroniser les charges restaurées vers le serveur → tous appareils (mobile compris)
+    noteLocalChange(KEY_CHARGES);
 
     emit(KEY_RES); syncNow();
     return true;

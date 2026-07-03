@@ -1330,7 +1330,16 @@
     buildShell();
     window.maGo('dashboard');
     try { if (typeof ASLDB !== 'undefined' && ASLDB.onChange) ASLDB.onChange(function () { if (isMobile()) renderScreen(current); }); } catch (e) {}
+    /* ★ Forcer une synchro immédiate au démarrage du mobile pour garantir
+       que les données restaurées sur desktop sont reçues sans attendre le poll. */
+    try { if (typeof ASLDB !== 'undefined' && ASLDB.syncNow) ASLDB.syncNow(); } catch (e) {}
     setTimeout(function () { renderNotifications(); window.maGo('dashboard'); }, 200);
+    /* Second passage à 2s pour attraper les données misc (charges, sous-loc, LLD)
+       qui arrivent après la première synchro des réservations. */
+    setTimeout(function () {
+      try { if (typeof ASLDB !== 'undefined' && ASLDB.syncNow) ASLDB.syncNow(); } catch (e) {}
+      if (isMobile()) renderScreen(current);
+    }, 2000);
     watchSync();
     hookModalLock();
   }

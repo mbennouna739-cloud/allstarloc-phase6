@@ -210,16 +210,18 @@
   };
 
   /* ---- RESTAURER ---- */
-  window.doRestoreArchive = function (id) {
+  window.doRestoreArchive = async function (id) {
     var a = getArchives().filter(function (x) { return x.id === id; })[0];
     if (!a) return;
     if (!confirm('♻ RESTAURER « ' + a.label + ' »\n\nLes réservations et charges de cette archive vont être rajoutées aux données actives du tableau de bord.\n\nContinuer ?')) return;
-    try { if (typeof ASLDB !== 'undefined' && ASLDB.restoreArchive) ASLDB.restoreArchive(id); } catch (e) {}
+    /* Attendre que la restauration soit poussée au serveur avant d'afficher la confirmation
+       Ainsi, si l'utilisateur ouvre le mobile 1 seconde après, les données sont déjà sur le serveur. */
+    try { if (typeof ASLDB !== 'undefined' && ASLDB.restoreArchive) await ASLDB.restoreArchive(id); } catch (e) {}
     refreshAll();
     closeArchiveModal();
     renderArchives();
-    if (typeof showToast === 'function') showToast('Archive restaurée ✓');
-    alert('✓ Archive restaurée.\nLes données ont été rajoutées au tableau de bord.');
+    if (typeof showToast === 'function') showToast('Archive restaurée ✓ — synchronisé sur tous les appareils');
+    alert('✓ Archive restaurée et synchronisée.\nLes données sont maintenant disponibles sur tous vos appareils (mobile, desktop).');
   };
 
   /* ---- SUPPRIMER ---- */

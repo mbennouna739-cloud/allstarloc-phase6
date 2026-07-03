@@ -191,8 +191,12 @@ function confirmReset() {
   /* Effacer les alertes opérationnelles d'entretien en cours (historique flotte conservé ailleurs) */
   /* On NE touche PAS aux documents clients ni aux paiements. */
 
-  /* Remise à zéro des charges */
-  try { localStorage.removeItem('asl_charges_v1'); } catch(e) {}
+  /* Remise à zéro des charges — sync vers serveur et tous appareils */
+  try {
+    localStorage.setItem('asl_charges_v1', '[]');
+    if (typeof ASLDB !== 'undefined' && ASLDB.noteLocalChange) ASLDB.noteLocalChange('asl_charges_v1');
+    if (typeof ASLDB !== 'undefined' && ASLDB.syncNow) ASLDB.syncNow();
+  } catch(e) {}
 
   if (typeof reloadData === 'function') reloadData();
   if (typeof renderDashboard === 'function') renderDashboard();

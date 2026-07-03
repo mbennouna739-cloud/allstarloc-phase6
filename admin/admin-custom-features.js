@@ -43,6 +43,9 @@
   }
   function writeCF(list) {
     try { localStorage.setItem(CF_KEY, JSON.stringify(list)); } catch (e) {}
+    /* Synchroniser vers le serveur et les autres appareils */
+    try { if (typeof ASLDB !== 'undefined' && ASLDB.noteLocalChange) ASLDB.noteLocalChange(CF_KEY); } catch (e) {}
+    try { if (typeof ASLDB !== 'undefined' && ASLDB.syncNow) ASLDB.syncNow(); } catch (e) {}
   }
 
   /* ---------- Helpers ---------- */
