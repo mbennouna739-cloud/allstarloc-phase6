@@ -187,17 +187,31 @@
     <a href="about.html" data-i18n="nav.about">À propos</a>
     <a href="contact.html" data-i18n="nav.contact">Contact</a>
     <a href="https://wa.me/212675312453" target="_blank" style="color:#25D366;" data-i18n="nav.wa247">WhatsApp 24h/7j</a>
-    <div class="mm-row">
-      <button data-setlang="fr" onclick="setLang('fr')">FR</button>
-      <button data-setlang="en" onclick="setLang('en')">EN</button>
-      <button data-setlang="es" onclick="setLang('es')">ES</button>
-      <button data-setlang="ar" onclick="setLang('ar')">عربية</button>
-    </div>
-    <div class="mm-row">
-      <button data-setcur="MAD" onclick="setCurrency('MAD')">MAD</button>
-      <button data-setcur="EUR" onclick="setCurrency('EUR')">EUR</button>
-      <button data-setcur="USD" onclick="setCurrency('USD')">USD</button>
-      <button data-setcur="GBP" onclick="setCurrency('GBP')">GBP</button>
+    <div class="mm-prefs">
+      <div class="mm-group">
+        <div class="mm-group-label">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" x2="22" y1="12" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          Langue
+        </div>
+        <div class="mm-seg">
+          <button data-setlang="fr" onclick="setLang('fr')">FR</button>
+          <button data-setlang="en" onclick="setLang('en')">EN</button>
+          <button data-setlang="es" onclick="setLang('es')">ES</button>
+          <button data-setlang="ar" onclick="setLang('ar')">AR</button>
+        </div>
+      </div>
+      <div class="mm-group">
+        <div class="mm-group-label">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.8 9A2 2 0 0 0 13 8h-2a2 2 0 0 0 0 4h2a2 2 0 0 1 0 4h-2a2 2 0 0 1-1.8-1"/><line x1="12" x2="12" y1="6" y2="8"/><line x1="12" x2="12" y1="16" y2="18"/></svg>
+          Devise
+        </div>
+        <div class="mm-seg">
+          <button data-setcur="MAD" onclick="setCurrency('MAD')">MAD</button>
+          <button data-setcur="EUR" onclick="setCurrency('EUR')">EUR</button>
+          <button data-setcur="USD" onclick="setCurrency('USD')">USD</button>
+          <button data-setcur="GBP" onclick="setCurrency('GBP')">GBP</button>
+        </div>
+      </div>
     </div>
   </div>
 </header>

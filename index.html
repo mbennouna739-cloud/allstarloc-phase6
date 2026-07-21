@@ -1023,13 +1023,26 @@ body.scrolled .fade-in { animation: none !important; opacity: 1 !important; tran
 .hdr-menu button.active { color: #ff6b7a; font-weight: 700; }
 .cur-opt { transition: color 0.15s; }
 .cur-opt.active { color: white !important; font-weight: 700; }
-.mm-row { display: flex; gap: 8px; padding: 10px 0 0; }
-.mm-row button {
-  flex: 1; padding: 9px 0; background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.12); color: rgba(255,255,255,0.75);
-  border-radius: 9px; cursor: pointer; font-family: var(--font); font-size: 13px; font-weight: 600;
+.mm-prefs { margin-top: 6px; padding: 14px 24px 8px; border-top: 1px solid rgba(255,255,255,0.08); }
+.mm-group { margin-bottom: 14px; }
+.mm-group:last-child { margin-bottom: 2px; }
+.mm-group-label {
+  display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700;
+  letter-spacing: 1.2px; text-transform: uppercase; color: rgba(255,255,255,0.42); margin-bottom: 8px;
 }
-.mm-row button.active { border-color: var(--red); color: white; }
+.mm-group-label svg { flex-shrink: 0; opacity: 0.8; }
+.mm-seg {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px;
+  background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 12px; padding: 4px;
+}
+.mm-seg button {
+  border: none; background: transparent; color: rgba(255,255,255,0.62);
+  font-family: var(--font); font-size: 13px; font-weight: 600; padding: 10px 2px;
+  border-radius: 9px; cursor: pointer; transition: background 0.18s ease, color 0.18s ease;
+}
+.mm-seg button.active { background: var(--red); color: #fff; box-shadow: 0 3px 12px rgba(196,30,58,0.35); }
+[dir="rtl"] .mm-prefs, [dir="rtl"] .mm-group-label { text-align: right; }
 [dir="rtl"] .hdr-menu { right: auto; left: 0; }
 [dir="rtl"] .hdr-menu button { text-align: right; }
 
@@ -1184,17 +1197,31 @@ body.scrolled .fade-in { animation: none !important; opacity: 1 !important; tran
     <a href="pages/about.html" data-i18n="nav.about">À propos</a>
     <a href="pages/contact.html" data-i18n="nav.contact">Contact</a>
     <a href="https://wa.me/212675312453" target="_blank" style="color:#25D366;" data-i18n="nav.wa247">WhatsApp 24h/7j</a>
-    <div class="mm-row">
-      <button data-setlang="fr" onclick="setLang('fr')">FR</button>
-      <button data-setlang="en" onclick="setLang('en')">EN</button>
-      <button data-setlang="es" onclick="setLang('es')">ES</button>
-      <button data-setlang="ar" onclick="setLang('ar')">عربية</button>
-    </div>
-    <div class="mm-row">
-      <button data-setcur="MAD" onclick="setCurrency('MAD')">MAD</button>
-      <button data-setcur="EUR" onclick="setCurrency('EUR')">EUR</button>
-      <button data-setcur="USD" onclick="setCurrency('USD')">USD</button>
-      <button data-setcur="GBP" onclick="setCurrency('GBP')">GBP</button>
+    <div class="mm-prefs">
+      <div class="mm-group">
+        <div class="mm-group-label">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" x2="22" y1="12" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          Langue
+        </div>
+        <div class="mm-seg">
+          <button data-setlang="fr" onclick="setLang('fr')">FR</button>
+          <button data-setlang="en" onclick="setLang('en')">EN</button>
+          <button data-setlang="es" onclick="setLang('es')">ES</button>
+          <button data-setlang="ar" onclick="setLang('ar')">AR</button>
+        </div>
+      </div>
+      <div class="mm-group">
+        <div class="mm-group-label">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M14.8 9A2 2 0 0 0 13 8h-2a2 2 0 0 0 0 4h2a2 2 0 0 1 0 4h-2a2 2 0 0 1-1.8-1"/><line x1="12" x2="12" y1="6" y2="8"/><line x1="12" x2="12" y1="16" y2="18"/></svg>
+          Devise
+        </div>
+        <div class="mm-seg">
+          <button data-setcur="MAD" onclick="setCurrency('MAD')">MAD</button>
+          <button data-setcur="EUR" onclick="setCurrency('EUR')">EUR</button>
+          <button data-setcur="USD" onclick="setCurrency('USD')">USD</button>
+          <button data-setcur="GBP" onclick="setCurrency('GBP')">GBP</button>
+        </div>
+      </div>
     </div>
   </div>
 </header>
@@ -1675,23 +1702,20 @@ function loadCars() {
       //   hors service ne réduisent pas l'affichage du modèle mais réduisent le stock).
       stock: Math.max(1, rentableUnits(c)),
       unitIds: [c.id],
+      // ★ Équipements personnalisés (Back Office → BD → API → Site Client).
+      //   Doit être recopié ici pour être visible sur les fiches véhicules.
+      customFeatures: c.customFeatures || {},
     }));
 
-  // Regrouper les véhicules de même nom → une seule carte par modèle
-  const _grouped = [];
-  CARS.forEach(function(car) {
-    const ex = _grouped.find(function(g){ return g.name === car.name; });
-    if (ex) {
-      ex.stock = (ex.stock || 1) + (car.stock || 1);
-      if (car.unitIds) ex.unitIds = ex.unitIds.concat(car.unitIds);
-      if ((!ex.tiers || !ex.tiers.length) && car.tiers && car.tiers.length) ex.tiers = car.tiers;
-      if ((!ex.seasonalTiers || !ex.seasonalTiers.length) && car.seasonalTiers && car.seasonalTiers.length) ex.seasonalTiers = car.seasonalTiers;
-      if (!ex.featured && car.featured) ex.featured = true;
-    } else {
-      _grouped.push(Object.assign({}, car));
-    }
-  });
-  CARS = _grouped;
+  // ★ IMPORTANT : chaque fiche de la flotte (une par véhicule/variante saisie
+  //   dans le back-office) reste une carte INDÉPENDANTE sur le site client.
+  //   Le nom du véhicule n'est JAMAIS utilisé comme identifiant unique : deux
+  //   véhicules (ou plus) peuvent parfaitement partager le même nom affiché
+  //   (ex. deux fiches "Clio 5", l'une Manuelle, l'autre Automatique, ou deux
+  //   couleurs différentes) sans jamais être fusionnées ni masquées l'une par
+  //   l'autre. Un ancien regroupement par nom a été retiré : il fusionnait par
+  //   erreur des véhicules distincts en une seule carte et en faisait
+  //   disparaître certaines variantes côté client.
 }
 loadCars();
 
@@ -1855,9 +1879,11 @@ function startSearch() {
   if (!_sd) { showDatesNotice(); return; }
   // Date de retour manquante → message spécifique
   if (!_ed) { showReturnDateNotice(); return; }
-  // Vérifier que la durée est d'au moins 2 jours (uniquement au moment de la recherche)
+  // Vérifier la durée minimale de location (configurable depuis le Back Office,
+  // uniquement au moment de la recherche)
   const _diff = Math.round((new Date(_ed) - new Date(_sd)) / (1000*60*60*24));
-  if (_diff < 2) { showMinDaysNotice(); return; }
+  const _minStayCfg = getMinStayConfig();
+  if (_diff < _minStayCfg.days) { showMinDaysNotice(_minStayCfg); return; }
   CAL.picked = true;
   state.searched = true;
   renderCars();
@@ -1884,7 +1910,31 @@ function showReturnDateNotice() {
   }
 }
 
-function showMinDaysNotice() {
+// ★ Durée minimale de location : configurable depuis le Back Office
+//   (Paramètres → Durée minimale de location). Plus aucune valeur codée en
+//   dur : à défaut de configuration reçue du serveur, un repli raisonnable
+//   (2 jours, message par défaut) est utilisé, dans les 4 langues du site.
+function getMinStayConfig() {
+  var def = { days: 2, message: {
+    fr: 'La durée minimale de location est de {n} jours. Veuillez sélectionner une période d\'au moins {n} jours.',
+    en: 'The minimum rental duration is {n} days. Please select a period of at least {n} days.',
+    es: 'La duración mínima de alquiler es de {n} días. Seleccione un período de al menos {n} días.',
+    ar: 'المدة الدنيا للكراء هي {n} أيام. المرجو اختيار فترة لا تقل عن {n} أيام.'
+  }};
+  var cfg = null;
+  try {
+    if (window._ASL_MINSTAY && window._ASL_MINSTAY.days) cfg = window._ASL_MINSTAY;
+    else {
+      var all = JSON.parse(localStorage.getItem('asl_mkt_all_v1') || '{}');
+      if (all && all.minStay && all.minStay.days) cfg = all.minStay;
+    }
+  } catch (e) {}
+  if (!cfg) return def;
+  return { days: Math.max(1, parseInt(cfg.days, 10) || def.days), message: Object.assign({}, def.message, cfg.message || {}) };
+}
+
+function showMinDaysNotice(cfg) {
+  cfg = cfg || getMinStayConfig();
   const bkSection = document.getElementById('booking-section') || document.querySelector('.booking-card');
   if (bkSection) bkSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
   const card = document.querySelector('.booking-card');
@@ -1896,7 +1946,9 @@ function showMinDaysNotice() {
     card.insertBefore(n, card.firstChild);
   }
   if (n) {
-    n.textContent = 'La durée minimale de location est de 2 jours. Veuillez sélectionner une période d\'au moins 2 jours.';
+    var lng = (typeof getLang === 'function') ? getLang() : 'fr';
+    var msg = (cfg.message && (cfg.message[lng] || cfg.message.fr)) || '';
+    n.textContent = msg.split('{n}').join(String(cfg.days));
     n.classList.add('show');
     setTimeout(() => { if (n) n.classList.remove('show'); }, 6000);
   }

@@ -54,7 +54,7 @@
     dashboard: 'dashboard', fleet: 'fleet', maintenance: 'maintenance',
     reservations: 'reservations', rentals: 'rentals', customers: 'customers', sublease: 'sublease',
     payments: 'payments', caisse: 'caisse', settings: 'settings',
-    options: 'fleet', bookopt: 'fleet'
+    options: 'fleet', bookopt: 'fleet', minstay: 'fleet'
   };
 
   /* Applique les permissions à l'interface une fois le DOM prêt. */

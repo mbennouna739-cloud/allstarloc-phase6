@@ -258,11 +258,15 @@
     refresh: function() { tryShow(); }
   };
 
-  /* Premier essai à 300ms (localStorage déjà dispo) */
+  /* Plusieurs essais successifs (300ms → 6s) pour couvrir les réseaux plus
+     lents (typiquement mobile / 4G) : sans cela, si les données marketing
+     mettent plus de temps à arriver que sur desktop, la bannière pouvait
+     rester invisible indéfiniment sur un appareil et pas sur l'autre. Le
+     rafraîchissement via ASLCookies.refresh() (appelé par content-bridge dès
+     réception des données) reste le déclencheur principal ; ces essais sont
+     un filet de sécurité supplémentaire, identique sur toutes les plateformes. */
   function init() {
-    setTimeout(tryShow, 300);
-    /* Deuxième essai à 1500ms au cas où content-bridge met du temps */
-    setTimeout(tryShow, 1500);
+    [300, 1500, 3000, 6000, 10000].forEach(function (ms) { setTimeout(tryShow, ms); });
   }
   if (document.readyState !== 'loading') init();
   else document.addEventListener('DOMContentLoaded', init);

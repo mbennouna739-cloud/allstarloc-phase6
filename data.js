@@ -120,6 +120,25 @@
     return res.json();
   }
 
+  // Durée maximale pendant laquelle un écriture locale de la flotte, non
+  // encore confirmée par le serveur, peut bloquer la réception d'une donnée
+  // serveur plus récente (ex. restauration de la base de données par
+  // l'administrateur). Passé ce délai, on considère l'écriture locale comme
+  // abandonnée (appareil resté hors-ligne, session expirée, etc.) : la
+  // valeur serveur devient prioritaire, exactement comme sur les autres
+  // appareils. Ceci évite qu'un mobile (ou tout autre appareil) reste bloqué
+  // indéfiniment sur un ancien état de la flotte après une restauration.
+  const PEND_F_MAX_AGE_MS = 2 * 60 * 1000; // 2 minutes
+
+  function fleetPendingIsStale() {
+    const raw = localStorage.getItem(KEY_PEND_F);
+    if (!raw) return false;
+    const ts = parseInt(raw, 10);
+    // Compat : anciennes valeurs '1' sans horodatage → considérées comme immédiatement obsolètes.
+    if (!ts) return true;
+    return (Date.now() - ts) > PEND_F_MAX_AGE_MS;
+  }
+
   /* ----- PULL : récupère l'état serveur et met à jour le cache ----- */
   async function pullState() {
     const data = await apiFetch('/state', { method: 'GET' });
@@ -127,14 +146,20 @@
 
     // Flotte
     if (data.fleet && Array.isArray(data.fleet.items)) {
-      if (!localStorage.getItem(KEY_PEND_F) && data.fleet.rev > readNum(KEY_REV_F)) {
+      const pendingRaw = localStorage.getItem(KEY_PEND_F);
+      const blockedByPending = pendingRaw && !fleetPendingIsStale();
+      if (pendingRaw && fleetPendingIsStale()) {
+        // Écriture locale abandonnée (trop ancienne) : on ne bloque plus le pull.
+        try { localStorage.removeItem(KEY_PEND_F); } catch (e) {}
+      }
+      if (!blockedByPending && data.fleet.rev > readNum(KEY_REV_F)) {
         write(KEY_FLEET, data.fleet.items);
         writeNum(KEY_REV_F, data.fleet.rev);
         changed = true; emit(KEY_FLEET);
       }
     } else if (data.fleet === null || data.fleet === undefined) {
       // Serveur vide (tout premier déploiement) → on y envoie la flotte locale
-      try { localStorage.setItem(KEY_PEND_F, '1'); } catch (e) {}
+      markFleetDirty();
     }
 
     // Réservations (le serveur fait foi ; on ré-applique les écritures locales en attente)
@@ -299,9 +324,12 @@
         pushFailed = true;
         if (e && (e.status === 401 || e.status === 403)) {
           authError = true;
-          // Cas particulier : simple seed d'un serveur vide depuis une page sans clé
-          // (ex. un visiteur du site) → on abandonne, l'admin fera le seed avec sa clé.
-          if (readNum(KEY_REV_F) === 0 && localStorage.getItem(KEY_PEND_F)) {
+          // Clé admin invalide/absente sur CET appareil : il ne peut de toute façon
+          // pas écrire la flotte. On lève immédiatement le drapeau local plutôt que
+          // d'attendre son expiration, afin que le pull juste après adopte sans délai
+          // la version serveur (ex. mobile après une restauration de la base par
+          // l'administrateur depuis un autre appareil).
+          if (localStorage.getItem(KEY_PEND_F)) {
             try { localStorage.removeItem(KEY_PEND_F); } catch (x) {}
           }
         }
@@ -314,7 +342,7 @@
         catch (e) {
           if (e && (e.status === 401 || e.status === 403)) {
             authError = true;
-            if (readNum(KEY_REV_F) === 0) { try { localStorage.removeItem(KEY_PEND_F); } catch (x) {} }
+            try { localStorage.removeItem(KEY_PEND_F); } catch (x) {}
           }
         }
       }
@@ -334,7 +362,7 @@
     if (existing) Object.assign(existing.patch, patch); else q.push({ id: id, patch: patch });
     write(KEY_PEND_RU, q);
   }
-  function markFleetDirty() { try { localStorage.setItem(KEY_PEND_F, '1'); } catch (e) {} }
+  function markFleetDirty() { try { localStorage.setItem(KEY_PEND_F, String(Date.now())); } catch (e) {} }
 
   /* ---------- Indicateur de synchronisation (administration uniquement) ---------- */
   function setOnline(v) {

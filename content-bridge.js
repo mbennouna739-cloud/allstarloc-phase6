@@ -409,6 +409,11 @@
 
     window._ASL_MARKETING = data;
 
+    /* Durée minimale de location (configurable depuis le Back Office →
+       Paramètres). Le site n'a plus AUCUNE valeur codée en dur : à défaut
+       de configuration serveur, un repli raisonnable (2 jours) est utilisé. */
+    if (data.minStay && data.minStay.days) window._ASL_MINSTAY = data.minStay;
+
     /* Pages de contenu (CGV, confidentialité, mentions, services…)
        gérées depuis le back-office. Fusion : seed pré-rempli + données admin.
        Le contenu admin prime ; sinon le seed reste affiché et éditable. */
@@ -454,13 +459,17 @@
       try { window.onMarketingApplied(); } catch (e) {}
     }
 
-    /* Configuration de la bannière cookies (gérée depuis le back-office). */
-    if (data.cookies) {
-      window._ASL_COOKIES = data.cookies;
-      /* Notifier cookie-consent.js pour qu'il réévalue l'affichage */
-      if (window.ASLCookies && typeof window.ASLCookies.refresh === 'function') {
-        try { window.ASLCookies.refresh(); } catch(e) {}
-      }
+    /* Configuration de la bannière cookies (gérée depuis le back-office).
+       ★ Important : on notifie cookie-consent.js à CHAQUE fois que les
+       données marketing arrivent, même si "cookies" est absent de cette
+       réponse précise. Auparavant, la notification n'avait lieu QUE si
+       data.cookies existait, ce qui pouvait, selon le moment exact où
+       chaque appareil (desktop/mobile) recevait sa réponse serveur, faire
+       apparaître la bannière sur l'un et pas sur l'autre. Ce comportement
+       doit être strictement identique sur les deux plateformes. */
+    window._ASL_COOKIES = data.cookies || window._ASL_COOKIES || null;
+    if (window.ASLCookies && typeof window.ASLCookies.refresh === 'function') {
+      try { window.ASLCookies.refresh(); } catch(e) {}
     }
 
     /* Avis clients gérés depuis le back-office (multilingues). */

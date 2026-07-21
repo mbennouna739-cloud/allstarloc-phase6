@@ -48,7 +48,15 @@ body{font-family:var(--font);background:var(--dark);color:var(--text);display:fl
 .sb-logo-name{font-size:15px;font-weight:800;color:white;}
 .sb-logo-tag{font-size:10px;color:var(--text3);letter-spacing:1px;}
 
-.sb-nav{flex:1;padding:12px 8px;overflow-y:auto;}
+.sb-nav{
+  flex:1;padding:12px 8px;overflow-y:auto;overflow-x:hidden;
+  scrollbar-gutter:stable;                              /* espace réservé : aucun décalage horizontal */
+  scrollbar-width:thin;scrollbar-color:rgba(18,22,30,0.18) transparent; /* Firefox */
+}
+.sb-nav::-webkit-scrollbar{width:6px;}
+.sb-nav::-webkit-scrollbar-track{background:transparent;}
+.sb-nav::-webkit-scrollbar-thumb{background-color:rgba(18,22,30,0.16);border-radius:10px;}
+.sb-nav::-webkit-scrollbar-thumb:hover{background-color:rgba(18,22,30,0.28);}
 .sb-section{margin-bottom:20px;}
 .sb-section-label{font-size:10px;color:var(--text3);font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:0 10px;margin-bottom:6px;}
 .sb-item{
@@ -513,6 +521,7 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
 <a class="sb-item" onclick="showPage('caisse',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg></span>Caisse</a>
 <a class="sb-item" onclick="showPage('options',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg></span>Assurances</a>
 <a class="sb-item" onclick="showPage('bookopt',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M7 12h10"/><path d="M10 18h4"/></svg></span>Options de réservation</a>
+<a class="sb-item" onclick="showPage('minstay',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>Durée minimale de location</a>
     </div>
     <div class="sb-section">
       <div class="sb-section-label">Outils</div>
@@ -884,6 +893,35 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
       </div>
     </div>
 
+    <!-- ===== DURÉE MINIMALE DE LOCATION (configurable) ===== -->
+    <div id="page-minstay" class="page">
+      <div class="table-card" id="minstay-card" style="border-left:3px solid var(--red);max-width:780px;">
+        <div class="table-header" style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="table-title">&#128197; Durée minimale de location</div>
+          <span class="sb-badge" style="position:static;">Configurable</span>
+        </div>
+        <div style="padding:18px;">
+          <div style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.5;">
+            Définissez le nombre minimum de jours qu'un client doit réserver (ex : 5 en été, 2 en hiver) et le message qui s'affiche s'il sélectionne une durée plus courte. Le site client applique automatiquement cette valeur — plus rien n'est codé en dur.
+            Le message saisi en français est <strong>traduit automatiquement</strong> en anglais, espagnol et arabe et utilisé selon la langue choisie par le visiteur.
+          </div>
+          <div class="form-row" style="display:grid;grid-template-columns:200px 1fr;gap:14px;align-items:end;">
+            <div class="form-group" style="margin:0;">
+              <label class="form-label">Minimum (jours)</label>
+              <input class="form-input" type="number" min="1" max="60" id="minstay-days" placeholder="ex : 2">
+            </div>
+            <div class="form-group" style="margin:0;">
+              <label class="form-label">Message affiché au client (français)</label>
+              <input class="form-input" id="minstay-msg-fr" placeholder="La durée minimale de location est de {n} jours...">
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:6px;">Astuce : utilisez <code>{n}</code> dans le message, il sera automatiquement remplacé par le nombre de jours configuré.</div>
+          <div id="minstay-status" style="font-size:12.5px;margin-top:10px;min-height:16px;"></div>
+          <button class="topbar-btn primary" style="margin-top:10px;" onclick="saveMinStayConfig()">&#128190; Enregistrer et traduire automatiquement</button>
+        </div>
+      </div>
+    </div>
+
       
     <!-- ===== ENTRETIEN VEHICULES ===== -->
     <div id="page-maintenance" class="page">
@@ -1106,6 +1144,8 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
           </div>
         </div>
 
+
+
         <div class="table-card">
           <div class="table-header"><div class="table-title" style="color:var(--red);">&#9851; Réinitialisation opérationnelle</div></div>
           <div style="padding:20px;">
@@ -1292,7 +1332,7 @@ function showPage(id, el) {
     dashboard:'Tableau de bord', reservations:'Réservations',
     fleet:'Véhicules / Ma flotte', maintenance:'Entretien véhicules',
     rentals:'Locations en cours', customers:'Clients', sublease:'Sous-location', lld:'Location longue durée',
-    payments:'Paiements', options:'Assurances', bookopt:'Options de réservation', caisse:'Caisse', settings:'Paramètres système'
+    payments:'Paiements', options:'Assurances', bookopt:'Options de réservation', minstay:'Durée minimale de location', caisse:'Caisse', settings:'Paramètres système'
   };
   document.getElementById('topbar-title').textContent = titles[id] || id;
   // Recharge les données partagées avant chaque affichage
@@ -1307,6 +1347,7 @@ function showPage(id, el) {
   if(id==='lld' && typeof renderLLD==='function') renderLLD();
   if(id==='payments') renderPayments();
   if(id==='bookopt') renderBookOptMain();
+  if(id==='minstay' && typeof loadMinStayConfigUI==='function') loadMinStayConfigUI();
   if(id==='caisse') renderCaisse();
   if(id==='dashboard') renderDashboard();
   if(id==='settings'){ renderSettings(); if(typeof renderArchives==='function') renderArchives(); if(typeof renderUsers==='function') renderUsers(); }
@@ -2987,6 +3028,8 @@ document.addEventListener('DOMContentLoaded', function(){ setTimeout(renderMobil
 <script src="admin-lot7.js"></script>
 <script src="admin-lot10.js"></script>
 <script src="admin-bookopt.js"></script>
+<script src="admin-minstay.js"></script>
+<script src="admin-profile-ui.js"></script>
 <script src="admin-custom-features.js"></script>
 <script src="admin-caisse.js"></script>
 <script src="admin-archive.js"></script>

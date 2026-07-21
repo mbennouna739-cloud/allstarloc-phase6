@@ -263,7 +263,18 @@
       + (list.length ? list.map(vehCard).join('') : '<div class="ma-empty">Aucun véhicule dans cette catégorie.</div>');
   }
   function vehCard(c) {
-    var statusMap = { available: ['green', 'Disponible'], rented: ['blue', 'Loué'], active: ['blue', 'Loué'], reserved: ['orange', 'Réservé'], maintenance: ['gray', 'Entretien'] };
+    // ★ Statuts strictement identiques au back-office desktop (AVAIL_LABELS,
+    //   admin/index.html) : mêmes libellés, même code couleur, afin que la
+    //   version mobile reproduise à 100 % le comportement desktop.
+    var statusMap = {
+      available: ['green', 'Disponible'],
+      reserved: ['blue', 'Réservé'],
+      rented: ['blue', 'Loué'],
+      active: ['blue', 'Loué'],
+      maintenance: ['yellow', 'Maintenance'],
+      offroad: ['red', 'Hors service'],
+      lld: ['purple', 'Location longue durée']
+    };
     var st = statusMap[c.status] || ['gray', c.status || '—'];
     var photo = c.photo || c.image || c.img || '';
     var imgHtml = photo ? '<img class="ma-card-photo" src="' + esc(photo) + '" alt="" loading="lazy">' : '<div class="ma-card-photo"></div>';
@@ -301,9 +312,10 @@
     if (!car) return;
     var opts = [
       ['available', 'Disponible', 'green'],
-      ['reserved', 'Réservé', 'orange'],
+      ['reserved', 'Réservé', 'blue'],
       ['rented', 'Loué', 'blue'],
-      ['maintenance', 'Entretien', 'gray']
+      ['maintenance', 'Maintenance', 'yellow'],
+      ['offroad', 'Hors service', 'red']
     ];
     openSheet(
       '<div class="ma-sheet-title">' + esc(car.name || 'Véhicule') + '</div>'
