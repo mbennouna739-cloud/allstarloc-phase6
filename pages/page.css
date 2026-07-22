@@ -6,6 +6,7 @@
   --white: #FFFFFF; --text: #1A1A1A; --text2: #555;
   --gold: #D4A853; --green: #22C55E;
   --shadow: 0 4px 24px rgba(0,0,0,0.08);
+  --shadow-lg: 0 16px 60px rgba(0,0,0,0.14);
   --radius: 14px; --radius-sm: 8px;
   --font: 'Outfit', sans-serif; --font2: 'DM Sans', sans-serif;
 }
@@ -442,3 +443,106 @@ header nav a:hover { color: white; background: rgba(255,255,255,0.08); }
 .hero-fleet h1 { color: var(--text, #101216) !important; }
 .hero-fleet p { color: var(--t2, #555) !important; }
 /* Le reste de la page reste sur fond blanc, le dernier bloc CTA (.vp-cta) est conservé tel quel */
+
+/* ============================================================
+   ★ CARTES VÉHICULES — copie EXACTE du style de la page d'accueil
+   (index.html : .filter-tabs / .cars-grid / .car-card …) afin que
+   la page "Nos véhicules" soit visuellement identique à la section
+   "Nos véhicules" de la page d'accueil : mêmes cartes, mêmes
+   dimensions, mêmes couleurs, mêmes boutons, mêmes espacements.
+   ============================================================ */
+.filter-tabs {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin-bottom: 36px;
+}
+.filter-tab {
+  padding: 9px 20px; border-radius: 50px; font-size: 13px; font-weight: 600;
+  border: 1.5px solid var(--gray2); background: white; color: var(--text2);
+  cursor: pointer; transition: background 0.18s, color 0.18s, border-color 0.18s; font-family: var(--font);
+}
+.filter-tab.active, .filter-tab:hover {
+  background: var(--red); color: white; border-color: var(--red);
+}
+.cars-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px;
+  contain: layout;
+}
+.car-card {
+  background: white; border-radius: 18px; overflow: hidden;
+  border: 1px solid var(--gray2); transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+  content-visibility: auto; contain-intrinsic-size: 0 420px;
+  cursor: pointer; position: relative;
+  will-change: transform;
+}
+@media (hover: hover) and (pointer: fine) { .car-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); border-color: transparent; } }
+.car-card-img {
+  background: var(--gray); height: 200px; position: relative; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.car-card-img img {
+  width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s;
+}
+.car-card:hover .car-card-img img { transform: scale(1.04); }
+.car-badge {
+  position: absolute; top: 14px; left: 14px;
+  background: var(--dark); color: white; font-size: 11px;
+  font-weight: 700; padding: 4px 12px; border-radius: 50px;
+  letter-spacing: 0.5px; text-transform: uppercase;
+}
+.car-badge.featured { background: var(--red); }
+.car-price-block {
+  display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px;
+}
+.car-price-amount {
+  font-size: 22px; font-weight: 900; color: var(--red);
+  line-height: 1; letter-spacing: -0.5px;
+}
+.car-price-unit { font-size: 12px; font-weight: 500; color: var(--text2); }
+.car-price-from {
+  font-size: 11.5px; font-weight: 700; color: var(--text2);
+  text-transform: uppercase; letter-spacing: 0.4px; align-self: center;
+}
+.car-tier-label {
+  font-size: 11.5px; font-weight: 600; color: var(--red); margin-bottom: 12px;
+  opacity: .82;
+}
+.car-card-body { padding: 20px; }
+.car-name { font-size: 18px; font-weight: 700; color: var(--black); margin-bottom: 12px; }
+.car-specs {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px;
+}
+.car-spec {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 13px; color: var(--text2); font-weight: 500;
+}
+.car-spec-icon {
+  width: 28px; height: 28px; background: rgba(196,30,58,0.08);
+  border-radius: 7px; display: flex; align-items: center; justify-content: center;
+  color: var(--red); font-size: 14px; flex-shrink: 0;
+}
+.car-services {
+  border-top: 1px solid var(--gray2); padding-top: 12px; margin-bottom: 16px;
+}
+.car-services-list {
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
+.car-service-tag {
+  font-size: 11px; color: var(--text2); background: var(--gray);
+  padding: 3px 10px; border-radius: 50px; font-weight: 500;
+}
+.car-extras { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 12px; }
+.car-extra {
+  font-size: 11px; font-weight: 600; color: var(--text2);
+  background: var(--gray); border: 1px solid var(--gray2);
+  padding: 4px 10px; border-radius: 50px;
+}
+.car-addons { font-family: var(--font2); }
+.btn-book {
+  width: 100%; padding: 13px; background: var(--dark);
+  color: white; border: none; border-radius: 10px;
+  font-size: 14px; font-weight: 700; font-family: var(--font);
+  cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  text-decoration: none; box-sizing: border-box;
+}
+.btn-book:hover { background: var(--red); }

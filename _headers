@@ -1,0 +1,39 @@
+# ============================================================
+# ALL STAR LOC — Cache Cloudflare Pages
+# ------------------------------------------------------------
+# Empêche un navigateur (desktop ou mobile) de continuer à utiliser
+# une ancienne version mise en cache des scripts critiques de
+# synchronisation (data.js, admin-mobile.js, content-bridge.js…)
+# après un déploiement. Sans ce fichier, un téléphone qui a déjà
+# visité le site peut garder en cache local une version obsolète
+# de la logique de synchronisation même après une correction et un
+# redéploiement — ce qui peut ressembler, à tort, à un bug de
+# synchronisation persistant entre desktop et mobile.
+# "no-cache" = toujours revalider avec le serveur avant utilisation
+# (léger appel réseau), pas "no-store" : les performances restent
+# bonnes, seule la fraîcheur est garantie.
+# ============================================================
+
+/data.js
+  Cache-Control: no-cache, must-revalidate
+
+/content-bridge.js
+  Cache-Control: no-cache, must-revalidate
+
+/i18n.js
+  Cache-Control: no-cache, must-revalidate
+
+/cookie-consent.js
+  Cache-Control: no-cache, must-revalidate
+
+/admin/*.js
+  Cache-Control: no-cache, must-revalidate
+
+/admin/*.html
+  Cache-Control: no-cache, must-revalidate
+
+/*.html
+  Cache-Control: no-cache, must-revalidate
+
+/pages/*.html
+  Cache-Control: no-cache, must-revalidate
