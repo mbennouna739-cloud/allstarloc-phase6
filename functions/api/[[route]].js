@@ -13,7 +13,9 @@
    ENDPOINTS :
    GET  /api/state               → { fleet:{rev,items}, reservations:{rev,items} }
    PUT  /api/fleet               → remplace la flotte           (clé admin si définie)
-   POST /api/reservations        → {action:'add'|'update'}      (add: public, update: clé admin)
+   POST /api/reservations        → {action:'add'|'update'|'replace'} (add: public, update/replace: clé admin)
+   GET  /api/backup/export       → sauvegarde complète (JSON exhaustif, clé admin)
+   POST /api/backup/restore      → restauration EXACTE (remplace, jamais de fusion — clé admin)
    POST /api/upload              → téléverse une image          (clé admin si définie)
    GET  /api/img/<id>            → sert une image (cache CDN 1 an)
    GET  /api/health              → diagnostic de configuration
@@ -37,6 +39,91 @@ function authorized(request, env) {
   // (pratique pour les tests). En production, configurez-la (voir en-tête de fichier).
   if (!env.ADMIN_KEY) return true;
   return request.headers.get('X-ASL-Key') === env.ADMIN_KEY;
+}
+
+/* Liste unique des noms "misc" valides — utilisée par /api/misc ET par
+   /api/backup (export/restore), pour n'avoir qu'un seul endroit à modifier
+   si un nouveau type de donnée auxiliaire est ajouté un jour. */
+const MISC_NAMES = ['subleases', 'charges', 'maint', 'docs', 'users', 'lld', 'customfeatures', 'archives'];
+
+/* ============================================================
+   ★ SYSTÈME DE SAUVEGARDE / RESTAURATION COMPLÈTE (refonte)
+   ------------------------------------------------------------
+   Inventaire EXHAUSTIF de tout l'état applicatif stocké en KV :
+   - 3 documents "top-level"  : fleet, reservations, users
+   - 1 blob de configuration  : marketing (SEO, FAQ, blog, popups, légal…)
+   - N documents "misc_*"     : MISC_NAMES ci-dessus (note : 'users' figure
+     aussi dans MISC_NAMES pour compat historique avec d'anciens clients ;
+     on sauvegarde/restaure les deux emplacements par sécurité, même si
+     seul le document top-level 'users' est réellement utilisé aujourd'hui).
+   Les images (clé 'img:*') ne sont PAS incluses : ce sont des blobs
+   binaires immuables et adressés par contenu, jamais modifiés ni
+   supprimés par une restauration — les URLs référencées dans la flotte
+   restent valides après restauration.
+   ============================================================ */
+const BACKUP_TOP_KEYS = ['fleet', 'reservations', 'users', 'marketing'];
+
+/* Construit un instantané complet et cohérent de tout l'état KV. */
+async function buildFullBackup(env) {
+  const data = { top: {}, misc: {} };
+  for (const key of BACKUP_TOP_KEYS) {
+    const raw = await env.ASL_DB.get(key);
+    data.top[key] = raw ? (function () { try { return JSON.parse(raw); } catch (e) { return null; } })() : null;
+  }
+  for (const name of MISC_NAMES) {
+    const raw = await env.ASL_DB.get('misc_' + name);
+    data.misc[name] = raw ? (function () { try { return JSON.parse(raw); } catch (e) { return null; } })() : null;
+  }
+  return { version: 1, exportedAt: new Date().toISOString(), data: data };
+}
+
+/* Restaure un instantané : REMPLACE intégralement chaque document fourni
+   (jamais de fusion). Chaque document restauré reçoit un rev/resetAt
+   fraîchement daté afin que TOUS les appareils (mobile compris) le
+   détectent et adoptent la version restaurée au prochain cycle de synchro,
+   sans jamais mélanger avec leurs propres données locales en attente. */
+async function applyFullBackup(env, backup) {
+  const applied = { top: {}, misc: {} };
+  const errors = [];
+  const data = (backup && backup.data) || {};
+  const now = Date.now();
+
+  for (const key of BACKUP_TOP_KEYS) {
+    if (!(key in (data.top || {})) || data.top[key] === null || data.top[key] === undefined) continue;
+    try {
+      const src = data.top[key];
+      if (key === 'marketing') {
+        // Blob brut, sans enveloppe {rev,items}
+        await env.ASL_DB.put('marketing', JSON.stringify(src));
+        applied.top[key] = { restored: true };
+      } else if (key === 'reservations') {
+        const items = Array.isArray(src.items) ? src.items : [];
+        const doc = { rev: now, items: items, resetAt: now };
+        await env.ASL_DB.put('reservations', JSON.stringify(doc));
+        applied.top[key] = { rev: now, resetAt: now, count: items.length };
+      } else {
+        const items = Array.isArray(src.items) ? src.items : (Array.isArray(src) ? src : []);
+        const rev = await writeDoc(env, key, items);
+        applied.top[key] = { rev: rev, count: items.length };
+      }
+    } catch (e) {
+      errors.push('top:' + key + ' — ' + (e && e.message ? e.message : 'échec inconnu'));
+    }
+  }
+
+  for (const name of MISC_NAMES) {
+    if (!(name in (data.misc || {})) || data.misc[name] === null || data.misc[name] === undefined) continue;
+    try {
+      const src = data.misc[name];
+      const value = (src && src.value !== undefined) ? src.value : src;
+      await env.ASL_DB.put('misc_' + name, JSON.stringify({ rev: now, value: value }));
+      applied.misc[name] = { rev: now };
+    } catch (e) {
+      errors.push('misc:' + name + ' — ' + (e && e.message ? e.message : 'échec inconnu'));
+    }
+  }
+
+  return { appliedAt: new Date().toISOString(), applied: applied, errors: errors, ok: errors.length === 0 };
 }
 
 async function readDoc(env, key) {
@@ -354,13 +441,41 @@ export async function onRequest(context) {
     return err(400, 'action inconnue (add | update | replace)');
   }
 
+  /* ============================================================
+     ★ SAUVEGARDE COMPLÈTE — export exhaustif de tout l'état KV.
+     Contient des données métier sensibles (clients, revenus) → protégé
+     par la clé admin, comme la flotte et les réservations.
+     ============================================================ */
+  if (path === 'backup/export' && request.method === 'GET') {
+    if (!authorized(request, env)) return err(403, 'Clé admin invalide ou absente (X-ASL-Key)');
+    const backup = await buildFullBackup(env);
+    return json({ ok: true, backup: backup });
+  }
+
+  /* ============================================================
+     ★ RESTAURATION COMPLÈTE — remplace intégralement (jamais de fusion)
+     chaque document présent dans la sauvegarde fournie, avec un
+     rev/resetAt fraîchement daté pour que tous les appareils adoptent
+     l'état restauré au prochain cycle de synchro.
+     ============================================================ */
+  if (path === 'backup/restore' && request.method === 'POST') {
+    if (!authorized(request, env)) return err(403, 'Clé admin invalide ou absente (X-ASL-Key)');
+    let body;
+    try { body = await request.json(); } catch (e) { return err(400, 'JSON invalide'); }
+    if (!body || !body.backup || typeof body.backup !== 'object' || !body.backup.data) {
+      return err(400, 'Fichier de sauvegarde invalide : structure { backup: { data: {...} } } attendue');
+    }
+    if (JSON.stringify(body.backup).length > 20_000_000) return err(413, 'Sauvegarde trop volumineuse (max ~15 Mo)');
+    const result = await applyFullBackup(env, body.backup);
+    return json({ ok: result.ok, result: result }, result.ok ? 200 : 207 /* 207 = succès partiel */);
+  }
+
   /* ---- Données auxiliaires synchronisées (sous-locations, charges,
          entretien, documents) : GET (lecture) / PUT (admin).
          name ∈ { subleases, charges, maint, docs } ---- */
   if (path === 'misc' && request.method === 'GET') {
     const name = url.searchParams.get('name') || '';
-    const allowed = ['subleases', 'charges', 'maint', 'docs', 'users', 'lld', 'customfeatures', 'archives'];
-    if (allowed.indexOf(name) < 0) return err(400, 'name invalide');
+    if (MISC_NAMES.indexOf(name) < 0) return err(400, 'name invalide');
     const raw = await env.ASL_DB.get('misc_' + name);
     let doc = null;
     if (raw) {
@@ -376,7 +491,7 @@ export async function onRequest(context) {
     if (!authorized(request, env)) return err(403, 'Clé admin invalide ou absente (X-ASL-Key)');
     let body;
     try { body = await request.json(); } catch (e) { return err(400, 'JSON invalide'); }
-    const allowed = ['subleases', 'charges', 'maint', 'docs', 'users', 'lld', 'customfeatures', 'archives'];
+    const allowed = MISC_NAMES;
     if (allowed.indexOf(body.name) < 0) return err(400, 'name invalide');
     if (JSON.stringify(body.value || '').length > 4_000_000) return err(413, 'Données trop volumineuses');
     const rev = Date.now();

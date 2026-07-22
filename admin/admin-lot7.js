@@ -131,12 +131,19 @@ function testNotifPreview() {
 }
 
 /* ============================================================
-   2. RÉINITIALISATION OPÉRATIONNELLE (clarifiée + sécurisée)
-   Remet le parc à "disponible", archive l'exploitation,
-   ne supprime jamais : flotte, clients, paiements, assurances,
-   marketing, historique.
+   2. RÉINITIALISATION OPÉRATIONNELLE — ★ REMPLACÉE / INUTILISÉE ★
+   Cette version ne vidait JAMAIS réellement les réservations : elle se
+   contentait de les marquer status:'completed', ce qui laissait les
+   montants dus, les dates de retour, et donc les compteurs "Loués",
+   "En retard" et "Impayés", inchangés.
+   Remplacée par la "Clôture de période" d'admin-archive.js
+   (ASLDB.closePeriod), qui vide réellement les réservations et propage
+   ce vidage au serveur (avec relance automatique, voir data.js).
+   Renommée (au lieu de laisser `confirmReset`) pour supprimer tout risque
+   de collision/écrasement avec la bonne fonction, quel que soit l'ordre
+   de chargement des scripts. Conservée uniquement pour référence.
    ============================================================ */
-function confirmReset() {
+function _OLD_confirmReset_operational_unused() {
   var step1 = confirm(
     '🔄 RÉINITIALISATION OPÉRATIONNELLE\n\n' +
     'Cette action remet l\'exploitation courante à zéro :\n' +

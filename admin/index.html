@@ -1182,6 +1182,33 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
           </div>
         </div>
 
+        <!-- ===== SAUVEGARDE COMPLÈTE / RESTAURATION EXACTE ===== -->
+        <div class="table-card">
+          <div class="table-header"><div class="table-title">&#128190; Sauvegarde &amp; restauration complète</div></div>
+          <div style="padding:20px;">
+            <div style="background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.2);border-radius:10px;padding:14px;margin-bottom:16px;font-size:13px;line-height:1.5;">
+              <strong style="color:var(--blue);">📦 Sauvegarde complète :</strong> télécharge un fichier JSON contenant l'intégralité de l'état du système — véhicules, réservations, employés, marketing/FAQ/blog, sous-locations, charges, entretien, documents, LLD, archives. Gardez-le en lieu sûr.<br><br>
+              <strong style="color:var(--red);">♻ Restauration exacte :</strong> à partir d'un fichier de sauvegarde, <u>remplace intégralement</u> l'état actuel — aucune fusion, aucun mélange avec les données présentes. Cette action est irréversible : faites une sauvegarde de l'état actuel juste avant si vous voulez pouvoir revenir en arrière.
+            </div>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;">
+              <button class="topbar-btn" style="background:var(--blue);color:#fff;" onclick="doExportFullBackup()">&#128190; Télécharger une sauvegarde complète</button>
+              <button class="topbar-btn" style="background:var(--red);color:#fff;" onclick="document.getElementById('backup-restore-file').click()">&#9888; Restaurer une sauvegarde…</button>
+              <input type="file" id="backup-restore-file" accept="application/json,.json" style="display:none" onchange="handleBackupRestoreFile(this)">
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== RÉINITIALISATION DES DONNÉES DE TEST (avant mise en production) ===== -->
+        <div class="table-card">
+          <div class="table-header"><div class="table-title">&#129529; Réinitialisation des données de test</div></div>
+          <div style="padding:20px;">
+            <div style="background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.25);border-radius:10px;padding:14px;margin-bottom:16px;font-size:13px;line-height:1.5;">
+              À utiliser <strong>une seule fois, juste avant la mise en production</strong>, pour effacer les réservations, locations et paiements de test. <strong>Ne touche jamais</strong> à la flotte, aux tarifs, aux employés, ni à la configuration (marketing, FAQ, blog). Différent de « Clôturer la période » : n'archive pas commercialement — une sauvegarde complète est prise automatiquement juste avant, en filet de sécurité téléchargeable.
+            </div>
+            <button class="topbar-btn" style="background:#d97706;color:#fff;" onclick="confirmResetTestData()">&#129529; Réinitialiser les données de test</button>
+          </div>
+        </div>
+
         <!-- ===== ARCHIVES ===== -->
         <div class="table-card">
           <div class="table-header"><div class="table-title">&#128230; Archives des périodes clôturées</div></div>

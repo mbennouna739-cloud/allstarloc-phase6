@@ -45,6 +45,19 @@
   const KEY_PEND_RA = 'asl_pending_res_add_v1'; // réservations créées hors-ligne
   const KEY_PEND_RU = 'asl_pending_res_upd_v1'; // mises à jour de réservations hors-ligne
   const KEY_RESET_SEEN = 'asl_reservations_reset_seen_v1'; // dernier resetAt serveur connu par CET appareil
+  // ★ CORRECTIF : vidage des réservations (clôture de période) en attente de
+  //   confirmation par le serveur. Avant ce correctif, l'appel réseau qui vide
+  //   les réservations côté serveur était envoyé UNE SEULE FOIS, sans relance :
+  //   en cas d'échec (clé admin locale périmée, coupure réseau, redémarrage à
+  //   froid du Worker...), l'échec était avalé silencieusement. L'appareil qui
+  //   avait cliqué gardait un tableau de bord vide (son propre cache local
+  //   avait été vidé directement), mais le serveur — donc TOUS LES AUTRES
+  //   appareils (mobile compris) — continuait de renvoyer l'ancienne liste
+  //   complète de réservations indéfiniment. Ce marqueur rend l'opération
+  //   persistante et automatiquement retentée à chaque cycle de synchro
+  //   (comme KEY_PEND_F et les données "misc"), jusqu'à confirmation réelle
+  //   par le serveur.
+  const KEY_PEND_RESET = 'asl_pending_reservations_reset_v1';
   const RATE_MAD    = 10.8; // 1 EUR = 10.8 MAD (utilisé pour les conversions)
 
   /* ---------- Flotte initiale (premier démarrage uniquement) ---------- */
@@ -258,6 +271,15 @@
       }
       upds.shift();
       write(KEY_PEND_RU, upds);
+    }
+    // 4) ★ CORRECTIF : vidage des réservations (clôture de période) resté en
+    //    attente d'une confirmation serveur — relance automatique tant que
+    //    KEY_PEND_RESET est présent (voir pushReservationsReset / closePeriod
+    //    pour le détail du bug corrigé : avant, cette étape n'existait pas et
+    //    un échec réseau/auth lors de la clôture perdait le vidage pour de
+    //    bon côté serveur, sans que rien ne le relance ni ne le signale).
+    if (localStorage.getItem(KEY_PEND_RESET)) {
+      await pushReservationsReset();
     }
   }
 
@@ -694,7 +716,7 @@
 
   function getArchives() { return readJSON(KEY_ARCHIVES, []) || []; }
 
-  async function closePeriod(label) {
+  function closePeriod(label) {
     const now = new Date();
     const reservations = read(KEY_RES, []);
     let charges = [];
@@ -753,66 +775,51 @@
     });
     write(KEY_FLEET, fleet);
 
-    emit(KEY_RES); emit(KEY_FLEET);
+    // ★ PROPAGATION GLOBALE : pousser l'état vidé au serveur pour que TOUS les
+    //   appareils (mobiles, autres salariés, site client) voient la
+    //   réinitialisation. Sans cela, le serveur gardait les anciennes
+    //   réservations et les renvoyait au prochain pull (mobile non réinitialisé).
+    markFleetDirty();                 // force le push de la flotte (unités remises à dispo)
+    // ★ CORRECTIF : on pose D'ABORD le marqueur persistant (avant même la
+    //   tentative réseau). Si l'onglet se ferme ou si l'appel échoue, la
+    //   demande de vidage n'est PAS perdue : elle sera automatiquement
+    //   retentée à chaque cycle de synchro par pushReservationsReset(),
+    //   exactement comme la flotte (KEY_PEND_F) et les données "misc".
+    try { localStorage.setItem(KEY_PEND_RESET, String(Date.now())); } catch (e) {}
+    pushReservationsReset(); // tentative immédiate (best-effort, non bloquante)
 
-    // ★★★ PROPAGATION GLOBALE — CORRECTIF CRITIQUE ★★★
-    // Avant, ces deux envois serveur étaient "fire-and-forget" : leur échec
-    // (clé admin absente/expirée, coupure réseau, erreur serveur) était
-    // silencieusement avalé par un .catch(()=>{}) vide. Résultat : CET
-    // appareil (généralement le desktop de l'admin) affichait "réinitialisation
-    // terminée" alors que le serveur gardait en réalité les anciennes
-    // réservations/statuts — donc TOUS LES AUTRES APPAREILS (mobile compris)
-    // continuaient, à raison, d'afficher les vraies données (non réinitialisées)
-    // du serveur. Ce n'était pas un bug d'affichage mobile : le serveur
-    // n'était simplement jamais remis à zéro.
-    // On attend maintenant CHAQUE envoi, avec une nouvelle tentative en cas
-    // d'échec réseau transitoire, et on renvoie un résultat explicite au lieu
-    // de prétendre un succès qui n'a pas eu lieu.
-    async function pushWithRetry(fn, tries) {
-      tries = tries || 2;
-      let lastErr = null;
-      for (let i = 0; i < tries; i++) {
-        try { return { ok: true, value: await fn() }; }
-        catch (e) { lastErr = e; if (i < tries - 1) await new Promise(r => setTimeout(r, 700)); }
+    emit(KEY_RES); emit(KEY_FLEET); syncNow();
+    return snapshot;
+  }
+
+  /* ★ CORRECTIF — Pousse (ou repousse) au serveur le vidage complet des
+     réservations tant que KEY_PEND_RESET est présent. Appelée immédiatement
+     après une clôture de période, ET à chaque cycle de synchro (doSync) tant
+     que le serveur n'a pas confirmé — contrairement à l'ancien code qui ne
+     tentait l'opération qu'une seule fois et avalait silencieusement l'échec. */
+  async function pushReservationsReset() {
+    if (!remoteEnabled) return;
+    if (!localStorage.getItem(KEY_PEND_RESET)) return;
+    try {
+      const out = await apiFetch('/reservations', {
+        method: 'POST', headers: headers(true),
+        body: JSON.stringify({ action: 'replace', items: [] })
+      });
+      if (out && out.rev) writeNum(KEY_REV_R, out.rev);
+      if (out && out.resetAt) writeNum(KEY_RESET_SEEN, out.resetAt);
+      try { localStorage.removeItem(KEY_PEND_RESET); } catch (e) {}
+      authError = false;
+      updateBadge();
+    } catch (e) {
+      // Échec (auth, réseau, KV momentanément indisponible...) : le marqueur
+      // KEY_PEND_RESET reste posé, il sera retenté au prochain cycle. Si la
+      // cause est une clé admin invalide, on le signale immédiatement via le
+      // badge de synchro existant (au lieu d'avaler l'erreur en silence).
+      if (e && (e.status === 401 || e.status === 403)) {
+        authError = true;
+        updateBadge();
       }
-      return { ok: false, error: lastErr };
     }
-
-    let reservationsSynced = false, fleetSynced = false, syncError = null;
-
-    if (remoteEnabled) {
-      const resResult = await pushWithRetry(async function () {
-        const out = await apiFetch('/reservations', {
-          method: 'POST', headers: headers(true),
-          body: JSON.stringify({ action: 'replace', items: [] })
-        });
-        if (out && out.rev) writeNum(KEY_REV_R, out.rev);
-        if (out && out.resetAt) writeNum(KEY_RESET_SEEN, out.resetAt);
-        return out;
-      });
-      reservationsSynced = resResult.ok;
-      if (!resResult.ok) syncError = resResult.error;
-
-      const fleetResult = await pushWithRetry(async function () {
-        const out = await apiFetch('/fleet', {
-          method: 'PUT', headers: headers(true),
-          body: JSON.stringify({ items: read(KEY_FLEET, []) })
-        });
-        writeNum(KEY_REV_F, out.rev || Date.now());
-        try { localStorage.removeItem(KEY_PEND_F); } catch (e) {}
-        return out;
-      });
-      fleetSynced = fleetResult.ok;
-      if (!fleetResult.ok && !syncError) syncError = fleetResult.error;
-    } else {
-      // Mode local pur (sans serveur) : rien à confirmer, mais rien n'est "faux" non plus.
-      reservationsSynced = true; fleetSynced = true;
-    }
-
-    syncNow();
-
-    snapshot.serverConfirmed = reservationsSynced && fleetSynced;
-    return { snapshot: snapshot, serverConfirmed: reservationsSynced && fleetSynced, error: syncError };
   }
 
   /* Restaure une période archivée : réinjecte ses réservations et charges
@@ -864,6 +871,109 @@
     const archives = getArchives().filter(function (a) { return a.id !== archiveId; });
     try { localStorage.setItem(KEY_ARCHIVES, JSON.stringify(archives)); } catch (e) {}
     return true;
+  }
+
+  /* ============================================================
+     ★ REFONTE — SAUVEGARDE COMPLÈTE / RESTAURATION EXACTE / RESET TEST
+     ------------------------------------------------------------
+     Trois opérations clairement séparées, qui ne se substituent PAS à
+     closePeriod()/restoreArchive() (clôture métier récurrente / réintégration
+     d'une période archivée dans l'actif) mais couvrent des besoins différents :
+
+     1. exportFullBackup()  : instantané EXHAUSTIF de tout l'état KV serveur
+        (flotte, réservations, employés, marketing/FAQ/blog, sous-locations,
+        charges, entretien, documents, LLD, fonctionnalités custom, archives).
+     2. restoreFullBackup() : REMPLACE intégralement chaque document par celui
+        de la sauvegarde fournie (jamais de fusion), puis purge la totalité
+        du cache local de CET appareil avant de retirer l'état serveur — afin
+        qu'aucune donnée locale précédente ne puisse se mélanger au résultat.
+     3. resetTestData()     : vide UNIQUEMENT les données opérationnelles de
+        test (réservations, charges/paiements) — jamais la flotte, les
+        tarifs, les employés ni la configuration — après avoir pris une
+        sauvegarde complète automatique (filet de sécurité téléchargeable).
+        Contrairement à closePeriod(), n'archive pas commercialement (pas de
+        nom de période, n'entre pas dans la liste des archives métier).
+     ============================================================ */
+
+  /* ---------- 1. Sauvegarde complète (export) ---------- */
+  async function exportFullBackup() {
+    if (!remoteEnabled) throw new Error('Synchronisation serveur désactivée (mode local) — sauvegarde impossible.');
+    const out = await apiFetch('/backup/export', { method: 'GET', headers: headers(true) });
+    if (!out || !out.backup) throw new Error('Réponse serveur invalide.');
+    return out.backup; // { version, exportedAt, data: { top:{...}, misc:{...} } }
+  }
+
+  /* ---------- Purge totale du cache local (appelée après restauration) ---------- */
+  function hardResetLocalCache() {
+    const keys = [
+      KEY_FLEET, KEY_RES, KEY_REV_F, KEY_REV_R,
+      KEY_PEND_F, KEY_PEND_RA, KEY_PEND_RU, KEY_PEND_RESET, KEY_RESET_SEEN,
+      KEY_CHARGES, KEY_ARCHIVES
+    ];
+    keys.forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
+    Object.keys(MISC_MAP).forEach(function (name) {
+      try { localStorage.removeItem(MISC_MAP[name]); } catch (e) {}
+      try { localStorage.removeItem(miscDirtyKey(name)); } catch (e) {}
+      try { localStorage.removeItem(miscRevKey(name)); } catch (e) {}
+    });
+  }
+
+  /* ---------- 2. Restauration EXACTE (remplace, jamais de fusion) ---------- */
+  async function restoreFullBackup(backup) {
+    if (!remoteEnabled) throw new Error('Synchronisation serveur désactivée (mode local) — restauration impossible.');
+    if (!backup || !backup.data) throw new Error('Fichier de sauvegarde invalide.');
+    const out = await apiFetch('/backup/restore', {
+      method: 'POST', headers: headers(true),
+      body: JSON.stringify({ backup: backup })
+    });
+    // ★ Purge locale AVANT tout nouveau tirage serveur : cet appareil ne doit
+    //   garder AUCUNE trace (cache, file d'attente, marqueurs de rev) de son
+    //   état précédent, pour bannir tout mélange avec les données restaurées.
+    hardResetLocalCache();
+    await pullState();
+    try { await syncMisc(); } catch (e) {}
+    emit(KEY_FLEET); emit(KEY_RES);
+    return out; // { ok, result: { applied, errors, appliedAt } }
+  }
+
+  /* ---------- 3. Réinitialisation des données de TEST uniquement ----------
+     Vide reservations + charges (donc tous les compteurs qui en dérivent :
+     loués, en retard, impayés, caisse), remet la flotte disponible — sans
+     jamais toucher aux tarifs, aux employés ni à la configuration du site.
+     Prend automatiquement une sauvegarde complète juste avant, en filet de
+     sécurité (retournée à l'appelant pour proposer le téléchargement). */
+  async function resetTestData() {
+    let safetyBackup = null;
+    try { safetyBackup = await exportFullBackup(); } catch (e) { /* hors-ligne : on continue quand même */ }
+
+    saveReservations([]);
+    try { localStorage.setItem(KEY_CHARGES, '[]'); } catch (e) {}
+    noteLocalChange(KEY_CHARGES);
+    try { localStorage.removeItem(KEY_PEND_RA); } catch (e) {}
+    try { localStorage.removeItem(KEY_PEND_RU); } catch (e) {}
+
+    // Flotte : redevient disponible (jamais supprimée) — même logique que closePeriod().
+    const fleet = read(KEY_FLEET, []);
+    fleet.forEach(function (c) {
+      if (Array.isArray(c.units)) {
+        c.units.forEach(function (u) {
+          if (!u) return;
+          const s = u.status || 'available';
+          if (s !== 'maintenance' && s !== 'offroad' && s !== 'lld') u.status = 'available';
+        });
+      }
+      if (c.status === 'rented' || c.status === 'active' || c.status === 'reserved') c.status = 'available';
+    });
+    write(KEY_FLEET, fleet);
+    markFleetDirty();
+
+    // Vidage des réservations, propagé et retenté jusqu'à confirmation serveur
+    // (même mécanisme robuste que closePeriod — voir pushReservationsReset).
+    try { localStorage.setItem(KEY_PEND_RESET, String(Date.now())); } catch (e) {}
+    pushReservationsReset();
+
+    emit(KEY_RES); emit(KEY_FLEET); syncNow();
+    return { safetyBackup: safetyBackup };
   }
 
   /* ---------- Démarrage ---------- */
@@ -1068,6 +1178,8 @@
     getFleet, saveFleet, addVehicle, updateVehicle, deleteVehicle,
     getReservations, addReservation, updateReservation,
     closePeriod, getArchives, restoreArchive, deleteArchive,
+    // ★ Sauvegarde complète / restauration exacte / reset des données de test
+    exportFullBackup, restoreFullBackup, resetTestData,
     onChange,
     // Gestion des unités de stock (couleur + immatriculation par unité)
     normalizeUnits, modelAvailability, assignUnit, releaseUnit, setUnitStatusByPlate,
