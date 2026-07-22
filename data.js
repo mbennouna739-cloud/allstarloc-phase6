@@ -44,6 +44,7 @@
   const KEY_PEND_F  = 'asl_pending_fleet_v1';   // '1' si la flotte locale doit être renvoyée
   const KEY_PEND_RA = 'asl_pending_res_add_v1'; // réservations créées hors-ligne
   const KEY_PEND_RU = 'asl_pending_res_upd_v1'; // mises à jour de réservations hors-ligne
+  const KEY_RESET_SEEN = 'asl_reservations_reset_seen_v1'; // dernier resetAt serveur connu par CET appareil
   const RATE_MAD    = 10.8; // 1 EUR = 10.8 MAD (utilisé pour les conversions)
 
   /* ---------- Flotte initiale (premier démarrage uniquement) ---------- */
@@ -164,6 +165,26 @@
 
     // Réservations (le serveur fait foi ; on ré-applique les écritures locales en attente)
     if (data.reservations && Array.isArray(data.reservations.items)) {
+      // ★ Détection d'une réinitialisation serveur (clôture de période lancée
+      //   depuis N'IMPORTE QUEL appareil). Si le marqueur resetAt renvoyé par
+      //   le serveur est plus récent que le dernier connu sur CET appareil,
+      //   on jette la file d'attente locale (ajouts/mises à jour non confirmés)
+      //   au lieu de la rejouer : sans ça, un mobile ayant une écriture en
+      //   attente (ex. mise à jour de statut refusée faute de clé admin, ou
+      //   simple coupure réseau) continuait de renvoyer/réafficher indéfiniment
+      //   d'anciennes réservations même après une remise à zéro complète.
+      const serverResetAt = Number(data.reservations.resetAt) || 0;
+      const lastKnownResetAt = readNum(KEY_RESET_SEEN);
+      if (serverResetAt && serverResetAt > lastKnownResetAt) {
+        if (lastKnownResetAt > 0) {
+          // Pas le tout premier chargement : c'est un VRAI reset survenu
+          // depuis notre dernier passage → on purge nos écritures en attente.
+          try { localStorage.removeItem(KEY_PEND_RA); } catch (e) {}
+          try { localStorage.removeItem(KEY_PEND_RU); } catch (e) {}
+        }
+        writeNum(KEY_RESET_SEEN, serverResetAt);
+      }
+
       if (data.reservations.rev > readNum(KEY_REV_R)) {
         let items = data.reservations.items.slice();
         readJSON(KEY_PEND_RA, []).forEach(function (p) {
@@ -214,11 +235,27 @@
     const upds = readJSON(KEY_PEND_RU, []);
     while (upds.length) {
       const u = upds[0];
-      const out = await apiFetch('/reservations', {
-        method: 'POST', headers: headers(true),
-        body: JSON.stringify({ action: 'update', id: u.id, patch: u.patch })
-      });
-      if (out.rev) writeNum(KEY_REV_R, out.rev);
+      try {
+        const out = await apiFetch('/reservations', {
+          method: 'POST', headers: headers(true),
+          body: JSON.stringify({ action: 'update', id: u.id, patch: u.patch })
+        });
+        if (out.rev) writeNum(KEY_REV_R, out.rev);
+      } catch (eUpd) {
+        // ★ Clé admin absente/refusée (ex. appareil employé sans droits) ou
+        //   réservation introuvable (déjà purgée par une réinitialisation) :
+        //   cette mise à jour ne pourra JAMAIS aboutir depuis cet appareil.
+        //   Sans ce garde-fou, elle restait bloquée en tête de file et était
+        //   retentée indéfiniment à chaque cycle, tout en étant réappliquée
+        //   localement par pullState() — ce qui faisait diverger l'appareil
+        //   du reste du parc (ex. mobile affichant une location « fantôme »).
+        if (eUpd && (eUpd.status === 401 || eUpd.status === 403 || eUpd.status === 404)) {
+          upds.shift();
+          write(KEY_PEND_RU, upds);
+          continue;
+        }
+        throw eUpd; // erreur réseau/temporaire : on réessaiera au prochain cycle
+      }
       upds.shift();
       write(KEY_PEND_RU, upds);
     }
@@ -689,6 +726,13 @@
     try { localStorage.setItem(KEY_CHARGES, '[]'); } catch (e) {}  // charges → 0
     // Synchroniser les charges vidées vers le serveur
     noteLocalChange(KEY_CHARGES);
+    // ★ Purge immédiate, sur CET appareil, de toute écriture de réservation
+    //   encore en attente d'envoi (ajout/mise à jour) : une réinitialisation
+    //   doit annuler tout ce qui concerne la période qu'on vient de clôturer,
+    //   sinon cette file pourrait renvoyer d'anciennes données au serveur
+    //   juste après l'avoir vidé.
+    try { localStorage.removeItem(KEY_PEND_RA); } catch (e) {}
+    try { localStorage.removeItem(KEY_PEND_RU); } catch (e) {}
 
     // Tous les véhicules redeviennent disponibles (élément permanent, jamais supprimé).
     // ★ On libère AUSSI chaque unité du stock : sans cela, une unité restée
@@ -722,6 +766,7 @@
           body: JSON.stringify({ action: 'replace', items: [] })
         }).then(function (out) {
           if (out && out.rev) writeNum(KEY_REV_R, out.rev);
+          if (out && out.resetAt) writeNum(KEY_RESET_SEEN, out.resetAt);
         }).catch(function () {});
       }
     } catch (e) {}

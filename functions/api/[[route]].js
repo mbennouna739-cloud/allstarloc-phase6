@@ -50,6 +50,19 @@ async function writeDoc(env, key, items) {
   return doc.rev;
 }
 
+/* Réservations : variante qui préserve/positionne le marqueur resetAt.
+   resetAt permet à TOUS les appareils de détecter qu'une réinitialisation
+   (clôture de période) a eu lieu côté serveur, même si leur file d'attente
+   locale contient encore des écritures non confirmées — sans ce marqueur,
+   un appareil (mobile) pouvait renvoyer indéfiniment de vieilles réservations
+   après une remise à zéro faite depuis un autre appareil (desktop). */
+async function writeReservationsDoc(env, items, resetAt) {
+  const doc = { rev: Date.now(), items: items };
+  if (resetAt) doc.resetAt = resetAt;
+  await env.ASL_DB.put('reservations', JSON.stringify(doc));
+  return doc;
+}
+
 /* ---------- Validation légère ---------- */
 function isArrayOfObjects(a, max) {
   return Array.isArray(a) && a.length <= max && a.every(function (x) { return x && typeof x === 'object'; });
@@ -314,8 +327,8 @@ export async function onRequest(context) {
       item.id = id;
       if (!item.createdAt) item.createdAt = new Date().toISOString();
       items.push(item);
-      const rev = await writeDoc(env, 'reservations', items);
-      return json({ ok: true, rev: rev, id: id });
+      const out = await writeReservationsDoc(env, items, doc.resetAt);
+      return json({ ok: true, rev: out.rev, id: id });
     }
 
     if (body.action === 'update') {
@@ -324,15 +337,18 @@ export async function onRequest(context) {
       if (!r) return err(404, 'Réservation introuvable: ' + body.id);
       if (!body.patch || typeof body.patch !== 'object') return err(400, 'patch manquant');
       Object.assign(r, body.patch);
-      const rev = await writeDoc(env, 'reservations', items);
-      return json({ ok: true, rev: rev });
+      const out = await writeReservationsDoc(env, items, doc.resetAt);
+      return json({ ok: true, rev: out.rev });
     }
 
     if (body.action === 'replace') {
       if (!authorized(request, env)) return err(403, 'Clé admin invalide ou absente (X-ASL-Key)');
       if (!isArrayOfObjects(body.items, 5000)) return err(400, 'items invalide');
-      const rev = await writeDoc(env, 'reservations', body.items);
-      return json({ ok: true, rev: rev });
+      // ★ Nouveau marqueur resetAt : signale à TOUS les appareils (mobile compris)
+      //   qu'une réinitialisation vient d'avoir lieu, afin qu'ils jettent leurs
+      //   écritures locales en attente au lieu de les renvoyer/réafficher.
+      const out = await writeReservationsDoc(env, body.items, Date.now());
+      return json({ ok: true, rev: out.rev, resetAt: out.resetAt });
     }
 
     return err(400, 'action inconnue (add | update | replace)');

@@ -243,18 +243,42 @@
       + '<span class="ma-notif-chev">' + ic('returns') + '</span></div>';
   }
 
-  /* ============ VÉHICULES ============ */
+  /* ============ VÉHICULES ============
+     ★ Chaque fiche de la flotte est un MODÈLE (ex. « Clio 5 ») qui peut
+     posséder plusieurs UNITÉS physiques (couleur + immatriculation +
+     statut propres à chacune) via ASLDB.normalizeUnits. Le back-office
+     desktop affiche/compte une carte par UNITÉ (fleetUnitStats) : la liste
+     mobile fait maintenant exactement pareil, pour ne plus afficher
+     13 modèles là où il y a 23 véhicules physiques réels. */
   var vehFilter = 'all';
   window.maVehFilter = function (f) { vehFilter = f; renderVehicles(); };
+
+  // Aplatit la flotte (modèles) en une liste d'unités individuelles.
+  function fleetUnits() {
+    var out = [];
+    fleet().forEach(function (c) {
+      var units = (typeof ASLDB !== 'undefined' && ASLDB.normalizeUnits) ? ASLDB.normalizeUnits(c) : null;
+      if (!units || !units.length) units = [{ plate: c.plate || '', color: '', status: c.status || 'available' }];
+      units.forEach(function (u, i) {
+        out.push({
+          carId: c.id, name: c.name, category: c.category, priceMAD: c.priceMAD, price: c.price,
+          fuel: c.fuel, transmission: c.transmission, photo: c.photo || c.image || c.img || '',
+          unitIndex: i, plate: u.plate || c.plate || '', color: u.color || '', status: u.status || 'available'
+        });
+      });
+    });
+    return out;
+  }
+
   function renderVehicles() {
     var host = document.getElementById('ma-vehicles');
     if (!host) return;
-    var f = fleet();
+    var all = fleetUnits();
     var chips = [['all', 'Tous'], ['available', 'Disponibles'], ['rented', 'Loués'], ['reserved', 'Réservés']];
-    var list = f.filter(function (c) {
+    var list = all.filter(function (u) {
       if (vehFilter === 'all') return true;
-      if (vehFilter === 'rented') return c.status === 'rented' || c.status === 'active';
-      return c.status === vehFilter;
+      if (vehFilter === 'rented') return u.status === 'rented' || u.status === 'active';
+      return u.status === vehFilter;
     });
     host.innerHTML =
       '<div class="ma-chips">' + chips.map(function (ch) {
@@ -262,7 +286,7 @@
       }).join('') + '</div>'
       + (list.length ? list.map(vehCard).join('') : '<div class="ma-empty">Aucun véhicule dans cette catégorie.</div>');
   }
-  function vehCard(c) {
+  function vehCard(u) {
     // ★ Statuts strictement identiques au back-office desktop (AVAIL_LABELS,
     //   admin/index.html) : mêmes libellés, même code couleur, afin que la
     //   version mobile reproduise à 100 % le comportement desktop.
@@ -275,23 +299,23 @@
       offroad: ['red', 'Hors service'],
       lld: ['purple', 'Location longue durée']
     };
-    var st = statusMap[c.status] || ['gray', c.status || '—'];
-    var photo = c.photo || c.image || c.img || '';
-    var imgHtml = photo ? '<img class="ma-card-photo" src="' + esc(photo) + '" alt="" loading="lazy">' : '<div class="ma-card-photo"></div>';
-    var idArg = (typeof c.id === 'number' ? c.id : "'" + String(c.id) + "'");
+    var st = statusMap[u.status] || ['gray', u.status || '—'];
+    var imgHtml = u.photo ? '<img class="ma-card-photo" src="' + esc(u.photo) + '" alt="" loading="lazy">' : '<div class="ma-card-photo"></div>';
+    var carIdArg = (typeof u.carId === 'number' ? u.carId : "'" + String(u.carId) + "'");
+    var subLine = esc(u.plate || '—') + (u.color ? ' · ' + esc(u.color) : '') + (u.category ? ' · ' + esc(u.category) : '');
     return '<div class="ma-card">'
       + '<div class="ma-card-top">' + imgHtml
-      + '<div class="ma-card-info"><div class="ma-card-name">' + esc(c.name || 'Véhicule') + '</div>'
-      + '<div class="ma-card-sub">' + esc(c.plate || c.immat || '—') + ' · ' + esc(c.category || '') + '</div></div>'
+      + '<div class="ma-card-info"><div class="ma-card-name">' + esc(u.name || 'Véhicule') + '</div>'
+      + '<div class="ma-card-sub">' + subLine + '</div></div>'
       + '<span class="ma-badge ' + st[0] + '">' + st[1] + '</span></div>'
-      + '<div class="ma-card-meta"><div class="ma-meta">Prix/jour<b>' + money(c.priceMAD || c.price || 0) + '</b></div>'
-      + '<div class="ma-meta">Carburant<b>' + esc(c.fuel || '—') + '</b></div>'
-      + '<div class="ma-meta">Boîte<b>' + esc(c.transmission || '—') + '</b></div></div>'
+      + '<div class="ma-card-meta"><div class="ma-meta">Prix/jour<b>' + money(u.priceMAD || u.price || 0) + '</b></div>'
+      + '<div class="ma-meta">Carburant<b>' + esc(u.fuel || '—') + '</b></div>'
+      + '<div class="ma-meta">Boîte<b>' + esc(u.transmission || '—') + '</b></div></div>'
       + '<div class="ma-actions">'
-      + '<button class="ma-act-btn" onclick="maViewVehicle(' + idArg + ')">' + ic('eye') + 'Fiche</button>'
-      + '<button class="ma-act-btn" onclick="maEditVehicle(' + idArg + ')">' + ic('edit') + 'Modifier</button>'
-      + '<button class="ma-act-btn" onclick="maChangeStatus(' + idArg + ')">' + ic('swap') + 'Statut</button>'
-      + '<button class="ma-act-btn" onclick="maVehiclePhoto(' + idArg + ')">' + ic('camera') + 'Photo</button>'
+      + '<button class="ma-act-btn" onclick="maViewVehicle(' + carIdArg + ')">' + ic('eye') + 'Fiche</button>'
+      + '<button class="ma-act-btn" onclick="maEditVehicle(' + carIdArg + ')">' + ic('edit') + 'Modifier</button>'
+      + '<button class="ma-act-btn" onclick="maChangeStatus(' + carIdArg + ',\'' + esc(u.plate || '') + '\')">' + ic('swap') + 'Statut</button>'
+      + '<button class="ma-act-btn" onclick="maVehiclePhoto(' + carIdArg + ')">' + ic('camera') + 'Photo</button>'
       + '</div></div>';
   }
   window.maViewVehicle = function (id) {
@@ -305,11 +329,16 @@
     }, 100);
     maShowBackToApp();
   };
-  /* Changer le statut : feuille tactile, écrit via ASLDB.updateVehicle */
-  window.maChangeStatus = function (id) {
+  /* Changer le statut : feuille tactile, écrit via ASLDB.setUnitStatusByPlate
+     ★ Cible désormais l'UNITÉ précise (identifiée par sa plaque), pas tout le
+     modèle : changer le statut d'une Clio 5 Bleue ne doit plus affecter la
+     Clio 5 Grise/Blanche/Noire du même modèle. */
+  window.maChangeStatus = function (id, plate) {
     var f = fleet();
     var car = f.filter(function (c) { return String(c.id) === String(id); })[0];
     if (!car) return;
+    var units = (typeof ASLDB !== 'undefined' && ASLDB.normalizeUnits) ? ASLDB.normalizeUnits(car) : [{ plate: car.plate || '', color: '', status: car.status || 'available' }];
+    var unit = (plate ? units.filter(function (u) { return u.plate === plate; })[0] : null) || units[0];
     var opts = [
       ['available', 'Disponible', 'green'],
       ['reserved', 'Réservé', 'blue'],
@@ -317,19 +346,24 @@
       ['maintenance', 'Maintenance', 'yellow'],
       ['offroad', 'Hors service', 'red']
     ];
+    var idArg = (typeof car.id === 'number' ? car.id : "'" + String(car.id) + "'");
+    var plateArg = "'" + esc(unit.plate || '') + "'";
     openSheet(
       '<div class="ma-sheet-title">' + esc(car.name || 'Véhicule') + '</div>'
-      + '<div class="ma-sheet-sub">' + esc(car.plate || car.immat || '') + ' — changer le statut</div>'
+      + '<div class="ma-sheet-sub">' + esc(unit.plate || '—') + (unit.color ? ' · ' + esc(unit.color) : '') + ' — changer le statut</div>'
       + opts.map(function (o) {
-        var activeNow = (car.status === o[0]) || (o[0] === 'rented' && car.status === 'active');
-        return '<button class="ma-sheet-opt' + (activeNow ? ' active' : '') + '" onclick="maSetStatus(' + (typeof car.id === 'number' ? car.id : "'" + String(car.id) + "'") + ',\'' + o[0] + '\')">'
+        var activeNow = (unit.status === o[0]) || (o[0] === 'rented' && unit.status === 'active');
+        return '<button class="ma-sheet-opt' + (activeNow ? ' active' : '') + '" onclick="maSetStatus(' + idArg + ',' + plateArg + ',\'' + o[0] + '\')">'
           + '<span class="ma-dot-status ' + o[2] + '"></span>' + o[1]
           + (activeNow ? '<span class="ma-sheet-chk">' + ic('check') + '</span>' : '') + '</button>';
       }).join('')
     );
   };
-  window.maSetStatus = function (id, status) {
-    try { if (ASLDB && ASLDB.updateVehicle) ASLDB.updateVehicle(id, { status: status }); } catch (e) {}
+  window.maSetStatus = function (id, plate, status) {
+    try {
+      if (ASLDB && ASLDB.setUnitStatusByPlate) ASLDB.setUnitStatusByPlate(id, plate, status);
+      else if (ASLDB && ASLDB.updateVehicle) ASLDB.updateVehicle(id, { status: status }); // repli ancien modèle mono-unité
+    } catch (e) {}
     closeSheet();
     if (typeof window.showToast === 'function') window.showToast('Statut mis à jour ✓');
     renderVehicles();
@@ -577,23 +611,32 @@
     var host = document.getElementById('ma-available');
     if (!host) return;
     var ts = todayISO();
-    var f = fleet().filter(function (c) {
-      if (c.status === 'lld') return false;
-      if (typeof ASLDB !== 'undefined' && ASLDB.modelAvailability) return ASLDB.modelAvailability(c).available > 0;
-      return c.status === 'available';
-    });
     var res = reservations();
-    host.innerHTML = f.length ? f.map(function (c) {
+    // ★ Une carte par UNITÉ physique disponible (pas par modèle) : un modèle
+    //   « Clio 5 » avec 3 unités libres doit produire 3 cartes distinctes,
+    //   chacune avec sa propre plaque/couleur — même logique que renderVehicles.
+    var rows = [];
+    fleet().forEach(function (c) {
+      if (c.status === 'lld') return;
+      var units = (typeof ASLDB !== 'undefined' && ASLDB.normalizeUnits) ? ASLDB.normalizeUnits(c) : [{ plate: c.plate || '', color: '', status: c.status || 'available' }];
+      units.forEach(function (u) {
+        if ((u.status || 'available') !== 'available') return;
+        rows.push({ car: c, unit: u });
+      });
+    });
+    host.innerHTML = rows.length ? rows.map(function (row) {
+      var c = row.car, u = row.unit;
       // Réservation future éventuelle (libre aujourd'hui mais réservé plus tard)
       var fut = res.filter(function (r) {
         if (r.status === 'cancelled' || r.status === 'completed') return false;
-        if (!(r.car === c.name || r.carId === c.id || r.assignedPlate === c.plate)) return false;
+        if (!(r.car === c.name || r.carId === c.id || r.assignedPlate === u.plate)) return false;
         return (r.startDate || '') > ts;
       }).sort(function (a, b) { return String(a.startDate || '').localeCompare(String(b.startDate || '')); })[0];
+      var subLine = esc(u.plate || '—') + (u.color ? ' · ' + esc(u.color) : '');
       return '<div class="ma-card">'
         + '<div class="ma-card-top"><div class="ma-card-ico-box green">' + ic('car') + '</div>'
         + '<div class="ma-card-info"><div class="ma-card-name">' + esc(c.name || 'Véhicule') + '</div>'
-        + '<div class="ma-card-sub">' + esc(c.plate || '—') + '</div></div>'
+        + '<div class="ma-card-sub">' + subLine + '</div></div>'
         + '<span class="ma-badge green">Disponible</span></div>'
         + (fut ? '<div class="ma-card-note orange">' + ic('calendar') + ' Réservée du ' + fmtDMT(fut.startDate, fut.startTime, '10:00') + ' au ' + fmtDMT(fut.endDate, fut.endTime, '18:00') + '</div>' : '')
         + '</div>';
