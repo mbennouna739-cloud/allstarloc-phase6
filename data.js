@@ -694,7 +694,7 @@
 
   function getArchives() { return readJSON(KEY_ARCHIVES, []) || []; }
 
-  function closePeriod(label) {
+  async function closePeriod(label) {
     const now = new Date();
     const reservations = read(KEY_RES, []);
     let charges = [];
@@ -753,26 +753,66 @@
     });
     write(KEY_FLEET, fleet);
 
-    // ★ PROPAGATION GLOBALE : pousser l'état vidé au serveur pour que TOUS les
-    //   appareils (mobiles, autres salariés, site client) voient la
-    //   réinitialisation. Sans cela, le serveur gardait les anciennes
-    //   réservations et les renvoyait au prochain pull (mobile non réinitialisé).
-    markFleetDirty();                 // force le push de la flotte (unités remises à dispo)
-    try {
-      if (remoteEnabled) {
-        // Remplacement explicite de la liste des réservations côté serveur (vidée)
-        apiFetch('/reservations', {
+    emit(KEY_RES); emit(KEY_FLEET);
+
+    // ★★★ PROPAGATION GLOBALE — CORRECTIF CRITIQUE ★★★
+    // Avant, ces deux envois serveur étaient "fire-and-forget" : leur échec
+    // (clé admin absente/expirée, coupure réseau, erreur serveur) était
+    // silencieusement avalé par un .catch(()=>{}) vide. Résultat : CET
+    // appareil (généralement le desktop de l'admin) affichait "réinitialisation
+    // terminée" alors que le serveur gardait en réalité les anciennes
+    // réservations/statuts — donc TOUS LES AUTRES APPAREILS (mobile compris)
+    // continuaient, à raison, d'afficher les vraies données (non réinitialisées)
+    // du serveur. Ce n'était pas un bug d'affichage mobile : le serveur
+    // n'était simplement jamais remis à zéro.
+    // On attend maintenant CHAQUE envoi, avec une nouvelle tentative en cas
+    // d'échec réseau transitoire, et on renvoie un résultat explicite au lieu
+    // de prétendre un succès qui n'a pas eu lieu.
+    async function pushWithRetry(fn, tries) {
+      tries = tries || 2;
+      let lastErr = null;
+      for (let i = 0; i < tries; i++) {
+        try { return { ok: true, value: await fn() }; }
+        catch (e) { lastErr = e; if (i < tries - 1) await new Promise(r => setTimeout(r, 700)); }
+      }
+      return { ok: false, error: lastErr };
+    }
+
+    let reservationsSynced = false, fleetSynced = false, syncError = null;
+
+    if (remoteEnabled) {
+      const resResult = await pushWithRetry(async function () {
+        const out = await apiFetch('/reservations', {
           method: 'POST', headers: headers(true),
           body: JSON.stringify({ action: 'replace', items: [] })
-        }).then(function (out) {
-          if (out && out.rev) writeNum(KEY_REV_R, out.rev);
-          if (out && out.resetAt) writeNum(KEY_RESET_SEEN, out.resetAt);
-        }).catch(function () {});
-      }
-    } catch (e) {}
+        });
+        if (out && out.rev) writeNum(KEY_REV_R, out.rev);
+        if (out && out.resetAt) writeNum(KEY_RESET_SEEN, out.resetAt);
+        return out;
+      });
+      reservationsSynced = resResult.ok;
+      if (!resResult.ok) syncError = resResult.error;
 
-    emit(KEY_RES); emit(KEY_FLEET); syncNow();
-    return snapshot;
+      const fleetResult = await pushWithRetry(async function () {
+        const out = await apiFetch('/fleet', {
+          method: 'PUT', headers: headers(true),
+          body: JSON.stringify({ items: read(KEY_FLEET, []) })
+        });
+        writeNum(KEY_REV_F, out.rev || Date.now());
+        try { localStorage.removeItem(KEY_PEND_F); } catch (e) {}
+        return out;
+      });
+      fleetSynced = fleetResult.ok;
+      if (!fleetResult.ok && !syncError) syncError = fleetResult.error;
+    } else {
+      // Mode local pur (sans serveur) : rien à confirmer, mais rien n'est "faux" non plus.
+      reservationsSynced = true; fleetSynced = true;
+    }
+
+    syncNow();
+
+    snapshot.serverConfirmed = reservationsSynced && fleetSynced;
+    return { snapshot: snapshot, serverConfirmed: reservationsSynced && fleetSynced, error: syncError };
   }
 
   /* Restaure une période archivée : réinjecte ses réservations et charges

@@ -21,7 +21,6 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap"></noscript>
 <link rel="stylesheet" href="page.css">
 <script src="../i18n.js" defer></script>
-<script src="../content-bridge.js" defer></script>
 <script src="../cookie-consent.js" defer></script>
 <script src="../data.js" defer></script>
 <script type="application/ld+json">
@@ -226,27 +225,33 @@
 // (Cloudflare KV via data.js, exactement comme la page d'accueil et l'admin).
 // La réservation N'A PAS lieu ici : « Réserver » renvoie vers le calendrier
 // de la page d'accueil (réservation centralisée, parcours dates → véhicule).
+// ★ Cartes IDENTIQUES à la section "Nos véhicules" de la page d'accueil :
+//   mêmes classes CSS (.car-card, .cars-grid, .filter-tabs…), même contenu
+//   (specs, services, équipements personnalisés), même bouton "Réserver".
 (function () {
   var curFilter = 'all';
 
   // Identique à la fonction du même nom dans index.html (non partagée dans un
   // fichier commun) : lecture du cache local des équipements personnalisés
-  // synchronisés depuis le Back Office.
+  // (features du véhicule : 5 portes, GPS, Bluetooth, CarPlay…) synchronisés
+  // depuis le Back Office. ★ Ce sont les ÉQUIPEMENTS du véhicule — pas les
+  // options de réservation (siège bébé, conducteur additionnel…), qui ne
+  // sont volontairement PAS affichées ici (elles restent réservées au
+  // pop-up de réservation de la page d'accueil).
   function getCustomFeaturesDef() {
     try { var raw = localStorage.getItem('asl_custom_features_v1'); return raw ? JSON.parse(raw) : []; } catch(e) { return []; }
   }
 
-  // ★ Prix identique à la page d'accueil : même moteur de tarification
-  //   (ASLDB.dailyRate, tarif de base 1 jour) et même devise active (ASL_CUR).
   function priceLabel(car) {
-    var mad = (window.ASLDB && ASLDB.dailyRate) ? ASLDB.dailyRate(car, 1) : (car.priceMAD || 0);
-    var formatted = (window.ASL_CUR && ASL_CUR.format) ? ASL_CUR.format(mad) : (mad + ' MAD');
-    return formatted;
+    // Même moteur de tarification que la page d'accueil (tarif de base 1 jour).
+    var mad = (window.ASLDB && ASLDB.dailyRate) ? ASLDB.dailyRate(car, 1)
+            : (car.priceMAD != null ? car.priceMAD : Math.round((car.priceEUR || 0) * ((window.ASLDB && ASLDB.RATE_MAD) || 10.8)));
+    return (window.ASL_CUR && ASL_CUR.format) ? ASL_CUR.format(mad) : (mad + ' MAD');
   }
 
-  // ★ Liste des caractéristiques : EXACTEMENT la même logique que la page
-  //   d'accueil (index.html → renderCars), équipements personnalisés du
-  //   Back Office inclus, pour une cohérence parfaite entre les deux pages.
+  // Liste des caractéristiques : EXACTEMENT la même logique que la page
+  // d'accueil (index.html → renderCars), équipements personnalisés du
+  // Back Office inclus.
   function carExtras(car) {
     var f = car.features || {};
     var T = window.t || function (k, p) { return k; };
@@ -262,17 +267,6 @@
       (car.depositShow && car.deposit) ? T('sp.deposit', { v: car.deposit + ' MAD' }) : ''
     ].concat(_cfExtras).filter(Boolean);
     return list;
-  }
-
-  // ★ Options en supplément gérées depuis le Back Office (Assurances → Options
-  //   de réservation) — même bloc que sur la page d'accueil.
-  function bookingAddons() {
-    var list = (window._ASL_BOOKING_OPTIONS && window._ASL_BOOKING_OPTIONS.length) ? window._ASL_BOOKING_OPTIONS : [];
-    var lng = (typeof window.getLang === 'function') ? window.getLang() : 'fr';
-    return list.map(function (o) {
-      if (o && o.name && typeof o.name === 'object') return o.name[lng] || o.name.fr || o.id;
-      return (o && o.id) || '';
-    }).filter(Boolean);
   }
 
   function esc(s) { return String(s == null ? '' : s); }
@@ -299,7 +293,6 @@
 
     grid.innerHTML = fleet.map(function (car) {
       var extras = carExtras(car);
-      var addons = bookingAddons();
       var services = (car.services && car.services.length) ? car.services : ['Clim'];
       var img = car.img || '../assets/hero-car.svg';
       var altTxt = (function () {
@@ -330,7 +323,6 @@
           '</div>' +
           '<div class="car-services"><div class="car-services-list">' + services.map(function (s) { return '<span class="car-service-tag">' + esc(s) + '</span>'; }).join('') + '</div></div>' +
           (extras.length ? '<div class="car-extras">' + extras.map(function (x) { return '<span class="car-extra">' + esc(x) + '</span>'; }).join('') + '</div>' : '') +
-          (addons.length ? '<div class="car-addons" style="margin-top:6px;font-size:11.5px;color:var(--text2);line-height:1.4;"><strong style="color:inherit;">' + (T('car.addonsLabel') || 'Options en supplément') + ' :</strong> ' + addons.join(' · ') + '</div>' : '') +
           '<a href="../index.html#fleet" class="btn-book" data-i18n="car.book">' + T('car.book') + '</a>' +
         '</div>' +
       '</div>';
@@ -346,10 +338,8 @@
   function rebuildFilters(allCars) {
     var box = document.getElementById('vp-filters');
     if (!box) return;
-    // Collecter les catégories présentes dans la flotte (insensible à la casse)
     var seen = new Set(['all']);
     allCars.forEach(function(c){ if(c.category) seen.add(c.category.toLowerCase()); });
-    var T = window.t || function(k){ return k; };
     box.innerHTML = '';
     seen.forEach(function(cat) {
       var btn = document.createElement('button');
@@ -358,10 +348,8 @@
       btn.textContent = CAT_LABELS[cat] || (cat.charAt(0).toUpperCase() + cat.slice(1));
       box.appendChild(btn);
     });
-    // Toujours mettre "Tous" en premier
     var allBtn = box.querySelector('[data-cat="all"]');
     if (allBtn && allBtn !== box.firstChild) box.insertBefore(allBtn, box.firstChild);
-    // Un seul event listener
     if (!filtersWired) {
       filtersWired = true;
       box.addEventListener('click', function (e) {
@@ -385,7 +373,7 @@
     // Après la sync KV, re-rendu avec les données serveur
     if (ASLDB.syncNow) ASLDB.syncNow().then(render).catch(function () {});
     // Mise à jour en direct si l'admin modifie la flotte (véhicules, équipements
-    // personnalisés, options de réservation — tout passe par ASLDB.onChange)
+    // personnalisés — tout passe par ASLDB.onChange)
     ASLDB.onChange(render);
     // Ré-affiche quand la langue ou la devise changent
     window.addEventListener('asl-lang-change', render);

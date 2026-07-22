@@ -27,7 +27,7 @@
   }
 
   /* ---- CLÔTURE DE PÉRIODE (remplace l'ancien reset) ---- */
-  window.confirmReset = function () {
+  window.confirmReset = async function () {
     var res = [];
     try { res = (typeof ASLDB !== 'undefined' && ASLDB.getReservations) ? ASLDB.getReservations() : []; } catch (e) {}
     var charges = [];
@@ -56,18 +56,41 @@
     if (label === null) return;
     if (!confirm('⛔ CONFIRMATION FINALE\n\nLe tableau de bord va repartir à zéro.\nLes données sont archivées (jamais supprimées).\n\nConfirmer la clôture ?')) return;
 
-    var snap = null;
+    // ★ La clôture doit maintenant être CONFIRMÉE par le serveur avant de
+    //   déclarer un succès (voir data.js → closePeriod). Sans cette attente,
+    //   un échec réseau/clé admin silencieux laissait le serveur (et donc
+    //   TOUS les autres appareils, mobile compris) avec les anciennes
+    //   données, alors que CET appareil affichait déjà "terminé".
+    if (typeof showToast === 'function') showToast('Clôture en cours — synchronisation avec le serveur…');
+
+    var result = { serverConfirmed: false, error: null, snapshot: null };
     try {
       if (typeof ASLDB !== 'undefined' && ASLDB.closePeriod) {
-        snap = ASLDB.closePeriod((label || '').trim() || _defaultLabel());
+        result = await ASLDB.closePeriod((label || '').trim() || _defaultLabel());
       }
-    } catch (e) {}
+    } catch (e) { result = { serverConfirmed: false, error: e, snapshot: null }; }
 
     // Rafraîchir toute l'interface (dashboard à zéro)
     refreshAll();
 
-    if (typeof showToast === 'function') showToast('Période clôturée et archivée ✓');
-    alert('✓ Période clôturée.\n\nLe tableau de bord est repassé à zéro.\nArchive « ' + ((snap && snap.label) || label) + ' » consultable dans Paramètres → Archives.');
+    var snap = result && result.snapshot;
+    if (result && result.serverConfirmed) {
+      if (typeof showToast === 'function') showToast('Période clôturée et archivée ✓');
+      alert('✓ Période clôturée.\n\nLe tableau de bord est repassé à zéro sur CE et TOUS LES AUTRES appareils (mobile compris).\nArchive « ' + ((snap && snap.label) || label) + ' » consultable dans Paramètres → Archives.');
+    } else {
+      // ★ Message honnête : la clôture a eu lieu LOCALEMENT (cet appareil est
+      //   à zéro) mais le serveur n'a PAS pu être mis à jour. Tant que ce
+      //   n'est pas résolu, les autres appareils (mobile compris) verront
+      //   encore les anciennes données — ce n'est plus un bug caché.
+      alert('⚠ CLÔTURE INCOMPLÈTE\n\n'
+        + 'Le tableau de bord de CET appareil est à zéro, mais la synchronisation avec le serveur a échoué '
+        + '(connexion instable ou clé administrateur invalide/expirée).\n\n'
+        + 'IMPORTANT : tant que ce message apparaît, les autres appareils (mobile compris) continueront '
+        + 'd\'afficher les anciennes réservations/statuts, car le serveur n\'a pas encore reçu la remise à zéro.\n\n'
+        + 'Vérifiez votre connexion internet et réessayez la clôture dans quelques instants. '
+        + 'Vos données sont toujours en sécurité dans les Archives.');
+      if (typeof showToast === 'function') showToast('⚠ Clôture non synchronisée — réessayez');
+    }
     renderArchives();
   };
 
