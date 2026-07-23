@@ -127,6 +127,10 @@
         });
       }
     } catch (e) {}
+    // ★ CORRECTIF (synchro immédiate) : garantit la propagation même si cet
+    //   équipement n'était assigné à aucun véhicule (la boucle ci-dessus ne
+    //   déclenche alors aucun syncNow()).
+    try { if (typeof ASLDB !== 'undefined' && ASLDB.syncNow) ASLDB.syncNow(); } catch (e) {}
     renderCFList();
   };
 
@@ -197,6 +201,11 @@
       if (idx > -1) { cfs[idx].name = name; cfs[idx].lucideIcon = icon; }
     }
     writeCF(cfs);
+    // ★ CORRECTIF (synchro immédiate) : writeCF() marque la clé "dirty" mais
+    //   ne poussait vers le serveur qu'au prochain cycle de synchro (~8s),
+    //   contrairement aux autres écritures du back-office (flotte, etc.) qui
+    //   synchronisent immédiatement. On aligne ce comportement ici.
+    try { if (typeof ASLDB !== 'undefined' && ASLDB.syncNow) ASLDB.syncNow(); } catch (e) {}
     closeCFManager();
     setTimeout(openCustomFeaturesManager, 0);
   };

@@ -216,65 +216,125 @@ img, iframe { max-width: 100%; }
 .vp-filter.active, .vp-filter:hover { background: var(--red); border-color: var(--red); color: #fff; }
 .vp-note { font-size: 12.5px; color: var(--text2); font-family: var(--font2); }
 
-/* Grille des cartes véhicules */
-.vp-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
-  gap: 22px; margin-bottom: 48px;
-}
-.vp-card {
-  background: #fff; border-radius: 16px; overflow: hidden;
+/* Catalogue « Nos véhicules » — fiches riches en ligne complète (jamais les
+   cartes compactes de l'accueil, qui restent optimisées pour la conversion
+   rapide). Chaque véhicule = une fiche catalogue premium. */
+.vp-catalog { display: flex; flex-direction: column; gap: 26px; margin-bottom: 52px; }
+.vp-row {
+  display: grid; grid-template-columns: 360px 1fr 250px;
+  background: #fff; border-radius: 20px; overflow: hidden;
   border: 1px solid var(--gray2);
-  box-shadow: 0 4px 18px rgba(10,10,14,0.07);
-  transition: transform .18s, box-shadow .18s;
+  box-shadow: 0 4px 20px rgba(10,10,14,0.06);
+  transition: box-shadow .2s, transform .2s;
 }
-.vp-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(10,10,14,0.12); }
-.vp-card-img { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: var(--gray); }
-.vp-card-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.vp-card-body { padding: 16px; }
-.vp-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
-.vp-card-name { font-size: 16px; font-weight: 800; color: var(--text); }
-.vp-card-badge {
-  font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
-  background: var(--gray); color: var(--text2); padding: 3px 9px; border-radius: 50px;
-  white-space: nowrap;
+.vp-row:hover { box-shadow: 0 16px 40px rgba(10,10,14,0.12); }
+/* ★ CORRECTIF (uniformité des images) : en grille, un élément s'étire par
+   défaut à la hauteur de sa ligne — or cette hauteur varie selon la
+   longueur de la description/des équipements de chaque véhicule. Hauteur
+   FIXE + align-self:start pour garantir des images strictement identiques
+   (largeur, hauteur, ratio, cadrage) sur toutes les fiches, quelle que soit
+   la taille de la photo d'origine (object-fit:cover). */
+.vp-row-img { position: relative; overflow: hidden; background: var(--gray); height: 230px; align-self: start; }
+.vp-row-img img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+.vp-row-badge {
+  position: absolute; top: 16px; left: 16px;
+  background: var(--dark); color: #fff; font-size: 10.5px; font-weight: 800;
+  letter-spacing: .6px; text-transform: uppercase; padding: 6px 13px; border-radius: 50px;
 }
-.vp-price {
-  font-size: 18px; font-weight: 900; color: var(--red); margin-bottom: 10px;
-  font-family: var(--font);
+.vp-row-body {
+  padding: 28px 32px; display: flex; flex-direction: column; gap: 13px;
+  border-right: 1px solid var(--gray2);
 }
-.vp-chips { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 14px; }
-.vp-chip {
-  font-size: 11px; font-weight: 600; color: var(--text2);
+.vp-row-name { font-family: var(--font); font-size: 23px; font-weight: 800; color: var(--text); line-height: 1.15; }
+.vp-row-cat { font-size: 13px; color: var(--text2); font-family: var(--font2); }
+.vp-row-cat strong { color: var(--red); font-weight: 700; }
+.vp-row-desc { font-family: var(--font2); font-size: 14px; line-height: 1.7; color: var(--text2); overflow-wrap: break-word; word-break: break-word; }
+.vp-specs { display: flex; flex-wrap: wrap; gap: 14px 24px; margin-top: 2px; }
+.vp-spec { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--text2); font-family: var(--font2); font-weight: 500; white-space: nowrap; }
+.vp-spec svg { color: var(--red); flex-shrink: 0; }
+.vp-equip { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 4px; }
+.vp-equip-chip {
+  font-size: 11.5px; font-weight: 600; color: var(--text2);
   background: var(--gray); border: 1px solid var(--gray2);
-  padding: 3px 9px; border-radius: 50px; white-space: nowrap;
+  padding: 4px 12px; border-radius: 50px; white-space: nowrap;
 }
-.vp-book {
-  display: block; width: 100%; padding: 12px;
-  background: var(--dark); color: white; text-align: center;
-  border-radius: 10px; font-size: 14px; font-weight: 700;
-  text-decoration: none; transition: background .18s;
+/* ★ Équipements personnalisés (Back-office) : icône alignée avec le libellé,
+   même gabarit que les autres puces .vp-equip-chip (aucun changement visuel
+   pour les puces existantes qui n'ont pas d'icône). */
+.vp-equip-icon { display: inline-flex; align-items: center; color: var(--red); margin-right: 4px; vertical-align: -2px; }
+.vp-equip-icon svg { display: inline-block; }
+.vp-row-price-col {
+  padding: 28px 26px; display: flex; flex-direction: column; justify-content: center;
+  align-items: stretch; gap: 10px; background: var(--gray);
 }
-.vp-book:hover { background: var(--red); }
+.vp-row-from { font-size: 11px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--text3,#8a8a8a); }
+.vp-row-price { font-family: var(--font); font-size: 29px; font-weight: 900; color: var(--red); line-height: 1.1; }
+.vp-row-price span { font-size: 13.5px; font-weight: 600; color: var(--text2); }
+.vp-row-degressif { font-size: 11.5px; color: var(--text2); font-family: var(--font2); line-height: 1.4; }
 .vp-empty { text-align: center; color: var(--text2); font-size: 15px; padding: 40px 0; }
 
-/* CTA « Réserver » */
+@media (max-width: 900px) {
+  /* Version mobile : chaque véhicule devient une grande fiche verticale,
+     pensée pour une lecture confortable en une seule colonne. */
+  .vp-row { grid-template-columns: 1fr; }
+  .vp-row-img { height: 180px; aspect-ratio: unset; align-self: stretch; }
+  .vp-row-body { border-right: none; border-bottom: 1px solid var(--gray2); padding: 22px 20px; }
+  .vp-row-price-col { padding: 22px 20px; }
+  /* ★ Sécurité mobile : les équipements personnalisés (Back-office) et les
+     caractéristiques peuvent contenir un texte plus long que prévu (nom
+     d'équipement libre, traduction plus longue dans une autre langue). En
+     desktop l'espace est large et « nowrap » évite un retour à la ligne
+     disgracieux ; en dessous de 900px, on autorise le retour à la ligne
+     pour garantir qu'aucun texte ne puisse jamais dépasser l'écran. */
+  .vp-spec, .vp-equip-chip { white-space: normal; }
+}
+
+/* CTA « Réserver » — un seul Call To Action global, en fin de catalogue */
 .vp-cta {
   text-align: center; padding: 48px 24px; margin-top: 12px;
   background: linear-gradient(135deg, var(--black), #1a0008);
   border-radius: 20px; color: white;
 }
-.vp-cta h2 { font-size: clamp(22px, 3vw, 34px); margin-bottom: 10px; }
+/* ★ CORRECTIF : .page-content h2 impose color:var(--text) (sombre) avec la
+   même spécificité — sans cette règle plus précise, le titre devenait
+   invisible (texte sombre sur fond sombre). */
+.vp-cta .vp-cta-title { color: #fff; font-size: clamp(22px, 3vw, 34px); margin-bottom: 10px; }
 .vp-cta p { color: rgba(255,255,255,0.68); font-size: 15px; margin-bottom: 22px; }
-.vp-cta-btn {
-  display: inline-flex; align-items: center; gap: 10px;
-  background: var(--red); color: white; padding: 15px 32px;
-  border-radius: 12px; font-size: 16px; font-weight: 700;
-  text-decoration: none; transition: background .2s;
+/* ★ CORRECTIF : .page-content a impose color:var(--red) avec une spécificité
+   supérieure à .vp-cta-btn seul — le texte du bouton devenait rouge sur fond
+   rouge (invisible). Style désormais identique à .btn-book de l'accueil :
+   fond noir, texte blanc, fond rouge au survol, texte toujours blanc. */
+/* ★ AMÉLIORATION CONTRASTE (item 2) : le bouton restait bien noir/rouge au
+   survol (cohérent avec .btn-book de l'accueil), mais se fondait dans le
+   fond sombre du bloc CTA au repos. Une bordure + une lueur rouge (couleur
+   de marque déjà omniprésente : prix, badges, soulignement actif du menu)
+   le détachent nettement du fond, sans changer la charte ni la logique
+   noir → rouge au survol. */
+.vp-cta .vp-cta-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--dark); color: #fff !important; padding: 15px 34px;
+  border-radius: 12px; font-size: 16px; font-weight: 700; font-family: var(--font);
+  letter-spacing: .2px; text-decoration: none;
+  border: 1.5px solid var(--red);
+  box-shadow: 0 0 0 4px rgba(196,30,58,.14), 0 10px 28px rgba(196,30,58,.28);
+  transition: background .2s, transform .2s, box-shadow .2s;
 }
-.vp-cta-btn:hover { background: var(--red-dark, #9B1830); }
+.vp-cta .vp-cta-btn:hover {
+  background: var(--red); color: #fff !important; text-decoration: none;
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 4px rgba(196,30,58,.2), 0 14px 34px rgba(196,30,58,.4);
+}
 @media (max-width: 560px) {
-  .vp-grid { grid-template-columns: 1fr; }
   .vp-toolbar { flex-direction: column; align-items: flex-start; }
+  /* ★ Sécurité mobile : sur les très petits écrans (≈320-375px), le texte
+     "Vérifier les disponibilités" + icône pouvait approcher voire dépasser
+     la largeur disponible. On réduit légèrement (padding/police) et on
+     autorise un retour à la ligne propre plutôt qu'un débordement — le
+     bouton reste centré et identique visuellement sur desktop/tablette. */
+  .vp-cta .vp-cta-btn {
+    padding: 13px 20px; font-size: 14.5px; max-width: 100%;
+    white-space: normal; text-align: center;
+  }
 }
 
 
@@ -422,15 +482,8 @@ header nav a:hover { color: white; background: rgba(255,255,255,0.08); }
 }
 
 
-/* === Page Nos Véhicules : large comme l'accueil (grille multi-colonnes) === */
+/* === Page Nos Véhicules : large comme l'accueil, catalogue en pleine largeur === */
 .page-content--wide { max-width: 1280px !important; }
-.page-content--wide .vp-grid {
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)) !important;
-  gap: 24px !important;
-}
-@media (max-width: 640px) {
-  .page-content--wide .vp-grid { grid-template-columns: 1fr !important; }
-}
 
 
 /* === Page Nos Véhicules : bandeau haut en BLANC (pas de fond noir) === */

@@ -3,7 +3,7 @@
 <head>
 <script>(function(){try{var l=localStorage.getItem("asl_lang")||"fr";if(["fr","en","es","ar"].indexOf(l)<0)l="fr";document.documentElement.lang=l;document.documentElement.dir=(l==="ar")?"rtl":"ltr";}catch(e){}})();</script>
 <meta charset="UTF-8">
-<style id="asl-anti-flash">@view-transition{navigation:auto}html{background:#0A0A0A}::view-transition-old(root),::view-transition-new(root){animation-duration:.18s}</style>
+<style id="asl-anti-flash">html{background:#0A0A0A}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/x-icon" href="../assets/favicons/favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="../assets/favicons/favicon-32x32.png">
@@ -135,8 +135,17 @@
     <div class="vp-note" data-i18n="vp.degressive">Tarifs dégressifs selon la durée de location.</div>
   </div>
 
-  <div class="vp-grid" id="vp-grid" aria-live="polite"></div>
+  <div class="vp-catalog" id="vp-grid" aria-live="polite"></div>
   <p class="vp-empty" id="vp-empty" style="display:none;" data-i18n="vp.empty">Aucun véhicule dans cette catégorie pour le moment.</p>
+
+  <div class="vp-cta">
+    <h2 class="vp-cta-title" data-i18n="vp.ctaTitle">Prêt à trouver votre véhicule ?</h2>
+    <p data-i18n="vp.ctaText">Sélectionnez vos dates afin de découvrir les véhicules disponibles pendant votre séjour à Marrakech.</p>
+    <a href="../index.html#booking-section" class="vp-cta-btn">
+      <span data-i18n="vp.ctaBtn">Vérifier les disponibilités</span>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+    </a>
+  </div>
 </div>
 
 <footer>
@@ -228,29 +237,75 @@
 (function () {
   var curFilter = 'all';
 
+  // ★ Icônes (mêmes traits que le reste du site — stroke 1.8/2, style Lucide)
+  var ICONS = {
+    seats: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16"/><path d="M4 4h11a2 2 0 0 1 2 2v10"/><path d="M17 16H4"/><path d="M4 12h9"/><path d="M20 20H4"/></svg>',
+    trans: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>',
+    fuel: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="15" y1="22" y2="22"/><line x1="4" x2="14" y1="9" y2="9"/><path d="M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18"/><path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2 2 2 0 0 0 2-2v-7.5a1 1 0 0 0-.3-.7L18 4"/></svg>',
+    trunk: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-9a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Z"/><path d="M4 7v13a2 2 0 0 0 2 2"/><path d="M14 4v3"/><path d="M9 4v3"/></svg>',
+    ac: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>'
+  };
+
   function priceLabel(car) {
     // Affiche le prix de base (MAD) ; la tarification dégressive complète
     // s'applique dans le tunnel de réservation de la page d'accueil.
     var p = (car.priceMAD != null) ? car.priceMAD
           : Math.round((car.priceEUR || 0) * ((window.ASLDB && ASLDB.RATE_MAD) || 10.8));
-    var perDay = (window.t ? t('u.perDayLong') : '/ jour');
-    return p + ' MAD ' + perDay;
+    return p;
   }
 
-  function carExtras(car) {
+  // ★ Description courte (catalogue) : langue courante → repli français →
+  //   repli générique. Alimentée depuis le Back-office (Ma flotte → Modifier
+  //   un véhicule → Description courte), traduite automatiquement FR→EN/ES/AR.
+  function carDescription(car) {
+    var lang = (window.getLang ? getLang() : (document.documentElement.lang || 'fr'));
+    var i18n = car.shortDescI18n || {};
+    return i18n[lang] || i18n.fr || car.shortDesc || '';
+  }
+
+  // ★ Caractéristiques principales (places, transmission, carburant, bagages,
+  //   climatisation) — jamais la disponibilité, qui dépend des dates choisies
+  //   par le client dans le tunnel de réservation de l'accueil.
+  function carSpecs(car) {
+    var T = window.t || function (k) { return k; };
+    var list = [];
+    if (car.seats) list.push({ icon: ICONS.seats, label: car.seats + ' ' + (T('u.seats') || 'places') });
+    if (car.transmission) list.push({ icon: ICONS.trans, label: car.transmission });
+    if (car.fuel) list.push({ icon: ICONS.fuel, label: car.fuel });
+    list.push({ icon: ICONS.trunk, label: car.trunk ? car.trunk : ((T('sp.doors', {n:2})) ? '2 ' + (T('u.bags')||'bagages') : '2 bagages') });
+    if (!car.features || car.features.ac !== false) list.push({ icon: ICONS.ac, label: T('sp.ac') || 'Climatisation' });
+    return list;
+  }
+
+  // ★ Équipements (checkboxes standard + équipements personnalisés du
+  //   Back-office). Purement informatif — aide à comparer les modèles.
+  function carEquipment(car) {
     var f = car.features || {};
-    var T = window.t || function (k, p) { return k; };
+    var T = window.t || function (k) { return k; };
     var list = [
-      f.ac ? T('sp.ac') : '', f.bluetooth ? 'Bluetooth' : '', f.gps ? 'GPS' : '',
-      f.camera ? T('sp.cam') : '',
-      car.transmission || '', car.fuel || '',
-      car.doors ? T('sp.doors', { n: car.doors }) : '',
-      (car.seats ? car.seats + ' ' + (T('u.seats') || 'places') : ''),
-      car.trunk ? T('sp.trunk', { v: car.trunk }) : '',
-      car.consumption || '',
-      f.insurance ? T('sp.insur') : '', f.airport ? T('sp.airport') : '',
-      (car.depositShow && car.deposit) ? T('sp.deposit', { v: car.deposit + ' MAD' }) : ''
+      f.ac ? (T('sp.ac') || 'Clim') : '',
+      f.bluetooth ? 'Bluetooth' : '',
+      f.gps ? 'GPS' : '',
+      f.camera ? (T('sp.cam') || 'Caméra de recul') : '',
+      f.insurance ? (T('sp.insur') || 'Assurance incluse') : '',
+      f.airport ? (T('sp.airport') || 'Livraison aéroport') : ''
     ].filter(Boolean);
+    // ★ CORRECTIF (synchro équipements personnalisés) : admin-custom-features.js
+    //   n'est chargé que dans le back-office, jamais sur cette page. On lit
+    //   donc les définitions (nom + icône) via ASLDB, chargé partout, qui
+    //   reflète la même clé KV synchronisée — avec l'icône correspondante.
+    try {
+      if (typeof ASLDB !== 'undefined' && ASLDB.getCustomFeaturesDef && car.customFeatures) {
+        ASLDB.getCustomFeaturesDef().forEach(function (def) {
+          if (car.customFeatures[def.id]) {
+            var icon = ASLDB.customFeatureIconSvg ? ASLDB.customFeatureIconSvg(def.lucideIcon) : '';
+            list.push('<span class="vp-equip-icon">' + icon + '</span>' + def.name);
+          }
+        });
+      }
+    } catch (e) {}
+    // Repli : anciens véhicules seedés avec `services` (tags libres)
+    if (!list.length && Array.isArray(car.services)) list = car.services.slice();
     return list;
   }
 
@@ -258,8 +313,12 @@
     var grid = document.getElementById('vp-grid');
     var empty = document.getElementById('vp-empty');
     if (!grid || !window.ASLDB) return;
+    // ★ La disponibilité dépend des dates choisies par le client : ce
+    //   catalogue présente TOUTE la flotte commercialisable (hors
+    //   maintenance/hors-service), sans jamais afficher un statut
+    //   "disponible/indisponible" qui n'aurait pas de sens hors contexte de dates.
     var fleet = ASLDB.getFleet().filter(function (c) {
-      return c.status === 'available' || c.status === 'reserved';
+      return c.status !== 'maintenance' && c.status !== 'offroad';
     });
     // Filtrage insensible à la casse ; "Tout" affiche toujours tout
     if (curFilter !== 'all') {
@@ -268,29 +327,41 @@
       });
     }
     // Reconstruire les boutons de filtre dynamiquement à partir des catégories réelles
-    rebuildFilters(ASLDB.getFleet().filter(function(c){ return c.status==='available'||c.status==='reserved'; }));
+    rebuildFilters(ASLDB.getFleet().filter(function(c){ return c.status !== 'maintenance' && c.status !== 'offroad'; }));
 
     if (!fleet.length) { grid.innerHTML = ''; empty.style.display = 'block'; return; }
     empty.style.display = 'none';
 
     var T = window.t || function (k) { return k; };
+    var CAT_LABELS_FULL = { citadine:'Citadine', economique:'Économique', familiale:'Familiale', suv:'SUV' };
+
     grid.innerHTML = fleet.map(function (car) {
-      var extras = carExtras(car).map(function (x) {
-        return '<span class="vp-chip">' + x + '</span>';
-      }).join('');
       var img = car.img || '../assets/hero-car.svg';
+      var specsHTML = carSpecs(car).map(function (s) {
+        return '<span class="vp-spec">' + s.icon + s.label + '</span>';
+      }).join('');
+      var equipHTML = carEquipment(car).map(function (x) {
+        return '<span class="vp-equip-chip">' + x + '</span>';
+      }).join('');
+      var desc = carDescription(car);
+      var catLabel = CAT_LABELS_FULL[(car.category||'').toLowerCase()] || car.category || '';
       return '' +
-        '<article class="vp-card">' +
-          '<div class="vp-card-img"><img src="' + img + '" alt="' + (car.name || 'Véhicule') +
-            ' — location à Marrakech" loading="lazy" onerror="this.onerror=null;this.src=\'../assets/hero-car.svg\'"></div>' +
-          '<div class="vp-card-body">' +
-            '<div class="vp-card-top">' +
-              '<h3 class="vp-card-name">' + (car.name || '') + '</h3>' +
-              '<span class="vp-card-badge">' + (car.badge || car.category || '') + '</span>' +
-            '</div>' +
-            '<div class="vp-price">' + priceLabel(car) + '</div>' +
-            (extras ? '<div class="vp-chips">' + extras + '</div>' : '') +
-            '<a href="../index.html#fleet" class="vp-book" data-i18n="car.book">Réserver</a>' +
+        '<article class="vp-row">' +
+          '<div class="vp-row-img">' +
+            (car.badge ? '<span class="vp-row-badge">' + car.badge + '</span>' : '') +
+            '<img src="' + img + '" alt="' + (car.name || 'Véhicule') +
+              ' — location à Marrakech" loading="lazy" onerror="this.onerror=null;this.src=\'../assets/hero-car.svg\'">' +
+          '</div>' +
+          '<div class="vp-row-body">' +
+            '<h2 class="vp-row-name">' + (car.name || '') + '</h2>' +
+            (catLabel ? '<div class="vp-row-cat">' + (T('misc.cat')||'Catégorie : ') + '<strong>' + catLabel + '</strong></div>' : '') +
+            (desc ? '<p class="vp-row-desc">' + desc + '</p>' : '') +
+            (specsHTML ? '<div class="vp-specs">' + specsHTML + '</div>' : '') +
+            (equipHTML ? '<div class="vp-equip">' + equipHTML + '</div>' : '') +
+          '</div>' +
+          '<div class="vp-row-price-col">' +
+            '<div class="vp-row-from" data-i18n="vp.from">À partir de</div>' +
+            '<div class="vp-row-price">' + priceLabel(car) + ' <span>MAD / ' + (T('u.day')||'jour') + '</span></div>' +
           '</div>' +
         '</article>';
     }).join('');

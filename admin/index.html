@@ -557,6 +557,7 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
     <div class="topbar-right">
       <div class="notif-btn" onclick="showNotifications()" style="cursor:pointer;" title="Notifications"><span><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span><div class="notif-dot"></div></div>
       <button class="topbar-btn secondary" onclick="exportReservationsCSV()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg> Exporter</button>
+      <button class="topbar-btn secondary" onclick="openModal('new-location')">+ Nouvelle location</button>
       <button class="topbar-btn primary" onclick="openModal('new-reservation')">+ Nouvelle réservation</button>
     </div>
   </div>
@@ -986,16 +987,9 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
         </table>
         </div>
       </div>
-      <!-- Drawer détail location -->
-      <div id="rental-drawer-bg" onclick="closeRentalDrawer()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;"></div>
-      <div id="rental-drawer" style="display:none;position:fixed;top:0;right:0;bottom:0;width:min(500px,100vw);background:var(--dark2,#fff);box-shadow:-6px 0 32px rgba(0,0,0,.18);z-index:2001;flex-direction:column;transition:transform .28s;">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);flex-shrink:0;">
-          <div id="rental-drawer-title" style="font-size:16px;font-weight:800;"></div>
-          <button onclick="closeRentalDrawer()" style="background:none;border:none;cursor:pointer;font-size:22px;color:var(--text3);line-height:1;">&#10005;</button>
-        </div>
-        <div id="rental-drawer-body" style="overflow-y:auto;flex:1;padding:18px 22px;"></div>
-        <div id="rental-drawer-footer" style="padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:10px;flex-wrap:wrap;"></div>
-      </div>
+      <!-- Drawer détail location déplacé hors de cette page (voir plus bas,
+           juste avant #modal-overlay) : il doit rester accessible depuis le
+           Dashboard quelle que soit la page active. -->
     </div>
 
     <!-- ===== CAISSE ===== -->
@@ -1260,6 +1254,22 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
 </main>
 
 <!-- MODALS -->
+<!-- ★ CORRECTIF NAVIGATION : tiroir "Fiche location", déplacé hors de
+     #page-rentals. Il est utilisé depuis le Dashboard (Véhicules loués,
+     Retours aujourd'hui/demain/date sélectionnée) ET reste disponible
+     indépendamment de la page active — c'était la cause exacte du bug
+     ("Fiche" ne s'ouvrait pas depuis le Dashboard : le tiroir était
+     invisible car nichée dans une page masquée par display:none). -->
+<div id="rental-drawer-bg" onclick="closeRentalDrawer()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;"></div>
+<div id="rental-drawer" style="display:none;position:fixed;top:0;right:0;bottom:0;width:min(500px,100vw);background:var(--dark2,#fff);box-shadow:-6px 0 32px rgba(0,0,0,.18);z-index:2001;flex-direction:column;transition:transform .28s;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);flex-shrink:0;">
+    <div id="rental-drawer-title" style="font-size:16px;font-weight:800;"></div>
+    <button onclick="closeRentalDrawer()" style="background:none;border:none;cursor:pointer;font-size:22px;color:var(--text3);line-height:1;">&#10005;</button>
+  </div>
+  <div id="rental-drawer-body" style="overflow-y:auto;flex:1;padding:18px 22px;"></div>
+  <div id="rental-drawer-footer" style="padding:14px 22px;border-top:1px solid var(--border);display:flex;gap:10px;flex-wrap:wrap;"></div>
+</div>
+
 <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
   <div class="modal" id="modal-content">
     <div class="modal-header">
@@ -1752,6 +1762,31 @@ async function translateAltAll(prefix) {
   }
 }
 
+/* ★ Description courte du véhicule (catalogue « Nos véhicules ») — même
+   principe exact que translateAltAll : FR saisi à la main, EN/ES/AR générés
+   automatiquement via ASLTranslate et stockés dans un champ i18n caché,
+   appliqué à la sauvegarde du véhicule. */
+async function translateShortDescAll(prefix) {
+  var input = document.getElementById(prefix + '-shortdesc');
+  var hidden = document.getElementById(prefix + '-shortdesc-i18n');
+  var status = document.getElementById(prefix + '-shortdesc-tr-status');
+  var fr = (input && input.value || '').trim();
+  if (!fr) { if (status) { status.style.color = '#ef4444'; status.textContent = 'Rédigez d\'abord la description en français.'; } return; }
+  if (typeof ASLTranslate === 'undefined' || !ASLTranslate.one) { if (status) { status.style.color = '#ef4444'; status.textContent = 'Module de traduction indisponible.'; } return; }
+  if (status) { status.style.color = 'var(--text3,#888)'; status.textContent = 'Traduction en cours…'; }
+  try {
+    var out = { fr: fr };
+    var langs = ASLTranslate.LANGS || ['en', 'es', 'ar'];
+    for (var i = 0; i < langs.length; i++) {
+      out[langs[i]] = await ASLTranslate.one(fr, langs[i]);
+    }
+    if (hidden) hidden.value = JSON.stringify(out);
+    if (status) { status.style.color = 'var(--green,#22c55e)'; status.textContent = '✓ Traduit (FR, EN, ES, AR). Enregistrez pour appliquer.'; }
+  } catch (e) {
+    if (status) { status.style.color = '#ef4444'; status.textContent = 'Échec de la traduction — réessayez.'; }
+  }
+}
+
 function renderFleetPage() {
   const grid = document.getElementById('fleet-grid');
   if (!grid) return;
@@ -1881,6 +1916,15 @@ function editCar(id) {
         <option value="suv" ${car.category==='suv'?'selected':''}>SUV</option>
       </select>
     </div>
+    <div class="form-group" style="grid-column:1/-1;"><label class="form-label">Description courte du véhicule (catalogue « Nos véhicules »)</label>
+      <textarea class="form-input" id="edit-shortdesc" rows="3" placeholder="Ex : Parfaite pour vos déplacements en ville, la Kia Picanto offre une conduite fluide et une faible consommation...">${(car.shortDescI18n && car.shortDescI18n.fr) || car.shortDesc || ''}</textarea>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px;">
+        <button type="button" class="btn-sm" style="background:rgba(37,99,235,.1);color:#1d4ed8;border:1px solid rgba(37,99,235,.25);border-radius:8px;padding:6px 12px;font-size:12.5px;font-weight:600;cursor:pointer;" onclick="translateShortDescAll('edit')">🌐 Traduire automatiquement</button>
+        <span id="edit-shortdesc-tr-status" style="font-size:11px;color:var(--text3,#888);"></span>
+      </div>
+      <div style="font-size:11px;color:var(--text3,#888);margin-top:4px;">Rédigez la description en français (3 à 5 lignes), puis traduisez automatiquement en EN/ES/AR. Affichée automatiquement dans le catalogue « Nos véhicules » du site.</div>
+      <input type="hidden" id="edit-shortdesc-i18n" value='${JSON.stringify(car.shortDescI18n||{}).replace(/'/g,"&#39;")}'>
+    </div>
     <div class="form-group"><label class="form-label">Photo du véhicule</label>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
         <button type="button" class="btn-sm primary" id="edit-upload-btn"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg> Téléverser une image</button>
@@ -1991,6 +2035,13 @@ function editCar(id) {
       img: document.getElementById('edit-img').value || car.img,
       imgAlt: document.getElementById('edit-imgalt')?.value || car.imgAlt || '',
       imgAltI18n: (function(){ try { return JSON.parse(document.getElementById('edit-imgalt-i18n')?.value || '{}'); } catch(e){ return car.imgAltI18n || {}; } })(),
+      shortDesc: document.getElementById('edit-shortdesc')?.value || car.shortDesc || '',
+      shortDescI18n: (function(){
+        var frTxt = document.getElementById('edit-shortdesc')?.value || '';
+        var i18n; try { i18n = JSON.parse(document.getElementById('edit-shortdesc-i18n')?.value || '{}'); } catch(e){ i18n = car.shortDescI18n || {}; }
+        if (!i18n.fr || i18n.fr !== frTxt) i18n.fr = frTxt; // le FR fait toujours foi (dernière saisie)
+        return i18n;
+      })(),
       status: _agg,
     });
     reloadData();
@@ -2545,6 +2596,14 @@ function openModal(type) {
     </div>
     <div class="form-group"><label class="form-label">URL Photo (option secondaire)</label><input class="form-input" placeholder="https://..." id="ac-img"></div>
     <div class="form-group" style="grid-column:1/-1;"><label class="form-label">Texte ALT de l'image (SEO)</label><input class="form-input" placeholder="Ex : Renault Clio 5 blanche location Marrakech" id="ac-imgalt"><div style="font-size:11px;color:var(--text3,#888);margin-top:4px;">Décrit l'image pour Google et l'accessibilité. Améliore le référencement.</div></div>
+    <div class="form-group" style="grid-column:1/-1;"><label class="form-label">Description courte du véhicule (catalogue « Nos véhicules »)</label>
+      <textarea class="form-input" id="ac-shortdesc" rows="3" placeholder="Ex : Parfaite pour vos déplacements en ville..."></textarea>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px;">
+        <button type="button" class="btn-sm" style="background:rgba(37,99,235,.1);color:#1d4ed8;border:1px solid rgba(37,99,235,.25);border-radius:8px;padding:6px 12px;font-size:12.5px;font-weight:600;cursor:pointer;" onclick="translateShortDescAll('ac')">🌐 Traduire automatiquement</button>
+        <span id="ac-shortdesc-tr-status" style="font-size:11px;color:var(--text3,#888);"></span>
+      </div>
+      <input type="hidden" id="ac-shortdesc-i18n" value='{}'>
+    </div>
     `;
     document.getElementById('ac-price-mad').addEventListener('input', e => {
       document.getElementById('ac-price-eur').value = Math.round(parseInt(e.target.value||0) / ASLDB.RATE_MAD);
@@ -2596,7 +2655,14 @@ function openModal(type) {
         featured: false,
         services: ['Clim','Radio'],
         img: document.getElementById('ac-img')?.value || 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=600&q=80',
-        imgAlt: document.getElementById('ac-imgalt')?.value || ''
+        imgAlt: document.getElementById('ac-imgalt')?.value || '',
+        shortDesc: document.getElementById('ac-shortdesc')?.value || '',
+        shortDescI18n: (function(){
+          var frTxt = document.getElementById('ac-shortdesc')?.value || '';
+          var i18n; try { i18n = JSON.parse(document.getElementById('ac-shortdesc-i18n')?.value || '{}'); } catch(e){ i18n = {}; }
+          if (!i18n.fr || i18n.fr !== frTxt) i18n.fr = frTxt;
+          return i18n;
+        })()
       });
       reloadData();
       renderFleetPage(); renderAvailability(); renderDashboard();

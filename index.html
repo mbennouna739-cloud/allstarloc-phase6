@@ -3,7 +3,7 @@
 <head>
 <script>(function(){try{var l=localStorage.getItem("asl_lang")||"fr";if(["fr","en","es","ar"].indexOf(l)<0)l="fr";document.documentElement.lang=l;document.documentElement.dir=(l==="ar")?"rtl":"ltr";}catch(e){}})();</script>
 <meta charset="UTF-8">
-<style id="asl-anti-flash">@view-transition{navigation:auto}html{background:#FFFFFF}::view-transition-old(root),::view-transition-new(root){animation-duration:.18s}</style>
+<style id="asl-anti-flash">html{background:#FFFFFF}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/x-icon" href="assets/favicons/favicon.ico">
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicons/favicon-32x32.png">
@@ -240,6 +240,12 @@ nav a:hover { color: white; background: rgba(255,255,255,0.08); }
   background: var(--gray); border: 1px solid var(--gray2);
   padding: 4px 9px; border-radius: 50px; white-space: nowrap;
 }
+/* ★ Équipements personnalisés (Back-office) : icône alignée avec le libellé,
+   même gabarit que les autres puces .car-extra (aucun changement visuel
+   pour les puces existantes). */
+.car-extra-custom { display: inline-flex; align-items: center; gap: 4px; }
+.car-extra-icon { display: inline-flex; color: var(--red); flex-shrink: 0; }
+.car-extra-icon svg { display: block; }
 
 /* Champs obligatoires manquants */
 .form-input.input-error, .form-select.input-error {
@@ -1160,7 +1166,7 @@ body.scrolled .fade-in { animation: none !important; opacity: 1 !important; tran
     </a>
     <nav>
       <a href="index.html" data-i18n="nav.home">Accueil</a>
-      <a href="#fleet" data-i18n="nav.fleet">Nos Véhicules</a>
+      <a href="pages/nos-vehicules.html" data-i18n="nav.fleet">Nos Véhicules</a>
       <a href="pages/about.html" data-i18n="nav.about">À propos</a>
       <a href="pages/contact.html" data-i18n="nav.contact">Contact</a>
     </nav>
@@ -1193,7 +1199,7 @@ body.scrolled .fade-in { animation: none !important; opacity: 1 !important; tran
   </div>
   <div class="mobile-menu" id="mobile-menu">
     <a href="index.html" data-i18n="nav.home">Accueil</a>
-    <a href="#fleet" onclick="toggleMobileMenu()" data-i18n="nav.fleet">Nos Véhicules</a>
+    <a href="pages/nos-vehicules.html" onclick="toggleMobileMenu()" data-i18n="nav.fleet">Nos Véhicules</a>
     <a href="pages/about.html" data-i18n="nav.about">À propos</a>
     <a href="pages/contact.html" data-i18n="nav.contact">Contact</a>
     <a href="https://wa.me/212675312453" target="_blank" style="color:#25D366;" data-i18n="nav.wa247">WhatsApp 24h/7j</a>
@@ -1380,7 +1386,7 @@ body.scrolled .fade-in { animation: none !important; opacity: 1 !important; tran
     <div class="section-header">
       <div class="section-badge"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg> <span data-i18n="fleet.badge">Notre Flotte</span></div>
       <h2 class="section-title" data-i18n-html="fleet.titleHtml">Choisissez le Véhicule<br><span>Idéal pour Marrakech</span></h2>
-      <p class="section-sub" data-i18n="fleet.sub">Tous nos véhicules sont récents, propres et régulièrement entretenus.</p>
+      <p class="section-sub" data-i18n="fleet.sub">Tous nos véhicules sont récents, propres et régulièrement entretenus, avec des tarifs dégressifs selon la durée de location.</p>
     </div>
     <div class="filter-tabs" id="filter-tabs">
       <button class="filter-tab active" onclick="filterCars('all', this)" data-cat="all" data-i18n="filt.all">Toutes</button>
@@ -1544,7 +1550,7 @@ body.scrolled .fade-in { animation: none !important; opacity: 1 !important; tran
       <div class="footer-col-title" data-i18n="ft.colQuick">Liens Rapides</div>
       <div class="footer-links">
         <a href="/" class="footer-link" data-i18n="nav.home">Accueil</a>
-        <a href="#fleet" class="footer-link" data-i18n="nav.fleet">Nos Véhicules</a>
+        <a href="pages/nos-vehicules.html" class="footer-link" data-i18n="nav.fleet">Nos Véhicules</a>
         <a href="pages/about.html" class="footer-link" data-i18n="nav.about">À propos</a>
         <a href="pages/blog.html" class="footer-link" data-i18n="pf.blog">Blog</a>
         <a href="pages/faq.html" class="footer-link" data-i18n="pf.faq">FAQ</a>
@@ -1649,12 +1655,7 @@ body.scrolled .fade-in { animation: none !important; opacity: 1 !important; tran
 
 <script src="i18n.js"></script>
 <script src="pages-seed.js"></script>
-<script src="content-bridge.js">
-/* ── Équipements personnalisés ─── */
-function getCustomFeaturesDef() {
-  try { var raw = localStorage.getItem('asl_custom_features_v1'); return raw ? JSON.parse(raw) : []; } catch(e) { return []; }
-}
-</script>
+<script src="content-bridge.js"></script>
 <script src="cookie-consent.js"></script>
 <script src="data.js"></script>
 <script>
@@ -1803,8 +1804,15 @@ function renderCars(filter) {
   grid.innerHTML = filtered.map(car => {
     const av = searchActive ? carAvailability(car, state.startDate, state.endDate) : { available: true };
     const f = car.features || {};
-    const _cfDefs = (typeof getCustomFeaturesDef === 'function') ? getCustomFeaturesDef() : [];
-    const _cfExtras = _cfDefs.filter(cf => car.customFeatures && car.customFeatures[cf.id]).map(cf => cf.name);
+    // ★ CORRECTIF (synchro équipements personnalisés) : admin-custom-features.js
+    //   n'est chargé que dans le back-office — jamais sur ce site. On lit donc
+    //   les définitions (nom + icône) via ASLDB, chargé partout, qui reflète
+    //   la même clé KV synchronisée. Chaque équipement personnalisé s'affiche
+    //   désormais avec son icône, comme les autres caractéristiques.
+    const _cfDefs = (typeof ASLDB !== 'undefined' && ASLDB.getCustomFeaturesDef) ? ASLDB.getCustomFeaturesDef() : [];
+    const _cfChips = _cfDefs.filter(cf => car.customFeatures && car.customFeatures[cf.id]).map(cf =>
+      `<span class="car-extra car-extra-custom">${(typeof ASLDB !== 'undefined' && ASLDB.customFeatureIconSvg) ? `<span class="car-extra-icon">${ASLDB.customFeatureIconSvg(cf.lucideIcon)}</span>` : ''}${cf.name}</span>`
+    );
     const extras = [
       f.ac ? t('sp.ac') : '', f.bluetooth ? 'Bluetooth' : '', f.gps ? 'GPS' : '',
       f.camera ? t('sp.cam') : '',
@@ -1813,7 +1821,6 @@ function renderCars(filter) {
       car.consumption ? car.consumption : '',
       f.insurance ? t('sp.insur') : '', f.airport ? t('sp.airport') : '',
       (car.depositShow && car.deposit) ? t('sp.deposit', { v: car.deposit + ' MAD' }) : '',
-      ..._cfExtras,
     ].filter(Boolean);
     return `
     <div class="car-card ${av.available ? '' : 'unavailable'}" onclick="${av.available ? `selectCar(${car.id})` : 'scrollToDates()'}">
@@ -1830,7 +1837,7 @@ function renderCars(filter) {
         </div>
         ${searchActive
           ? (normalizeTiers(car.tiers).length ? `<div class="car-tier-label">${t('car.tierHint')}</div>` : '')
-          : `<div class="car-tier-label" style="font-size:11px;color:var(--text2);font-weight:500;margin-top:2px;">${t('vp.degressive')}</div>`}
+          : ''}
         <div class="car-name">${car.name}</div>
         <div class="car-specs">
           <div class="car-spec"><div class="car-spec-icon"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div> ${t('car.seats',{n:car.seats})}</div>
@@ -1843,7 +1850,7 @@ function renderCars(filter) {
             ${car.services.map(s=>`<span class="car-service-tag">${s}</span>`).join('')}
           </div>
         </div>
-        ${extras.length ? `<div class="car-extras">${extras.map(x=>`<span class="car-extra">${x}</span>`).join('')}</div>` : ''}
+        ${(extras.length || _cfChips.length) ? `<div class="car-extras">${extras.map(x=>`<span class="car-extra">${x}</span>`).join('')}${_cfChips.join('')}</div>` : ''}
       ${av.available ? '' : `<div class="avail-from"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> ${availFromLabel(av)}</div>`}
       ${av.available
         ? `<button class="btn-book">${t('car.book')} <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>`
