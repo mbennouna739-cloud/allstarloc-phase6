@@ -187,11 +187,19 @@ function renderCustomers() {
     var monthFilter = parseInt((document.getElementById('cust-month-filter') && document.getElementById('cust-month-filter').value) || '0');
     var q = ((document.getElementById('cust-search') && document.getElementById('cust-search').value) || '').toLowerCase().trim();
 
+    // ★ Item 8 — Libellés lisibles pour l'origine du client (source de la
+    //   réservation). "Site Web" pour les réservations en ligne ; les autres
+    //   valeurs sont choisies par l'admin lors de la création manuelle.
+    var ORIGIN_LABELS = {
+      online: 'Site Web', manual: 'Réservation manuelle', phone: 'Téléphone',
+      whatsapp: 'WhatsApp', partner: 'Partenaire', gbp: 'Google Business Profile',
+      facebook: 'Facebook', instagram: 'Instagram'
+    };
     var customers = {};
     res.forEach(function(r) {
       var key = _custId(r.email, r.client);
       if (!customers[key]) {
-        customers[key] = { key: key, name: r.client, email: r.email || '', phone: r.phone || '', nationality: r.nationality || '', count: 0, total: 0, unpaid: 0, last: '', months: {} };
+        customers[key] = { key: key, name: r.client, email: r.email || '', phone: r.phone || '', nationality: r.nationality || '', count: 0, total: 0, unpaid: 0, last: '', months: {}, origin: r.source || '' };
       }
       var c = customers[key];
       c.count++;
@@ -201,7 +209,8 @@ function renderCustomers() {
         var rReste = Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
         c.unpaid += rReste;
       }
-      if ((r.startDate || '') > c.last) c.last = r.startDate || '';
+      // ★ Origine : celle de la réservation la plus récente du client.
+      if ((r.startDate || '') > c.last) { c.last = r.startDate || ''; if (r.source) c.origin = r.source; }
       var mo = (typeof ASLDB !== 'undefined' && ASLDB.monthOfISO) ? ASLDB.monthOfISO(r.startDate) : 0;
       if (mo) c.months[mo] = true;
       if (!c.name && r.client) c.name = r.client;
@@ -221,7 +230,7 @@ function renderCustomers() {
     var tbody = document.getElementById('customers-table');
     if (!tbody) return;
     if (!list.length) {
-      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text3);">Aucun client' + (monthFilter ? ' pour ' + ASL_MONTHS[monthFilter] : '') + '.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text3);">Aucun client' + (monthFilter ? ' pour ' + ASL_MONTHS[monthFilter] : '') + '.</td></tr>';
       return;
     }
     tbody.innerHTML = list.map(function(c) {
@@ -237,6 +246,7 @@ function renderCustomers() {
         '<td style="color:var(--text2);font-size:12px;">' + (c.email||'—') + '</td>' +
         '<td style="font-size:12px;">' + (c.phone||'—') + '</td>' +
         '<td><span class="badge badge-gray">' + (c.nationality||'N/A') + '</span></td>' +
+        '<td><span class="badge badge-blue" style="font-size:11px;">' + (ORIGIN_LABELS[c.origin] || c.origin || '—') + '</span></td>' +
         '<td style="text-align:center;"><strong>' + c.count + '</strong></td>' +
         '<td><strong style="color:var(--green);">' + (Number(c.total)||0).toLocaleString('fr-FR') + ' MAD</strong></td>' +
         unpaidCell +

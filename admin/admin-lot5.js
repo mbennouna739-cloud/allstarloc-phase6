@@ -41,7 +41,14 @@ function aslRes() {
   try { return (typeof ASLDB !== 'undefined' && ASLDB.getReservations) ? ASLDB.getReservations() : (typeof RESERVATIONS !== 'undefined' ? RESERVATIONS : []); } catch(e) { return []; }
 }
 function todayStr() {
-  var d = new Date(); d.setHours(0,0,0,0); return d.toISOString().slice(0,10);
+  // ★ CORRECTIF FUSEAU HORAIRE : l'ancien code faisait
+  //   `new Date().toISOString().slice(0,10)`, qui convertit en UTC et
+  //   décale "aujourd'hui" d'un jour en arrière dans tout fuseau en avance
+  //   sur UTC (Maroc, Europe...) — retardant d'une journée le passage
+  //   "Réservé" → "Loué" et faussant "retours aujourd'hui"/"en retard".
+  if (typeof ASLDB !== 'undefined' && ASLDB.localDateISO) return ASLDB.localDateISO();
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
 function statusBadge(code) {
   var map = { pending:{l:'En attente',c:'badge-yellow'}, confirmed:{l:'Confirmée',c:'badge-blue'}, active:{l:'En cours',c:'badge-green'}, completed:{l:'Terminée',c:'badge-gray'}, cancelled:{l:'Annulée',c:'badge-red'} };
@@ -54,11 +61,17 @@ function statusBadge(code) {
 function updateBadges() {
   try {
     var res = aslRes();
-    var pending = res.filter(function(r) { return r.status === 'pending'; }).length;
+    // ★ CORRECTIF (item 3) : le badge de la barre latérale doit correspondre
+    //   exactement à ce qu'affiche par défaut la page "Réservations" (phase
+    //   réelle 'reserved' — date+heure+fuseau), pas seulement au statut brut
+    //   'pending'. Sans ce correctif, le badge pouvait indiquer 0 alors que
+    //   la page listait des réservations (incohérence signalée).
+    function phaseOf(r) { return (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? ASLDB.computePhase(r) : r.status; }
+    var pending = res.filter(function(r) { return phaseOf(r) === 'reserved'; }).length;
     var el = document.getElementById('badge-res');
     if (el) el.textContent = pending;
 
-    var active = res.filter(function(r) { return r.status === 'active' || r.status === 'confirmed'; }).length;
+    var active = res.filter(function(r) { return phaseOf(r) === 'active'; }).length;
     el = document.getElementById('badge-rentals');
     if (el) { el.textContent = active; el.style.display = active ? '' : 'none'; }
 
@@ -106,6 +119,12 @@ function renderDashboard() {
     var fleet = aslFleet();
     var res = aslRes();
     var ts = todayStr();
+    var now = new Date();
+    // ★ CORRECTIF : phase réelle (reserved/active/late) calculée via
+    //   ASLDB.computePhase — date + heure + fuseau local réels — au lieu de
+    //   comparer uniquement des chaînes de date (qui retardait "Loué" d'un
+    //   jour et ne tenait jamais compte de l'heure de départ/retour).
+    function phase(r) { return (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? ASLDB.computePhase(r, now) : r.status; }
 
     // Compter les UNITÉS réellement disponibles (un modèle « Stock 2 »
     // compte pour 2). On utilise modelAvailability si présent, sinon repli.
@@ -116,11 +135,12 @@ function renderDashboard() {
       return (c.status === 'available') ? Math.max(1, parseInt(c.stock) || 1) : 0;
     }
     var availUnitsTotal = fleet.reduce(function (s, c) { return s + _avUnits(c); }, 0);
-    var avail   = fleet.filter(function(c) { return c.status === 'available'; });
-    var rented  = res.filter(function(r) { return (r.status === 'active' || r.status === 'confirmed') && (r.startDate||'') <= ts && (r.endDate||'') >= ts; });
-    var returns = res.filter(function(r) { return (r.endDate||'').slice(0,10) === ts && r.status !== 'cancelled'; });
-    var late    = res.filter(function(r) { return (r.endDate||'') < ts && (r.status === 'active' || r.status === 'confirmed'); });
-    var unpaid  = res.filter(function(r) { if (r.status === 'cancelled') return false; return (Number(r.amount)||0) > (Number(r.paid)||0); });
+    var avail    = fleet.filter(function(c) { return c.status === 'available'; });
+    var rented   = res.filter(function(r) { return phase(r) === 'active'; });
+    var reserved = res.filter(function(r) { return phase(r) === 'reserved'; });
+    var returns  = res.filter(function(r) { return (r.endDate||'').slice(0,10) === ts && r.status !== 'cancelled' && r.status !== 'completed'; });
+    var late     = res.filter(function(r) { return phase(r) === 'late'; });
+    var unpaid   = res.filter(function(r) { if (r.status === 'cancelled') return false; return (Number(r.amount)||0) > (Number(r.paid)||0); });
 
     function setV(id, val, col) {
       var el = document.getElementById(id);
@@ -128,6 +148,7 @@ function renderDashboard() {
     }
     setV('dash-available', availUnitsTotal, availUnitsTotal ? '#22c55e'    : '');
     setV('dash-rented',    rented.length,  rented.length  ? '#3b82f6'    : '');
+    setV('dash-reserved',  reserved.length, reserved.length ? '#8b5cf6'  : '');
     setV('dash-returns',   returns.length, returns.length ? '#f59e0b'    : '');
     setV('dash-late',      late.length,    late.length    ? 'var(--red)' : '');
     setV('dash-unpaid',    unpaid.length,  unpaid.length  ? '#ef4444'    : '');
@@ -204,7 +225,9 @@ function openDashDrawer(type) {
 
   } else if (type === 'rented') {
     title = '🔵 Véhicules loués actuellement';
-    res.filter(function(r) { return (r.status==='active'||r.status==='confirmed') && (r.startDate||'')<=ts && (r.endDate||'')>=ts; }).forEach(function(r) {
+    // ★ CORRECTIF : phase réelle (date+heure+fuseau), plus l'ancien filtre
+    //   "date seule" qui retardait d'un jour le passage en "Loué".
+    res.filter(function(r) { return (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? ASLDB.computePhase(r) === 'active' : ((r.status==='active'||r.status==='confirmed') && (r.startDate||'')<=ts && (r.endDate||'')>=ts); }).forEach(function(r) {
       var plateColor = '';
       if (r.assignedPlate) {
         plateColor = r.assignedPlate + (r.assignedColor ? ' — ' + r.assignedColor : '');
@@ -212,19 +235,44 @@ function openDashDrawer(type) {
         var fc2 = fleet.filter(function(c){ return c.name===r.car || c.id===r.carId; })[0];
         if (fc2) plateColor = (fc2.plate||'') + (fc2.color ? ' — ' + fc2.color : '');
       }
+      // ★ Vue rapide (item 7) : uniquement la DATE+HEURE DE RETOUR, sans la
+      //   date de départ ni les autres détails (disponibles dans la fiche).
       rows.push(
         '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);gap:10px;">'
         + '<div style="min-width:0;">'
         + '<div style="font-weight:700;">' + (r.car||'') + '</div>'
         + (plateColor ? '<div style="font-size:12px;color:var(--text3);">🚗 ' + plateColor + '</div>' : '')
-        + '<div style="font-size:12px;color:var(--text3);">' + (r.client||'') + ' · ' + (r.contractRef||r.id) + '</div>'
-        + '<div style="font-size:12px;">Retour : <strong>' + (r.endDate||'') + '</strong></div>'
+        + '<div style="font-size:13px;margin-top:2px;">Retour :<br><strong>' + fmtD(r.endDate||'') + (r.endTime ? ' à ' + r.endTime : '') + '</strong></div>'
         + '</div>'
-        + '<div style="flex-shrink:0;"><button class="btn-sm ghost" data-rid="' + r.id + '" onclick="closeDashDrawer();showPage(\'rentals\',null);setTimeout(function(){viewRental(document.querySelector(\'[data-rid=' + r.id + ']\')&&document.querySelector(\'[data-rid=' + r.id + ']\').dataset.rid)},400)">Voir →</button></div>'
+        + '<div style="flex-shrink:0;"><button class="btn-sm ghost" data-rid="' + r.id + '" onclick="closeDashDrawer();showPage(\'rentals\',null);setTimeout(function(){viewRental(document.querySelector(\'[data-rid=' + r.id + ']\')&&document.querySelector(\'[data-rid=' + r.id + ']\').dataset.rid)},400)">Fiche →</button></div>'
         + '</div>'
       );
     });
     if (!rows.length) rows.push('<div style="color:var(--text3);text-align:center;padding:30px;">Aucune location active à ce jour</div>');
+
+  } else if (type === 'reserved') {
+    title = '🟣 Véhicules réservés';
+    // ★ Vue rapide (item 7) : uniquement la DATE+HEURE DE DÉPART.
+    res.filter(function(r) { return (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? ASLDB.computePhase(r) === 'reserved' : ((r.status==='confirmed'||r.status==='reserved'||r.status==='pending') && (r.startDate||'')>ts); }).forEach(function(r) {
+      var plateColor = '';
+      if (r.assignedPlate) {
+        plateColor = r.assignedPlate + (r.assignedColor ? ' — ' + r.assignedColor : '');
+      } else {
+        var fc3 = fleet.filter(function(c){ return c.name===r.car || c.id===r.carId; })[0];
+        if (fc3) plateColor = (fc3.plate||'') + (fc3.color ? ' — ' + fc3.color : '');
+      }
+      rows.push(
+        '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);gap:10px;">'
+        + '<div style="min-width:0;">'
+        + '<div style="font-weight:700;">' + (r.car||'') + '</div>'
+        + (plateColor ? '<div style="font-size:12px;color:var(--text3);">🚗 ' + plateColor + '</div>' : '')
+        + '<div style="font-size:13px;margin-top:2px;">Départ :<br><strong>' + fmtD(r.startDate||'') + (r.startTime ? ' à ' + r.startTime : '') + '</strong></div>'
+        + '</div>'
+        + '<div style="flex-shrink:0;"><button class="btn-sm primary" data-rid="' + r.id + '" onclick="closeDashDrawer();viewRes(this.dataset.rid)">Fiche →</button></div>'
+        + '</div>'
+      );
+    });
+    if (!rows.length) rows.push('<div style="color:var(--text3);text-align:center;padding:30px;">Aucune réservation en attente de départ</div>');
 
   } else if (type === 'returns') {
     title = '🟡 Retours prévus';
@@ -233,7 +281,7 @@ function openDashDrawer(type) {
     var targetDate = ts;
     if (rf.mode === 'tomorrow') {
       var tm = new Date(today.getTime() + 86400000);
-      targetDate = tm.toISOString().slice(0, 10);
+      targetDate = (typeof ASLDB !== 'undefined' && ASLDB.localDateISO) ? ASLDB.localDateISO(tm) : tm.toISOString().slice(0, 10);
     } else if (rf.mode === 'date' && rf.date) {
       targetDate = rf.date;
     }
@@ -267,17 +315,24 @@ function openDashDrawer(type) {
     if (!matches.length) rows.push('<div style="color:#22c55e;text-align:center;padding:30px;">✓ Aucun retour prévu pour cette date</div>');
 
   } else if (type === 'late') {
-    title = '🔴 Retards (date de retour dépassée)';
-    res.filter(function(r) { return (r.endDate||'')<ts && (r.status==='active'||r.status==='confirmed'); }).forEach(function(r) {
-      var diff = Math.round((today - new Date(r.endDate)) / 86400000);
+    title = '🔴 Retards (date et heure de retour dépassées)';
+    // ★ CORRECTIF : phase réelle (date+heure+fuseau) — un véhicule n'est en
+    //   retard QUE si l'heure de retour est réellement dépassée et que le
+    //   retour n'a pas été confirmé (item 6).
+    res.filter(function(r) { return (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? ASLDB.computePhase(r) === 'late' : ((r.endDate||'')<ts && (r.status==='active'||r.status==='confirmed')); }).forEach(function(r) {
+      var end = new Date((r.endDate||'') + 'T' + (r.endTime || '12:00'));
+      var diffMs = new Date() - end;
+      var diff = Math.max(0, Math.round(diffMs / 3600000));
+      var diffLabel = diff >= 24 ? (Math.floor(diff/24) + ' j ' + (diff%24) + ' h') : (diff + ' h');
       rows.push(
         '<div style="padding:12px 0;border-bottom:1px solid var(--border);">' +
-        '<div style="font-weight:700;color:var(--red);">' + (r.car||'') + ' — ' + diff + ' jour(s) de retard</div>' +
-        '<div style="font-size:12px;color:var(--text3);">' + (r.client||'') + ' — devait revenir le ' + (r.endDate||'') + '</div>' +
+        '<div style="font-weight:700;color:var(--red);">' + (r.car||'') + ' — ' + diffLabel + ' de retard</div>' +
+        '<div style="font-size:12px;color:var(--text3);">' + (r.client||'') + ' — devait revenir le ' + fmtD(r.endDate||'') + (r.endTime ? ' à ' + r.endTime : '') + '</div>' +
         '<div style="font-size:12px;margin-bottom:8px;">' + (r.phone||'') + '</div>' +
         '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
         '<button class="btn-sm primary" data-rid="' + r.id + '" onclick="dashConfirmReturn(this.dataset.rid)">Confirmer retour</button>' +
         '<button class="btn-sm ghost" data-rid="' + r.id + '" onclick="dashExtend(this.dataset.rid)">Prolonger</button>' +
+        '<button class="btn-sm ghost" style="color:var(--red);" data-rid="' + r.id + '" onclick="cancelRental(this.dataset.rid);setTimeout(function(){openDashDrawer(\'late\')},60)">Annuler</button>' +
         (r.phone ? '<a href="tel:'+r.phone+'" class="btn-sm ghost" style="text-decoration:none;">Appeler</a>' : '') +
         '</div></div>'
       );
@@ -472,9 +527,13 @@ function renderRentals() {
     var filter = (document.getElementById('rentals-filter') && document.getElementById('rentals-filter').value) || 'active';
     var q = ((document.getElementById('rentals-search') && document.getElementById('rentals-search').value) || '').toLowerCase().trim();
     var ts = todayStr();
+    function phaseOf(r) { return (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? ASLDB.computePhase(r) : r.status; }
     var rows;
     if (filter === 'active') {
-      rows = res.filter(function(r) { return r.status === 'active' || r.status === 'confirmed'; });
+      // ★ CORRECTIF : phase réelle — une réservation 'confirmed' mais pas
+      //   encore démarrée (départ futur) n'est PAS une location "en cours" ;
+      //   elle reste sur la page Réservations tant qu'elle n'a pas démarré.
+      rows = res.filter(function(r) { return phaseOf(r) === 'active' || phaseOf(r) === 'late'; });
     } else if (filter === 'completed') {
       rows = res.filter(function(r) { return r.status === 'completed'; });
     } else {
@@ -495,7 +554,7 @@ function renderRentals() {
     }
     tbody.innerHTML = rows.map(function(r) {
       var total = Number(r.amount)||0, paid = Number(r.paid)||0, reste = Math.max(0, total-paid);
-      var isLate = (r.endDate||'') < ts && (r.status==='active'||r.status==='confirmed');
+      var isLate = phaseOf(r) === 'late';
       var payBadge = reste > 0
         ? '<span class="badge badge-red">● ' + fmtMAD(reste) + ' restant</span>'
         : '<span class="badge badge-green">● Soldé</span>';
@@ -553,6 +612,12 @@ function viewRental(id) {
     '</div>' +
 
     '<div style="font-size:22px;font-weight:800;color:var(--red);margin-bottom:14px;">' + fmtMAD(total) + '</div>' +
+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">' +
+    '<button class="topbar-btn primary" data-rid="' + r.id + '" onclick="terminerLocation(this.dataset.rid)">✅ Confirmer la récupération</button>' +
+    '<button class="topbar-btn secondary" data-rid="' + r.id + '" onclick="prolongerLocation(this.dataset.rid)">📅 Prolonger</button>' +
+    '<button class="topbar-btn secondary" style="color:var(--red);border-color:var(--red);" data-rid="' + r.id + '" onclick="cancelRental(this.dataset.rid)">❌ Annuler la location</button>' +
+    '</div>' +
 
     '<div style="background:rgba(18,22,30,.04);border-radius:10px;padding:14px;">' +
     '<div style="font-weight:700;margin-bottom:10px;color:var(--red);">Paiement</div>' +
@@ -628,20 +693,32 @@ function prolongerLocation(id) {
   if (!r) return;
   var jours = parseInt(prompt('Nombre de jours supplémentaires :', '1'));
   if (!jours || jours < 1) return;
-  var newEnd = new Date(r.endDate); newEnd.setDate(newEnd.getDate() + jours);
-  var newEndStr = newEnd.toISOString().slice(0,10);
+  // ★ Nouvelle heure de retour : conservée par défaut, modifiable (demande explicite :
+  //   pouvoir changer la date ET l'heure de retour lors d'une prolongation).
+  var newTime = prompt('Heure de retour (HH:MM) :', r.endTime || '18:00');
+  if (newTime === null) return;
+  if (!/^\d{1,2}:\d{2}$/.test(newTime)) newTime = r.endTime || '18:00';
+  // Arithmétique de date robuste (indépendante du fuseau) : on part des
+  // composants Y/M/D locaux du endDate existant plutôt que de reparser la
+  // chaîne via `new Date(r.endDate)` (qui serait interprétée en UTC).
+  var parts = String(r.endDate || '').split('-').map(Number);
+  var base = new Date(parts[0] || 1970, (parts[1] || 1) - 1, parts[2] || 1);
+  base.setDate(base.getDate() + jours);
+  var newEndStr = (typeof ASLDB !== 'undefined' && ASLDB.localDateISO) ? ASLDB.localDateISO(base)
+    : (base.getFullYear() + '-' + String(base.getMonth() + 1).padStart(2, '0') + '-' + String(base.getDate()).padStart(2, '0'));
   var ppu = r.pricePerDay || Math.round((Number(r.amount)||0) / Math.max(1, r.days||1));
   var supplement = ppu * jours;
   var newTotal = (Number(r.amount)||0) + supplement;
   var newDays  = (r.days||0) + jours;
-  if (!confirm('Prolongation de ' + jours + ' j\nNouvelle date de retour : ' + newEndStr + '\nSupplément : ' + fmtMAD(supplement) + '\nNouveau total : ' + fmtMAD(newTotal) + '\n\nConfirmer ?')) return;
+  if (!confirm('Prolongation de ' + jours + ' j\nNouvelle date de retour : ' + newEndStr + ' à ' + newTime + '\nSupplément : ' + fmtMAD(supplement) + '\nNouveau total : ' + fmtMAD(newTotal) + '\n\nConfirmer ?')) return;
   if (typeof ASLDB !== 'undefined' && ASLDB.updateReservation) {
-    ASLDB.updateReservation(id, { endDate: newEndStr, days: newDays, amount: newTotal, extended: true });
+    ASLDB.updateReservation(id, { endDate: newEndStr, endTime: newTime, days: newDays, amount: newTotal, extended: true });
   }
   if (typeof reloadData === 'function') reloadData();
   renderRentals(); renderDashboard();
   if (typeof renderPayments === 'function') renderPayments();
-  showToast('Prolongation enregistrée — retour le ' + newEndStr + ' ✓');
+  if (typeof closeRentalDrawer === 'function') closeRentalDrawer();
+  showToast('Prolongation enregistrée — retour le ' + newEndStr + ' à ' + newTime + ' ✓');
 }
 
 function terminerLocation(id) {
@@ -652,12 +729,76 @@ function terminerLocation(id) {
     if (r.carId && r.assignedPlate && typeof ASLDB.releaseUnit === 'function') {
       ASLDB.releaseUnit(r.carId, r.assignedPlate);
     }
-    if (ASLDB.updateReservation) ASLDB.updateReservation(id, { status: 'completed' });
+    if (ASLDB.updateReservation) {
+      // ★ Enregistre le moment RÉEL du retour (peut différer de la date
+      //   prévue si le client rend le véhicule en avance ou en retard) —
+      //   l'historique reflète ainsi ce qui s'est réellement passé.
+      var now = new Date();
+      var actualEndDate = (typeof ASLDB !== 'undefined' && ASLDB.localDateISO) ? ASLDB.localDateISO(now) : now.toISOString().slice(0,10);
+      var actualEndTime = (typeof ASLDB !== 'undefined' && ASLDB.localTimeHM) ? ASLDB.localTimeHM(now) : (String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0'));
+      ASLDB.updateReservation(id, { status: 'completed', endDate: actualEndDate, endTime: actualEndTime, plannedEndDate: r.endDate, plannedEndTime: r.endTime || '' });
+    }
   }
   if (typeof reloadData === 'function') reloadData();
   renderRentals(); renderDashboard();
   if (typeof renderFleetPage === 'function') renderFleetPage();
+  if (typeof closeRentalDrawer === 'function') closeRentalDrawer();
   showToast('Location clôturée — véhicule libéré ✓');
+}
+
+/* ---- ANNULATION (item 5) ----
+   Deux cas distincts, intégrés directement dans les fiches existantes :
+   1. Annuler une RÉSERVATION (avant que le client ne récupère le véhicule) :
+      le statut passe à 'cancelled', l'unité éventuellement pré-réservée
+      est libérée, le véhicule redevient immédiatement disponible.
+   2. Annuler/clôturer une LOCATION en cours (retour anticipé ou annulation
+      après remise du véhicule) : mêmes effets que "Confirmer la
+      récupération", mais explicitement nommé "annulation" et enregistre
+      la date/heure réelle de restitution (souvent avant la date prévue). */
+function cancelReservation(id) {
+  var res = aslRes();
+  var r = res.find(function(x) { return String(x.id) === String(id); });
+  if (!r) return;
+  if (!confirm('❌ Annuler la réservation « ' + (r.contractRef||r.id) + ' » ?\n\nLe véhicule redeviendra immédiatement disponible.')) return;
+  if (typeof ASLDB !== 'undefined') {
+    if (r.carId && r.assignedPlate && typeof ASLDB.releaseUnit === 'function') {
+      ASLDB.releaseUnit(r.carId, r.assignedPlate);
+    }
+    if (ASLDB.updateReservation) {
+      ASLDB.updateReservation(id, { status: 'cancelled', cancelledAt: new Date().toISOString() });
+    }
+  }
+  if (typeof reloadData === 'function') reloadData();
+  renderRentals(); renderDashboard();
+  if (typeof renderAllReservations === 'function') renderAllReservations();
+  if (typeof renderFleetPage === 'function') renderFleetPage();
+  updateBadges();
+  if (typeof closeModal === 'function') closeModal();
+  showToast('Réservation annulée — véhicule disponible ✓');
+}
+
+function cancelRental(id) {
+  var res = aslRes();
+  var r = res.find(function(x) { return String(x.id) === String(id); });
+  if (!r) return;
+  if (!confirm('❌ Annuler / clôturer cette location « ' + (r.contractRef||r.id) + ' » ?\n\nLa date et l\'heure réelles de restitution seront enregistrées, et le véhicule redeviendra immédiatement disponible.')) return;
+  if (typeof ASLDB !== 'undefined') {
+    if (r.carId && r.assignedPlate && typeof ASLDB.releaseUnit === 'function') {
+      ASLDB.releaseUnit(r.carId, r.assignedPlate);
+    }
+    if (ASLDB.updateReservation) {
+      var now = new Date();
+      var actualEndDate = (typeof ASLDB !== 'undefined' && ASLDB.localDateISO) ? ASLDB.localDateISO(now) : now.toISOString().slice(0,10);
+      var actualEndTime = (typeof ASLDB !== 'undefined' && ASLDB.localTimeHM) ? ASLDB.localTimeHM(now) : (String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0'));
+      ASLDB.updateReservation(id, { status: 'completed', endDate: actualEndDate, endTime: actualEndTime, plannedEndDate: r.endDate, plannedEndTime: r.endTime || '', earlyOrCancelled: true });
+    }
+  }
+  if (typeof reloadData === 'function') reloadData();
+  renderRentals(); renderDashboard();
+  if (typeof renderFleetPage === 'function') renderFleetPage();
+  updateBadges();
+  if (typeof closeRentalDrawer === 'function') closeRentalDrawer();
+  showToast('Location annulée / clôturée — véhicule disponible ✓');
 }
 
 /* Depuis le panneau « En retard » du tableau de bord : confirmer le retour
@@ -803,6 +944,17 @@ function _buildNewLocationModal() {
     '</div>' +
     '<div class="form-group"><label class="form-label">Lieu de prise en charge</label>' +
     '<select class="form-select" id="nl-pickup"><option>Aéroport Marrakech (RAK)</option><option>Centre-Ville</option><option>Gare</option><option>Hôtel</option></select></div>' +
+    '<div class="form-group"><label class="form-label">Origine du client</label>' +
+    '<select class="form-select" id="nl-source">' +
+    '<option value="manual">Réservation manuelle</option>' +
+    '<option value="phone">Téléphone</option>' +
+    '<option value="whatsapp">WhatsApp</option>' +
+    '<option value="online">Site Web</option>' +
+    '<option value="partner">Partenaire</option>' +
+    '<option value="gbp">Google Business Profile</option>' +
+    '<option value="facebook">Facebook</option>' +
+    '<option value="instagram">Instagram</option>' +
+    '</select></div>' +
     '<div style="background:rgba(18,22,30,.04);border-radius:10px;padding:14px;">' +
     '<div style="font-weight:700;margin-bottom:10px;color:var(--red);">Paiement</div>' +
     '<div class="form-row">' +
@@ -945,7 +1097,7 @@ function _saveNewLocation() {
       paymentStatus: payStatus, paymentMode: mode,
       startDate: start, endDate: end,
       pickup: (document.getElementById('nl-pickup')&&document.getElementById('nl-pickup').value)||'',
-      source: 'manual', type: 'location', status: 'active',
+      source: (document.getElementById('nl-source')&&document.getElementById('nl-source').value)||'manual', type: 'location', status: 'active',
       subleaseId: subleaseId, finalClient: subleaseId ? finalClientName : '',
       notes: (document.getElementById('nl-notes')&&document.getElementById('nl-notes').value)||'',
       docs: (typeof collectDocs==='function' ? collectDocs('nl-doc-permis','nl-doc-identity') : {})
@@ -1017,6 +1169,10 @@ function viewRes(id) {
     _rCell('Statut',       statusBadge(r.status)) +
     '</div>' +
     '<div style="font-size:22px;font-weight:800;color:var(--red);margin:12px 0;">' + fmtMAD(total) + '</div>' +
+    ((r.status !== 'cancelled' && r.status !== 'completed') ?
+      '<div style="margin-bottom:14px;">' +
+      '<button class="topbar-btn secondary" style="color:var(--red);border-color:var(--red);" data-rid="' + r.id + '" onclick="cancelReservation(this.dataset.rid)">❌ Annuler la réservation</button>' +
+      '</div>' : '') +
     '<div style="background:rgba(18,22,30,.04);border-radius:10px;padding:14px;">' +
     '<div style="font-weight:700;margin-bottom:10px;color:var(--red);">Paiement</div>' +
     '<div class="form-row">' +
@@ -1079,8 +1235,8 @@ function vrPayCalc(total) {
   var style = document.createElement('style');
   style.textContent = [
     /* 5-card grid responsive */
-    '#dash-cards-grid { grid-template-columns: repeat(6,1fr) !important; }',
-    '@media(max-width:1100px){ #dash-cards-grid { grid-template-columns: repeat(3,1fr) !important; } }',
+    '#dash-cards-grid { grid-template-columns: repeat(7,1fr) !important; }',
+    '@media(max-width:1200px){ #dash-cards-grid { grid-template-columns: repeat(4,1fr) !important; } }',
     '@media(max-width:580px){ #dash-cards-grid { grid-template-columns: repeat(2,1fr) !important; } }',
     /* Hover sur cartes */
     '.stat-card[onclick] { transition: transform .15s, box-shadow .15s, border-color .15s; }',

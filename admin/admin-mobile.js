@@ -21,7 +21,13 @@
   function isMobile() { return window.innerWidth <= 768; }
   function money(n) { n = Math.round(Number(n) || 0); return n.toLocaleString('fr-FR').replace(/\u202f/g, ' ') + ' MAD'; }
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
-  function todayISO() { var d = new Date(); d.setHours(0, 0, 0, 0); return d.toISOString().slice(0, 10); }
+  function todayISO() {
+    // ★ CORRECTIF FUSEAU HORAIRE (voir data.js localDateISO / todayStr desktop
+    //   pour le détail) : ne plus passer par toISOString() (UTC).
+    if (typeof ASLDB !== 'undefined' && ASLDB.localDateISO) return ASLDB.localDateISO();
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
   function plusDaysISO(n) { var d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); }
 
   function fleet() { try { return (ASLDB.getFleet && ASLDB.getFleet()) || []; } catch (e) { return []; } }
@@ -104,17 +110,23 @@
       if (m.vt_next) { var dv = Math.round((new Date(m.vt_next) - todayMs) / 86400000); if (dv <= 7) vt++; }
       if (m.reminder_next && new Date(m.reminder_next).getTime() <= todayMs + 86400000) vid++;
     });
+    // ★ CORRECTIF (item 1/3/6, parité Mobile/Desktop) : phase réelle
+    //   calculée sur date+heure+fuseau réels via ASLDB.computePhase, au lieu
+    //   des anciennes comparaisons de chaînes de date qui retardaient d'un
+    //   jour le passage "Réservé" → "Loué" (bug de fuseau horaire, voir
+    //   todayISO ci-dessus) et ignoraient totalement l'heure.
+    function phase(x) { return (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? ASLDB.computePhase(x) : x.status; }
     return {
       available: f.reduce(function (n, c) {
         var ma = (typeof ASLDB !== 'undefined' && ASLDB.modelAvailability) ? ASLDB.modelAvailability(c) : null;
         return n + (ma ? ma.available : (c.status === 'available' ? 1 : 0));
       }, 0),
-      // Loués = réservations actives/confirmées en cours aujourd'hui (logique desktop)
-      rented: r.filter(function (x) { return (x.status === 'active' || x.status === 'confirmed') && (x.startDate || '') <= ts && (x.endDate || '') >= ts; }).length,
+      // Loués = réservations dont le départ est passé/atteint et le retour pas encore dépassé
+      rented: r.filter(function (x) { return phase(x) === 'active'; }).length,
       // Réservés = réservations futures non encore commencées (à venir)
-      reserved: r.filter(function (x) { return (x.status === 'confirmed' || x.status === 'reserved' || x.status === 'pending') && (x.startDate || '') > ts; }).length,
+      reserved: r.filter(function (x) { return phase(x) === 'reserved'; }).length,
       returnsToday: r.filter(function (x) { return (x.endDate || '').slice(0, 10) === ts && x.status !== 'cancelled'; }).length,
-      late: r.filter(function (x) { return (x.endDate || '') < ts && (x.status === 'active' || x.status === 'confirmed'); }).length,
+      late: r.filter(function (x) { return phase(x) === 'late'; }).length,
       unpaid: r.filter(function (x) { return x.status !== 'cancelled' && (Number(x.amount) || 0) > (Number(x.paid) || 0); }).length,
       // Activités du jour
       entrants: r.filter(function (x) { return (x.endDate || '').slice(0, 10) === ts && x.status !== 'cancelled'; }).length,
@@ -452,7 +464,10 @@
   function renderReservations() {
     var host = document.getElementById('ma-reservations');
     if (!host) return;
-    var list = reservations().filter(function (r) { return r.status === 'pending' || r.status === 'confirmed' || r.status === 'reserved'; })
+    // ★ CORRECTIF (item 3, parité Desktop) : phase réelle plutôt que statut
+    //   brut — dès qu'une réservation démarre réellement (devient "louée"),
+    //   elle disparaît automatiquement de cette liste.
+    var list = reservations().filter(function (r) { return (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? ASLDB.computePhase(r) === 'reserved' : (r.status === 'pending' || r.status === 'confirmed' || r.status === 'reserved'); })
       .sort(function (a, b) { return (b.createdAt || '').localeCompare(a.createdAt || ''); });
     host.innerHTML = list.length ? list.map(function (r) { return resCard(r, 'reservation'); }).join('') : '<div class="ma-empty">Aucune réservation en cours.</div>';
   }
@@ -461,8 +476,10 @@
   function renderRentals() {
     var host = document.getElementById('ma-rentals');
     if (!host) return;
-    var ts = todayISO();
-    var list = reservations().filter(function (r) { return (r.status === 'active' || r.status === 'confirmed') && (r.startDate || '') <= ts && (r.endDate || '') >= ts; });
+    // ★ CORRECTIF (item 1/6, parité Desktop) : phase réelle (date+heure+
+    //   fuseau réels) au lieu de la comparaison de chaînes de date qui
+    //   retardait d'un jour le passage "Réservé" → "Loué".
+    var list = reservations().filter(function (r) { return (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? (ASLDB.computePhase(r) === 'active' || ASLDB.computePhase(r) === 'late') : ((r.status === 'active' || r.status === 'confirmed')); });
     host.innerHTML = list.length ? list.map(function (r) { return resCard(r, 'rental'); }).join('') : '<div class="ma-empty">Aucune location en cours aujourd\'hui.</div>';
   }
 
@@ -489,6 +506,7 @@
         + '<button class="ma-act-btn" onclick="maRentalFiche(' + idStr + ')">' + ic('eye') + 'Fiche</button>'
         + '<button class="ma-act-btn" onclick="maExtend(' + idStr + ')">' + ic('plus') + 'Prolonger</button>'
         + '<button class="ma-act-btn ok" onclick="maReturnVehicle(' + idStr + ')">' + ic('returns') + 'Retour</button>'
+        + '<button class="ma-act-btn danger" onclick="maCancelRental(' + idStr + ')">' + ic('x') + 'Annuler</button>'
         + '</div></div>';
     }
 
@@ -565,6 +583,11 @@
     refreshSoon();
   };
   window.maReturnVehicle = function (id) { if (typeof window.terminerLocation === 'function') window.terminerLocation(id); refreshSoon(); };
+  /* ★ Annuler / clôturer anticipativement une location EN COURS (délègue à
+     la même fonction que Desktop — enregistre la date/heure réelle de
+     restitution, libère le véhicule). Distincte de maCancelRes (qui annule
+     une réservation pas encore démarrée). */
+  window.maCancelRental = function (id) { if (typeof window.cancelRental === 'function') window.cancelRental(id); refreshSoon(); };
   window.maExtend = function (id) {
     if (typeof window.prolongerLocation === 'function') { window.prolongerLocation(id); return; }
     if (typeof window.prolongerReservation === 'function') window.prolongerReservation(id);

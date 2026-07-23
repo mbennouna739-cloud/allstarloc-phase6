@@ -595,8 +595,8 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
 
     <!-- ===== DASHBOARD ===== -->
     <div id="page-dashboard" class="page active">
-      <!-- 5 cartes cliquables -->
-      <div class="stats-grid" id="dash-cards-grid" style="grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:22px;">
+      <!-- 7 cartes cliquables -->
+      <div class="stats-grid" id="dash-cards-grid" style="grid-template-columns:repeat(7,1fr);gap:14px;margin-bottom:22px;">
 
         <div class="stat-card" onclick="openDashDrawer('available')" style="cursor:pointer;border:2px solid transparent;transition:.2s;">
           <div class="stat-header"><div class="stat-icon" style="background:rgba(34,197,94,.12);color:#22c55e;">
@@ -614,6 +614,15 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
           <div class="stat-val" id="dash-rented" style="color:#3b82f6;">0</div>
           <div class="stat-label">Loués</div>
           <div style="font-size:10px;color:#3b82f6;margin-top:4px;font-weight:600;">Voir la liste →</div>
+        </div>
+
+        <div class="stat-card" onclick="openDashDrawer('reserved')" style="cursor:pointer;border:2px solid transparent;transition:.2s;">
+          <div class="stat-header"><div class="stat-icon" style="background:rgba(139,92,246,.12);color:#8b5cf6;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          </div></div>
+          <div class="stat-val" id="dash-reserved" style="color:#8b5cf6;">0</div>
+          <div class="stat-label">Réservés</div>
+          <div style="font-size:10px;color:#8b5cf6;margin-top:4px;font-weight:600;">Voir la liste →</div>
         </div>
 
         <div class="stat-card" onclick="window._returnsFilter=null;openDashDrawer('returns')" style="cursor:pointer;border:2px solid transparent;transition:.2s;">
@@ -691,18 +700,19 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
     <div id="page-reservations" class="page">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
         <div class="search-bar" style="flex:1;"><span style="display:flex;align-items:center;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span><input placeholder="Rechercher par nom, ref, voiture..."></div>
-        <select class="form-select" style="width:160px;" onchange="filterReservations(this.value)">
-          <option value="all">Tous les statuts</option>
-          <option value="pending">En attente</option>
-          <option value="confirmed">Confirmées</option>
-          <option value="active">En cours</option>
+        <select class="form-select" style="width:190px;" onchange="filterReservations(this.value)">
+          <option value="reserved" selected>Réservées (à venir)</option>
+          <option value="pending">En attente de confirmation</option>
+          <option value="active">En cours (louées)</option>
+          <option value="late">En retard</option>
           <option value="completed">Terminées</option>
           <option value="cancelled">Annulées</option>
+          <option value="all">Tous les dossiers (historique)</option>
         </select>
       </div>
       <div class="table-card">
         <div class="table-header">
-          <div class="table-title">Toutes les réservations</div>
+          <div class="table-title">Réservations</div>
           <div class="table-actions">
             <button class="btn-sm ghost"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg> Exporter CSV</button>
             <button class="btn-sm primary" onclick="openModal('new-reservation')">+ Nouvelle</button>
@@ -769,7 +779,7 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
       <div class="table-card">
         <div class="table-header"><div class="table-title">Base clients</div><button class="btn-sm ghost"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg> Exporter</button></div>
         <table>
-          <thead><tr><th>Client</th><th>Email</th><th>Téléphone</th><th>Nationalité</th><th>Réservations</th><th>Total dépensé</th><th>Montant impayé</th><th>Dernière résa</th></tr></thead>
+          <thead><tr><th>Client</th><th>Email</th><th>Téléphone</th><th>Nationalité</th><th>Origine</th><th>Réservations</th><th>Total dépensé</th><th>Montant impayé</th><th>Dernière résa</th></tr></thead>
           <tbody id="customers-table"></tbody>
         </table>
       </div>
@@ -1182,33 +1192,6 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
           </div>
         </div>
 
-        <!-- ===== SAUVEGARDE COMPLÈTE / RESTAURATION EXACTE ===== -->
-        <div class="table-card">
-          <div class="table-header"><div class="table-title">&#128190; Sauvegarde &amp; restauration complète</div></div>
-          <div style="padding:20px;">
-            <div style="background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.2);border-radius:10px;padding:14px;margin-bottom:16px;font-size:13px;line-height:1.5;">
-              <strong style="color:var(--blue);">📦 Sauvegarde complète :</strong> télécharge un fichier JSON contenant l'intégralité de l'état du système — véhicules, réservations, employés, marketing/FAQ/blog, sous-locations, charges, entretien, documents, LLD, archives. Gardez-le en lieu sûr.<br><br>
-              <strong style="color:var(--red);">♻ Restauration exacte :</strong> à partir d'un fichier de sauvegarde, <u>remplace intégralement</u> l'état actuel — aucune fusion, aucun mélange avec les données présentes. Cette action est irréversible : faites une sauvegarde de l'état actuel juste avant si vous voulez pouvoir revenir en arrière.
-            </div>
-            <div style="display:flex;gap:12px;flex-wrap:wrap;">
-              <button class="topbar-btn" style="background:var(--blue);color:#fff;" onclick="doExportFullBackup()">&#128190; Télécharger une sauvegarde complète</button>
-              <button class="topbar-btn" style="background:var(--red);color:#fff;" onclick="document.getElementById('backup-restore-file').click()">&#9888; Restaurer une sauvegarde…</button>
-              <input type="file" id="backup-restore-file" accept="application/json,.json" style="display:none" onchange="handleBackupRestoreFile(this)">
-            </div>
-          </div>
-        </div>
-
-        <!-- ===== RÉINITIALISATION DES DONNÉES DE TEST (avant mise en production) ===== -->
-        <div class="table-card">
-          <div class="table-header"><div class="table-title">&#129529; Réinitialisation des données de test</div></div>
-          <div style="padding:20px;">
-            <div style="background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.25);border-radius:10px;padding:14px;margin-bottom:16px;font-size:13px;line-height:1.5;">
-              À utiliser <strong>une seule fois, juste avant la mise en production</strong>, pour effacer les réservations, locations et paiements de test. <strong>Ne touche jamais</strong> à la flotte, aux tarifs, aux employés, ni à la configuration (marketing, FAQ, blog). Différent de « Clôturer la période » : n'archive pas commercialement — une sauvegarde complète est prise automatiquement juste avant, en filet de sécurité téléchargeable.
-            </div>
-            <button class="topbar-btn" style="background:#d97706;color:#fff;" onclick="confirmResetTestData()">&#129529; Réinitialiser les données de test</button>
-          </div>
-        </div>
-
         <!-- ===== ARCHIVES ===== -->
         <div class="table-card">
           <div class="table-header"><div class="table-title">&#128230; Archives des périodes clôturées</div></div>
@@ -1485,11 +1468,28 @@ function renderDashboard() {
 }
 
 // ==================== RESERVATIONS ====================
-function renderAllReservations(filter='all') {
-  const list = filter==='all' ? RESERVATIONS : RESERVATIONS.filter(r=>r.status===filter);
+function renderAllReservations(filter) {
+  filter = filter || 'reserved';
+  // ★ CORRECTIF (item 3) : ne plus utiliser la variable globale RESERVATIONS,
+  //   qui n'était rafraîchie que lors d'un reloadData() explicite et pouvait
+  //   afficher une liste périmée pendant que le compteur (badge-res, calculé
+  //   ailleurs à partir des données réelles) montrait autre chose. On relit
+  //   systématiquement l'état réel à chaque affichage.
+  const all = (typeof ASLDB !== 'undefined' && ASLDB.getReservations) ? ASLDB.getReservations() : RESERVATIONS;
+  function phaseOf(r) { return (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? ASLDB.computePhase(r) : r.status; }
+  // ★ CORRECTIF (item 3) : la page "Réservations" n'affiche par défaut QUE
+  //   les véhicules réellement "Réservé" (phase calculée sur date+heure+
+  //   fuseau réels) — dès qu'une réservation devient une location (phase
+  //   'active'), elle disparaît automatiquement de cette page.
+  let list;
+  if (filter === 'reserved') list = all.filter(r => phaseOf(r) === 'reserved');
+  else if (filter === 'active') list = all.filter(r => phaseOf(r) === 'active');
+  else if (filter === 'late') list = all.filter(r => phaseOf(r) === 'late');
+  else if (filter === 'all') list = all; // vue explicite "tous les dossiers" (historique complet)
+  else list = all.filter(r => r.status === filter); // pending / completed / cancelled : statut brut
   const tbody = document.getElementById('all-reservations');
   if (!list.length) {
-    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--text3);">Aucune réservation${filter!=='all'?' avec ce statut':''}.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--text3);">Aucune réservation${filter!=='all'?' dans cette catégorie':''}.</td></tr>`;
     return;
   }
   tbody.innerHTML = list.map(r => `
@@ -2288,8 +2288,17 @@ function openModal(type) {
           <option>Aéroport Marrakech (RAK)</option><option>Centre-Ville</option><option>Gare</option><option>Hôtel</option>
         </select>
       </div>
-      <div class="form-group"><label class="form-label">Source</label>
-        <select class="form-select" id="nr-source"><option value="phone">Téléphone</option><option value="whatsapp">WhatsApp</option><option value="online">En ligne</option></select>
+      <div class="form-group"><label class="form-label">Origine du client</label>
+        <select class="form-select" id="nr-source">
+          <option value="manual">Réservation manuelle</option>
+          <option value="phone">Téléphone</option>
+          <option value="whatsapp">WhatsApp</option>
+          <option value="online">Site Web</option>
+          <option value="partner">Partenaire</option>
+          <option value="gbp">Google Business Profile</option>
+          <option value="facebook">Facebook</option>
+          <option value="instagram">Instagram</option>
+        </select>
       </div>
       <div class="form-group" style="background:rgba(18,22,30,.03);border-radius:10px;padding:14px;">
         <label class="form-label" style="color:var(--red);">Paiement</label>

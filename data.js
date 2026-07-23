@@ -556,6 +556,25 @@
      préparation du véhicule + absorption d'un éventuel retard. */
   const AVAIL_MARGIN_H = 3;
 
+  /* ============================================================
+     ★ CORRECTIF FUSEAU HORAIRE — À utiliser PARTOUT à la place de
+     `new Date().toISOString().slice(0,10)` pour obtenir "la date locale
+     d'aujourd'hui". `toISOString()` convertit toujours en UTC : dans un
+     fuseau en avance sur UTC (Maroc UTC+1, Europe...), minuit local tombe
+     encore la veille en UTC, ce qui décalait "aujourd'hui" d'un jour en
+     arrière — retardant d'une journée entière le passage "Réservé" →
+     "Loué", et faussant "retours aujourd'hui", "en retard", etc.
+     ============================================================ */
+  function localDateISO(d) {
+    d = d || new Date();
+    var y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + day;
+  }
+  function localTimeHM(d) {
+    d = d || new Date();
+    return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  }
+
   /* Convertit date ISO (YYYY-MM-DD) + heure (HH:MM) en objet Date.
      Heure par défaut 12:00 si absente. */
   function _toDateTime(dateISO, timeStr, defTime) {
@@ -580,6 +599,41 @@
   /* Deux intervalles datetime se chevauchent-ils ? */
   function _dtOverlap(aStart, aEnd, bStart, bEnd) {
     return aStart < bEnd && bStart < aEnd;
+  }
+
+  /* ============================================================
+     ★ SOURCE UNIQUE — Phase réelle d'une réservation, à un instant donné.
+     ------------------------------------------------------------
+     Remplace les anciennes comparaisons "date seule" (r.startDate <= ts)
+     qui ignoraient l'heure ET souffraient d'un bug de fuseau horaire
+     (todayStr()/todayISO() utilisaient toISOString(), qui convertit en UTC
+     et décale la date d'un jour dans tout fuseau en avance sur UTC — dont
+     le Maroc — retardant d'une journée le passage "Réservé" → "Loué").
+
+     Ici, on compare de VRAIS instants (date + heure + fuseau local du
+     navigateur, via _toDateTime) au moment présent réel (new Date()) :
+       - avant le départ (heure comprise)         → 'reserved'
+       - après le départ, avant/à l'heure de retour → 'active'  (loué)
+       - après l'heure de retour, retour non confirmé → 'late'
+     Les statuts terminaux (annulée/terminée) sont retournés tels quels.
+     Utilisée PARTOUT (Desktop, Mobile, site) pour qu'aucune page ne puisse
+     diverger sur la définition de "loué"/"réservé"/"en retard".
+     ============================================================ */
+  function computePhase(r, now) {
+    if (!r) return null;
+    if (r.status === 'cancelled') return 'cancelled';
+    if (r.status === 'completed') return 'completed';
+    // 'pending' = demande en attente de confirmation admin (ex. site client) :
+    // ne devient jamais automatiquement "louée" ni "en retard" tant qu'un
+    // administrateur ne l'a pas confirmée (passage à 'confirmed'/'active').
+    if (r.status === 'pending') return 'reserved';
+    now = now || new Date();
+    var start = _toDateTime(r.startDate, r.startTime, '10:00');
+    var end = _toDateTime(r.endDate, r.endTime, '10:00');
+    if (!start || !end) return 'reserved';
+    if (now < start) return 'reserved';   // pas encore récupéré : réservation à venir
+    if (now > end) return 'late';         // heure de retour dépassée, retour non confirmé
+    return 'active';                      // en cours : le véhicule est loué maintenant
   }
 
   /* Réservations actives (confirmées/en cours/en attente) pour un véhicule donné. */
@@ -873,109 +927,6 @@
     return true;
   }
 
-  /* ============================================================
-     ★ REFONTE — SAUVEGARDE COMPLÈTE / RESTAURATION EXACTE / RESET TEST
-     ------------------------------------------------------------
-     Trois opérations clairement séparées, qui ne se substituent PAS à
-     closePeriod()/restoreArchive() (clôture métier récurrente / réintégration
-     d'une période archivée dans l'actif) mais couvrent des besoins différents :
-
-     1. exportFullBackup()  : instantané EXHAUSTIF de tout l'état KV serveur
-        (flotte, réservations, employés, marketing/FAQ/blog, sous-locations,
-        charges, entretien, documents, LLD, fonctionnalités custom, archives).
-     2. restoreFullBackup() : REMPLACE intégralement chaque document par celui
-        de la sauvegarde fournie (jamais de fusion), puis purge la totalité
-        du cache local de CET appareil avant de retirer l'état serveur — afin
-        qu'aucune donnée locale précédente ne puisse se mélanger au résultat.
-     3. resetTestData()     : vide UNIQUEMENT les données opérationnelles de
-        test (réservations, charges/paiements) — jamais la flotte, les
-        tarifs, les employés ni la configuration — après avoir pris une
-        sauvegarde complète automatique (filet de sécurité téléchargeable).
-        Contrairement à closePeriod(), n'archive pas commercialement (pas de
-        nom de période, n'entre pas dans la liste des archives métier).
-     ============================================================ */
-
-  /* ---------- 1. Sauvegarde complète (export) ---------- */
-  async function exportFullBackup() {
-    if (!remoteEnabled) throw new Error('Synchronisation serveur désactivée (mode local) — sauvegarde impossible.');
-    const out = await apiFetch('/backup/export', { method: 'GET', headers: headers(true) });
-    if (!out || !out.backup) throw new Error('Réponse serveur invalide.');
-    return out.backup; // { version, exportedAt, data: { top:{...}, misc:{...} } }
-  }
-
-  /* ---------- Purge totale du cache local (appelée après restauration) ---------- */
-  function hardResetLocalCache() {
-    const keys = [
-      KEY_FLEET, KEY_RES, KEY_REV_F, KEY_REV_R,
-      KEY_PEND_F, KEY_PEND_RA, KEY_PEND_RU, KEY_PEND_RESET, KEY_RESET_SEEN,
-      KEY_CHARGES, KEY_ARCHIVES
-    ];
-    keys.forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
-    Object.keys(MISC_MAP).forEach(function (name) {
-      try { localStorage.removeItem(MISC_MAP[name]); } catch (e) {}
-      try { localStorage.removeItem(miscDirtyKey(name)); } catch (e) {}
-      try { localStorage.removeItem(miscRevKey(name)); } catch (e) {}
-    });
-  }
-
-  /* ---------- 2. Restauration EXACTE (remplace, jamais de fusion) ---------- */
-  async function restoreFullBackup(backup) {
-    if (!remoteEnabled) throw new Error('Synchronisation serveur désactivée (mode local) — restauration impossible.');
-    if (!backup || !backup.data) throw new Error('Fichier de sauvegarde invalide.');
-    const out = await apiFetch('/backup/restore', {
-      method: 'POST', headers: headers(true),
-      body: JSON.stringify({ backup: backup })
-    });
-    // ★ Purge locale AVANT tout nouveau tirage serveur : cet appareil ne doit
-    //   garder AUCUNE trace (cache, file d'attente, marqueurs de rev) de son
-    //   état précédent, pour bannir tout mélange avec les données restaurées.
-    hardResetLocalCache();
-    await pullState();
-    try { await syncMisc(); } catch (e) {}
-    emit(KEY_FLEET); emit(KEY_RES);
-    return out; // { ok, result: { applied, errors, appliedAt } }
-  }
-
-  /* ---------- 3. Réinitialisation des données de TEST uniquement ----------
-     Vide reservations + charges (donc tous les compteurs qui en dérivent :
-     loués, en retard, impayés, caisse), remet la flotte disponible — sans
-     jamais toucher aux tarifs, aux employés ni à la configuration du site.
-     Prend automatiquement une sauvegarde complète juste avant, en filet de
-     sécurité (retournée à l'appelant pour proposer le téléchargement). */
-  async function resetTestData() {
-    let safetyBackup = null;
-    try { safetyBackup = await exportFullBackup(); } catch (e) { /* hors-ligne : on continue quand même */ }
-
-    saveReservations([]);
-    try { localStorage.setItem(KEY_CHARGES, '[]'); } catch (e) {}
-    noteLocalChange(KEY_CHARGES);
-    try { localStorage.removeItem(KEY_PEND_RA); } catch (e) {}
-    try { localStorage.removeItem(KEY_PEND_RU); } catch (e) {}
-
-    // Flotte : redevient disponible (jamais supprimée) — même logique que closePeriod().
-    const fleet = read(KEY_FLEET, []);
-    fleet.forEach(function (c) {
-      if (Array.isArray(c.units)) {
-        c.units.forEach(function (u) {
-          if (!u) return;
-          const s = u.status || 'available';
-          if (s !== 'maintenance' && s !== 'offroad' && s !== 'lld') u.status = 'available';
-        });
-      }
-      if (c.status === 'rented' || c.status === 'active' || c.status === 'reserved') c.status = 'available';
-    });
-    write(KEY_FLEET, fleet);
-    markFleetDirty();
-
-    // Vidage des réservations, propagé et retenté jusqu'à confirmation serveur
-    // (même mécanisme robuste que closePeriod — voir pushReservationsReset).
-    try { localStorage.setItem(KEY_PEND_RESET, String(Date.now())); } catch (e) {}
-    pushReservationsReset();
-
-    emit(KEY_RES); emit(KEY_FLEET); syncNow();
-    return { safetyBackup: safetyBackup };
-  }
-
   /* ---------- Démarrage ---------- */
   init();
 
@@ -1178,8 +1129,6 @@
     getFleet, saveFleet, addVehicle, updateVehicle, deleteVehicle,
     getReservations, addReservation, updateReservation,
     closePeriod, getArchives, restoreArchive, deleteArchive,
-    // ★ Sauvegarde complète / restauration exacte / reset des données de test
-    exportFullBackup, restoreFullBackup, resetTestData,
     onChange,
     // Gestion des unités de stock (couleur + immatriculation par unité)
     normalizeUnits, modelAvailability, assignUnit, releaseUnit, setUnitStatusByPlate,
@@ -1189,5 +1138,7 @@
     dailyRate, seasonalRate, normalizeSeasonalTiers, normalizeDurationTiers, monthOfISO,
     // ★ Moteur central de disponibilité & conflits (site + back-office)
     checkAvailability, checkReservationConflict, AVAIL_MARGIN_H,
+    // ★ Source unique : phase réelle (reserved/active/late) + dates locales
+    computePhase, localDateISO, localTimeHM,
   };
 })(window);
