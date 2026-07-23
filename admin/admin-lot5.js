@@ -159,14 +159,22 @@ function renderDashboard() {
         return String(b.createdAt||b.startDate||'').localeCompare(String(a.createdAt||a.startDate||''));
       }).slice(0,7);
       if (!recent.length) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text3);">Aucune réservation — les réservations du site client apparaîtront ici automatiquement.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text3);">Aucune réservation — les réservations du site client apparaîtront ici automatiquement.</td></tr>';
       } else {
+        // ★ Item 2 : provenance du client (Site Web / Réservation manuelle / ...)
+        var ORIGIN_LABELS_DASH = {
+          online: 'Site Web', manual: 'Réservation manuelle', phone: 'Téléphone',
+          whatsapp: 'WhatsApp', partner: 'Partenaire', gbp: 'Google Business Profile',
+          facebook: 'Facebook', instagram: 'Instagram'
+        };
         tbody.innerHTML = recent.map(function(r) {
+          var originLabel = ORIGIN_LABELS_DASH[r.source] || r.source || '—';
           return '<tr>' +
             '<td><strong>' + (r.contractRef || r.id || '') + '</strong></td>' +
             '<td>' + (r.client || '') + '</td>' +
             '<td style="font-size:12px;color:var(--text2);">' + (r.car || '') + '</td>' +
             '<td style="font-size:12px;">' + (r.startDate||'') + (r.endDate ? ' → '+r.endDate : '') + '</td>' +
+            '<td><span class="badge badge-gray" style="font-size:11px;">' + originLabel + '</span></td>' +
             '<td><strong>' + (r.amount||0) + ' MAD</strong></td>' +
             '<td>' + statusBadge(r.status) + '</td>' +
             '<td><button class="btn-sm ghost" data-rid="' + r.id + '" onclick="viewRes(this.dataset.rid)">&#128065;</button></td>' +
@@ -244,7 +252,7 @@ function openDashDrawer(type) {
         + (plateColor ? '<div style="font-size:12px;color:var(--text3);">🚗 ' + plateColor + '</div>' : '')
         + '<div style="font-size:13px;margin-top:2px;">Retour :<br><strong>' + fmtD(r.endDate||'') + (r.endTime ? ' à ' + r.endTime : '') + '</strong></div>'
         + '</div>'
-        + '<div style="flex-shrink:0;"><button class="btn-sm ghost" data-rid="' + r.id + '" onclick="closeDashDrawer();showPage(\'rentals\',null);setTimeout(function(){viewRental(document.querySelector(\'[data-rid=' + r.id + ']\')&&document.querySelector(\'[data-rid=' + r.id + ']\').dataset.rid)},400)">Fiche →</button></div>'
+        + '<div style="flex-shrink:0;"><button class="btn-sm ghost" data-rid="' + r.id + '" onclick="setDashReturnContext(\'rented\');closeDashDrawer();viewRental(this.dataset.rid,\'rented\')">Fiche →</button></div>'
         + '</div>'
       );
     });
@@ -268,7 +276,7 @@ function openDashDrawer(type) {
         + (plateColor ? '<div style="font-size:12px;color:var(--text3);">🚗 ' + plateColor + '</div>' : '')
         + '<div style="font-size:13px;margin-top:2px;">Départ :<br><strong>' + fmtD(r.startDate||'') + (r.startTime ? ' à ' + r.startTime : '') + '</strong></div>'
         + '</div>'
-        + '<div style="flex-shrink:0;"><button class="btn-sm primary" data-rid="' + r.id + '" onclick="closeDashDrawer();viewRes(this.dataset.rid)">Fiche →</button></div>'
+        + '<div style="flex-shrink:0;"><button class="btn-sm primary" data-rid="' + r.id + '" onclick="setDashReturnContext(\'reserved\');closeDashDrawer();viewRes(this.dataset.rid)">Fiche →</button></div>'
         + '</div>'
       );
     });
@@ -308,7 +316,7 @@ function openDashDrawer(type) {
         '<div style="min-width:0;"><div style="font-weight:700;">' + (r.car||'') + '</div>' +
         '<div style="font-size:12px;color:var(--text3);">' + (plateWithColor ? '🚗 ' + plateWithColor + ' · ' : '') + (r.client||'') + '</div>' +
         '<div style="font-size:12px;">Retour prévu : <strong>' + (r.endDate||'') + '</strong>' + (r.endTime ? ' à <strong>' + r.endTime + '</strong>' : '') + '</div></div>' +
-        '<div style="flex-shrink:0;"><button class="btn-sm primary" data-rid="' + r.id + '" onclick="closeDashDrawer();viewRes(this.dataset.rid)">Fiche →</button></div>' +
+        '<div style="flex-shrink:0;"><button class="btn-sm primary" data-rid="' + r.id + '" onclick="setDashReturnContext(\'returns\', window._returnsFilter);closeDashDrawer();viewRental(this.dataset.rid,\'returns\')">Fiche →</button></div>' +
         '</div>'
       );
     });
@@ -329,15 +337,15 @@ function openDashDrawer(type) {
         '<div style="font-weight:700;color:var(--red);">' + (r.car||'') + ' — ' + diffLabel + ' de retard</div>' +
         '<div style="font-size:12px;color:var(--text3);">' + (r.client||'') + ' — devait revenir le ' + fmtD(r.endDate||'') + (r.endTime ? ' à ' + r.endTime : '') + '</div>' +
         '<div style="font-size:12px;margin-bottom:8px;">' + (r.phone||'') + '</div>' +
-        '<div style="display:flex;gap:6px;flex-wrap:wrap;">' +
-        '<button class="btn-sm primary" data-rid="' + r.id + '" onclick="dashConfirmReturn(this.dataset.rid)">Confirmer retour</button>' +
-        '<button class="btn-sm ghost" data-rid="' + r.id + '" onclick="dashExtend(this.dataset.rid)">Prolonger</button>' +
-        '<button class="btn-sm ghost" style="color:var(--red);" data-rid="' + r.id + '" onclick="cancelRental(this.dataset.rid);setTimeout(function(){openDashDrawer(\'late\')},60)">Annuler</button>' +
-        (r.phone ? '<a href="tel:'+r.phone+'" class="btn-sm ghost" style="text-decoration:none;">Appeler</a>' : '') +
-        '</div></div>'
+        // ★ Item 1D : simple alerte, AUCUNE action de gestion ici — la gestion
+        //   des retours (confirmer/prolonger) se fait uniquement depuis
+        //   "Retours aujourd'hui / demain / date sélectionnée".
+        (r.phone ? '<a href="tel:'+r.phone+'" class="btn-sm ghost" style="text-decoration:none;">📞 Appeler</a>' : '') +
+        '</div>'
       );
     });
     if (!rows.length) rows.push('<div style="color:#22c55e;text-align:center;padding:30px;">✓ Aucun retard — tout est à l\'heure</div>');
+    else rows.unshift('<div style="font-size:12px;color:var(--text3);margin-bottom:10px;">ℹ Alerte uniquement. Pour confirmer un retour ou prolonger, utilisez « Retours aujourd\'hui / demain / date sélectionnée ».</div>');
 
   } else if (type === 'unpaid') {
     title = '💳 Dossiers avec impayés';
@@ -348,7 +356,7 @@ function openDashDrawer(type) {
         '<div><div style="font-weight:700;">' + (r.client||'') + '</div>' +
         '<div style="font-size:12px;color:var(--text3);">' + (r.car||'') + ' · ' + (r.contractRef||r.id) + '</div></div>' +
         '<div style="text-align:right;"><strong style="color:#ef4444;">' + fmtMAD(reste) + ' restant</strong><br>' +
-        '<button class="btn-sm ghost" data-rid="' + r.id + '" onclick="closeDashDrawer();viewRes(this.dataset.rid)">Voir →</button></div>' +
+        '<button class="btn-sm ghost" data-rid="' + r.id + '" onclick="setDashReturnContext(\'unpaid\');closeDashDrawer();viewUnpaidFiche(this.dataset.rid)">Voir →</button></div>' +
         '</div>'
       );
     });
@@ -549,7 +557,7 @@ function renderRentals() {
     var tbody = document.getElementById('rentals-table');
     if (!tbody) return;
     if (!rows.length) {
-      tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--text3);">Aucune location' + (filter==='active' ? ' en cours' : '') + '.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;padding:30px;color:var(--text3);">Aucune location' + (filter==='active' ? ' en cours' : '') + '.</td></tr>';
       updateBadges(); return;
     }
     tbody.innerHTML = rows.map(function(r) {
@@ -559,21 +567,22 @@ function renderRentals() {
         ? '<span class="badge badge-red">● ' + fmtMAD(reste) + ' restant</span>'
         : '<span class="badge badge-green">● Soldé</span>';
       var manualTag = (r.source==='manual'||r.type==='location') ? ' <span style="font-size:10px;background:rgba(0,0,0,.08);padding:2px 6px;border-radius:4px;margin-left:4px;">Manuel</span>' : '';
+      // ★ Item 4B : simple tableau récapitulatif (comme un export Excel) —
+      //   plus aucune action ici (ni Fiche, ni Fin) : ces actions sont gérées
+      //   exclusivement depuis le Dashboard (Véhicules loués / Retours),
+      //   pour éliminer toute redondance entre Dashboard et sidebar (item 5).
       return '<tr' + (isLate ? ' style="background:rgba(196,30,58,.04);"' : '') + '>' +
         '<td><strong>' + (r.contractRef||r.id||'') + '</strong>' + manualTag + '</td>' +
         '<td><div style="font-weight:600;">' + (r.client||'—') + '</div><div style="font-size:11px;color:var(--text3);">' + (r.phone||'') + '</div></td>' +
         '<td style="font-size:13px;">' + (r.car||'—') + (r.assignedPlate ? '<div style="font-size:11px;color:var(--text3);margin-top:1px;">🚗 ' + r.assignedPlate + (r.assignedColor ? ' — ' + r.assignedColor : '') + '</div>' : '') + '</td>' +
         '<td style="font-size:12px;">' + (r.startDate||'') + '</td>' +
+        '<td style="font-size:12px;color:var(--text2);">' + (r.startTime||'—') + '</td>' +
         '<td style="font-size:12px;' + (isLate ? 'color:var(--red);font-weight:700;' : '') + '">' + (r.endDate||'') + (isLate ? ' ⚠' : '') + '</td>' +
+        '<td style="font-size:12px;color:var(--text2);' + (isLate ? 'color:var(--red);font-weight:700;' : '') + '">' + (r.endTime||'—') + '</td>' +
         '<td style="text-align:center;">' + (r.days||'—') + '</td>' +
         '<td><strong>' + fmtMAD(total) + '</strong></td>' +
         '<td>' + payBadge + '</td>' +
         '<td>' + statusBadge(r.status) + '</td>' +
-        '<td style="white-space:nowrap;display:flex;gap:4px;">' +
-          '<button class="btn-sm ghost" data-rid="' + r.id + '" onclick="viewRental(this.dataset.rid)" title="Détail">&#128065;</button>' +
-          ((r.status==='active'||r.status==='confirmed') ? '<button class="btn-sm primary" data-rid="' + r.id + '" onclick="prolongerLocation(this.dataset.rid)" title="Prolonger">+jours</button>' : '') +
-          ((r.status==='active'||r.status==='confirmed') ? '<button class="btn-sm ghost" data-rid="' + r.id + '" onclick="terminerLocation(this.dataset.rid)" title="Clore" style="color:var(--text3);">✓ Fin</button>' : '') +
-        '</td>' +
         '</tr>';
     }).join('');
     updateBadges();
@@ -582,7 +591,14 @@ function renderRentals() {
 
 /* ---- Drawer détail location ---- */
 
-function viewRental(id) {
+function viewRental(id, mode) {
+  // ★ mode 'rented'  (défaut) : ouvert depuis "Véhicules loués" — Annuler la
+  //   location uniquement (item 1A).
+  //   mode 'returns' : ouvert depuis "Retours aujourd'hui/demain/date
+  //   sélectionnée" — Confirmer le retour + Prolonger uniquement, jamais
+  //   d'annulation (item 1C). Titre adapté au contexte (ce n'est pas une
+  //   réservation, mais une location déjà en cours qui revient).
+  mode = mode || 'rented';
   var res = aslRes();
   var r = res.find(function(x) { return String(x.id) === String(id); });
   if (!r) return;
@@ -595,7 +611,12 @@ function viewRental(id) {
   var dr = document.getElementById('rental-drawer');
   if (!dr) return;
 
-  if (titleEl) titleEl.textContent = 'Location ' + (r.contractRef||r.id);
+  if (titleEl) titleEl.textContent = (mode === 'returns' ? 'Retour — ' : 'Location ') + (r.contractRef||r.id);
+
+  var actionsHTML = (mode === 'returns')
+    ? ('<button class="topbar-btn primary" data-rid="' + r.id + '" onclick="terminerLocation(this.dataset.rid)">✅ Confirmer le retour</button>' +
+       '<button class="topbar-btn secondary" data-rid="' + r.id + '" onclick="prolongerLocation(this.dataset.rid)">📅 Prolonger</button>')
+    : ('<button class="topbar-btn secondary" style="color:var(--red);border-color:var(--red);" data-rid="' + r.id + '" onclick="cancelRental(this.dataset.rid)">❌ Annuler la location</button>');
 
   if (bodyEl) bodyEl.innerHTML =
     '<div class="form-group"><label class="form-label">N° Contrat / Référence</label>' +
@@ -614,9 +635,7 @@ function viewRental(id) {
     '<div style="font-size:22px;font-weight:800;color:var(--red);margin-bottom:14px;">' + fmtMAD(total) + '</div>' +
 
     '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">' +
-    '<button class="topbar-btn primary" data-rid="' + r.id + '" onclick="terminerLocation(this.dataset.rid)">✅ Confirmer la récupération</button>' +
-    '<button class="topbar-btn secondary" data-rid="' + r.id + '" onclick="prolongerLocation(this.dataset.rid)">📅 Prolonger</button>' +
-    '<button class="topbar-btn secondary" style="color:var(--red);border-color:var(--red);" data-rid="' + r.id + '" onclick="cancelRental(this.dataset.rid)">❌ Annuler la location</button>' +
+    actionsHTML +
     '</div>' +
 
     '<div style="background:rgba(18,22,30,.04);border-radius:10px;padding:14px;">' +
@@ -685,6 +704,28 @@ function closeRentalDrawer() {
   var dr = document.getElementById('rental-drawer');
   if (bg) bg.style.display = 'none';
   if (dr) { dr.style.transform = 'translateX(100%)'; setTimeout(function(){ dr.style.display='none'; dr.style.transform=''; }, 280); }
+  // ★ Item 3 (navigation) : retour exact au tiroir Dashboard d'origine, le cas échéant.
+  if (typeof restoreDashReturnContext === 'function') restoreDashReturnContext();
+}
+
+/* ============================================================
+   ★ Item 3 — NAVIGATION : le Dashboard doit conserver son contexte.
+   Quand une fiche (viewRental / viewRes / viewUnpaidFiche) est ouverte
+   depuis un tiroir du Dashboard, on mémorise ce contexte ; à la fermeture
+   de la fiche (Enregistrer, Annuler, ou simple fermeture), on rouvre
+   automatiquement EXACTEMENT ce même tiroir — jamais de redirection vers
+   Réservations / Locations en cours / un autre onglet.
+   ============================================================ */
+window._dashReturnContext = null;
+function setDashReturnContext(type, filter) {
+  window._dashReturnContext = { type: type, filter: filter || null };
+}
+function restoreDashReturnContext() {
+  var ctx = window._dashReturnContext;
+  if (!ctx) return;
+  window._dashReturnContext = null;
+  if (ctx.filter) window._returnsFilter = ctx.filter;
+  if (typeof openDashDrawer === 'function') openDashDrawer(ctx.type);
 }
 
 function prolongerLocation(id) {
@@ -1208,6 +1249,69 @@ function viewRes(id) {
       renderRentals(); renderDashboard(); updateBadges();
       if (typeof closeModal==='function') closeModal();
       showToast('Réservation mise à jour et synchronisée ✓');
+    };
+  }
+  setTimeout(function(){ vrPayCalc(total); }, 50);
+}
+
+/* ============================================================
+   ★ Item 1E — Fiche IMPAYÉS dédiée : uniquement infos client + paiement.
+   AUCUNE action de réservation/location (ni annuler, ni confirmer, ni
+   prolonger) — cette fiche ne sert qu'à enregistrer un paiement. Dès que
+   le reste à payer atteint 0, le dossier disparaît automatiquement de la
+   liste des impayés (recalculée à chaque ouverture du tiroir).
+   ============================================================ */
+function viewUnpaidFiche(id) {
+  var res = aslRes();
+  var r = res.find(function(x) { return String(x.id) === String(id); });
+  if (!r) return;
+  var overlay = document.getElementById('modal-overlay');
+  var titleEl = document.getElementById('modal-title');
+  var bodyEl  = document.getElementById('modal-body');
+  var footEl  = document.getElementById('modal-footer');
+  if (!overlay) return;
+  if (titleEl) titleEl.textContent = 'Paiement — ' + (r.contractRef||r.id);
+  overlay.classList.add('open');
+
+  var total = Number(r.amount)||0, paid = Number(r.paid)||0;
+  var mode  = r.paymentMode || 'Espèces';
+
+  if (bodyEl) bodyEl.innerHTML =
+    '<div class="res-detail-grid">' +
+    _rCell('Client',    '<strong>' + (r.client||'') + '</strong>') +
+    _rCell('Téléphone', r.phone||'—') +
+    _rCell('Véhicule',  r.car||'—') +
+    _rCell('Contrat',   r.contractRef||r.id) +
+    '</div>' +
+    '<div style="font-size:22px;font-weight:800;color:var(--red);margin:12px 0;">' + fmtMAD(total) + '</div>' +
+    '<div style="background:rgba(18,22,30,.04);border-radius:10px;padding:14px;">' +
+    '<div style="font-weight:700;margin-bottom:10px;color:var(--red);">Paiement</div>' +
+    '<div class="form-row">' +
+    '<div class="form-group"><label class="form-label">Montant reçu (MAD)</label>' +
+    '<input class="form-input" type="number" id="vr-paid" value="' + paid + '" oninput="vrPayCalc(' + total + ')"></div>' +
+    '<div class="form-group"><label class="form-label">Mode de paiement</label>' +
+    '<select class="form-select" id="vr-mode">' +
+    ['Espèces','Carte bancaire','Virement','Chèque','Autre'].map(function(m){ return '<option' + (mode===m?' selected':'') + '>' + m + '</option>'; }).join('') +
+    '</select></div></div>' +
+    '<div id="vr-rest" style="font-weight:700;font-size:13px;margin-top:6px;"></div></div>';
+
+  if (footEl) footEl.style.display = 'flex';
+  var saveBtn = document.getElementById('modal-save');
+  if (saveBtn) {
+    saveBtn.textContent = 'Enregistrer le paiement';
+    saveBtn.onclick = function() {
+      var newPaid = parseFloat(document.getElementById('vr-paid') && document.getElementById('vr-paid').value || 0);
+      var newMode = (document.getElementById('vr-mode') && document.getElementById('vr-mode').value) || r.paymentMode;
+      var payStatus = newPaid<=0 ? 'Non payé' : (newPaid>=total ? 'Paiement complet' : 'Paiement partiel');
+      if (typeof ASLDB!=='undefined' && ASLDB.updateReservation) {
+        ASLDB.updateReservation(id, { paid: newPaid, paymentMode: newMode, paymentStatus: payStatus });
+      }
+      if (typeof reloadData==='function') reloadData();
+      if (typeof renderAllReservations==='function') renderAllReservations();
+      if (typeof renderPayments==='function') renderPayments();
+      renderRentals(); renderDashboard(); updateBadges();
+      if (typeof closeModal==='function') closeModal();
+      showToast(newPaid>=total ? 'Paiement enregistré — dossier soldé ✓' : 'Paiement enregistré ✓');
     };
   }
   setTimeout(function(){ vrPayCalc(total); }, 50);

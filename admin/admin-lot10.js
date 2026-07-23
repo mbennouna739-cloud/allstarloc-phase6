@@ -216,7 +216,7 @@ function notifGoRental(id) {
     var item = document.querySelector('.sb-item[onclick*="rentals"]');
     showPage('rentals', item || null);
   }
-  setTimeout(function(){ if (typeof viewRental === 'function') viewRental(id); }, 350);
+  setTimeout(function(){ if (typeof viewRental === 'function') viewRental(id, 'returns'); }, 350);
 }
 
 function notifGoMaint(carId) {
