@@ -630,8 +630,15 @@ function viewRental(id, mode) {
     _infoCell('Téléphone', r.phone||'—') +
     _infoCell('Véhicule', r.car||'—') +
     _infoCell('Durée', (r.days||'—') + ' jours') +
-    _infoCell('Départ', fmtD(r.startDate||'') + (r.startTime ? ' à ' + r.startTime : '')) +
-    _infoCell('Retour', fmtD(r.endDate||'') + (r.endTime ? ' à ' + r.endTime : '')) +
+    '</div>' +
+
+    // ★ CORRECTIF (item 2) : dates ET heures de départ/retour désormais
+    //   modifiables directement depuis cette fiche, sans recréer la location.
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">' +
+    '<div class="form-group"><label class="form-label">Date départ</label><input type="date" class="form-input" id="rd-start-date" value="' + (r.startDate||'') + '"></div>' +
+    '<div class="form-group"><label class="form-label">Heure départ</label><input type="time" class="form-input" id="rd-start-time" value="' + (r.startTime||'10:00') + '"></div>' +
+    '<div class="form-group"><label class="form-label">Date retour</label><input type="date" class="form-input" id="rd-end-date" value="' + (r.endDate||'') + '"></div>' +
+    '<div class="form-group"><label class="form-label">Heure retour</label><input type="time" class="form-input" id="rd-end-time" value="' + (r.endTime||'10:00') + '"></div>' +
     '</div>' +
 
     '<div style="font-size:22px;font-weight:800;color:var(--red);margin-bottom:14px;">' + fmtMAD(total) + '</div>' +
@@ -652,7 +659,22 @@ function viewRental(id, mode) {
     }).join('') +
     '</select></div></div>' +
     '<div id="rd-rest" style="font-weight:700;font-size:13px;margin-top:6px;"></div>' +
-    '</div>';
+    '</div>' +
+
+    // ★ CORRECTIF (item 2) : consulter/ajouter/remplacer directement le permis
+    //   et la CIN/passeport depuis cette fiche — mêmes documents que la fiche
+    //   client (Base clients), pas une copie séparée.
+    (function() {
+      if (typeof _docBlock !== 'function' || typeof _loadCustDocs !== 'function' || typeof _custId !== 'function') return '';
+      var custKey = _custId(r.email, r.client);
+      var docs = _loadCustDocs();
+      var d = docs[custKey] || {};
+      return '<div style="margin-top:16px;">' +
+        '<div style="font-weight:700;margin-bottom:10px;color:var(--red);">Documents</div>' +
+        _docBlock(custKey, 'permis', 'Permis de conduire', d.permis) +
+        _docBlock(custKey, 'identite', 'Carte d\'identité (CIN) ou Passeport', d.identite, d.identiteType) +
+        '</div>';
+    })();
 
   if (footEl) footEl.innerHTML =
     (r.phone ? '<a href="tel:' + r.phone + '" class="topbar-btn secondary" style="text-decoration:none;flex:1;text-align:center;">📞 Appeler</a>' : '') +
@@ -689,9 +711,40 @@ function saveRentalChanges(id, total) {
   var newPaid = parseFloat((document.getElementById('rd-paid') && document.getElementById('rd-paid').value) || 0);
   var newRef  = (document.getElementById('rd-ref')  && document.getElementById('rd-ref').value)  || '';
   var newMode = (document.getElementById('rd-mode') && document.getElementById('rd-mode').value) || 'Espèces';
+  // ★ CORRECTIF (item 2) : dates/heures modifiables directement depuis la fiche.
+  var newStartDate = (document.getElementById('rd-start-date') && document.getElementById('rd-start-date').value) || '';
+  var newStartTime = (document.getElementById('rd-start-time') && document.getElementById('rd-start-time').value) || '10:00';
+  var newEndDate   = (document.getElementById('rd-end-date')   && document.getElementById('rd-end-date').value)   || '';
+  var newEndTime   = (document.getElementById('rd-end-time')   && document.getElementById('rd-end-time').value)   || '10:00';
   var payStatus = newPaid <= 0 ? 'Non payé' : (newPaid >= total ? 'Paiement complet' : 'Paiement partiel');
+
+  var res = aslRes();
+  var r = res.find(function(x) { return String(x.id) === String(id); });
+  var patch = { paid: newPaid, paymentMode: newMode, paymentStatus: payStatus, contractRef: newRef };
+
+  if (r && newStartDate && newEndDate) {
+    var datesChanged = (newStartDate !== r.startDate || newEndDate !== r.endDate || newStartTime !== (r.startTime||'10:00') || newEndTime !== (r.endTime||'10:00'));
+    if (datesChanged) {
+      // Vérifie qu'on ne crée pas de conflit avec une autre location du même véhicule
+      if (typeof ASLDB !== 'undefined' && ASLDB.checkAvailability && r.carId) {
+        var fleet = aslFleet();
+        var car = fleet.find(function(c) { return c.id === r.carId; });
+        if (car) {
+          var chk = ASLDB.checkAvailability(car, newStartDate, newEndDate, newStartTime, newEndTime, { excludeId: r.id });
+          if (!chk.available) {
+            if (!confirm('⛔ CONFLIT DÉTECTÉ\n\nCe véhicule est déjà réservé/loué sur cette nouvelle période.\n\nEnregistrer quand même ?')) return;
+          }
+        }
+      }
+      var days = Math.max(1, Math.round((new Date(newEndDate) - new Date(newStartDate)) / 86400000));
+      patch.startDate = newStartDate; patch.endDate = newEndDate;
+      patch.startTime = newStartTime; patch.endTime = newEndTime;
+      patch.days = days;
+    }
+  }
+
   if (typeof ASLDB !== 'undefined' && ASLDB.updateReservation) {
-    ASLDB.updateReservation(id, { paid: newPaid, paymentMode: newMode, paymentStatus: payStatus, contractRef: newRef });
+    ASLDB.updateReservation(id, patch);
   }
   if (typeof reloadData === 'function') reloadData();
   renderRentals();
@@ -841,6 +894,7 @@ function cancelRental(id) {
   if (typeof renderFleetPage === 'function') renderFleetPage();
   updateBadges();
   if (typeof closeRentalDrawer === 'function') closeRentalDrawer();
+  if (typeof closeModal === 'function') closeModal();
   showToast('Location annulée / clôturée — véhicule disponible ✓');
 }
 
@@ -1221,9 +1275,17 @@ function viewRes(id) {
     '</div>' +
     '<div style="font-size:22px;font-weight:800;color:var(--red);margin:12px 0;">' + fmtMAD(total) + '</div>' +
     ((r.status !== 'cancelled' && r.status !== 'completed') ?
-      '<div style="margin-bottom:14px;">' +
-      '<button class="topbar-btn secondary" style="color:var(--red);border-color:var(--red);" data-rid="' + r.id + '" onclick="cancelReservation(this.dataset.rid)">❌ Annuler la réservation</button>' +
-      '</div>' : '') +
+      (function() {
+        // ★ CORRECTIF : le bouton et l'action doivent correspondre au TYPE
+        //   RÉEL de l'opération (phase réelle), pas seulement au statut brut.
+        //   Une "réservation" pas encore démarrée → Annuler la réservation.
+        //   Un élément déjà en cours (loué) ou en retard → Annuler la location.
+        var phase = (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? ASLDB.computePhase(r) : 'reserved';
+        var isLocation = (phase === 'active' || phase === 'late');
+        return '<div style="margin-bottom:14px;">' +
+          '<button class="topbar-btn secondary" style="color:var(--red);border-color:var(--red);" data-rid="' + r.id + '" onclick="' + (isLocation ? 'cancelRental' : 'cancelReservation') + '(this.dataset.rid)">❌ ' + (isLocation ? 'Annuler la location' : 'Annuler la réservation') + '</button>' +
+          '</div>';
+      })() : '') +
     '<div style="background:rgba(18,22,30,.04);border-radius:10px;padding:14px;">' +
     '<div style="font-weight:700;margin-bottom:10px;color:var(--red);">Paiement</div>' +
     '<div class="form-row">' +

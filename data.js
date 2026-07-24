@@ -317,7 +317,8 @@
     docs: 'asl_cust_docs_v1',
     lld: 'asl_lld_v1',
     customfeatures: 'asl_custom_features_v1',
-    archives: 'asl_archives_v1'
+    archives: 'asl_archives_v1',
+    custprofiles: 'asl_cust_profiles_v1'
   };
   function miscDirtyKey(name) { return 'asl_misc_dirty_' + name; }
   function miscRevKey(name) { return 'asl_misc_rev_' + name; }

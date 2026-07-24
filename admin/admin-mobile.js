@@ -1407,7 +1407,26 @@
     if (!isMobile()) return;
     buildShell();
     window.maGo('dashboard');
-    try { if (typeof ASLDB !== 'undefined' && ASLDB.onChange) ASLDB.onChange(function () { if (isMobile()) renderScreen(current); }); } catch (e) {}
+    try {
+      if (typeof ASLDB !== 'undefined' && ASLDB.onChange) {
+        ASLDB.onChange(function () {
+          if (!isMobile()) return;
+          // ★ CORRECTIF (rafraîchissement automatique) : Desktop rafraîchit
+          //   systématiquement Dashboard/Badges/Locations à chaque changement,
+          //   quel que soit l'écran affiché. Mobile ne rafraîchissait QUE
+          //   l'écran actuellement visible — un changement survenu pendant que
+          //   l'utilisateur consultait un autre écran (ou le même écran avant
+          //   l'arrivée des données) restait invisible jusqu'à une navigation
+          //   manuelle ou un rafraîchissement de page. On aligne maintenant le
+          //   comportement : l'écran courant ET les indicateurs globaux
+          //   (badges, notifications) sont toujours recalculés immédiatement.
+          setTimeout(function () {
+            try { renderScreen(current); } catch (e) {}
+            try { renderNotifications(); } catch (e) {}
+          }, 50);
+        });
+      }
+    } catch (e) {}
     /* ★ Forcer une synchro immédiate au démarrage du mobile pour garantir
        que les données restaurées sur desktop sont reçues sans attendre le poll. */
     try { if (typeof ASLDB !== 'undefined' && ASLDB.syncNow) ASLDB.syncNow(); } catch (e) {}

@@ -42,7 +42,7 @@ function authorized(request, env) {
 /* Liste unique des noms "misc" valides — utilisée par /api/misc, pour
    n'avoir qu'un seul endroit à modifier si un nouveau type de donnée
    auxiliaire est ajouté un jour. */
-const MISC_NAMES = ['subleases', 'charges', 'maint', 'docs', 'users', 'lld', 'customfeatures', 'archives'];
+const MISC_NAMES = ['subleases', 'charges', 'maint', 'docs', 'users', 'lld', 'customfeatures', 'archives', 'custprofiles'];
 
 async function readDoc(env, key) {
   const raw = await env.ASL_DB.get(key);

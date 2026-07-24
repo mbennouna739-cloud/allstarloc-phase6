@@ -335,6 +335,31 @@ function openRevenueDrawer() {
       row('Revenus du mois', r.month, '#16a34a', 'Mois calendaire en cours') +
       row('Revenus de l\'année', r.year, '#16a34a', 'Année ' + new Date().getFullYear()) +
       row('Reste à payer global', r.dueGlobal, (r.dueGlobal > 0 ? '#ef4444' : '#16a34a'), 'Somme de tous les soldes dus');
+
+    // ★ CORRECTIF (item 1 — transparence) : détail des dossiers comptés dans
+    //   "Revenus du mois", pour vérifier visuellement qu'aucun doublon ni
+    //   dossier annulé n'est compté par erreur.
+    var now2 = new Date();
+    var y2 = now2.getFullYear(), mm2 = String(now2.getMonth()+1).padStart(2,'0');
+    var monthFrom2 = y2 + '-' + mm2 + '-01', monthTo2 = y2 + '-' + mm2 + '-31';
+    var contributing = asl7Res().filter(function(x) {
+      if (x.status === 'cancelled') return false;
+      var paid = Number(x.paid) || 0;
+      if (paid <= 0) return false;
+      var d = _revDateOf(x);
+      return d && d >= monthFrom2 && d <= monthTo2;
+    });
+    body.innerHTML += '<div style="font-weight:700;font-size:13px;margin:18px 0 10px;border-top:1px solid var(--border);padding-top:14px;">Détail — Revenus du mois (' + contributing.length + ' dossier(s))</div>';
+    if (!contributing.length) {
+      body.innerHTML += '<div style="color:var(--text3);font-size:12.5px;">Aucun dossier ce mois-ci.</div>';
+    } else {
+      body.innerHTML += contributing.map(function(x) {
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:12.5px;">' +
+          '<div><strong>' + (x.contractRef||x.id) + '</strong> — ' + (x.client||'') + '<div style="color:var(--text3);font-size:11px;">' + (x.car||'') + ' · ' + (x.startDate||'') + '</div></div>' +
+          '<strong style="color:#16a34a;">' + (Number(x.paid)||0).toLocaleString('fr-FR') + ' MAD</strong>' +
+          '</div>';
+      }).join('');
+    }
   }
   var bg = document.getElementById('rev-drawer-bg');
   var dr = document.getElementById('rev-drawer');

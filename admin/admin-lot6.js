@@ -169,6 +169,23 @@ function applySeasonalGroup() {
    ============================================================ */
 
 function _custDocsKey() { return 'asl_cust_docs_v1'; }
+
+/* ★ CORRECTIF (item 3) — Profil client modifiable. Les informations client
+   (nom, téléphone, email, nationalité, adresse) sont normalement DÉRIVÉES
+   des réservations (il n'existe pas de "fiche client" à part). Ce petit
+   magasin de "surcharges" permet de les corriger/compléter manuellement
+   depuis la fiche, sans dépendre d'une réservation existante. Synchronisé
+   comme les autres données auxiliaires (MISC_MAP.custprofiles). */
+function _custProfilesKey() { return 'asl_cust_profiles_v1'; }
+function _loadCustProfiles() {
+  try { return JSON.parse(localStorage.getItem(_custProfilesKey()) || '{}'); } catch(e) { return {}; }
+}
+function _saveCustProfiles(obj) {
+  try { localStorage.setItem(_custProfilesKey(), JSON.stringify(obj)); } catch(e) {}
+  try { if (typeof ASLDB !== 'undefined' && ASLDB.noteLocalChange) ASLDB.noteLocalChange(_custProfilesKey()); } catch(e) {}
+  try { if (typeof ASLDB !== 'undefined' && ASLDB.syncNow) ASLDB.syncNow(); } catch(e) {}
+}
+
 function _loadCustDocs() {
   try { return JSON.parse(localStorage.getItem(_custDocsKey()) || '{}'); } catch(e) { return {}; }
 }
@@ -244,14 +261,21 @@ function renderCustomers() {
     list.sort(function(a,b){ return String(b.last).localeCompare(String(a.last)); });
 
     var docs = _loadCustDocs();
+    var profiles = _loadCustProfiles();
     var tbody = document.getElementById('customers-table');
     if (!tbody) return;
     if (!list.length) {
-      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--text3);">Aucun client' + (monthFilter ? ' pour ' + ASL_MONTHS[monthFilter] : '') + '.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:var(--text3);">Aucun client' + (monthFilter ? ' pour ' + ASL_MONTHS[monthFilter] : '') + '.</td></tr>';
       return;
     }
     tbody.innerHTML = list.map(function(c) {
       var d = docs[c.key] || {};
+      var p = profiles[c.key] || {};
+      // ★ CORRECTIF (item 3) : les surcharges de la fiche (si modifiées) priment sur les valeurs dérivées des réservations.
+      var dispName = (p.firstName != null || p.lastName != null) ? ((p.firstName||'') + ' ' + (p.lastName||'')).trim() : c.name;
+      var dispPhone = p.phone != null ? p.phone : c.phone;
+      var dispEmail = p.email != null ? p.email : c.email;
+      var dispNat = p.nationality != null ? p.nationality : c.nationality;
       var docCount = ['permis','identite'].filter(function(t){ return d[t]; }).length;
       var docBadge = docCount ? '<span class="badge badge-green" style="margin-left:6px;font-size:10px;">📎 ' + docCount + '</span>' : '';
       var unpaid = Number(c.unpaid) || 0;
@@ -259,15 +283,16 @@ function renderCustomers() {
         ? '<td><strong style="color:#ef4444;">' + unpaid.toLocaleString('fr-FR') + ' MAD</strong></td>'
         : '<td style="color:var(--text3);">—</td>';
       return '<tr style="cursor:pointer;" onclick="openCustomerDrawer(\'' + encodeURIComponent(c.key) + '\')">' +
-        '<td><strong>' + (c.name||'—') + '</strong>' + docBadge + '</td>' +
-        '<td style="color:var(--text2);font-size:12px;">' + (c.email||'—') + '</td>' +
-        '<td style="font-size:12px;">' + (c.phone||'—') + '</td>' +
-        '<td><span class="badge badge-gray">' + (c.nationality||'N/A') + '</span></td>' +
+        '<td><strong>' + (dispName||'—') + '</strong>' + docBadge + '</td>' +
+        '<td style="color:var(--text2);font-size:12px;">' + (dispEmail||'—') + '</td>' +
+        '<td style="font-size:12px;">' + (dispPhone||'—') + '</td>' +
+        '<td><span class="badge badge-gray">' + (dispNat||'N/A') + '</span></td>' +
         '<td><span class="badge badge-blue" style="font-size:11px;">' + (ORIGIN_LABELS[c.origin] || c.origin || '—') + '</span></td>' +
         '<td style="text-align:center;"><strong>' + c.count + '</strong></td>' +
         '<td><strong style="color:var(--green);">' + (Number(c.total)||0).toLocaleString('fr-FR') + ' MAD</strong></td>' +
         unpaidCell +
         '<td style="font-size:12px;color:var(--text2);">' + (c.last||'—') + '</td>' +
+        '<td style="text-align:center;"><button class="btn-sm ghost" onclick="event.stopPropagation();openCustomerDrawer(\'' + encodeURIComponent(c.key) + '\')" title="Voir la fiche complète"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button></td>' +
         '</tr>';
     }).join('');
   } catch(e) { console.error('renderCustomers(lot6):', e); }
@@ -293,6 +318,19 @@ function openCustomerDrawer(encKey) {
 
   var docs = _loadCustDocs();
   var d = docs[key] || {};
+  // ★ CORRECTIF (item 3) : surcharges éventuelles (modifiées manuellement),
+  //   sinon valeurs dérivées des réservations.
+  var profiles = _loadCustProfiles();
+  var prof = profiles[key] || {};
+  var nameParts = String(cust.name||'').trim().split(/\s+/);
+  var defFirst = nameParts.slice(0,-1).join(' ') || nameParts[0] || '';
+  var defLast = nameParts.length > 1 ? nameParts[nameParts.length-1] : '';
+  var firstName = prof.firstName != null ? prof.firstName : defFirst;
+  var lastName  = prof.lastName  != null ? prof.lastName  : defLast;
+  var phone = prof.phone != null ? prof.phone : (cust.phone||'');
+  var email = prof.email != null ? prof.email : (cust.email||'');
+  var nationality = prof.nationality != null ? prof.nationality : (cust.nationality||'');
+  var address = prof.address != null ? prof.address : '';
   var totalSpent = custRes.reduce(function(s,r){ return s + (Number(r.amount)||0); }, 0);
   var totalPaid  = custRes.reduce(function(s,r){ return s + (Number(r.paid)||0); }, 0);
   var totalDue   = Math.max(0, totalSpent - totalPaid);
@@ -301,13 +339,22 @@ function openCustomerDrawer(encKey) {
   var bodyEl  = document.getElementById('cust-drawer-body');
   if (titleEl) titleEl.textContent = cust.name || 'Client';
 
-  /* Infos + résumé financier (lecture seule, dérivé de l'existant) */
+  /* ★ CORRECTIF (item 3) : fiche client complète et modifiable — nom,
+     prénom, téléphone, email, nationalité, adresse. */
   var html =
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">' +
-    _c6cell('Téléphone', cust.phone||'—') +
-    _c6cell('Email', '<span style="font-size:12px;">' + (cust.email||'—') + '</span>') +
-    _c6cell('Nationalité', cust.nationality||'—') +
-    _c6cell('Locations', String(custRes.length)) +
+    '<input type="hidden" id="cd-key" value="' + encodeURIComponent(key) + '">' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">' +
+    '<div class="form-group"><label class="form-label">Prénom</label><input class="form-input" id="cd-firstname" value="' + firstName.replace(/"/g,'&quot;') + '"></div>' +
+    '<div class="form-group"><label class="form-label">Nom</label><input class="form-input" id="cd-lastname" value="' + lastName.replace(/"/g,'&quot;') + '"></div>' +
+    '<div class="form-group"><label class="form-label">Téléphone</label><input class="form-input" id="cd-phone" value="' + phone.replace(/"/g,'&quot;') + '"></div>' +
+    '<div class="form-group"><label class="form-label">Email</label><input class="form-input" id="cd-email" value="' + email.replace(/"/g,'&quot;') + '"></div>' +
+    '<div class="form-group"><label class="form-label">Nationalité</label><input class="form-input" id="cd-nationality" value="' + nationality.replace(/"/g,'&quot;') + '"></div>' +
+    '<div class="form-group"><label class="form-label">Adresse</label><input class="form-input" id="cd-address" value="' + address.replace(/"/g,'&quot;') + '" placeholder="Si disponible"></div>' +
+    '</div>' +
+    '<button class="topbar-btn primary" style="width:100%;margin-bottom:16px;" onclick="saveCustomerProfile()">💾 Enregistrer les modifications</button>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">' +
+    '<div style="background:rgba(139,92,246,.08);border-radius:8px;padding:10px;text-align:center;"><div style="font-size:11px;color:var(--text3);">Nombre de locations</div><div style="font-weight:800;color:#8b5cf6;font-size:15px;">' + custRes.length + '</div></div>' +
+    '<div style="background:rgba(18,22,30,.04);border-radius:8px;padding:10px;text-align:center;"><div style="font-size:11px;color:var(--text3);">Dernière location</div><div style="font-weight:800;font-size:14px;">' + (custRes[0] ? ((typeof fmtD==='function'?fmtD(custRes[0].startDate):(custRes[0].startDate||'')) + (custRes[0].startTime ? ' à ' + custRes[0].startTime : '')) : '—') + '</div></div>' +
     '</div>' +
     '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:18px;">' +
     '<div style="background:rgba(34,197,94,.08);border-radius:8px;padding:10px;text-align:center;"><div style="font-size:11px;color:var(--text3);">Total</div><div style="font-weight:800;color:#16a34a;font-size:15px;">' + totalSpent.toLocaleString('fr-FR') + '</div></div>' +
@@ -344,6 +391,28 @@ function openCustomerDrawer(encKey) {
   var dr = document.getElementById('cust-drawer');
   dr.style.display = 'flex';
   dr.style.transform = 'translateX(0)';
+}
+
+/* ★ CORRECTIF (item 3) — Enregistre les modifications de la fiche client
+   (prénom, nom, téléphone, email, nationalité, adresse) dans le magasin de
+   surcharges, synchronisé comme le reste du Back-office. */
+function saveCustomerProfile() {
+  var encKey = document.getElementById('cd-key') && document.getElementById('cd-key').value;
+  if (!encKey) return;
+  var key = decodeURIComponent(encKey);
+  var profiles = _loadCustProfiles();
+  profiles[key] = {
+    firstName: (document.getElementById('cd-firstname') && document.getElementById('cd-firstname').value) || '',
+    lastName: (document.getElementById('cd-lastname') && document.getElementById('cd-lastname').value) || '',
+    phone: (document.getElementById('cd-phone') && document.getElementById('cd-phone').value) || '',
+    email: (document.getElementById('cd-email') && document.getElementById('cd-email').value) || '',
+    nationality: (document.getElementById('cd-nationality') && document.getElementById('cd-nationality').value) || '',
+    address: (document.getElementById('cd-address') && document.getElementById('cd-address').value) || ''
+  };
+  _saveCustProfiles(profiles);
+  renderCustomers();
+  openCustomerDrawer(encKey);
+  if (typeof asl6Toast === 'function') asl6Toast('Fiche client mise à jour ✓');
 }
 
 function _c6cell(label, val) {
