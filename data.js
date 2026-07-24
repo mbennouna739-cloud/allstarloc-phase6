@@ -44,6 +44,7 @@
   const KEY_PEND_F  = 'asl_pending_fleet_v1';   // '1' si la flotte locale doit être renvoyée
   const KEY_PEND_RA = 'asl_pending_res_add_v1'; // réservations créées hors-ligne
   const KEY_PEND_RU = 'asl_pending_res_upd_v1'; // mises à jour de réservations hors-ligne
+  const KEY_PEND_RD = 'asl_pending_res_del_v1'; // suppressions définitives en attente (point 1)
   const KEY_RESET_SEEN = 'asl_reservations_reset_seen_v1'; // dernier resetAt serveur connu par CET appareil
   // ★ CORRECTIF : vidage des réservations (clôture de période) en attente de
   //   confirmation par le serveur. Avant ce correctif, l'appel réseau qui vide
@@ -287,7 +288,30 @@
       upds.shift();
       write(KEY_PEND_RU, upds);
     }
-    // 4) ★ CORRECTIF : vidage des réservations (clôture de période) resté en
+    // 4) ★ Suppressions définitives en attente (point 1)
+    const dels = readJSON(KEY_PEND_RD, []);
+    while (dels.length) {
+      const delId = dels[0];
+      try {
+        const out = await apiFetch('/reservations', {
+          method: 'POST', headers: headers(true),
+          body: JSON.stringify({ action: 'delete', id: delId })
+        });
+        if (out.rev) writeNum(KEY_REV_R, out.rev);
+      } catch (eDel) {
+        // Même garde-fou que pour les mises à jour : une clé refusée ou un id
+        // déjà absent ne pourra jamais aboutir depuis cet appareil.
+        if (eDel && (eDel.status === 401 || eDel.status === 403 || eDel.status === 404)) {
+          dels.shift();
+          write(KEY_PEND_RD, dels);
+          continue;
+        }
+        throw eDel; // erreur réseau/temporaire : on réessaiera au prochain cycle
+      }
+      dels.shift();
+      write(KEY_PEND_RD, dels);
+    }
+    // 5) ★ CORRECTIF : vidage des réservations (clôture de période) resté en
     //    attente d'une confirmation serveur — relance automatique tant que
     //    KEY_PEND_RESET est présent (voir pushReservationsReset / closePeriod
     //    pour le détail du bug corrigé : avant, cette étape n'existait pas et
@@ -775,6 +799,41 @@
   }
 
   /* ============================================================
+     ★ SUPPRESSION DÉFINITIVE D'UNE LOCATION/RÉSERVATION (point 1)
+     ------------------------------------------------------------
+     Contrairement à une annulation (qui garde l'enregistrement, marqué
+     "cancelled", pour l'historique/la comptabilité), ceci retire
+     DÉFINITIVEMENT le dossier — utile pour corriger une erreur de saisie
+     (ex. mauvaise date de retour) sans polluer l'historique avec un doublon.
+     Possible quel que soit le statut (en cours, en retard, terminée...).
+     Le montant disparaît automatiquement des revenus/caisse/statistiques
+     car ceux-ci sont TOUJOURS recalculés à la volée depuis la liste des
+     réservations — aucune valeur n'est stockée séparément nulle part.
+     ============================================================ */
+  function deleteReservation(id) {
+    const list = read(KEY_RES, []);
+    const idx = list.findIndex(function (x) { return x.id === id; });
+    if (idx === -1) return false;
+    list.splice(idx, 1);
+    saveReservations(list);
+    queueResDelete(id); syncNow();
+    return true;
+  }
+
+  function queueResDelete(id) {
+    const q = readJSON(KEY_PEND_RD, []);
+    if (q.indexOf(id) === -1) q.push(id);
+    write(KEY_PEND_RD, q);
+    // Une suppression rend obsolète toute autre écriture en attente sur ce même id
+    try {
+      const adds = readJSON(KEY_PEND_RA, []).filter(function (a) { return a.id !== id; });
+      write(KEY_PEND_RA, adds);
+      const upds = readJSON(KEY_PEND_RU, []).filter(function (u) { return u.id !== id; });
+      write(KEY_PEND_RU, upds);
+    } catch (e) {}
+  }
+
+  /* ============================================================
      CLÔTURE DE PÉRIODE AVEC ARCHIVAGE
      Déplace toutes les données opérationnelles vers les archives
      (consultables), vide les compteurs actifs, et préserve les
@@ -1182,7 +1241,7 @@
   global.ASLDB = {
     RATE_MAD,
     getFleet, saveFleet, addVehicle, updateVehicle, deleteVehicle,
-    getReservations, addReservation, updateReservation,
+    getReservations, addReservation, updateReservation, deleteReservation,
     closePeriod, getArchives, restoreArchive, deleteArchive,
     onChange,
     // Gestion des unités de stock (couleur + immatriculation par unité)

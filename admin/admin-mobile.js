@@ -125,11 +125,20 @@
       rented: r.filter(function (x) { return phase(x) === 'active'; }).length,
       // Réservés = réservations futures non encore commencées (à venir)
       reserved: r.filter(function (x) { return phase(x) === 'reserved'; }).length,
-      returnsToday: r.filter(function (x) { return (x.endDate || '').slice(0, 10) === ts && x.status !== 'cancelled'; }).length,
+      // ★ CORRECTIF (point 3) : le compteur excluait bien les annulées mais
+      //   pas les retours déjà CONFIRMÉS ('completed') — après confirmation
+      //   du retour, le compteur restait bloqué à 1 alors que la liste
+      //   (qui exclut déjà 'completed') s'affichait vide. Les deux filtres
+      //   sont désormais strictement identiques.
+      returnsToday: r.filter(function (x) { return (x.endDate || '').slice(0, 10) === ts && x.status !== 'cancelled' && x.status !== 'completed'; }).length,
       late: r.filter(function (x) { return phase(x) === 'late'; }).length,
       unpaid: r.filter(function (x) { return x.status !== 'cancelled' && (Number(x.amount) || 0) > (Number(x.paid) || 0); }).length,
       // Activités du jour
-      entrants: r.filter(function (x) { return (x.endDate || '').slice(0, 10) === ts && x.status !== 'cancelled'; }).length,
+      // ★ CORRECTIF (point 4) : même bug que returnsToday — le compteur
+      //   "entrants" (retours du jour) doit exclure les retours déjà
+      //   confirmés ('completed'), pas seulement les annulés, pour rester
+      //   cohérent avec la liste détaillée (qui l'exclut déjà).
+      entrants: r.filter(function (x) { return (x.endDate || '').slice(0, 10) === ts && x.status !== 'cancelled' && x.status !== 'completed'; }).length,
       sortants: r.filter(function (x) { return (x.startDate || '').slice(0, 10) === ts && x.status !== 'cancelled'; }).length,
       vt: vt,
       vidanges: vid

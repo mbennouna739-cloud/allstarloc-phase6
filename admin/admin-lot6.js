@@ -168,6 +168,62 @@ function applySeasonalGroup() {
    Documents stockés en localStorage (clé par email client).
    ============================================================ */
 
+/* ============================================================
+   ★ CORRECTIF (point 5) — Compression d'image avant stockage.
+   Une photo de téléphone pèse souvent 3 à 8 Mo ; stockée telle quelle,
+   plusieurs documents (recto/verso × 3 documents) dépassaient vite la
+   capacité du navigateur ("stockage plein"). En la redimensionnant et en
+   la recompressant en JPEG, on obtient un fichier de ~100-400 Ko sans
+   perte de lisibilité perceptible pour un document d'identité — cela
+   règle la cause réelle du problème plutôt que d'augmenter une limite.
+   Les PDF ne sont jamais recompressés (ils passent tels quels).
+   ============================================================ */
+function _compressImageFile(file, maxDim, quality) {
+  maxDim = maxDim || 1600; quality = quality || 0.75;
+  return new Promise(function (resolve) {
+    if (!file.type || file.type.indexOf('image') !== 0) {
+      // PDF ou autre : pas de compression possible, on lit tel quel
+      var r0 = new FileReader();
+      r0.onload = function (e) { resolve(e.target.result); };
+      r0.onerror = function () { resolve(null); };
+      r0.readAsDataURL(file);
+      return;
+    }
+    var img = new Image();
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      img.onload = function () {
+        var w = img.width, h = img.height;
+        if (w > maxDim || h > maxDim) {
+          if (w >= h) { h = Math.round(h * maxDim / w); w = maxDim; }
+          else { w = Math.round(w * maxDim / h); h = maxDim; }
+        }
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        try {
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        } catch (err) {
+          resolve(e.target.result); // repli : image d'origine si le canvas échoue
+        }
+      };
+      img.onerror = function () { resolve(e.target.result); };
+      img.src = e.target.result;
+    };
+    reader.onerror = function () { resolve(null); };
+    reader.readAsDataURL(file);
+  });
+}
+
+/* Normalise une entrée de document (ancien format = chaîne unique, nouveau
+   format = tableau) en tableau, pour une rétrocompatibilité totale avec
+   les documents déjà enregistrés avant ce correctif. */
+function _docAsArray(entry) {
+  if (!entry) return [];
+  return Array.isArray(entry) ? entry : [entry];
+}
+
 function _custDocsKey() { return 'asl_cust_docs_v1'; }
 
 /* ★ CORRECTIF (item 3) — Profil client modifiable. Les informations client
@@ -190,7 +246,14 @@ function _loadCustDocs() {
   try { return JSON.parse(localStorage.getItem(_custDocsKey()) || '{}'); } catch(e) { return {}; }
 }
 function _saveCustDocs(obj) {
-  try { localStorage.setItem(_custDocsKey(), JSON.stringify(obj)); } catch(e) { alert('Stockage plein : document trop volumineux.'); }
+  try { localStorage.setItem(_custDocsKey(), JSON.stringify(obj)); } catch(e) { alert('Stockage local plein malgré la compression — essayez de supprimer une ancienne image inutile.'); }
+  // ★ CORRECTIF (point 5) : cette fonction n'appelait jamais noteLocalChange/
+  //   syncNow — les documents étaient donc enregistrés localement mais
+  //   JAMAIS synchronisés vers le serveur ni les autres appareils. Alignée
+  //   sur le même mécanisme que le reste du Back-office (flotte, profils
+  //   clients, équipements personnalisés).
+  try { if (typeof ASLDB !== 'undefined' && ASLDB.noteLocalChange) ASLDB.noteLocalChange(_custDocsKey()); } catch(e) {}
+  try { if (typeof ASLDB !== 'undefined' && ASLDB.syncNow) ASLDB.syncNow(); } catch(e) {}
 }
 function _custId(email, name) {
   return (email && email.trim()) ? email.trim().toLowerCase() : ('name:' + (name||'').trim().toLowerCase());
@@ -208,8 +271,9 @@ function saveCustomerDocs(email, name, docs) {
   var key = _custId(email, name);
   var all = _loadCustDocs();
   if (!all[key]) all[key] = {};
-  if (docs.permis) all[key].permis = docs.permis;
-  if (docs.identite) all[key].identite = docs.identite;
+  // ★ Point 5 : on AJOUTE au tableau existant, on ne remplace jamais.
+  if (docs.permis) { var pArr = _docAsArray(all[key].permis); pArr.push(docs.permis); all[key].permis = pArr; }
+  if (docs.identite) { var iArr = _docAsArray(all[key].identite); iArr.push(docs.identite); all[key].identite = iArr; }
   _saveCustDocs(all);
 }
 
@@ -423,22 +487,28 @@ function _c6cell(label, val) {
 
 function _docBlock(key, type, label, dataUrl, subType) {
   var enc = encodeURIComponent(key);
+  // ★ CORRECTIF (point 5) : plusieurs images par document (recto/verso,
+  //   pages multiples). Rétrocompatible avec l'ancien format (chaîne unique).
+  var images = _docAsArray(dataUrl);
   var inner;
-  if (dataUrl) {
-    var isPdf = dataUrl.indexOf('application/pdf') >= 0;
-    var preview = isPdf
-      ? '<div style="width:54px;height:54px;border-radius:8px;background:rgba(196,30,58,.1);display:flex;align-items:center;justify-content:center;color:var(--red);font-weight:700;font-size:11px;flex-shrink:0;">PDF</div>'
-      : '<img src="' + dataUrl + '" style="width:54px;height:54px;border-radius:8px;object-fit:cover;flex-shrink:0;cursor:pointer;" onclick="window.open(\'\').document.write(\'<img src=&quot;' + '' + '&quot;>\')">';
+  if (images.length) {
+    var thumbs = images.map(function (url, idx) {
+      var isPdf = url.indexOf('application/pdf') >= 0;
+      var thumb = isPdf
+        ? '<div style="width:54px;height:54px;border-radius:8px;background:rgba(196,30,58,.1);display:flex;align-items:center;justify-content:center;color:var(--red);font-weight:700;font-size:11px;flex-shrink:0;">PDF</div>'
+        : '<img src="' + url + '" style="width:54px;height:54px;border-radius:8px;object-fit:cover;flex-shrink:0;cursor:pointer;" onclick="previewCustDoc(\'' + enc + '\',\'' + type + '\',' + idx + ')">';
+      return '<div style="position:relative;">' + thumb +
+        '<button class="btn-sm ghost" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;padding:0;border-radius:50%;background:#fff;color:var(--red);line-height:1;font-size:12px;box-shadow:0 1px 4px rgba(0,0,0,.2);" title="Supprimer cette image" onclick="event.stopPropagation();deleteCustDoc(\'' + enc + '\',\'' + type + '\',' + idx + ')">✕</button>' +
+        '</div>';
+    }).join('');
     inner =
-      '<div style="display:flex;align-items:center;gap:12px;">' +
-      preview +
-      '<div style="flex:1;"><div style="font-weight:600;font-size:13px;">' + label + '</div>' +
+      '<div style="display:flex;align-items:flex-start;gap:12px;">' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;">' + thumbs + '</div>' +
+      '<div style="flex:1;min-width:120px;"><div style="font-weight:600;font-size:13px;">' + label + ' <span style="font-weight:400;color:var(--text3);font-size:11px;">(' + images.length + ' image' + (images.length>1?'s':'') + ')</span></div>' +
       (subType ? '<div style="font-size:11px;color:var(--text3);">' + subType + '</div>' : '') +
       '<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">' +
-      '<button class="btn-sm ghost" onclick="previewCustDoc(\'' + enc + '\',\'' + type + '\')">Aperçu</button>' +
-      '<button class="btn-sm ghost" onclick="downloadCustDoc(\'' + enc + '\',\'' + type + '\')">Télécharger</button>' +
-      '<button class="btn-sm ghost" onclick="document.getElementById(\'docin-' + type + '\').click()">Remplacer</button>' +
-      '<button class="btn-sm ghost" style="color:var(--red);" onclick="deleteCustDoc(\'' + enc + '\',\'' + type + '\')">Supprimer</button>' +
+      '<button class="btn-sm ghost" onclick="document.getElementById(\'docin-' + type + '\').click()">+ Ajouter une image (recto/verso)</button>' +
+      '<button class="btn-sm ghost" onclick="downloadCustDoc(\'' + enc + '\',\'' + type + '\')">Télécharger tout</button>' +
       '</div></div></div>';
   } else {
     inner =
@@ -471,26 +541,33 @@ function uploadCustDoc(encKey, type, input) {
 }
 
 /* ★ CORRECTIF (point 5) — Logique de sauvegarde extraite pour être partagée
-   entre sélection de fichier, coller (Ctrl+V) et glisser-déposer. */
-function _saveDocFile(encKey, type, file) {
+   entre sélection de fichier, coller (Ctrl+V) et glisser-déposer.
+   Chaque document (permis, CIN, passeport) est désormais un TABLEAU
+   d'images : une deuxième image (verso, autre page...) s'AJOUTE, elle ne
+   remplace jamais la précédente. Chaque image est compressée avant
+   stockage pour éviter toute erreur de capacité. */
+async function _saveDocFile(encKey, type, file) {
   var key = decodeURIComponent(encKey);
   if (!file) return;
-  if (file.size > 3 * 1024 * 1024) { alert('Fichier trop volumineux (max 3 Mo).'); return; }
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    var docs = _loadCustDocs();
-    if (!docs[key]) docs[key] = {};
-    docs[key][type] = e.target.result;
-    if (type === 'identite') {
-      var t = prompt('Type de document ?\nTapez 1 pour CIN, 2 pour Passeport :', '1');
-      docs[key].identiteType = (t === '2') ? 'Passeport' : 'CIN (Carte d\'identité nationale)';
-    }
-    _saveCustDocs(docs);
-    openCustomerDrawer(encKey);
-    renderCustomers();
-    asl6Toast('Document enregistré et associé au client ✓');
-  };
-  reader.readAsDataURL(file);
+  // Limite de sécurité sur le fichier D'ORIGINE (avant compression) — très
+  // large, car la compression ramène presque toujours l'image à quelques
+  // centaines de Ko avant l'enregistrement réel.
+  if (file.size > 20 * 1024 * 1024) { alert('Fichier trop volumineux (max 20 Mo).'); return; }
+  var compressed = await _compressImageFile(file, 1600, 0.75);
+  if (!compressed) { alert('Impossible de lire ce fichier.'); return; }
+  var docs = _loadCustDocs();
+  if (!docs[key]) docs[key] = {};
+  var arr = _docAsArray(docs[key][type]);
+  arr.push(compressed);
+  docs[key][type] = arr;
+  if (type === 'identite' && !docs[key].identiteType) {
+    var t = prompt('Type de document ?\nTapez 1 pour CIN, 2 pour Passeport :', '1');
+    docs[key].identiteType = (t === '2') ? 'Passeport' : 'CIN (Carte d\'identité nationale)';
+  }
+  _saveCustDocs(docs);
+  openCustomerDrawer(encKey);
+  renderCustomers();
+  asl6Toast('Document ajouté (' + arr.length + ' image' + (arr.length>1?'s':'') + ') ✓');
 }
 
 /* ★ CORRECTIF (point 5) — Coller une image copiée (Ctrl+V / "Copier" sur
@@ -514,10 +591,11 @@ function dropCustDoc(encKey, type, ev) {
   if (file) _saveDocFile(encKey, type, file);
 }
 
-function previewCustDoc(encKey, type) {
+function previewCustDoc(encKey, type, idx) {
   var key = decodeURIComponent(encKey);
   var docs = _loadCustDocs();
-  var url = docs[key] && docs[key][type];
+  var arr = _docAsArray(docs[key] && docs[key][type]);
+  var url = arr[idx || 0];
   if (!url) return;
   var w = window.open('');
   if (!w) { alert('Autorisez les pop-ups pour l\'aperçu.'); return; }
@@ -528,25 +606,38 @@ function previewCustDoc(encKey, type) {
   }
 }
 
-function downloadCustDoc(encKey, type) {
+function downloadCustDoc(encKey, type, idx) {
   var key = decodeURIComponent(encKey);
   var docs = _loadCustDocs();
-  var url = docs[key] && docs[key][type];
-  if (!url) return;
-  var ext = url.indexOf('application/pdf') >= 0 ? 'pdf' : (url.indexOf('image/png') >= 0 ? 'png' : 'jpg');
-  var a = document.createElement('a');
-  a.href = url;
-  a.download = type + '_' + key.replace(/[^a-z0-9]/gi,'_') + '.' + ext;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  var arr = _docAsArray(docs[key] && docs[key][type]);
+  if (!arr.length) return;
+  // ★ Point 5 : idx omis (undefined) = "Télécharger tout" (une image = un
+  //   téléchargement par image, suffixé _1, _2...) ; idx fourni = une seule image.
+  var toDownload = (idx == null) ? arr : [arr[idx]];
+  toDownload.forEach(function (url, i) {
+    if (!url) return;
+    var ext = url.indexOf('application/pdf') >= 0 ? 'pdf' : (url.indexOf('image/png') >= 0 ? 'png' : 'jpg');
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = type + '_' + key.replace(/[^a-z0-9]/gi,'_') + (arr.length>1 ? '_' + ((idx==null?i:idx)+1) : '') + '.' + ext;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  });
 }
 
-function deleteCustDoc(encKey, type) {
-  if (!confirm('Supprimer ce document ?')) return;
+function deleteCustDoc(encKey, type, idx) {
+  if (!confirm(idx != null ? 'Supprimer cette image ?' : 'Supprimer ce document ?')) return;
   var key = decodeURIComponent(encKey);
   var docs = _loadCustDocs();
   if (docs[key]) {
-    delete docs[key][type];
-    if (type === 'identite') delete docs[key].identiteType;
+    var arr = _docAsArray(docs[key][type]);
+    if (idx != null && arr.length) {
+      arr.splice(idx, 1);
+      docs[key][type] = arr;
+      if (!arr.length && type === 'identite') delete docs[key].identiteType;
+    } else {
+      delete docs[key][type];
+      if (type === 'identite') delete docs[key].identiteType;
+    }
     _saveCustDocs(docs);
   }
   openCustomerDrawer(encKey);

@@ -388,6 +388,30 @@ export async function onRequest(context) {
       return json({ ok: true, rev: out.rev });
     }
 
+    if (body.action === 'delete') {
+      if (!authorized(request, env)) return err(403, 'Clé admin invalide ou absente (X-ASL-Key)');
+      if (!body.id) return err(400, 'id manquant');
+      // ★ Point 1 — suppression DÉFINITIVE (distincte d'une annulation, qui
+      //   garde le dossier marqué "cancelled" pour l'historique/la
+      //   comptabilité). Même correctif que add/update : relecture fraîche +
+      //   vérification post-écriture, pour ne jamais perdre une opération
+      //   concurrente ni la resusciter par erreur.
+      let outDel = null, delOk = false;
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const freshDoc = attempt === 0 ? doc : ((await readDoc(env, 'reservations')) || { rev: 0, items: [] });
+        let freshItems = Array.isArray(freshDoc.items) ? freshDoc.items.slice() : [];
+        const existed = freshItems.some(function (x) { return x.id === body.id; });
+        if (!existed) { outDel = { rev: freshDoc.rev || Date.now() }; delOk = true; break; } // déjà absent : rien à faire
+        freshItems = freshItems.filter(function (x) { return x.id !== body.id; });
+        const attemptOut = await writeReservationsDoc(env, freshItems, freshDoc.resetAt);
+        const verify = await readDoc(env, 'reservations');
+        const stillThere = verify && Array.isArray(verify.items) && verify.items.some(function (x) { return x.id === body.id; });
+        if (!stillThere) { outDel = { rev: verify ? verify.rev : attemptOut.rev }; delOk = true; break; }
+      }
+      if (!delOk) return err(409, 'Conflit d\'écriture répété — réessayez.');
+      return json({ ok: true, rev: outDel.rev });
+    }
+
     if (body.action === 'replace') {
       if (!authorized(request, env)) return err(403, 'Clé admin invalide ou absente (X-ASL-Key)');
       if (!isArrayOfObjects(body.items, 5000)) return err(400, 'items invalide');
@@ -398,7 +422,7 @@ export async function onRequest(context) {
       return json({ ok: true, rev: out.rev, resetAt: out.resetAt });
     }
 
-    return err(400, 'action inconnue (add | update | replace)');
+    return err(400, 'action inconnue (add | update | delete | replace)');
   }
 
   /* ---- Données auxiliaires synchronisées (sous-locations, charges,

@@ -619,6 +619,8 @@ function viewRental(id, mode) {
     ? ('<button class="topbar-btn primary" data-rid="' + r.id + '" onclick="terminerLocation(this.dataset.rid)">✅ Confirmer le retour</button>' +
        '<button class="topbar-btn secondary" data-rid="' + r.id + '" onclick="prolongerLocation(this.dataset.rid)">📅 Prolonger</button>')
     : ('<button class="topbar-btn secondary" style="color:var(--red);border-color:var(--red);" data-rid="' + r.id + '" onclick="cancelRental(this.dataset.rid)">❌ Annuler la location</button>');
+  // ★ Point 1 : suppression définitive toujours disponible, quel que soit le statut.
+  actionsHTML += '<button class="topbar-btn secondary" style="color:var(--text3);" data-rid="' + r.id + '" onclick="deleteReservationPermanently(this.dataset.rid)">🗑 Supprimer définitivement</button>';
 
   if (bodyEl) bodyEl.innerHTML =
     '<div class="form-group"><label class="form-label">N° Contrat / Référence</label>' +
@@ -896,6 +898,39 @@ function cancelRental(id) {
   if (typeof closeRentalDrawer === 'function') closeRentalDrawer();
   if (typeof closeModal === 'function') closeModal();
   showToast('Location annulée / clôturée — véhicule disponible ✓');
+}
+
+/* ============================================================
+   ★ SUPPRESSION DÉFINITIVE (point 1) — distincte de l'annulation.
+   Retire complètement le dossier (réservation OU location, quel que soit
+   son statut : en cours, en retard, terminée). Le montant disparaît
+   automatiquement des revenus/caisse/statistiques puisque ceux-ci sont
+   toujours recalculés à partir de la liste réelle des réservations —
+   aucune valeur n'est jamais stockée séparément.
+   À utiliser pour corriger une erreur de saisie (ex. mauvaise date),
+   sans laisser de doublon dans l'historique.
+   ============================================================ */
+function deleteReservationPermanently(id) {
+  var res = aslRes();
+  var r = res.find(function(x) { return String(x.id) === String(id); });
+  if (!r) return;
+  if (!confirm('🗑 SUPPRESSION DÉFINITIVE\n\n« ' + (r.contractRef||r.id) + ' » — ' + (r.client||'') + ' (' + (r.car||'') + ')\n\nCette action retire complètement ce dossier : activité récente, revenus, caisse et statistiques seront recalculés automatiquement.\n\nCeci est irréversible (contrairement à une annulation). Continuer ?')) return;
+  if (!confirm('⛔ CONFIRMATION FINALE\n\nSupprimer définitivement ce dossier ?')) return;
+  if (typeof ASLDB !== 'undefined') {
+    if (r.carId && r.assignedPlate && typeof ASLDB.releaseUnit === 'function') {
+      ASLDB.releaseUnit(r.carId, r.assignedPlate);
+    }
+    if (ASLDB.deleteReservation) ASLDB.deleteReservation(id);
+  }
+  if (typeof reloadData === 'function') reloadData();
+  renderRentals(); renderDashboard();
+  if (typeof renderAllReservations === 'function') renderAllReservations();
+  if (typeof renderFleetPage === 'function') renderFleetPage();
+  if (typeof renderPayments === 'function') renderPayments();
+  updateBadges();
+  if (typeof closeRentalDrawer === 'function') closeRentalDrawer();
+  if (typeof closeModal === 'function') closeModal();
+  showToast('Dossier supprimé définitivement — véhicule disponible ✓');
 }
 
 /* Depuis le panneau « En retard » du tableau de bord : confirmer le retour
@@ -1282,10 +1317,14 @@ function viewRes(id) {
         //   Un élément déjà en cours (loué) ou en retard → Annuler la location.
         var phase = (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? ASLDB.computePhase(r) : 'reserved';
         var isLocation = (phase === 'active' || phase === 'late');
-        return '<div style="margin-bottom:14px;">' +
+        return '<div style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap;">' +
           '<button class="topbar-btn secondary" style="color:var(--red);border-color:var(--red);" data-rid="' + r.id + '" onclick="' + (isLocation ? 'cancelRental' : 'cancelReservation') + '(this.dataset.rid)">❌ ' + (isLocation ? 'Annuler la location' : 'Annuler la réservation') + '</button>' +
           '</div>';
       })() : '') +
+    // ★ Point 1 : suppression définitive toujours disponible, quel que soit le statut.
+    '<div style="margin-bottom:14px;">' +
+    '<button class="topbar-btn secondary" style="color:var(--text3);" data-rid="' + r.id + '" onclick="deleteReservationPermanently(this.dataset.rid)">🗑 Supprimer définitivement</button>' +
+    '</div>' +
     '<div style="background:rgba(18,22,30,.04);border-radius:10px;padding:14px;">' +
     '<div style="font-weight:700;margin-bottom:10px;color:var(--red);">Paiement</div>' +
     '<div class="form-row">' +
@@ -1434,18 +1473,26 @@ function dropDocField(inputId, previewId, ev) {
   if (file) _applyDocFile(inputId, previewId, file);
 }
 
-function _applyDocFile(inputId, previewId, file) {
+async function _applyDocFile(inputId, previewId, file) {
   var input = inputId ? document.getElementById(inputId) : null;
   var prev = previewId ? document.getElementById(previewId) : null;
   if (!file) return;
-  if (file.size > 3 * 1024 * 1024) { alert('Fichier trop volumineux (max 3 Mo).'); return; }
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    if (input) input.dataset.dataurl = e.target.result;
-    if (prev) prev.innerHTML = '<img src="' + e.target.result + '" style="width:48px;height:48px;border-radius:8px;object-fit:cover;">' +
-      '<span style="font-size:11px;color:#22c55e;margin-left:6px;">✓ Enregistré</span>';
-  };
-  reader.readAsDataURL(file);
+  if (file.size > 20 * 1024 * 1024) { alert('Fichier trop volumineux (max 20 Mo).'); return; }
+  // ★ Point 5 : même compression que la fiche client, pour éviter toute
+  //   erreur de capacité de stockage dès la création.
+  var result = (typeof _compressImageFile === 'function') ? await _compressImageFile(file, 1600, 0.75) : null;
+  if (!result) {
+    var reader = new FileReader();
+    reader.onload = function(e) { result = e.target.result; _finishDocPreview(input, prev, result); };
+    reader.readAsDataURL(file);
+    return;
+  }
+  _finishDocPreview(input, prev, result);
+}
+function _finishDocPreview(input, prev, dataUrl) {
+  if (input) input.dataset.dataurl = dataUrl;
+  if (prev) prev.innerHTML = '<img src="' + dataUrl + '" style="width:48px;height:48px;border-radius:8px;object-fit:cover;">' +
+    '<span style="font-size:11px;color:#22c55e;margin-left:6px;">✓ Enregistré</span>';
 }
 
 function _rCell(label, val) {
