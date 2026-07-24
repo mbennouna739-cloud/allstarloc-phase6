@@ -56,22 +56,22 @@ function buildNotifList() {
   });
 
   /* Retours prévus aujourd'hui */
-  res.filter(function(r){ return (r.endDate||'').slice(0,10) === ts && (r.status==='active'||r.status==='confirmed'); }).forEach(function(r){
+  res.filter(function(r){ return (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? ((r.endDate||'').slice(0,10) === ts && ASLDB.computePhase(r) === 'active') : ((r.endDate||'').slice(0,10) === ts && (r.status==='active'||r.status==='confirmed')); }).forEach(function(r){
     items.push({
       type: 'return', icon: '🔄', color: '#3b82f6',
       title: 'Retour prévu aujourd\'hui',
-      desc: (r.car || '') + ' · ' + (r.client || '') + ' — à restituer',
+      desc: (r.car || '') + ' · ' + (r.client || '') + ' — à restituer' + (r.endTime ? ' à ' + r.endTime : ''),
       action: 'notifGoRental', arg: r.id
     });
   });
 
-  /* Véhicules en retard (endDate valide ET dépassée) */
-  res.filter(function(r){ return r.endDate && (r.endDate||'').slice(0,10) < ts && (r.status==='active'||r.status==='confirmed'); }).forEach(function(r){
+  /* Véhicules en retard (date+heure de retour réellement dépassées) */
+  res.filter(function(r){ return (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? ASLDB.computePhase(r) === 'late' : (r.endDate && (r.endDate||'').slice(0,10) < ts && (r.status==='active'||r.status==='confirmed')); }).forEach(function(r){
     var diff = Math.round((today - new Date(r.endDate)) / 86400000);
     items.push({
       type: 'late', icon: '⚠', color: '#ef4444',
       title: 'Véhicule en retard (' + diff + 'j)',
-      desc: (r.car || '') + ' · ' + (r.client || '') + ' — retour le ' + (r.endDate || ''),
+      desc: (r.car || '') + ' · ' + (r.client || '') + ' — retour le ' + (r.endDate || '') + (r.endTime ? ' à ' + r.endTime : ''),
       action: 'notifGoRental', arg: r.id
     });
   });

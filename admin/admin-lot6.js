@@ -179,6 +179,23 @@ function _custId(email, name) {
   return (email && email.trim()) ? email.trim().toLowerCase() : ('name:' + (name||'').trim().toLowerCase());
 }
 
+/* ★ CORRECTIF — Pont manquant entre les documents collés/déposés lors d'une
+   création (Nouvelle réservation / Nouvelle location) et la fiche client.
+   Cette fonction était APPELÉE (saveCustomerDocs(...)) mais n'existait
+   NULLE PART : les documents ajoutés à la création n'étaient donc jamais
+   associés au client, même si collectDocs() les récupérait correctement.
+   Fusionne avec les documents déjà existants du client (ne remplace jamais
+   un document déjà présent par du vide). */
+function saveCustomerDocs(email, name, docs) {
+  if (!docs || (!docs.permis && !docs.identite)) return;
+  var key = _custId(email, name);
+  var all = _loadCustDocs();
+  if (!all[key]) all[key] = {};
+  if (docs.permis) all[key].permis = docs.permis;
+  if (docs.identite) all[key].identite = docs.identite;
+  _saveCustDocs(all);
+}
+
 /* Surcharge propre de renderCustomers (garde toutes les colonnes d'origine
    + ajoute filtre mois + clic pour ouvrir la fiche). */
 function renderCustomers() {
@@ -357,7 +374,7 @@ function _docBlock(key, type, label, dataUrl, subType) {
   } else {
     inner =
       '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">' +
-      '<div style="font-weight:600;font-size:13px;color:var(--text2);">' + label + '<div style="font-size:11px;color:var(--text3);font-weight:400;">Aucun document</div></div>' +
+      '<div style="font-weight:600;font-size:13px;color:var(--text2);">' + label + '<div style="font-size:11px;color:var(--text3);font-weight:400;">Aucun document — cliquez ici puis Ctrl+V pour coller une image, ou glissez-déposez un fichier</div></div>' +
       '<button class="btn-sm primary" onclick="document.getElementById(\'docin-' + type + '\').click()">+ Ajouter</button>' +
       '</div>';
   }
@@ -365,15 +382,31 @@ function _docBlock(key, type, label, dataUrl, subType) {
   var onchange = type === 'identite'
     ? 'uploadCustDoc(\'' + enc + '\',\'identite\',this)'
     : 'uploadCustDoc(\'' + enc + '\',\'' + type + '\',this)';
-  return '<div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;">' + inner +
+  // ★ CORRECTIF (point 5) : zone entière collable (Ctrl+V) et glissable-déposable
+  //   (drag & drop), en plus de la sélection de fichier classique — pour les 3
+  //   documents (permis, CIN, passeport), sans changer le reste du fonctionnement.
+  return '<div tabindex="0" class="doc-drop-zone" style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;outline:none;cursor:text;" ' +
+    'title="Cliquez puis Ctrl+V pour coller une image, ou glissez-déposez un fichier" ' +
+    'onpaste="pasteCustDoc(\'' + enc + '\',\'' + type + '\',event)" ' +
+    'ondragover="event.preventDefault();this.classList.add(\'doc-drop-active\')" ' +
+    'ondragleave="this.classList.remove(\'doc-drop-active\')" ' +
+    'ondrop="dropCustDoc(\'' + enc + '\',\'' + type + '\',event)">' + inner +
     '<input type="file" id="docin-' + type + '" accept="' + accept + '" style="display:none;" onchange="' + onchange + '"></div>';
 }
 
 function uploadCustDoc(encKey, type, input) {
-  var key = decodeURIComponent(encKey);
   var file = input && input.files && input.files[0];
   if (!file) return;
-  if (file.size > 3 * 1024 * 1024) { alert('Fichier trop volumineux (max 3 Mo).'); input.value=''; return; }
+  _saveDocFile(encKey, type, file);
+  input.value = '';
+}
+
+/* ★ CORRECTIF (point 5) — Logique de sauvegarde extraite pour être partagée
+   entre sélection de fichier, coller (Ctrl+V) et glisser-déposer. */
+function _saveDocFile(encKey, type, file) {
+  var key = decodeURIComponent(encKey);
+  if (!file) return;
+  if (file.size > 3 * 1024 * 1024) { alert('Fichier trop volumineux (max 3 Mo).'); return; }
   var reader = new FileReader();
   reader.onload = function(e) {
     var docs = _loadCustDocs();
@@ -389,6 +422,27 @@ function uploadCustDoc(encKey, type, input) {
     asl6Toast('Document enregistré et associé au client ✓');
   };
   reader.readAsDataURL(file);
+}
+
+/* ★ CORRECTIF (point 5) — Coller une image copiée (Ctrl+V / "Copier" sur
+   téléphone) directement dans la zone du document, sans sélectionner de
+   fichier. Fonctionne pour tous les documents (permis, CIN, passeport). */
+function pasteCustDoc(encKey, type, ev) {
+  var items = (ev.clipboardData && ev.clipboardData.items) || [];
+  for (var i = 0; i < items.length; i++) {
+    if (items[i].type && items[i].type.indexOf('image') === 0) {
+      var file = items[i].getAsFile();
+      if (file) { ev.preventDefault(); _saveDocFile(encKey, type, file); return; }
+    }
+  }
+}
+
+/* ★ CORRECTIF (point 5) — Glisser-déposer une image sur la zone du document. */
+function dropCustDoc(encKey, type, ev) {
+  ev.preventDefault();
+  if (ev.currentTarget && ev.currentTarget.classList) ev.currentTarget.classList.remove('doc-drop-active');
+  var file = ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0];
+  if (file) _saveDocFile(encKey, type, file);
 }
 
 function previewCustDoc(encKey, type) {

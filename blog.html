@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<script>(function(){try{var l=localStorage.getItem("asl_lang")||"fr";if(["fr","en","es","ar"].indexOf(l)<0)l="fr";document.documentElement.lang=l;document.documentElement.dir=(l==="ar")?"rtl":"ltr";}catch(e){}})();</script>
 <meta charset="UTF-8">
+<style id="asl-anti-flash">html{background:#0A0A0A}</style>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" type="image/x-icon" href="../assets/favicons/favicon.ico">
-  <link rel="icon" type="image/png" sizes="32x32" href="../assets/favicons/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="../assets/favicons/favicon-16x16.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="../assets/favicons/apple-touch-icon.png">
-  <meta name="theme-color" content="#ffffff">
+  <link rel="icon" type="image/x-icon" href="assets/favicons/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicons/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicons/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/favicons/apple-touch-icon.png">
+  <meta name="theme-color" content="#12151B">
 <title>Blog — ALL STAR LOC Marrakech</title>
 <meta name="description" content="Le blog ALL STAR LOC : guides et conseils pour louer une voiture et conduire à Marrakech et au Maroc."
 <link rel="canonical" href="https://allstarloc.ma/blog">
@@ -23,8 +25,14 @@
 <meta name="twitter:description" content="Le blog ALL STAR LOC : guides et conseils pour louer une voiture et conduire à Marrakech et au Maroc.">
 >
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="page.css">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Sans:wght@300;400;500;600&display=swap"></noscript>
+<link rel="stylesheet" href="pages/page.css">
+<script src="i18n.js" defer></script>
+<script src="blog-seed.js" defer></script>
+<script src="pages-seed.js" defer></script>
+<script src="content-bridge.js" defer></script>
+<script src="cookie-consent.js" defer></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -49,14 +57,14 @@
 <body>
 <header>
   <div class="header-inner">
-    <a href="../index.html" class="logo" aria-label="ALL STAR LOC — Accueil">
-      <img src="../assets/logo-asl-header.png" alt="ALL STAR LOC" class="logo-img">
+    <a href="index.html" class="logo" aria-label="ALL STAR LOC — Accueil">
+      <img src="assets/logo-asl-header.png" alt="ALL STAR LOC" class="logo-img">
     </a>
     <nav>
-      <a href="../index.html" data-i18n="nav.home">Accueil</a>
-      <a href="nos-vehicules.html" data-i18n="nav.fleet">Nos Véhicules</a>
-      <a href="about.html" data-i18n="nav.about">À propos</a>
-      <a href="contact.html" data-i18n="nav.contact">Contact</a>
+      <a href="index.html" data-i18n="nav.home">Accueil</a>
+      <a href="pages/nos-vehicules.html" data-i18n="nav.fleet">Nos Véhicules</a>
+      <a href="pages/about.html" data-i18n="nav.about">À propos</a>
+      <a href="pages/contact.html" data-i18n="nav.contact">Contact</a>
     </nav>
     <div class="header-actions">
       <div class="hdr-select">
@@ -81,15 +89,15 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
         WhatsApp
       </a>
-      <a href="../index.html#booking-section" class="btn-reserve" data-i18n="nav.book">Réserver</a>
+      <a href="index.html#booking-section" class="btn-reserve" data-i18n="nav.book">Réserver</a>
       <button class="menu-toggle" onclick="toggleMobileMenu()" aria-label="Menu"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button>
     </div>
   </div>
   <div class="mobile-menu" id="mobile-menu">
-    <a href="../index.html" data-i18n="nav.home">Accueil</a>
-    <a href="nos-vehicules.html" data-i18n="nav.fleet">Nos Véhicules</a>
-    <a href="about.html" data-i18n="nav.about">À propos</a>
-    <a href="contact.html" data-i18n="nav.contact">Contact</a>
+    <a href="index.html" data-i18n="nav.home">Accueil</a>
+    <a href="pages/nos-vehicules.html" data-i18n="nav.fleet">Nos Véhicules</a>
+    <a href="pages/about.html" data-i18n="nav.about">À propos</a>
+    <a href="pages/contact.html" data-i18n="nav.contact">Contact</a>
     <a href="https://wa.me/212675312453" target="_blank" style="color:#25D366;" data-i18n="nav.wa247">WhatsApp 24h/7j</a>
     <div class="mm-prefs">
       <div class="mm-group">
@@ -121,45 +129,18 @@
 </header>
 
 <div class="page-hero">
-  <div class="page-badge"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg> Le Blog</div>
-  <h1>Conseils &amp; Guides<br><span>pour conduire au Maroc</span></h1>
-  <p>Nos conseils de locaux pour louer, conduire et explorer Marrakech et sa région en toute sérénité.</p>
+  <div class="page-badge"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg> <span data-i18n="bl.badge">Le Blog</span></div>
+  <h1 data-i18n-html="bl.h1Html">Conseils &amp; Guides<br><span>pour conduire au Maroc</span></h1>
+  <p data-i18n="bl.lead">Nos conseils de locaux pour louer, conduire et explorer Marrakech et sa région en toute sérénité.</p>
 </div>
 
 <div class="page-content">
-<div class="cards-grid">
-  <div class="card">
-    <div class="card-img"><img src="https://images.unsplash.com/photo-1597212618440-806262de4f6b?w=600&q=80" alt="Conduire à Marrakech" loading="lazy"></div>
-    <div class="card-body">
-      <div class="card-tag">Guide pratique</div>
-      <div class="card-title">Louer une voiture à Marrakech : le guide complet 2026</div>
-      <div class="card-text">Documents nécessaires, assurance, caution, pièges à éviter et conseils de conduite : tout ce qu'il faut savoir avant de prendre le volant au Maroc.</div>
-      <a class="card-link" href="article-guide-location.html">Lire l'article <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
-    </div>
-  </div>
-  <div class="card soon">
-    <div class="card-img"><img src="https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=600&q=80" alt="Route de l'Atlas" loading="lazy"></div>
-    <div class="card-body">
-      <div class="card-tag">Itinéraires</div>
-      <div class="card-title">5 road-trips inoubliables au départ de Marrakech</div>
-      <div class="card-text">Essaouira, vallée de l'Ourika, Ouarzazate, Agafay… nos itinéraires testés et approuvés.</div>
-      <span class="badge-soon">Bientôt disponible</span>
-    </div>
-  </div>
-  <div class="card soon">
-    <div class="card-img"><img src="https://images.unsplash.com/photo-1489824904134-891ab64532f1?w=600&q=80" alt="Conduite au Maroc" loading="lazy"></div>
-    <div class="card-body">
-      <div class="card-tag">Conseils</div>
-      <div class="card-title">Conduire au Maroc : règles, radars et bonnes pratiques</div>
-      <div class="card-text">Limitations de vitesse, contrôles, stationnement à Marrakech : évitez les amendes.</div>
-      <span class="badge-soon">Bientôt disponible</span>
-    </div>
-  </div>
-</div>
+<div class="cards-grid" id="blog-grid"></div>
+<div id="blog-empty" style="display:none;text-align:center;color:#888;padding:40px 0;" data-i18n="bl.empty">Aucun article pour le moment. Revenez bientôt !</div>
 <div class="cta-band">
-  <h3>Prêt à prendre la route ?</h3>
-  <p>Réservez votre voiture en 2 minutes, livraison gratuite à l'aéroport de Marrakech.</p>
-  <a href="../index.html#fleet">Voir nos véhicules <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
+  <h3 data-i18n="cta.h3">Prêt à prendre la route ?</h3>
+  <p data-i18n="cta.p">Réservez votre voiture en 2 minutes, livraison gratuite à l'aéroport de Marrakech.</p>
+  <a href="index.html#fleet"><span data-i18n="cta.btn">Voir nos véhicules</span> <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>
 </div>
 </div>
 
@@ -167,7 +148,7 @@
   <div class="footer-top">
     <div class="footer-brand">
       <div class="footer-logo">
-        <img src="../assets/logo-asl-header.png" alt="ALL STAR LOC" style="height:28px;width:auto;display:block;margin-bottom:12px;">
+        <img src="assets/logo-asl-header.png" alt="ALL STAR LOC" style="height:28px;width:auto;display:block;margin-bottom:12px;">
         <div class="footer-logo-text">
           <div class="footer-logo-name">ALL STAR LOC</div>
           <div class="footer-logo-tag" data-i18n="ft.tag">Location de Voiture Marrakech</div>
@@ -193,38 +174,37 @@
         </a>
       </div>
       <div class="footer-socials" style="margin-top:20px;">
-        <a href="contact.html" class="footer-social" title="Retrouvez-nous — page contact" data-social="facebook">f</a>
-        <a href="contact.html" class="footer-social" title="Retrouvez-nous — page contact" data-social="instagram"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg></a>
+        <a href="pages/contact.html" class="footer-social" title="Retrouvez-nous — page contact" data-social="facebook">f</a>
+        <a href="pages/contact.html" class="footer-social" title="Retrouvez-nous — page contact" data-social="instagram"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg></a>
         <a href="https://wa.me/212675312453" class="footer-social" target="_blank" data-social="whatsapp"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a>
       </div>
     </div>
     <div>
       <div class="footer-col-title" data-i18n="ft.colServices">Nos Services</div>
       <div class="footer-links">
-        <a href="../index.html#fleet" class="footer-link" data-i18n="ft.s1">Location Courte Durée</a>
-        <a href="lld.html" class="footer-link" data-i18n="ft.s2">Location Longue Durée</a>
-        <a href="aeroport.html" class="footer-link" data-i18n="ft.s3">Livraison Aéroport</a>
-        <a href="contact.html" class="footer-link" data-i18n="ft.s4">Livraison Hôtel</a>
-        <a href="contact.html" class="footer-link" data-i18n="ft.s6">Transfert Privé</a>
+        <a href="pages/page.html?slug=courte-duree" class="footer-link" data-i18n="ft.s1">Location Courte Durée</a>
+        <a href="pages/page.html?slug=lld" class="footer-link" data-i18n="ft.s2">Location Longue Durée</a>
+        <a href="pages/page.html?slug=aeroport" class="footer-link" data-i18n="ft.s3">Livraison Aéroport</a>
+        <a href="pages/page.html?slug=livraison-hotel" class="footer-link" data-i18n="ft.s4">Livraison Hôtel</a>
       </div>
     </div>
     <div>
       <div class="footer-col-title" data-i18n="ft.colQuick">Liens Rapides</div>
       <div class="footer-links">
-        <a href="../index.html" class="footer-link" data-i18n="nav.home">Accueil</a>
-        <a href="../index.html#fleet" class="footer-link" data-i18n="nav.fleet">Nos Véhicules</a>
-        <a href="about.html" class="footer-link" data-i18n="nav.about">À propos</a>
+        <a href="index.html" class="footer-link" data-i18n="nav.home">Accueil</a>
+        <a href="index.html#fleet" class="footer-link" data-i18n="nav.fleet">Nos Véhicules</a>
+        <a href="pages/about.html" class="footer-link" data-i18n="nav.about">À propos</a>
         <a href="blog.html" class="footer-link" data-i18n="pf.blog">Blog</a>
-        <a href="faq.html" class="footer-link" data-i18n="pf.faq">FAQ</a>
-        <a href="contact.html" class="footer-link" data-i18n="nav.contact">Contact</a>
+        <a href="pages/faq.html" class="footer-link" data-i18n="pf.faq">FAQ</a>
+        <a href="pages/contact.html" class="footer-link" data-i18n="nav.contact">Contact</a>
       </div>
     </div>
     <div>
       <div class="footer-col-title" data-i18n="ft.colLegal">Légal</div>
       <div class="footer-links">
-        <a href="cgv.html" class="footer-link" data-i18n="ft.lCgv">Conditions Générales</a>
-        <a href="privacy.html" class="footer-link" data-i18n="ft.lPriv">Politique de Confidentialité</a>
-        <a href="mentions.html" class="footer-link" data-i18n="ft.lLegal">Mentions Légales</a>
+        <a href="pages/page.html?slug=cgv" class="footer-link" data-i18n="ft.lCgv">Conditions Générales</a>
+        <a href="pages/page.html?slug=privacy" class="footer-link" data-i18n="ft.lPriv">Politique de Confidentialité</a>
+        <a href="pages/page.html?slug=mentions" class="footer-link" data-i18n="ft.lLegal">Mentions Légales</a>
       </div>
       <div class="footer-col-title" style="margin-top:24px;" data-i18n="ft.colCur">Devises</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -238,11 +218,37 @@
   <div class="footer-bottom">
     <div class="footer-copy" data-i18n="ft.copy">© 2025 All Star Loc — Location de Voitures à Marrakech. Tous droits réservés.</div>
     <div class="footer-legal">
-      <a href="cgv.html" data-i18n="ft.bCgv">CGV</a>
-      <a href="privacy.html" data-i18n="ft.bPriv">Confidentialité</a>
-      <a href="mentions.html" data-i18n="ft.bLegal">Mentions légales</a>
+      <a href="pages/page.html?slug=cgv" data-i18n="ft.bCgv">CGV</a>
+      <a href="pages/page.html?slug=privacy" data-i18n="ft.bPriv">Confidentialité</a>
+      <a href="pages/page.html?slug=mentions" data-i18n="ft.bLegal">Mentions légales</a>
     </div>
   </div>
 </footer>
+<script>
+/* Préchargement intelligent des pages internes (survol + inactivité).
+   Améliore la fluidité sans changer le comportement du site. */
+(function(){
+  if (!('requestIdleCallback' in window)) { window.requestIdleCallback = function(cb){ return setTimeout(cb, 200); }; }
+  var done = {};
+  function prefetch(href){
+    if (!href || done[href]) return;
+    if (href.indexOf('#') === 0 || href.indexOf('mailto:') === 0 || href.indexOf('tel:') === 0) return;
+    if (/^https?:/i.test(href) && href.indexOf(location.host) < 0) return; // pas les domaines externes
+    done[href] = 1;
+    try { var l = document.createElement('link'); l.rel = 'prefetch'; l.href = href; document.head.appendChild(l); } catch(e){}
+  }
+  // Au survol/touch d'un lien interne : on précharge immédiatement
+  function onHover(e){ var a = e.target.closest && e.target.closest('a[href]'); if (a) prefetch(a.getAttribute('href')); }
+  document.addEventListener('mouseover', onHover, {passive:true});
+  document.addEventListener('touchstart', onHover, {passive:true});
+  // À l'inactivité : on précharge tous les liens internes visibles
+  requestIdleCallback(function(){
+    try {
+      var links = document.querySelectorAll('a[href]');
+      for (var i=0; i<links.length; i++){ prefetch(links[i].getAttribute('href')); }
+    } catch(e){}
+  });
+})();
+</script>
 </body>
 </html>

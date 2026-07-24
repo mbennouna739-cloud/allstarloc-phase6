@@ -155,7 +155,9 @@ function renderDashboard() {
 
     var tbody = document.getElementById('dashboard-reservations');
     if (tbody) {
-      var recent = res.slice().sort(function(a,b) {
+      // ★ CORRECTIF (point 2) : une réservation annulée ne doit plus
+      //   apparaître dans l'activité récente du Dashboard.
+      var recent = res.filter(function(r) { return r.status !== 'cancelled'; }).sort(function(a,b) {
         return String(b.createdAt||b.startDate||'').localeCompare(String(a.createdAt||a.startDate||''));
       }).slice(0,7);
       if (!recent.length) {
@@ -628,8 +630,8 @@ function viewRental(id, mode) {
     _infoCell('Téléphone', r.phone||'—') +
     _infoCell('Véhicule', r.car||'—') +
     _infoCell('Durée', (r.days||'—') + ' jours') +
-    _infoCell('Départ', r.startDate||'') +
-    _infoCell('Retour', r.endDate||'') +
+    _infoCell('Départ', fmtD(r.startDate||'') + (r.startTime ? ' à ' + r.startTime : '')) +
+    _infoCell('Retour', fmtD(r.endDate||'') + (r.endTime ? ' à ' + r.endTime : '')) +
     '</div>' +
 
     '<div style="font-size:22px;font-weight:800;color:var(--red);margin-bottom:14px;">' + fmtMAD(total) + '</div>' +
@@ -981,7 +983,11 @@ function _buildNewLocationModal() {
     '<input class="form-input" type="number" min="1" id="nl-days" placeholder="Nombre de jours"></div>' +
     '<div class="form-row">' +
     '<div class="form-group"><label class="form-label">Date départ</label><input type="date" class="form-input" id="nl-start"></div>' +
+    '<div class="form-group"><label class="form-label">Heure départ</label><input type="time" class="form-input" id="nl-start-time" value="10:00"></div>' +
+    '</div>' +
+    '<div class="form-row">' +
     '<div class="form-group"><label class="form-label">Date retour</label><input type="date" class="form-input" id="nl-end"></div>' +
+    '<div class="form-group"><label class="form-label">Heure retour</label><input type="time" class="form-input" id="nl-end-time" value="10:00"></div>' +
     '</div>' +
     '<div class="form-group"><label class="form-label">Lieu de prise en charge</label>' +
     '<select class="form-select" id="nl-pickup"><option>Aéroport Marrakech (RAK)</option><option>Centre-Ville</option><option>Gare</option><option>Hôtel</option></select></div>' +
@@ -1008,9 +1014,11 @@ function _buildNewLocationModal() {
     '<div class="form-group"><label class="form-label">Notes internes</label><textarea class="form-input form-textarea" rows="2" id="nl-notes" placeholder="Notes..."></textarea></div>' +
     '<div class="form-group"><label class="form-label">Documents (facultatif)</label>' +
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">' +
-    '<div><div style="font-size:12px;color:var(--text3);margin-bottom:4px;">Permis de conduire</div>' +
+    '<div tabindex="0" class="doc-drop-zone" style="border:1px solid var(--border);border-radius:8px;padding:8px;" title="Cliquez puis Ctrl+V pour coller une image, ou glissez-déposez un fichier" onpaste="pasteDocField(\'nl-doc-permis\',\'nl-permis-prev\',event)" ondragover="event.preventDefault();this.classList.add(\'doc-drop-active\')" ondragleave="this.classList.remove(\'doc-drop-active\')" ondrop="dropDocField(\'nl-doc-permis\',\'nl-permis-prev\',event)">' +
+    '<div style="font-size:12px;color:var(--text3);margin-bottom:4px;">Permis de conduire <span style="font-weight:400;">— ou collez (Ctrl+V)</span></div>' +
     '<input type="file" accept="image/*" id="nl-doc-permis" class="form-input" style="padding:8px;" onchange="docPreview(this,\'nl-permis-prev\')"><div id="nl-permis-prev" style="margin-top:6px;"></div></div>' +
-    '<div><div style="font-size:12px;color:var(--text3);margin-bottom:4px;">CIN / Passeport</div>' +
+    '<div tabindex="0" class="doc-drop-zone" style="border:1px solid var(--border);border-radius:8px;padding:8px;" title="Cliquez puis Ctrl+V pour coller une image, ou glissez-déposez un fichier" onpaste="pasteDocField(\'nl-doc-identity\',\'nl-identity-prev\',event)" ondragover="event.preventDefault();this.classList.add(\'doc-drop-active\')" ondragleave="this.classList.remove(\'doc-drop-active\')" ondrop="dropDocField(\'nl-doc-identity\',\'nl-identity-prev\',event)">' +
+    '<div style="font-size:12px;color:var(--text3);margin-bottom:4px;">CIN / Passeport <span style="font-weight:400;">— ou collez (Ctrl+V)</span></div>' +
     '<input type="file" accept="image/*" id="nl-doc-identity" class="form-input" style="padding:8px;" onchange="docPreview(this,\'nl-identity-prev\')"><div id="nl-identity-prev" style="margin-top:6px;"></div></div>' +
     '</div><div style="font-size:11px;color:var(--text3);margin-top:5px;">Ajoutables aussi plus tard depuis la fiche client.</div></div>';
 
@@ -1085,6 +1093,8 @@ function _saveNewLocation() {
   var car     = fleet.find(function(c){ return c.id===carId; });
   var start   = document.getElementById('nl-start') && document.getElementById('nl-start').value;
   var end     = document.getElementById('nl-end')   && document.getElementById('nl-end').value;
+  var startTime = (document.getElementById('nl-start-time') && document.getElementById('nl-start-time').value) || '10:00';
+  var endTime   = (document.getElementById('nl-end-time')   && document.getElementById('nl-end-time').value)   || '10:00';
   if (!fn || !start || !end) { alert('Complétez les champs obligatoires (prénom, dates)'); return; }
   var days = Math.max(1, Math.round((new Date(end)-new Date(start))/(86400000)));
   var ppu  = parseFloat(document.getElementById('nl-ppu')&&document.getElementById('nl-ppu').value)||0;
@@ -1109,7 +1119,7 @@ function _saveNewLocation() {
 
   /* ★ VÉRIFICATION DE CONFLIT avant d'enregistrer (disponibilité réelle) */
   if (typeof ASLDB !== 'undefined' && ASLDB.checkAvailability && car) {
-    var chk = ASLDB.checkAvailability(car, start, end, '10:00', '10:00');
+    var chk = ASLDB.checkAvailability(car, start, end, startTime, endTime);
     if (!chk.available) {
       var msg = '⛔ CONFLIT DÉTECTÉ\n\nLe véhicule « ' + car.name + ' » est déjà réservé ou loué sur cette période.';
       if (chk.nextFrom) {
@@ -1136,7 +1146,7 @@ function _saveNewLocation() {
       pricePerDay: ppu, assignedPlate: plate, assignedColor: color,
       days: days, amount: total, paid: paid,
       paymentStatus: payStatus, paymentMode: mode,
-      startDate: start, endDate: end,
+      startDate: start, endDate: end, startTime: startTime, endTime: endTime,
       pickup: (document.getElementById('nl-pickup')&&document.getElementById('nl-pickup').value)||'',
       source: (document.getElementById('nl-source')&&document.getElementById('nl-source').value)||'manual', type: 'location', status: 'active',
       subleaseId: subleaseId, finalClient: subleaseId ? finalClientName : '',
@@ -1150,7 +1160,7 @@ function _saveNewLocation() {
     }
   }
   if (typeof reloadData==='function') reloadData();
-  if (newLoc && newLoc.docs && newLoc.phone && typeof saveCustomerDocs==='function') saveCustomerDocs(newLoc.phone, newLoc.docs);
+  if (newLoc && newLoc.docs && typeof saveCustomerDocs==='function') saveCustomerDocs(newLoc.email, newLoc.client, newLoc.docs);
   if (typeof clearPendingDocs==='function') clearPendingDocs();
   renderRentals(); renderDashboard();
   if (typeof renderPayments==='function') renderPayments();
@@ -1204,8 +1214,8 @@ function viewRes(id) {
     _rCell('Nationalité',  r.nationality||'—') +
     _rCell('Véhicule',     r.car||'—') +
     _rCell('Durée',        (r.days||'—') + ' jours') +
-    _rCell('Départ',       (r.pickup||'') + '<br><small>' + (r.startDate||'') + '</small>') +
-    _rCell('Retour',       r.endDate||'') +
+    _rCell('Départ',       (r.pickup||'') + '<br><small>' + fmtD(r.startDate||'') + (r.startTime ? ' à ' + r.startTime : '') + '</small>') +
+    _rCell('Retour',       fmtD(r.endDate||'') + (r.endTime ? ' à ' + r.endTime : '')) +
     _rCell('Source',       '<span class="badge badge-gray">' + (r.source||'—') + '</span>' + ((r.source==='phone'||r.source==='manual')?' <span style="font-size:10px;background:rgba(0,0,0,.07);padding:2px 6px;border-radius:4px;">Manuelle</span>':'')) +
     _rCell('Statut',       statusBadge(r.status)) +
     '</div>' +
@@ -1315,6 +1325,65 @@ function viewUnpaidFiche(id) {
     };
   }
   setTimeout(function(){ vrPayCalc(total); }, 50);
+}
+
+/* ============================================================
+   ★ CORRECTIF — Documents (Permis / CIN / Passeport) dans les formulaires
+   "Nouvelle réservation" et "Nouvelle location".
+   Ces deux fonctions étaient APPELÉES (onchange="docPreview(...)",
+   collectDocs(...) au moment d'enregistrer) mais n'étaient définies NULLE
+   PART dans le projet : la sélection d'un document ne faisait donc
+   littéralement rien, et aucun document n'était jamais enregistré depuis
+   ces deux formulaires. Implémentées ici, avec en plus le collage
+   (Ctrl+V) et le glisser-déposer demandés (point 5), pour les 3 documents
+   (permis, CIN, passeport).
+   ============================================================ */
+function docPreview(input, previewId) {
+  var file = input && input.files && input.files[0];
+  _applyDocFile(input && input.id, previewId, file);
+  if (input) input.value = '';
+}
+
+function collectDocs(permisInputId, identityInputId) {
+  var out = {};
+  var p = document.getElementById(permisInputId);
+  var i = document.getElementById(identityInputId);
+  if (p && p.dataset && p.dataset.dataurl) out.permis = p.dataset.dataurl;
+  if (i && i.dataset && i.dataset.dataurl) out.identite = i.dataset.dataurl;
+  return out;
+}
+
+/* Colle une image copiée (Ctrl+V) directement dans un champ document. */
+function pasteDocField(inputId, previewId, ev) {
+  var items = (ev.clipboardData && ev.clipboardData.items) || [];
+  for (var k = 0; k < items.length; k++) {
+    if (items[k].type && items[k].type.indexOf('image') === 0) {
+      var file = items[k].getAsFile();
+      if (file) { ev.preventDefault(); _applyDocFile(inputId, previewId, file); return; }
+    }
+  }
+}
+
+/* Glisser-déposer une image sur un champ document. */
+function dropDocField(inputId, previewId, ev) {
+  ev.preventDefault();
+  if (ev.currentTarget && ev.currentTarget.classList) ev.currentTarget.classList.remove('doc-drop-active');
+  var file = ev.dataTransfer && ev.dataTransfer.files && ev.dataTransfer.files[0];
+  if (file) _applyDocFile(inputId, previewId, file);
+}
+
+function _applyDocFile(inputId, previewId, file) {
+  var input = inputId ? document.getElementById(inputId) : null;
+  var prev = previewId ? document.getElementById(previewId) : null;
+  if (!file) return;
+  if (file.size > 3 * 1024 * 1024) { alert('Fichier trop volumineux (max 3 Mo).'); return; }
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    if (input) input.dataset.dataurl = e.target.result;
+    if (prev) prev.innerHTML = '<img src="' + e.target.result + '" style="width:48px;height:48px;border-radius:8px;object-fit:cover;">' +
+      '<span style="font-size:11px;color:#22c55e;margin-left:6px;">✓ Enregistré</span>';
+  };
+  reader.readAsDataURL(file);
 }
 
 function _rCell(label, val) {
