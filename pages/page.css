@@ -126,30 +126,28 @@ img, iframe { max-width: 100%; }
 .pg-nav a:hover { color: white; background: rgba(255,255,255,0.08); }
 @media (max-width: 900px) { .pg-nav { display: none; } }
 
-/* Hero À propos : ambiance confiance / agence (dégradés uniquement — voir
-   note ci-dessous : plus AUCUNE image externe). */
+/* Hero À propos : ambiance confiance / agence (photo + voile sombre, charte
+   conservée à l'identique). */
 .page-hero.hero-about {
-  /* ★ CORRECTIF DÉFINITIF (flash blanc Chrome, intermittent) — Cette règle
-     chargeait auparavant une photo distante (Unsplash) en fond, en plus du
-     dégradé. C'était la véritable cause du flash : cette image réseau
-     n'était disponible qu'après le chargement de page.css ET après son
-     propre temps de téléchargement, alors qu'elle est plus spécifique que
-     le dégradé "de secours" déjà présent dans le <head> — elle l'emportait
-     donc dès que page.css se chargeait, réintroduisant une dépendance
-     réseau exactement là où on l'avait éliminée. C'est également ce qui
-     expliquait le comportement propre à Chrome : les moteurs de rendu ne
-     gèrent pas tous de la même façon le délai entre "dégradé déjà prêt" et
-     "image de fond encore en cours de chargement" pour une même propriété
-     background à plusieurs couches. Remplacée par des dégradés purs
-     (aucune requête réseau, disponibles instantanément) — teinte
-     légèrement différente du dégradé générique pour conserver une
-     identité propre à cette page, sans aucune dépendance externe. */
-  background: linear-gradient(135deg, rgba(10,10,12,0.94), rgba(20,10,14,0.96)), linear-gradient(135deg, var(--black), var(--dark2));
+  /* ★ CORRECTIF DÉFINITIF (flash blanc Chrome) — La photo est désormais
+     hébergée directement sur le site (assets/hero-about-bg.jpg) au lieu
+     d'un site externe (Unsplash). C'était la vraie cause du flash : une
+     image tierce plus longue et moins prévisible à charger que le reste du
+     site. Même rendu visuel qu'avant (même photo, même voile sombre),
+     mais sans plus aucune dépendance à un serveur externe. */
+  background:
+    linear-gradient(135deg, rgba(10,10,12,0.86), rgba(15,15,18,0.92)),
+    url('../assets/hero-about-bg.jpg') center 40% / cover no-repeat,
+    linear-gradient(135deg, var(--black), var(--dark2));
 }
-/* Hero Contact : ambiance assistance / service client (dégradés uniquement) */
+/* Hero Contact : ambiance assistance / service client (photo + voile sombre) */
 .page-hero.hero-contact {
-  /* ★ Même correctif que hero-about ci-dessus : plus d'image distante. */
-  background: linear-gradient(135deg, rgba(10,12,15,0.94), rgba(10,15,20,0.96)), linear-gradient(135deg, var(--black), var(--dark2));
+  /* ★ Même correctif que hero-about ci-dessus : photo hébergée localement
+     (assets/hero-contact-bg.jpg), plus aucune dépendance externe. */
+  background:
+    linear-gradient(135deg, rgba(10,10,12,0.86), rgba(15,15,18,0.92)),
+    url('../assets/hero-contact-bg.jpg') center 30% / cover no-repeat,
+    linear-gradient(135deg, var(--black), var(--dark2));
 }
 
 /* Visuel de présentation (À propos) */

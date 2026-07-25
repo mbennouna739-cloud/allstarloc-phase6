@@ -588,4 +588,25 @@
       });
   }
 
+  /* ============================================================
+     ★ CORRECTIF (point 1) — Copyright dynamique du footer.
+     L'année de fin (© 2009–AAAA) ne doit jamais être écrite en dur dans le
+     code : elle est calculée à partir de l'année réelle du visiteur à
+     chaque affichage/traduction, l'année de début (2009, fondation de
+     l'entreprise) restant fixe. Suit le même mécanisme de chaînage que les
+     autres hooks de cette page (onLangApplied), pour s'appliquer sur
+     toutes les pages du site sans dupliquer la logique. */
+  (function () {
+    var prevCopyHook = window.onLangApplied;
+    window.onLangApplied = function () {
+      if (typeof prevCopyHook === 'function') { try { prevCopyHook(); } catch (e) {} }
+      try {
+        var years = '2009–' + new Date().getFullYear();
+        document.querySelectorAll('.footer-copy[data-i18n="ft.copy"]').forEach(function (el) {
+          el.textContent = (typeof t === 'function') ? t('ft.copy', { years: years }) : el.textContent;
+        });
+      } catch (e) {}
+    };
+  })();
+
 })();

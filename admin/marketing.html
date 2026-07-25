@@ -1340,9 +1340,9 @@ const K = {
 };
 
 const SEO_DEFAULTS = {
-  index: { title:'ALL STAR LOC — Location de Voiture à Marrakech | Depuis 2018', desc:'Location de voiture à Marrakech. Livraison aéroport gratuite, service 24h/7j, flotte moderne. Réservez en ligne en 2 minutes.', slug:'', keywords:'location voiture marrakech, louer voiture marrakech' },
+  index: { title:'ALL STAR LOC — Location de Voiture à Marrakech | Depuis 2009', desc:'Location de voiture à Marrakech. Livraison aéroport gratuite, service 24h/7j, flotte moderne. Réservez en ligne en 2 minutes.', slug:'', keywords:'location voiture marrakech, louer voiture marrakech' },
   'nos-vehicules': { title:'Nos Véhicules — Location de Voiture à Marrakech | ALL STAR LOC', desc:'Découvrez toute la flotte ALL STAR LOC à Marrakech : citadines, berlines et SUV récents. Tarifs dégressifs, assurance incluse.', slug:'nos-vehicules', keywords:'citadine marrakech, suv marrakech, berline marrakech' },
-  about:   { title:'À propos — ALL STAR LOC Marrakech', desc:'Découvrez ALL STAR LOC, votre partenaire de confiance pour la location de voiture à Marrakech depuis 2018.', slug:'about', keywords:'location voiture marrakech agence, ALL STAR LOC' },
+  about:   { title:'À propos — ALL STAR LOC Marrakech', desc:'Découvrez ALL STAR LOC, votre partenaire de confiance pour la location de voiture à Marrakech depuis 2009.', slug:'about', keywords:'location voiture marrakech agence, ALL STAR LOC' },
   contact: { title:'Contact — ALL STAR LOC Marrakech', desc:'Contactez ALL STAR LOC pour louer une voiture à Marrakech. Réponse rapide, devis gratuit, livraison à l\'aéroport.', slug:'contact', keywords:'contact location voiture marrakech' },
   aeroport:{ title:'Location Voiture Aéroport Marrakech Ménara | ALL STAR LOC', desc:'Location de voiture à l\'aéroport de Marrakech Ménara. Livraison gratuite et rapide à votre arrivée.', slug:'aeroport', keywords:'location voiture aeroport marrakech, rak location' },
   faq:     { title:'FAQ — Questions Fréquentes | ALL STAR LOC Marrakech', desc:'Retrouvez les réponses à toutes vos questions sur la location de voiture à Marrakech avec ALL STAR LOC.', slug:'faq', keywords:'faq location voiture marrakech' },
@@ -1352,7 +1352,7 @@ const SEO_DEFAULTS = {
 const I18N_DEFAULTS = {
   'hero.titleHtml': 'Location de Voiture<br>à Marrakech <span>Sans Surprise</span>',
   'hero.sub':       "Livraison gratuite à l'aéroport Ménara (RAK), au centre-ville et à votre hôtel. Flotte récente, assurance incluse, kilométrage illimité et prix transparents.",
-  'hero.badge':     'Agence à Marrakech · Depuis 2018',
+  'hero.badge':     'Agence à Marrakech · Depuis 2009',
   'nav.book':       'Réserver',
   'hero.f1':        'Livraison aéroport gratuite',
   'hero.f2':        'Disponible 24h/24, 7j/7',
@@ -1704,7 +1704,7 @@ function renderSEOSummary() {
   const schema = document.getElementById('schema-preview');
   if (schema) schema.textContent = JSON.stringify({
     "@context":"https://schema.org","@type":"LocalBusiness",
-    "name":"ALL STAR LOC","description":"Location de voiture à Marrakech depuis 2018",
+    "name":"ALL STAR LOC","description":"Location de voiture à Marrakech depuis 2009",
     "url":"https://allstarloc.ma","telephone":"+212675312453",
     "address":{"@type":"PostalAddress","streetAddress":"29 Rue Yougoslavie","addressLocality":"Marrakech","postalCode":"40000","addressCountry":"MA"},
     "priceRange":"25€–120€","openingHours":"Mo-Su 08:00-22:00",
@@ -1817,7 +1817,7 @@ async function generateSEOAI() {
   const pageName = pageNames[currentSEOPage] || currentSEOPage;
 
   const PROMPT = `Tu es un expert SEO spécialisé en location de voiture au Maroc, particulièrement pour Marrakech.
-L'agence s'appelle ALL STAR LOC (allstarloc.ma), spécialisée en location de voiture à Marrakech depuis 2018.
+L'agence s'appelle ALL STAR LOC (allstarloc.ma), spécialisée en location de voiture à Marrakech depuis 2009.
 Coordonnées : 29 Rue Yougoslavie, Guéliz, Marrakech. Tél: 06 75 31 24 53.
 
 CONTEXTE TEMPOREL ACTUEL :
