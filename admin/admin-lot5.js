@@ -642,7 +642,7 @@ function viewRental(id, mode) {
       var slName = subLeaseNameFor(r);
       return slName ? '<div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.25);border-radius:10px;padding:10px 14px;margin-bottom:12px;"><div style="font-size:11px;color:#8b5cf6;font-weight:700;text-transform:uppercase;letter-spacing:.4px;">Sous-location</div><div style="font-weight:800;font-size:15px;">' + slName + '</div></div>' : '';
     })() +
-    '<div class="form-group"><label class="form-label">Numéro de contrat</label>' +
+    '<div class="form-group"><label class="form-label">N° Contrat</label>' +
     '<input class="form-input" id="rd-ref" value="' + (r.contractRef||r.id||'') + '" style="font-weight:700;">' +
     '<div style="font-size:11px;color:var(--text3);margin-top:3px;">Modifiable — synchronisé Paiements, Clients, Tableau de bord</div></div>' +
 
@@ -1074,7 +1074,7 @@ function _buildNewLocationModal() {
     '<button type="button" class="btn-sm primary" style="white-space:nowrap;" onclick="nlQuickCreateSublease()">+ Créer</button>' +
     '</div>' +
     '<div style="font-size:11px;color:var(--text3);margin-top:5px;">Le « Prénom / Nom » ci-dessous = le client final de cette sous-location.</div></div>' +
-    '<div class="form-group"><label class="form-label">Numéro de contrat</label>' +
+    '<div class="form-group"><label class="form-label">N° Contrat</label>' +
     '<input class="form-input" id="nl-ref" placeholder="LOC-2026-001">' +
     '<div style="font-size:11px;color:var(--text3);margin-top:3px;">Modifiable — synchronisé avec Paiements, Clients et Tableau de bord</div></div>' +
     '<div class="form-row">' +
@@ -1323,7 +1323,7 @@ function viewRes(id) {
       var slName = subLeaseNameFor(r);
       return slName ? '<div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.25);border-radius:10px;padding:10px 14px;margin-bottom:12px;"><div style="font-size:11px;color:#8b5cf6;font-weight:700;text-transform:uppercase;letter-spacing:.4px;">Sous-location</div><div style="font-weight:800;font-size:15px;">' + slName + '</div></div>' : '';
     })() +
-    '<div class="form-group"><label class="form-label">Numéro de contrat</label>' +
+    '<div class="form-group"><label class="form-label">N° Contrat</label>' +
     '<input class="form-input" id="vr-ref" value="' + (r.contractRef||r.id||'') + '" style="font-weight:700;">' +
     '<div style="font-size:11px;color:var(--text3);margin-top:3px;">Modifiable — synchronisé avec Paiements, Clients et Tableau de bord</div></div>' +
     '<div class="res-detail-grid">' +
@@ -1511,14 +1511,25 @@ function dropDocField(inputId, previewId, ev) {
   if (file) _applyDocFile(inputId, previewId, file);
 }
 
-async function _applyDocFile(inputId, previewId, file) {
+/* ★ Même protection anti-course que la fiche client (point 10) : une file
+   par champ garantit qu'un collage rapide n'écrase jamais le précédent. */
+var _docFieldQueues = {};
+function _applyDocFile(inputId, previewId, file) {
+  var qKey = inputId || previewId || 'default';
+  var prevQ = _docFieldQueues[qKey] || Promise.resolve();
+  var next = prevQ.then(function () { return _applyDocFileNow(inputId, previewId, file); })
+    .catch(function (e) { console.error('_applyDocFile:', e); });
+  _docFieldQueues[qKey] = next;
+  return next;
+}
+async function _applyDocFileNow(inputId, previewId, file) {
   var input = inputId ? document.getElementById(inputId) : null;
   var prev = previewId ? document.getElementById(previewId) : null;
   if (!file) return;
   if (file.size > 20 * 1024 * 1024) { alert('Fichier trop volumineux (max 20 Mo).'); return; }
   // ★ Point 5 : même compression que la fiche client, pour éviter toute
   //   erreur de capacité de stockage dès la création.
-  var result = (typeof _compressImageFile === 'function') ? await _compressImageFile(file, 1600, 0.75) : null;
+  var result = (typeof _compressImageFile === 'function') ? await _compressImageFile(file, 1200, 0.7) : null;
   if (!result) {
     var reader = new FileReader();
     reader.onload = function(e) { result = e.target.result; _finishDocPreview(input, prev, result); };

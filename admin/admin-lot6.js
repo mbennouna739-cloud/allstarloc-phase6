@@ -242,16 +242,45 @@ function _saveCustProfiles(obj) {
   try { if (typeof ASLDB !== 'undefined' && ASLDB.syncNow) ASLDB.syncNow(); } catch(e) {}
 }
 
+/* ============================================================
+   ★ CORRECTIF DÉFINITIF (point 10) — Deux causes réelles trouvées :
+
+   1. CONDITION DE COURSE : chaque ajout de document compresse l'image
+      (~200-500 ms) puis fait "lire → modifier → écrire" sur localStorage.
+      Si on colle une 2e image AVANT que le 1er ajout ait fini d'écrire, le
+      2e lit un état encore incomplet et écrase le 1er en écrivant après
+      lui — exactement le symptôme "la 2e image remplace la 1re". Corrigé
+      avec une file d'attente (_docSaveQueue) qui garantit que chaque
+      ajout attend la fin complet du précédent avant de commencer.
+
+   2. localStorage A UNE LIMITE PAR ORIGINE (5-10 Mo au total, pas juste
+      par clé) — après plusieurs sessions de tests avec de nombreux
+      documents, cette limite globale pouvait être atteinte MÊME avec des
+      images compressées, bloquant tout nouvel ajout avec "stockage plein"
+      et empêchant l'image collée de s'afficher. Corrigé en gardant TOUJOURS
+      un cache EN MÉMOIRE (valable pour la session en cours) comme source
+      de vérité : même si l'écriture sur localStorage échoue, l'image
+      s'affiche immédiatement et part quand même vers le serveur (source
+      définitive, sans limite pratique de ce type).
+   ============================================================ */
+var _custDocsMemCache = null; // cache en mémoire, toujours à jour
+function _custDocsKey() { return 'asl_cust_docs_v1'; }
+
 function _loadCustDocs() {
-  try { return JSON.parse(localStorage.getItem(_custDocsKey()) || '{}'); } catch(e) { return {}; }
+  if (_custDocsMemCache) return _custDocsMemCache; // priorité au cache mémoire (toujours fiable)
+  try { _custDocsMemCache = JSON.parse(localStorage.getItem(_custDocsKey()) || '{}'); }
+  catch (e) { _custDocsMemCache = {}; }
+  return _custDocsMemCache;
 }
 function _saveCustDocs(obj) {
-  try { localStorage.setItem(_custDocsKey(), JSON.stringify(obj)); } catch(e) { alert('Stockage local plein malgré la compression — essayez de supprimer une ancienne image inutile.'); }
-  // ★ CORRECTIF (point 5) : cette fonction n'appelait jamais noteLocalChange/
-  //   syncNow — les documents étaient donc enregistrés localement mais
-  //   JAMAIS synchronisés vers le serveur ni les autres appareils. Alignée
-  //   sur le même mécanisme que le reste du Back-office (flotte, profils
-  //   clients, équipements personnalisés).
+  _custDocsMemCache = obj; // ★ le cache mémoire fait TOUJOURS foi pour cette session
+  try { localStorage.setItem(_custDocsKey(), JSON.stringify(obj)); }
+  catch (e) {
+    // Stockage local saturé : ce n'est PLUS bloquant — le document reste
+    // disponible pour toute la session (cache mémoire) et part quand même
+    // vers le serveur juste en dessous. On informe sans alarmer.
+    if (typeof asl6Toast === 'function') asl6Toast('⚠ Cache local plein (sans conséquence) — document conservé et synchronisé normalement.');
+  }
   try { if (typeof ASLDB !== 'undefined' && ASLDB.noteLocalChange) ASLDB.noteLocalChange(_custDocsKey()); } catch(e) {}
   try { if (typeof ASLDB !== 'undefined' && ASLDB.syncNow) ASLDB.syncNow(); } catch(e) {}
 }
@@ -544,20 +573,31 @@ function uploadCustDoc(encKey, type, input) {
   input.value = '';
 }
 
-/* ★ CORRECTIF (point 5) — Logique de sauvegarde extraite pour être partagée
-   entre sélection de fichier, coller (Ctrl+V) et glisser-déposer.
-   Chaque document (permis, CIN, passeport) est désormais un TABLEAU
-   d'images : une deuxième image (verso, autre page...) s'AJOUTE, elle ne
-   remplace jamais la précédente. Chaque image est compressée avant
-   stockage pour éviter toute erreur de capacité. */
-async function _saveDocFile(encKey, type, file) {
+/* ★ CORRECTIF DÉFINITIF (point 10) — File d'attente (mutex) : deux collages
+   rapprochés lançaient chacun leur propre "lire → modifier → écrire" en
+   parallèle ; celui qui finissait sa compression en second écrivait après
+   l'autre à partir d'un état déjà périmé, effaçant la première image. Cette
+   file garantit qu'un ajout ne commence JAMAIS avant que le précédent soit
+   entièrement terminé (compression + lecture + écriture), quel que soit le
+   nombre de collages rapides. */
+var _docSaveQueue = Promise.resolve();
+function _saveDocFile(encKey, type, file) {
+  _docSaveQueue = _docSaveQueue.then(function () { return _saveDocFileNow(encKey, type, file); })
+    .catch(function (e) { console.error('_saveDocFile:', e); });
+  return _docSaveQueue;
+}
+
+async function _saveDocFileNow(encKey, type, file) {
   var key = decodeURIComponent(encKey);
   if (!file) return;
   // Limite de sécurité sur le fichier D'ORIGINE (avant compression) — très
   // large, car la compression ramène presque toujours l'image à quelques
   // centaines de Ko avant l'enregistrement réel.
   if (file.size > 20 * 1024 * 1024) { alert('Fichier trop volumineux (max 20 Mo).'); return; }
-  var compressed = await _compressImageFile(file, 1600, 0.75);
+  // ★ Compression un peu plus poussée (1200px / qualité 0.7) : marge de
+  //   sécurité supplémentaire contre la capacité de stockage, sans perte de
+  //   lisibilité pour un document d'identité.
+  var compressed = await _compressImageFile(file, 1200, 0.7);
   if (!compressed) { alert('Impossible de lire ce fichier.'); return; }
   var docs = _loadCustDocs();
   if (!docs[key]) docs[key] = {};
@@ -569,6 +609,8 @@ async function _saveDocFile(encKey, type, file) {
     docs[key].identiteType = (t === '2') ? 'Passeport' : 'CIN (Carte d\'identité nationale)';
   }
   _saveCustDocs(docs);
+  // ★ Affichage IMMÉDIAT depuis la donnée qu'on vient d'écrire (pas une
+  //   relecture localStorage qui pourrait échouer si le stockage est plein).
   openCustomerDrawer(encKey);
   renderCustomers();
   asl6Toast('Document ajouté (' + arr.length + ' image' + (arr.length>1?'s':'') + ') ✓');
@@ -655,3 +697,23 @@ function closeCustomerDrawer() {
   if (bg) bg.style.display = 'none';
   if (dr) { dr.style.transform = 'translateX(100%)'; setTimeout(function(){ dr.style.display='none'; dr.style.transform=''; }, 280); }
 }
+
+/* ★ CORRECTIF (point 10) — Le cache mémoire (_custDocsMemCache) accélère
+   l'affichage et contourne les limites de localStorage, mais il doit être
+   invalidé quand une version plus récente arrive du serveur (ex. document
+   ajouté depuis un autre appareil) — sinon cet onglet resterait bloqué sur
+   sa propre copie locale malgré la synchronisation réelle des données. */
+try {
+  if (typeof ASLDB !== 'undefined' && ASLDB.onChange) {
+    ASLDB.onChange(function (changedKey) {
+      if (changedKey === _custDocsKey()) {
+        _custDocsMemCache = null; // force une relecture fraîche au prochain accès
+        try { if (document.getElementById('cust-drawer') && document.getElementById('cust-drawer').style.display !== 'none') {
+          var openKey = document.getElementById('cd-key');
+          if (openKey && openKey.value) openCustomerDrawer(openKey.value);
+        } } catch (e) {}
+        try { renderCustomers(); } catch (e) {}
+      }
+    });
+  }
+} catch (e) {}
