@@ -114,6 +114,16 @@ function fmtD(d) {
   return p.length === 3 ? (p[2] + '/' + p[1]) : d;
 }
 
+/* ★ CORRECTIF (points 5-7) — Nom de la sous-location liée à une réservation
+   (r.subleaseId), à afficher en tout premier dans les pop-up concernées. */
+function subLeaseNameFor(r) {
+  try {
+    if (!r || !r.subleaseId || typeof ASLSublease === 'undefined' || !ASLSublease.get) return '';
+    var s = ASLSublease.get(r.subleaseId);
+    return s ? s.name : '';
+  } catch (e) { return ''; }
+}
+
 function renderDashboard() {
   try {
     var fleet = aslFleet();
@@ -250,6 +260,7 @@ function openDashDrawer(type) {
       rows.push(
         '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);gap:10px;">'
         + '<div style="min-width:0;">'
+        + (subLeaseNameFor(r) ? '<div style="font-size:10.5px;color:#8b5cf6;font-weight:700;text-transform:uppercase;letter-spacing:.3px;">' + subLeaseNameFor(r) + '</div>' : '')
         + '<div style="font-weight:700;">' + (r.car||'') + '</div>'
         + (plateColor ? '<div style="font-size:12px;color:var(--text3);">🚗 ' + plateColor + '</div>' : '')
         + '<div style="font-size:13px;margin-top:2px;">Retour :<br><strong>' + fmtD(r.endDate||'') + (r.endTime ? ' à ' + r.endTime : '') + '</strong></div>'
@@ -274,6 +285,7 @@ function openDashDrawer(type) {
       rows.push(
         '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);gap:10px;">'
         + '<div style="min-width:0;">'
+        + (subLeaseNameFor(r) ? '<div style="font-size:10.5px;color:#8b5cf6;font-weight:700;text-transform:uppercase;letter-spacing:.3px;">' + subLeaseNameFor(r) + '</div>' : '')
         + '<div style="font-weight:700;">' + (r.car||'') + '</div>'
         + (plateColor ? '<div style="font-size:12px;color:var(--text3);">🚗 ' + plateColor + '</div>' : '')
         + '<div style="font-size:13px;margin-top:2px;">Départ :<br><strong>' + fmtD(r.startDate||'') + (r.startTime ? ' à ' + r.startTime : '') + '</strong></div>'
@@ -353,9 +365,11 @@ function openDashDrawer(type) {
     title = '💳 Dossiers avec impayés';
     res.filter(function(r) { if(r.status==='cancelled') return false; return (Number(r.amount)||0)>(Number(r.paid)||0); }).forEach(function(r) {
       var reste = (Number(r.amount)||0) - (Number(r.paid)||0);
+      var slName = subLeaseNameFor(r);
       rows.push(
         '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);">' +
-        '<div><div style="font-weight:700;">' + (r.client||'') + '</div>' +
+        '<div>' + (slName ? '<div style="font-size:10.5px;color:#8b5cf6;font-weight:700;text-transform:uppercase;letter-spacing:.3px;">' + slName + '</div>' : '') +
+        '<div style="font-weight:700;">' + (r.client||'') + '</div>' +
         '<div style="font-size:12px;color:var(--text3);">' + (r.car||'') + ' · ' + (r.contractRef||r.id) + '</div></div>' +
         '<div style="text-align:right;"><strong style="color:#ef4444;">' + fmtMAD(reste) + ' restant</strong><br>' +
         '<button class="btn-sm ghost" data-rid="' + r.id + '" onclick="setDashReturnContext(\'unpaid\');closeDashDrawer();viewUnpaidFiche(this.dataset.rid)">Voir →</button></div>' +
@@ -623,7 +637,12 @@ function viewRental(id, mode) {
   actionsHTML += '<button class="topbar-btn secondary" style="color:var(--text3);" data-rid="' + r.id + '" onclick="deleteReservationPermanently(this.dataset.rid)">🗑 Supprimer définitivement</button>';
 
   if (bodyEl) bodyEl.innerHTML =
-    '<div class="form-group"><label class="form-label">N° Contrat / Référence</label>' +
+    // ★ Point 5 : nom de la sous-location affiché en tout premier si applicable.
+    (function() {
+      var slName = subLeaseNameFor(r);
+      return slName ? '<div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.25);border-radius:10px;padding:10px 14px;margin-bottom:12px;"><div style="font-size:11px;color:#8b5cf6;font-weight:700;text-transform:uppercase;letter-spacing:.4px;">Sous-location</div><div style="font-weight:800;font-size:15px;">' + slName + '</div></div>' : '';
+    })() +
+    '<div class="form-group"><label class="form-label">Numéro de contrat</label>' +
     '<input class="form-input" id="rd-ref" value="' + (r.contractRef||r.id||'') + '" style="font-weight:700;">' +
     '<div style="font-size:11px;color:var(--text3);margin-top:3px;">Modifiable — synchronisé Paiements, Clients, Tableau de bord</div></div>' +
 
@@ -1055,7 +1074,7 @@ function _buildNewLocationModal() {
     '<button type="button" class="btn-sm primary" style="white-space:nowrap;" onclick="nlQuickCreateSublease()">+ Créer</button>' +
     '</div>' +
     '<div style="font-size:11px;color:var(--text3);margin-top:5px;">Le « Prénom / Nom » ci-dessous = le client final de cette sous-location.</div></div>' +
-    '<div class="form-group"><label class="form-label">N° Contrat / Référence</label>' +
+    '<div class="form-group"><label class="form-label">Numéro de contrat</label>' +
     '<input class="form-input" id="nl-ref" placeholder="LOC-2026-001">' +
     '<div style="font-size:11px;color:var(--text3);margin-top:3px;">Modifiable — synchronisé avec Paiements, Clients et Tableau de bord</div></div>' +
     '<div class="form-row">' +
@@ -1079,9 +1098,13 @@ function _buildNewLocationModal() {
     '<div class="form-group"><label class="form-label">Heure retour</label><input type="time" class="form-input" id="nl-end-time" value="10:00"></div>' +
     '</div>' +
     '<div class="form-group"><label class="form-label">Lieu de prise en charge</label>' +
-    '<select class="form-select" id="nl-pickup"><option>Aéroport Marrakech (RAK)</option><option>Centre-Ville</option><option>Gare</option><option>Hôtel</option></select></div>' +
+    '<select class="form-select" id="nl-pickup" onchange="document.getElementById(\'nl-pickup-custom\').style.display = (this.value===\'custom\') ? \'block\' : \'none\'">' +
+    '<option>Aéroport Marrakech (RAK)</option><option>Centre-Ville</option><option>Gare</option><option>Hôtel</option>' +
+    '<option value="custom">Autre (saisie libre)…</option>' +
+    '</select>' +
+    '<input type="text" id="nl-pickup-custom" class="form-input" placeholder="Ex : Adresse précise, quartier…" style="display:none;margin-top:8px;"></div>' +
     '<div class="form-group"><label class="form-label">Origine du client</label>' +
-    '<select class="form-select" id="nl-source">' +
+    '<select class="form-select" id="nl-source" onchange="document.getElementById(\'nl-source-custom\').style.display = (this.value===\'custom\') ? \'block\' : \'none\'">' +
     '<option value="manual">Réservation manuelle</option>' +
     '<option value="phone">Téléphone</option>' +
     '<option value="whatsapp">WhatsApp</option>' +
@@ -1090,7 +1113,9 @@ function _buildNewLocationModal() {
     '<option value="gbp">Google Business Profile</option>' +
     '<option value="facebook">Facebook</option>' +
     '<option value="instagram">Instagram</option>' +
-    '</select></div>' +
+    '<option value="custom">Autre (saisie libre)…</option>' +
+    '</select>' +
+    '<input type="text" id="nl-source-custom" class="form-input" placeholder="Ex : Hôtel, Ami, Agence de voyage…" style="display:none;margin-top:8px;"></div>' +
     '<div style="background:rgba(18,22,30,.04);border-radius:10px;padding:14px;">' +
     '<div style="font-weight:700;margin-bottom:10px;color:var(--red);">Paiement</div>' +
     '<div class="form-row">' +
@@ -1236,8 +1261,8 @@ function _saveNewLocation() {
       days: days, amount: total, paid: paid,
       paymentStatus: payStatus, paymentMode: mode,
       startDate: start, endDate: end, startTime: startTime, endTime: endTime,
-      pickup: (document.getElementById('nl-pickup')&&document.getElementById('nl-pickup').value)||'',
-      source: (document.getElementById('nl-source')&&document.getElementById('nl-source').value)||'manual', type: 'location', status: 'active',
+      pickup: (function(){ var v = (document.getElementById('nl-pickup')&&document.getElementById('nl-pickup').value)||''; if (v==='custom') return (document.getElementById('nl-pickup-custom')&&document.getElementById('nl-pickup-custom').value||'').trim(); return v; })(),
+      source: (function(){ var v = (document.getElementById('nl-source')&&document.getElementById('nl-source').value)||'manual'; if (v==='custom') { var c = (document.getElementById('nl-source-custom')&&document.getElementById('nl-source-custom').value||'').trim(); return c || 'manual'; } return v; })(), type: 'location', status: 'active',
       subleaseId: subleaseId, finalClient: subleaseId ? finalClientName : '',
       notes: (document.getElementById('nl-notes')&&document.getElementById('nl-notes').value)||'',
       docs: (typeof collectDocs==='function' ? collectDocs('nl-doc-permis','nl-doc-identity') : {})
@@ -1293,7 +1318,12 @@ function viewRes(id) {
   var mode  = r.paymentMode || 'Espèces';
 
   if (bodyEl) bodyEl.innerHTML =
-    '<div class="form-group"><label class="form-label">N° Contrat / Référence</label>' +
+    // ★ Point 6 : nom de la sous-location affiché en tout premier si applicable.
+    (function() {
+      var slName = subLeaseNameFor(r);
+      return slName ? '<div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.25);border-radius:10px;padding:10px 14px;margin-bottom:12px;"><div style="font-size:11px;color:#8b5cf6;font-weight:700;text-transform:uppercase;letter-spacing:.4px;">Sous-location</div><div style="font-weight:800;font-size:15px;">' + slName + '</div></div>' : '';
+    })() +
+    '<div class="form-group"><label class="form-label">Numéro de contrat</label>' +
     '<input class="form-input" id="vr-ref" value="' + (r.contractRef||r.id||'') + '" style="font-weight:700;">' +
     '<div style="font-size:11px;color:var(--text3);margin-top:3px;">Modifiable — synchronisé avec Paiements, Clients et Tableau de bord</div></div>' +
     '<div class="res-detail-grid">' +
@@ -1388,6 +1418,11 @@ function viewUnpaidFiche(id) {
   var mode  = r.paymentMode || 'Espèces';
 
   if (bodyEl) bodyEl.innerHTML =
+    // ★ Point 7 : nom de la sous-location affiché en tout premier si applicable.
+    (function() {
+      var slName = subLeaseNameFor(r);
+      return slName ? '<div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.25);border-radius:10px;padding:10px 14px;margin-bottom:12px;"><div style="font-size:11px;color:#8b5cf6;font-weight:700;text-transform:uppercase;letter-spacing:.4px;">Sous-location</div><div style="font-weight:800;font-size:15px;">' + slName + '</div></div>' : '';
+    })() +
     '<div class="res-detail-grid">' +
     _rCell('Client',    '<strong>' + (r.client||'') + '</strong>') +
     _rCell('Téléphone', r.phone||'—') +
@@ -1449,8 +1484,11 @@ function collectDocs(permisInputId, identityInputId) {
   var out = {};
   var p = document.getElementById(permisInputId);
   var i = document.getElementById(identityInputId);
-  if (p && p.dataset && p.dataset.dataurl) out.permis = p.dataset.dataurl;
-  if (i && i.dataset && i.dataset.dataurl) out.identite = i.dataset.dataurl;
+  // ★ CORRECTIF (point 3) : plusieurs images (recto/verso) par champ,
+  //   stockées en tableau JSON sur l'élément — jamais une seule valeur qui
+  //   écraserait la précédente à chaque collage.
+  if (p && p.dataset && p.dataset.dataurls) { try { out.permis = JSON.parse(p.dataset.dataurls); } catch(e) {} }
+  if (i && i.dataset && i.dataset.dataurls) { try { out.identite = JSON.parse(i.dataset.dataurls); } catch(e) {} }
   return out;
 }
 
@@ -1489,10 +1527,48 @@ async function _applyDocFile(inputId, previewId, file) {
   }
   _finishDocPreview(input, prev, result);
 }
+
+/* ★ CORRECTIF (point 3) — Chaque nouvelle image (recto/verso, pages
+   multiples) est désormais AJOUTÉE au tableau existant sur le champ, jamais
+   remplacée. `input.dataset.dataurls` contient un tableau JSON, lu ensuite
+   par collectDocs() au moment d'enregistrer la réservation/location. */
 function _finishDocPreview(input, prev, dataUrl) {
-  if (input) input.dataset.dataurl = dataUrl;
-  if (prev) prev.innerHTML = '<img src="' + dataUrl + '" style="width:48px;height:48px;border-radius:8px;object-fit:cover;">' +
-    '<span style="font-size:11px;color:#22c55e;margin-left:6px;">✓ Enregistré</span>';
+  if (input) {
+    var arr = [];
+    try { arr = JSON.parse(input.dataset.dataurls || '[]'); } catch (e) { arr = []; }
+    arr.push(dataUrl);
+    input.dataset.dataurls = JSON.stringify(arr);
+    if (prev) _renderDocPreviewGallery(input, prev, arr);
+  } else if (prev) {
+    prev.innerHTML = '<img src="' + dataUrl + '" style="width:48px;height:48px;border-radius:8px;object-fit:cover;">' +
+      '<span style="font-size:11px;color:#22c55e;margin-left:6px;">✓ Enregistré</span>';
+  }
+}
+
+/* Galerie de vignettes pour les documents en cours de création (avant même
+   l'enregistrement de la réservation), avec suppression individuelle. */
+function _renderDocPreviewGallery(input, prev, arr) {
+  var thumbs = arr.map(function (url, idx) {
+    return '<div style="position:relative;display:inline-block;">' +
+      '<img src="' + url + '" style="width:44px;height:44px;border-radius:6px;object-fit:cover;">' +
+      '<button type="button" style="position:absolute;top:-5px;right:-5px;width:16px;height:16px;padding:0;border:none;border-radius:50%;background:#fff;color:var(--red);line-height:1;font-size:10px;box-shadow:0 1px 3px rgba(0,0,0,.25);cursor:pointer;" title="Retirer" onclick="_removeDocPreview(\'' + input.id + '\',\'' + prev.id + '\',' + idx + ')">✕</button>' +
+      '</div>';
+  }).join('');
+  prev.innerHTML = '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">' + thumbs +
+    '<span style="font-size:11px;color:#22c55e;">✓ ' + arr.length + ' image' + (arr.length>1?'s':'') + '</span></div>';
+}
+function _removeDocPreview(inputId, previewId, idx) {
+  var input = document.getElementById(inputId);
+  var prev = document.getElementById(previewId);
+  if (!input) return;
+  var arr = [];
+  try { arr = JSON.parse(input.dataset.dataurls || '[]'); } catch (e) { arr = []; }
+  arr.splice(idx, 1);
+  input.dataset.dataurls = JSON.stringify(arr);
+  if (prev) {
+    if (arr.length) _renderDocPreviewGallery(input, prev, arr);
+    else prev.innerHTML = '';
+  }
 }
 
 function _rCell(label, val) {

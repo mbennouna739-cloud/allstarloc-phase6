@@ -684,7 +684,7 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
           <button class="btn-sm primary" onclick="showPage('reservations',document.querySelector('.sb-item[onclick*=reservations]'))">Voir toutes →</button>
         </div>
         <table>
-          <thead><tr><th>Réf.</th><th>Client</th><th>Véhicule</th><th>Dates</th><th>Origine</th><th>Montant</th><th>Statut</th><th></th></tr></thead>
+          <thead><tr><th>Numéro de contrat</th><th>Client</th><th>Véhicule</th><th>Dates</th><th>Origine</th><th>Montant</th><th>Statut</th><th></th></tr></thead>
           <tbody id="dashboard-reservations"></tbody>
         </table>
       </div>
@@ -724,7 +724,7 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
         </div>
         <table>
           <thead><tr>
-            <th>Réf.</th><th>Client</th><th>Véhicule</th><th>Date départ</th><th>Heure départ</th><th>Date retour</th><th>Heure retour</th><th>Jours</th><th>Total</th><th>Source</th><th>Statut</th><th>Actions</th>
+            <th>Numéro de contrat</th><th>Client</th><th>Véhicule</th><th>Date départ</th><th>Heure départ</th><th>Date retour</th><th>Heure retour</th><th>Jours</th><th>Total</th><th>Source</th><th>Statut</th><th>Actions</th>
           </tr></thead>
           <tbody id="all-reservations"></tbody>
         </table>
@@ -2308,7 +2308,7 @@ function openModal(type) {
           <button type="button" class="btn-sm primary" style="white-space:nowrap;" onclick="nrQuickCreateSublease()">+ Créer</button>
         </div>
         <div style="font-size:11px;color:var(--text3);margin-top:5px;">Le « Prénom / Nom » ci-dessous = le client final.</div></div>
-      <div class="form-group"><label class="form-label">N° de contrat / Référence</label><input class="form-input" id="nr-ref" placeholder="ASL-2026-001"><div style="font-size:11px;color:var(--text3,#888);margin-top:4px;">Pré-rempli automatiquement — modifiable. Se synchronise avec Paiements, Clients et le tableau de bord.</div></div>
+      <div class="form-group"><label class="form-label">Numéro de contrat</label><input class="form-input" id="nr-ref" placeholder="ASL-2026-001"><div style="font-size:11px;color:var(--text3,#888);margin-top:4px;">Pré-rempli automatiquement — modifiable. Se synchronise avec Paiements, Clients et le tableau de bord.</div></div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Prénom</label><input class="form-input" placeholder="Prénom" id="nr-firstname"></div>
         <div class="form-group"><label class="form-label">Nom</label><input class="form-input" placeholder="Nom" id="nr-lastname"></div>
@@ -2339,12 +2339,14 @@ function openModal(type) {
         <div class="form-group"><label class="form-label">Heure retour</label><input type="time" class="form-input" id="nr-end-time" value="10:00"></div>
       </div>
       <div class="form-group"><label class="form-label">Lieu de prise en charge</label>
-        <select class="form-select" id="nr-pickup">
+        <select class="form-select" id="nr-pickup" onchange="document.getElementById('nr-pickup-custom').style.display = (this.value==='custom') ? 'block' : 'none'">
           <option>Aéroport Marrakech (RAK)</option><option>Centre-Ville</option><option>Gare</option><option>Hôtel</option>
+          <option value="custom">Autre (saisie libre)…</option>
         </select>
+        <input type="text" id="nr-pickup-custom" class="form-input" placeholder="Ex : Adresse précise, quartier…" style="display:none;margin-top:8px;">
       </div>
       <div class="form-group"><label class="form-label">Origine du client</label>
-        <select class="form-select" id="nr-source">
+        <select class="form-select" id="nr-source" onchange="document.getElementById('nr-source-custom').style.display = (this.value==='custom') ? 'block' : 'none'">
           <option value="manual">Réservation manuelle</option>
           <option value="phone">Téléphone</option>
           <option value="whatsapp">WhatsApp</option>
@@ -2353,7 +2355,9 @@ function openModal(type) {
           <option value="gbp">Google Business Profile</option>
           <option value="facebook">Facebook</option>
           <option value="instagram">Instagram</option>
+          <option value="custom">Autre (saisie libre)…</option>
         </select>
+        <input type="text" id="nr-source-custom" class="form-input" placeholder="Ex : Hôtel, Ami, Agence de voyage…" style="display:none;margin-top:8px;">
       </div>
       <div class="form-group" style="background:rgba(18,22,30,.03);border-radius:10px;padding:14px;">
         <label class="form-label" style="color:var(--red);">Paiement</label>
@@ -2507,8 +2511,8 @@ function openModal(type) {
         days, amount: total, paid: paid, paymentStatus: payStatus, paymentMode: paymentMode,
         startDate: start, endDate: end,
         startTime: startTime, endTime: endTime,
-        pickup: document.getElementById('nr-pickup')?.value||'',
-        source: document.getElementById('nr-source')?.value||'phone',
+        pickup: (function(){ var v = document.getElementById('nr-pickup')?.value||''; if (v==='custom') return (document.getElementById('nr-pickup-custom')?.value||'').trim(); return v; })(),
+        source: (function(){ var v = document.getElementById('nr-source')?.value||'phone'; if (v==='custom') { var c = (document.getElementById('nr-source-custom')?.value||'').trim(); return c || 'manual'; } return v; })(),
         status: 'confirmed', type: 'reservation', payment: 'onsite', nationality: 'N/A',
         subleaseId: nrSubleaseId, finalClient: nrSubleaseId ? nrFinalClient : '',
         docs: (typeof collectDocs === 'function' ? collectDocs('nr-doc-permis', 'nr-doc-identity') : {}),

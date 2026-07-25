@@ -271,9 +271,13 @@ function saveCustomerDocs(email, name, docs) {
   var key = _custId(email, name);
   var all = _loadCustDocs();
   if (!all[key]) all[key] = {};
-  // ★ Point 5 : on AJOUTE au tableau existant, on ne remplace jamais.
-  if (docs.permis) { var pArr = _docAsArray(all[key].permis); pArr.push(docs.permis); all[key].permis = pArr; }
-  if (docs.identite) { var iArr = _docAsArray(all[key].identite); iArr.push(docs.identite); all[key].identite = iArr; }
+  // ★ Points 3/5 : on AJOUTE au tableau existant, on ne remplace jamais.
+  //   docs.permis/docs.identite peuvent désormais être un tableau (plusieurs
+  //   images saisies dès la création, recto/verso) OU une valeur unique
+  //   (rétrocompatibilité) — on CONCATÈNE dans les deux cas, on ne pousse
+  //   jamais un tableau entier comme un seul élément imbriqué.
+  if (docs.permis) { var pArr = _docAsArray(all[key].permis).concat(_docAsArray(docs.permis)); all[key].permis = pArr; }
+  if (docs.identite) { var iArr = _docAsArray(all[key].identite).concat(_docAsArray(docs.identite)); all[key].identite = iArr; }
   _saveCustDocs(all);
 }
 
