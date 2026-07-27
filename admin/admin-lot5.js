@@ -124,6 +124,62 @@ function subLeaseNameFor(r) {
   } catch (e) { return ''; }
 }
 
+/* ============================================================
+   ★ CORRECTIF (point 8) — Conservation automatique des brouillons de
+   pop-up (Nouvelle réservation / Nouvelle location / LLD).
+   Le formulaire est sauvegardé en continu pendant la saisie (localStorage),
+   restauré automatiquement à la réouverture, et n'est effacé QUE lors d'une
+   annulation volontaire ou d'un enregistrement réussi — jamais lors d'une
+   simple fermeture accidentelle du pop-up.
+   ============================================================ */
+function _draftKey(formId) { return 'asl_draft_' + formId + '_v1'; }
+
+function draftSave(formId, fieldIds) {
+  var data = {};
+  var hasContent = false;
+  fieldIds.forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el && el.value) { data[id] = el.value; hasContent = true; }
+  });
+  try {
+    if (hasContent) localStorage.setItem(_draftKey(formId), JSON.stringify(data));
+    else localStorage.removeItem(_draftKey(formId)); // formulaire vidé manuellement = plus rien à conserver
+  } catch (e) {}
+}
+
+function draftRestore(formId, fieldIds) {
+  var restored = false;
+  try {
+    var raw = localStorage.getItem(_draftKey(formId));
+    if (!raw) return false;
+    var data = JSON.parse(raw);
+    fieldIds.forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el && data[id] != null && data[id] !== '') { el.value = data[id]; restored = true; }
+    });
+  } catch (e) {}
+  return restored;
+}
+
+function draftClear(formId) {
+  try { localStorage.removeItem(_draftKey(formId)); } catch (e) {}
+}
+
+/* Attache la sauvegarde automatique du brouillon à TOUS les champs d'un
+   formulaire (délégation d'événement sur le conteneur) — appelé une fois
+   à l'ouverture de chaque pop-up concerné. */
+function draftWatch(formId, containerEl, fieldIds) {
+  if (!containerEl || containerEl.dataset.draftWatching) return;
+  containerEl.dataset.draftWatching = '1';
+  var debounce = null;
+  ['input', 'change'].forEach(function (evt) {
+    containerEl.addEventListener(evt, function () {
+      clearTimeout(debounce);
+      debounce = setTimeout(function () { draftSave(formId, fieldIds); }, 250);
+    });
+  });
+}
+
 function renderDashboard() {
   try {
     var fleet = aslFleet();
@@ -209,6 +265,20 @@ function setReturnsFilter(mode) {
 function setReturnsDate(d) {
   window._returnsFilter = { mode: 'date', date: d };
   openDashDrawer('returns');
+}
+/* ★ Point 7 — Recherche rapide dans les retours. Le tiroir se reconstruit
+   entièrement à chaque frappe (comme les autres filtres) ; on restaure donc
+   le focus et la position du curseur du champ de recherche juste après,
+   pour ne jamais interrompre la saisie. */
+function setReturnsSearch(q) {
+  window._returnsSearchQuery = q;
+  openDashDrawer('returns');
+  var input = document.getElementById('returns-search');
+  if (input) {
+    input.focus();
+    var pos = q.length;
+    try { input.setSelectionRange(pos, pos); } catch (e) {}
+  }
 }
 
 function openDashDrawer(type) {
@@ -316,7 +386,23 @@ function openDashDrawer(type) {
       (rf.mode==='date' ? '<input type="date" value="' + (rf.date||ts) + '" onchange="setReturnsDate(this.value)" style="padding:6px 8px;border:1px solid var(--border);border-radius:7px;font-size:13px;">' : '') +
       '</div>'
     );
+    // ★ Point 7 : recherche rapide (nom client / modèle / immatriculation),
+    //   filtrage instantané à la frappe.
+    rows.push(
+      '<div class="search-bar" style="margin-bottom:12px;"><span style="display:flex;align-items:center;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span>' +
+      '<input id="returns-search" placeholder="Rechercher : client, véhicule, immatriculation…" value="' + ((window._returnsSearchQuery||'').replace(/"/g,'&quot;')) + '" oninput="setReturnsSearch(this.value)"></div>'
+    );
+    var searchQ = (window._returnsSearchQuery || '').trim().toLowerCase();
     var matches = res.filter(function(r) { return (r.endDate||'').slice(0,10)===targetDate && r.status!=='cancelled' && r.status!=='completed'; });
+    if (searchQ) {
+      matches = matches.filter(function(r) {
+        var fc2 = fleet.filter(function(c){ return c.name===r.car || c.id===r.carId; })[0];
+        var plateSearch = (r.assignedPlate || (fc2 && fc2.plate) || '').toLowerCase();
+        return (r.client||'').toLowerCase().indexOf(searchQ) >= 0 ||
+               (r.car||'').toLowerCase().indexOf(searchQ) >= 0 ||
+               plateSearch.indexOf(searchQ) >= 0;
+      });
+    }
     matches.forEach(function(r) {
       // Récupérer l'immatriculation depuis la flotte
       var plate = '';
@@ -334,7 +420,7 @@ function openDashDrawer(type) {
         '</div>'
       );
     });
-    if (!matches.length) rows.push('<div style="color:#22c55e;text-align:center;padding:30px;">✓ Aucun retour prévu pour cette date</div>');
+    if (!matches.length) rows.push('<div style="color:#22c55e;text-align:center;padding:30px;">✓ ' + (searchQ ? 'Aucun résultat pour « ' + String(searchQ).replace(/</g,'&lt;').replace(/>/g,'&gt;') + ' »' : 'Aucun retour prévu pour cette date') + '</div>');
 
   } else if (type === 'late') {
     title = '🔴 Retards (date et heure de retour dépassées)';
@@ -662,7 +748,7 @@ function viewRental(id, mode) {
     '<div class="form-group"><label class="form-label">Heure retour</label><input type="time" class="form-input" id="rd-end-time" value="' + (r.endTime||'10:00') + '"></div>' +
     '</div>' +
 
-    '<div style="font-size:22px;font-weight:800;color:var(--red);margin-bottom:14px;">' + fmtMAD(total) + '</div>' +
+    '<div style="font-size:22px;font-weight:800;color:var(--red);margin-bottom:14px;" id="rd-total-display">' + fmtMAD(total) + '</div>' +
 
     '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">' +
     actionsHTML +
@@ -670,15 +756,32 @@ function viewRental(id, mode) {
 
     '<div style="background:rgba(18,22,30,.04);border-radius:10px;padding:14px;">' +
     '<div style="font-weight:700;margin-bottom:10px;color:var(--red);">Paiement</div>' +
+    // ★ CORRECTIF (point 9) : prix/jour et montant total désormais modifiables
+    //   même après enregistrement — aucune donnée financière n'est figée.
+    //   Le total se recalcule automatiquement (prix × jours) mais reste lui
+    //   aussi modifiable directement (ex. remise ponctuelle sur le total).
+    '<div class="form-row">' +
+    '<div class="form-group"><label class="form-label">Prix / jour (MAD)</label>' +
+    '<input class="form-input" type="number" id="rd-ppu" value="' + (r.pricePerDay || Math.round(total/Math.max(1,r.days||1))) + '" oninput="rdRecalcTotal(' + (r.days||1) + ')"></div>' +
+    '<div class="form-group"><label class="form-label">Total (MAD)</label>' +
+    '<input class="form-input" type="number" id="rd-total" value="' + total + '" oninput="rdPayCalc(parseFloat(this.value)||0)"></div>' +
+    '</div>' +
     '<div class="form-row">' +
     '<div class="form-group"><label class="form-label">Montant reçu (MAD)</label>' +
-    '<input class="form-input" type="number" id="rd-paid" value="' + paid + '" oninput="rdPayCalc(' + total + ')"></div>' +
+    '<input class="form-input" type="number" id="rd-paid" value="' + paid + '" oninput="rdPayCalc(parseFloat(document.getElementById(\'rd-total\').value)||' + total + ')"></div>' +
     '<div class="form-group"><label class="form-label">Mode de paiement</label>' +
     '<select class="form-select" id="rd-mode">' +
     ['Espèces','Carte bancaire','Virement','Chèque','Autre'].map(function(m) {
       return '<option' + (r.paymentMode===m?' selected':'') + '>' + m + '</option>';
     }).join('') +
     '</select></div></div>' +
+    '<div class="form-group"><label class="form-label">Encaissé par</label>' +
+    '<select class="form-select" id="rd-collected-by">' +
+    '<option value=""' + (!r.collectedBy?' selected':'') + '>— Non renseigné —</option>' +
+    ['Mohamed','Younes','Khalid'].map(function(m) {
+      return '<option' + (r.collectedBy===m?' selected':'') + '>' + m + '</option>';
+    }).join('') +
+    '</select></div>' +
     '<div id="rd-rest" style="font-weight:700;font-size:13px;margin-top:6px;"></div>' +
     '</div>' +
 
@@ -715,9 +818,23 @@ function _infoCell(label, val) {
     '<div style="font-size:13px;font-weight:600;">' + val + '</div></div>';
 }
 
+/* ★ CORRECTIF (point 9) — Recalcule le Total (MAD) quand le prix/jour change,
+   puis met à jour l'affichage payé/reste. Le Total reste lui-même
+   directement modifiable (remise ponctuelle) via son propre champ. */
+function rdRecalcTotal(days) {
+  var ppuEl = document.getElementById('rd-ppu');
+  var totalEl = document.getElementById('rd-total');
+  if (!ppuEl || !totalEl) return;
+  var ppu = parseFloat(ppuEl.value) || 0;
+  totalEl.value = ppu * (days || 1);
+  rdPayCalc(parseFloat(totalEl.value) || 0);
+}
+
 function rdPayCalc(total) {
   var paidEl = document.getElementById('rd-paid');
   var restEl = document.getElementById('rd-rest');
+  var totalDisplay = document.getElementById('rd-total-display');
+  if (totalDisplay) totalDisplay.textContent = fmtMAD(total);
   if (!paidEl || !restEl) return;
   var paid = parseFloat(paidEl.value) || 0;
   var reste = Math.max(0, total - paid);
@@ -728,20 +845,32 @@ function rdPayCalc(total) {
   restEl.innerHTML = 'Reste : <span style="color:' + col + ';font-weight:800;">' + fmtMAD(reste) + '</span> &nbsp;·&nbsp; <span style="color:' + col + ';">' + statut + '</span>';
 }
 
-function saveRentalChanges(id, total) {
+function saveRentalChanges(id, totalFallback) {
+  // ★ CORRECTIF (point 9) : le total et le prix/jour sont désormais lus en
+  //   direct depuis les champs (potentiellement modifiés par l'utilisateur),
+  //   jamais figés à la valeur d'ouverture de la fiche.
+  var newTotal = parseFloat((document.getElementById('rd-total') && document.getElementById('rd-total').value)) ;
+  if (isNaN(newTotal)) newTotal = totalFallback;
+  var newPpu = parseFloat((document.getElementById('rd-ppu') && document.getElementById('rd-ppu').value) || 0);
   var newPaid = parseFloat((document.getElementById('rd-paid') && document.getElementById('rd-paid').value) || 0);
   var newRef  = (document.getElementById('rd-ref')  && document.getElementById('rd-ref').value)  || '';
   var newMode = (document.getElementById('rd-mode') && document.getElementById('rd-mode').value) || 'Espèces';
+  var newCollectedBy = (document.getElementById('rd-collected-by') && document.getElementById('rd-collected-by').value) || '';
   // ★ CORRECTIF (item 2) : dates/heures modifiables directement depuis la fiche.
   var newStartDate = (document.getElementById('rd-start-date') && document.getElementById('rd-start-date').value) || '';
   var newStartTime = (document.getElementById('rd-start-time') && document.getElementById('rd-start-time').value) || '10:00';
   var newEndDate   = (document.getElementById('rd-end-date')   && document.getElementById('rd-end-date').value)   || '';
   var newEndTime   = (document.getElementById('rd-end-time')   && document.getElementById('rd-end-time').value)   || '10:00';
-  var payStatus = newPaid <= 0 ? 'Non payé' : (newPaid >= total ? 'Paiement complet' : 'Paiement partiel');
+  var payStatus = newPaid <= 0 ? 'Non payé' : (newPaid >= newTotal ? 'Paiement complet' : 'Paiement partiel');
 
   var res = aslRes();
   var r = res.find(function(x) { return String(x.id) === String(id); });
-  var patch = { paid: newPaid, paymentMode: newMode, paymentStatus: payStatus, contractRef: newRef };
+  // ★ Point 9 : aucune donnée financière n'est dupliquée — cette écriture met
+  //   à jour DIRECTEMENT le même enregistrement (amount/pricePerDay/paid...),
+  //   qui alimente automatiquement impayés, caisse, Grand Livre et
+  //   statistiques (tous calculés en direct depuis cette même réservation).
+  var patch = { paid: newPaid, amount: newTotal, pricePerDay: newPpu, paymentMode: newMode, paymentStatus: payStatus, contractRef: newRef, collectedBy: newCollectedBy };
+  var total = newTotal;
 
   if (r && newStartDate && newEndDate) {
     var datesChanged = (newStartDate !== r.startDate || newEndDate !== r.endDate || newStartTime !== (r.startTime||'10:00') || newEndTime !== (r.endTime||'10:00'));
@@ -1035,7 +1164,7 @@ function nlEndToDays() {
   if (days >= 1) dEl.value = days;
 }
 
-function _buildNewLocationModal() {
+function _buildNewLocationModal(isLLD) {
   // Garantit la présence du bouton #modal-save même si un autre module (LLD…)
   // a remplacé le pied de page du pop-up partagé juste avant.
   if (typeof restoreModalFooter === 'function') restoreModalFooter();
@@ -1045,7 +1174,11 @@ function _buildNewLocationModal() {
   var bodyEl  = document.getElementById('modal-body');
   var footEl  = document.getElementById('modal-footer');
   if (!overlay) return;
-  if (titleEl) titleEl.textContent = 'Nouvelle location directe';
+  // ★ Points 5-6 : la Location Longue Durée réutilise EXACTEMENT le même
+  //   pop-up qu'une location manuelle — même ergonomie, mêmes champs, même
+  //   système de dates/calendrier. Seule différence : le type enregistré et
+  //   l'ajout d'un historique de versements libres (voir _saveNewLocation).
+  if (titleEl) titleEl.textContent = isLLD ? 'Nouvelle location longue durée' : 'Nouvelle location directe';
   if (footEl)  footEl.style.display = 'flex';
 
   var carOpts = fleet.map(function(c) {
@@ -1062,6 +1195,8 @@ function _buildNewLocationModal() {
   }).join('');
 
   if (bodyEl) bodyEl.innerHTML =
+    '<input type="hidden" id="nl-is-lld" value="' + (isLLD ? '1' : '') + '">' +
+    (isLLD ? '<div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.25);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:12.5px;color:#6d28d9;">📅 Location Longue Durée — le montant saisi dans « Montant reçu » ci-dessous sera enregistré comme <strong>premier versement</strong>. Vous pourrez ajouter les suivants librement depuis la fiche, à chaque paiement du client (aucun calendrier fixe imposé).</div>' : '') +
     '<div class="form-group"><label class="form-label">Type de dossier</label>' +
     '<select class="form-select" id="nl-doctype" onchange="nlToggleSublease()">' +
     '<option value="direct">Client direct</option>' +
@@ -1083,10 +1218,13 @@ function _buildNewLocationModal() {
     '</div>' +
     '<div class="form-row">' +
     '<div class="form-group"><label class="form-label">Téléphone / WhatsApp</label><input class="form-input" id="nl-phone" placeholder="+212 6..."></div>' +
+    '<div class="form-group"><label class="form-label">Profession</label><input class="form-input" id="nl-profession" placeholder="Ex : Médecin, Ingénieur…"></div>' +
+    '</div>' +
+    '<div class="form-row">' +
     '<div class="form-group"><label class="form-label">Nationalité</label><input class="form-input" id="nl-nat" placeholder="ex : Française"></div>' +
     '</div>' +
     '<div class="form-group"><label class="form-label">Véhicule</label><select class="form-select" id="nl-car">' + carOpts + '</select></div>' +
-    '<div class="form-group"><label class="form-label">Prix / jour (MAD)</label><input class="form-input" type="number" id="nl-ppu" placeholder="Auto-calculé"></div>' +
+    '<div class="form-group"><label class="form-label">Prix / jour (MAD) — libre</label><input class="form-input" type="number" id="nl-ppu" placeholder="Saisissez le prix négocié"></div>' +
     '<div class="form-group"><label class="form-label">Nombre de jours</label>' +
     '<input class="form-input" type="number" min="1" id="nl-days" placeholder="Nombre de jours"></div>' +
     '<div class="form-row">' +
@@ -1098,32 +1236,23 @@ function _buildNewLocationModal() {
     '<div class="form-group"><label class="form-label">Heure retour</label><input type="time" class="form-input" id="nl-end-time" value="10:00"></div>' +
     '</div>' +
     '<div class="form-group"><label class="form-label">Lieu de prise en charge</label>' +
-    '<select class="form-select" id="nl-pickup" onchange="document.getElementById(\'nl-pickup-custom\').style.display = (this.value===\'custom\') ? \'block\' : \'none\'">' +
-    '<option>Aéroport Marrakech (RAK)</option><option>Centre-Ville</option><option>Gare</option><option>Hôtel</option>' +
-    '<option value="custom">Autre (saisie libre)…</option>' +
-    '</select>' +
-    '<input type="text" id="nl-pickup-custom" class="form-input" placeholder="Ex : Adresse précise, quartier…" style="display:none;margin-top:8px;"></div>' +
+    '<input class="form-input" id="nl-pickup" list="dl-pickup-options" placeholder="Sélectionnez ou saisissez librement…" value="Aéroport Marrakech (RAK)"></div>' +
     '<div class="form-group"><label class="form-label">Origine du client</label>' +
-    '<select class="form-select" id="nl-source" onchange="document.getElementById(\'nl-source-custom\').style.display = (this.value===\'custom\') ? \'block\' : \'none\'">' +
-    '<option value="manual">Réservation manuelle</option>' +
-    '<option value="phone">Téléphone</option>' +
-    '<option value="whatsapp">WhatsApp</option>' +
-    '<option value="online">Site Web</option>' +
-    '<option value="partner">Partenaire</option>' +
-    '<option value="gbp">Google Business Profile</option>' +
-    '<option value="facebook">Facebook</option>' +
-    '<option value="instagram">Instagram</option>' +
-    '<option value="custom">Autre (saisie libre)…</option>' +
-    '</select>' +
-    '<input type="text" id="nl-source-custom" class="form-input" placeholder="Ex : Hôtel, Ami, Agence de voyage…" style="display:none;margin-top:8px;"></div>' +
+    '<input class="form-input" id="nl-source" list="dl-source-options" placeholder="Sélectionnez ou saisissez librement…"></div>' +
     '<div style="background:rgba(18,22,30,.04);border-radius:10px;padding:14px;">' +
     '<div style="font-weight:700;margin-bottom:10px;color:var(--red);">Paiement</div>' +
     '<div class="form-row">' +
     '<div class="form-group"><label class="form-label">Total (MAD)</label><input class="form-input" type="number" id="nl-total" placeholder="Calculé auto" oninput="nlPayCalc()"></div>' +
     '<div class="form-group"><label class="form-label">Reçu (MAD)</label><input class="form-input" type="number" id="nl-paid" value="0" oninput="nlPayCalc()"></div>' +
     '</div>' +
+    '<div class="form-row">' +
     '<div class="form-group"><label class="form-label">Mode de paiement</label>' +
     '<select class="form-select" id="nl-mode"><option>Espèces</option><option>Carte bancaire</option><option>Virement</option><option>Chèque</option><option>Autre</option></select></div>' +
+    '<div class="form-group"><label class="form-label" style="color:var(--red);">Encaissé par *</label>' +
+    '<select class="form-select" id="nl-collected-by" required>' +
+    '<option value="">— Sélectionner —</option><option value="Mohamed">Mohamed</option><option value="Younes">Younes</option><option value="Khalid">Khalid</option>' +
+    '</select></div>' +
+    '</div>' +
     '<div id="nl-rest" style="font-weight:700;font-size:13px;margin-top:4px;"></div></div>' +
     '<div class="form-group"><label class="form-label">Notes internes</label><textarea class="form-input form-textarea" rows="2" id="nl-notes" placeholder="Notes..."></textarea></div>' +
     '<div class="form-group"><label class="form-label">Documents (facultatif)</label>' +
@@ -1146,17 +1275,13 @@ function _buildNewLocationModal() {
     var sEl = document.getElementById('nl-start');
     var eEl = document.getElementById('nl-end');
     var ppuEl = document.getElementById('nl-ppu');
-    function syncPpu() {
-      if (!ppuEl || ppuEl.dataset.manual) return;
-      var opt = carSel && carSel.options[carSel.selectedIndex];
-      var ppu = opt ? (parseFloat(opt.getAttribute('data-ppu'))||0) : 0;
-      var carId = carSel ? parseInt(carSel.value) : null;
-      var car = fleet.find(function(c){ return c.id===carId; });
-      var s = sEl && sEl.value;
-      var d = (s && eEl && eEl.value) ? Math.max(1, Math.round((new Date(eEl.value)-new Date(s))/86400000)) : 1;
-      var rate = (car && typeof ASLDB!=='undefined' && ASLDB.dailyRate) ? ASLDB.dailyRate(car, d, s) : ppu;
-      ppuEl.value = rate || ppu;
-    }
+    // ★ CORRECTIF (point 9) — Le prix du véhicule (fiche flotte) n'est plus
+    //   JAMAIS recopié automatiquement dans ce champ, y compris à la
+    //   sélection du véhicule. Le prix journalier est désormais une valeur
+    //   totalement libre saisie par l'utilisateur (remises, tarifs
+    //   négociés...) ; seul le TOTAL continue de se recalculer
+    //   automatiquement (prix × nombre de jours) à chaque changement de
+    //   prix ou de dates.
     function autoTotal() {
       var s = sEl&&sEl.value, e = eEl&&eEl.value, ppu = parseFloat(ppuEl&&ppuEl.value)||0;
       if (ppu && s && e) {
@@ -1165,16 +1290,16 @@ function _buildNewLocationModal() {
         if (tEl && !tEl.dataset.manual) { tEl.value = ppu*d; nlPayCalc(); }
       }
     }
-    if (carSel) carSel.addEventListener('change', function(){ if(ppuEl) delete ppuEl.dataset.manual; syncPpu(); autoTotal(); });
+    if (carSel) carSel.addEventListener('change', function(){ autoTotal(); });
     if (sEl) sEl.addEventListener('change', function(){ nlDaysToEnd(); });
     if (eEl) eEl.addEventListener('change', function(){ nlEndToDays(); });
     var daysEl = document.getElementById('nl-days');
     if (daysEl) daysEl.addEventListener('input', function(){ nlDaysToEnd(); });
-    [sEl,eEl].forEach(function(el){ if(el) el.addEventListener('change', function(){ syncPpu(); autoTotal(); }); });
-    if (ppuEl) ppuEl.addEventListener('input', function(){ this.dataset.manual='1'; autoTotal(); });
+    [sEl,eEl].forEach(function(el){ if(el) el.addEventListener('change', function(){ autoTotal(); }); });
+    if (ppuEl) ppuEl.addEventListener('input', function(){ autoTotal(); });
     var tEl = document.getElementById('nl-total');
     if (tEl) tEl.addEventListener('input', function(){ this.dataset.manual='1'; });
-    syncPpu(); autoTotal();
+    autoTotal();
   }, 80);
 
   var saveBtn = document.getElementById('modal-save');
@@ -1182,6 +1307,13 @@ function _buildNewLocationModal() {
     saveBtn.textContent = 'Enregistrer la location';
     saveBtn.onclick = _saveNewLocation;
   }
+
+  // ★ Point 8 : restaure un brouillon existant, puis surveille la saisie.
+  var NL_DRAFT_FIELDS = ['nl-ref','nl-fn','nl-ln','nl-phone','nl-profession','nl-nat','nl-car','nl-ppu','nl-days','nl-start','nl-start-time','nl-end','nl-end-time','nl-pickup','nl-source','nl-total','nl-paid','nl-mode','nl-collected-by','nl-notes','nl-doctype','nl-sublease'];
+  setTimeout(function () {
+    if (draftRestore('nl', NL_DRAFT_FIELDS)) showToast('Brouillon restauré ✓');
+    draftWatch('nl', bodyEl, NL_DRAFT_FIELDS);
+  }, 100);
 }
 
 function nlPayCalc() {
@@ -1211,9 +1343,10 @@ function _saveNewLocation() {
   var endTime   = (document.getElementById('nl-end-time')   && document.getElementById('nl-end-time').value)   || '10:00';
   if (!fn || !start || !end) { alert('Complétez les champs obligatoires (prénom, dates)'); return; }
   var days = Math.max(1, Math.round((new Date(end)-new Date(start))/(86400000)));
+  // ★ CORRECTIF (point 9) : prix journalier libre et obligatoire, plus
+  //   aucun repli automatique sur le prix de la fiche véhicule.
   var ppu  = parseFloat(document.getElementById('nl-ppu')&&document.getElementById('nl-ppu').value)||0;
-  if (!ppu && car && typeof ASLDB!=='undefined' && ASLDB.dailyRate) ppu = ASLDB.dailyRate(car, days, start);
-  if (!ppu && car) ppu = car.priceMAD || 0;
+  if (!ppu || ppu <= 0) { alert('Merci de saisir le prix journalier (le prix de la fiche véhicule n\'est qu\'une référence, il n\'est plus appliqué automatiquement).'); return; }
   var total = parseFloat(document.getElementById('nl-total')&&document.getElementById('nl-total').value) || ppu*days;
   var paid  = parseFloat(document.getElementById('nl-paid') &&document.getElementById('nl-paid').value)  || 0;
   var plate = (carOpt && carOpt.getAttribute('data-plate')) || (car&&car.plate) || '';
@@ -1249,23 +1382,48 @@ function _saveNewLocation() {
     }
   }
 
+  // ★ Point 3 : "Encaissé par" est obligatoire — indépendant de l'utilisateur connecté.
+  var nlCollectedBy = (document.getElementById('nl-collected-by') && document.getElementById('nl-collected-by').value) || '';
+  if (!nlCollectedBy) { alert('Merci de renseigner « Encaissé par » avant d\'enregistrer.'); return; }
+
+  // ★ Points 5-6 : Location Longue Durée = même fiche, seul le type change,
+  //   + le premier versement initialise un historique de paiements LIBRE
+  //   (pas de calendrier fixe imposé — voir addLLDPaymentEntry pour les suivants).
+  var isLLD = (document.getElementById('nl-is-lld') && document.getElementById('nl-is-lld').value === '1');
+  var initialPayments = [];
+  if (isLLD && paid > 0) {
+    initialPayments.push({ date: (typeof ASLDB!=='undefined' && ASLDB.localDateISO) ? ASLDB.localDateISO() : new Date().toISOString().slice(0,10), amount: paid, mode: mode, collectedBy: nlCollectedBy, comment: '' });
+  }
+
   var newLoc = null;
   if (typeof ASLDB!=='undefined' && ASLDB.addReservation) {
     newLoc = ASLDB.addReservation({
       client: (fn + ' ' + (ln||'')).trim(),
       contractRef: ref, email: '',
       phone: (document.getElementById('nl-phone')&&document.getElementById('nl-phone').value)||'',
+      profession: (document.getElementById('nl-profession')&&document.getElementById('nl-profession').value)||'',
       nationality: (document.getElementById('nl-nat')&&document.getElementById('nl-nat').value)||'N/A',
       car: car ? car.name : '', carId: carId,
       pricePerDay: ppu, assignedPlate: plate, assignedColor: color,
       days: days, amount: total, paid: paid,
-      paymentStatus: payStatus, paymentMode: mode,
+      paymentStatus: payStatus, paymentMode: mode, collectedBy: nlCollectedBy,
       startDate: start, endDate: end, startTime: startTime, endTime: endTime,
-      pickup: (function(){ var v = (document.getElementById('nl-pickup')&&document.getElementById('nl-pickup').value)||''; if (v==='custom') return (document.getElementById('nl-pickup-custom')&&document.getElementById('nl-pickup-custom').value||'').trim(); return v; })(),
-      source: (function(){ var v = (document.getElementById('nl-source')&&document.getElementById('nl-source').value)||'manual'; if (v==='custom') { var c = (document.getElementById('nl-source-custom')&&document.getElementById('nl-source-custom').value||'').trim(); return c || 'manual'; } return v; })(), type: 'location', status: 'active',
+      pickup: (document.getElementById('nl-pickup')&&document.getElementById('nl-pickup').value)||'',
+      source: (document.getElementById('nl-source')&&document.getElementById('nl-source').value)||'manual',
+      type: isLLD ? 'lld' : 'location', status: 'active',
+      payments: isLLD ? initialPayments : undefined,
       subleaseId: subleaseId, finalClient: subleaseId ? finalClientName : '',
-      notes: (document.getElementById('nl-notes')&&document.getElementById('nl-notes').value)||'',
-      docs: (typeof collectDocs==='function' ? collectDocs('nl-doc-permis','nl-doc-identity') : {})
+      notes: (document.getElementById('nl-notes')&&document.getElementById('nl-notes').value)||''
+      // ★ CORRECTIF CRITIQUE (régression Mission 2) : les documents ne sont
+      //   PLUS jamais embarqués directement dans la réservation elle-même
+      //   (voir _nlDocs juste en dessous). Une photo compressée pèse déjà
+      //   100-400 Ko : embarquée ici, la réservation dépassait largement la
+      //   limite de 20 Ko du serveur pour un ajout, qui était alors rejeté
+      //   EN PERMANENCE — bloquant TOUTES les réservations suivantes dans la
+      //   file d'attente de synchronisation (elles restaient coincées
+      //   derrière celle-ci indéfiniment). Les documents continuent d'être
+      //   correctement associés au client via saveCustomerDocs() ci-dessous,
+      //   dans leur propre magasin synchronisé séparément.
     });
     if (car && plate && typeof ASLDB.setUnitStatusByPlate==='function') {
       ASLDB.setUnitStatusByPlate(carId, plate, 'active');
@@ -1274,13 +1432,15 @@ function _saveNewLocation() {
     }
   }
   if (typeof reloadData==='function') reloadData();
-  if (newLoc && newLoc.docs && typeof saveCustomerDocs==='function') saveCustomerDocs(newLoc.email, newLoc.client, newLoc.docs);
+  var _nlDocs = (typeof collectDocs==='function') ? collectDocs('nl-doc-permis','nl-doc-identity') : {};
+  if (newLoc && (_nlDocs.permis || _nlDocs.identite) && typeof saveCustomerDocs==='function') saveCustomerDocs(newLoc.email, newLoc.client, _nlDocs);
   if (typeof clearPendingDocs==='function') clearPendingDocs();
   renderRentals(); renderDashboard();
   if (typeof renderPayments==='function') renderPayments();
   if (typeof renderSubleases==='function') renderSubleases();
   updateBadges();
   if (typeof closeModal==='function') closeModal();
+  draftClear('nl'); // ★ Point 8 : enregistrement réussi = brouillon effacé
   showToast('Location ' + (newLoc ? newLoc.id : '') + ' créée et synchronisée ✓');
 }
 
@@ -1358,12 +1518,22 @@ function viewRes(id) {
     '<div style="background:rgba(18,22,30,.04);border-radius:10px;padding:14px;">' +
     '<div style="font-weight:700;margin-bottom:10px;color:var(--red);">Paiement</div>' +
     '<div class="form-row">' +
+    '<div class="form-group"><label class="form-label">Total (MAD)</label>' +
+    '<input class="form-input" type="number" id="vr-total" value="' + total + '" oninput="vrPayCalc(parseFloat(this.value)||0)"></div>' +
     '<div class="form-group"><label class="form-label">Montant reçu (MAD)</label>' +
-    '<input class="form-input" type="number" id="vr-paid" value="' + paid + '" oninput="vrPayCalc(' + total + ')"></div>' +
+    '<input class="form-input" type="number" id="vr-paid" value="' + paid + '" oninput="vrPayCalc(parseFloat(document.getElementById(\'vr-total\').value)||' + total + ')"></div>' +
+    '</div>' +
+    '<div class="form-row">' +
     '<div class="form-group"><label class="form-label">Mode de paiement</label>' +
     '<select class="form-select" id="vr-mode">' +
     ['Espèces','Carte bancaire','Virement','Chèque','Autre'].map(function(m){ return '<option' + (mode===m?' selected':'') + '>' + m + '</option>'; }).join('') +
-    '</select></div></div>' +
+    '</select></div>' +
+    '<div class="form-group"><label class="form-label">Encaissé par</label>' +
+    '<select class="form-select" id="vr-collected-by">' +
+    '<option value=""' + (!r.collectedBy?' selected':'') + '>— Non renseigné —</option>' +
+    ['Mohamed','Younes','Khalid'].map(function(m){ return '<option' + (r.collectedBy===m?' selected':'') + '>' + m + '</option>'; }).join('') +
+    '</select></div>' +
+    '</div>' +
     '<div id="vr-rest" style="font-weight:700;font-size:13px;margin-top:6px;"></div></div>' +
     '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">' +
     '<button class="topbar-btn secondary" style="flex:1;min-width:120px;" onclick="addDocsToReservation(\'' + r.id + '\')">📎 Documents</button>' +
@@ -1376,13 +1546,17 @@ function viewRes(id) {
   if (saveBtn) {
     saveBtn.textContent = r.status==='pending' ? 'Confirmer la réservation' : 'Enregistrer les modifications';
     saveBtn.onclick = function() {
+      // ★ Point 9 : total/prix modifiables même après enregistrement, sans doublon.
+      var newTotal = parseFloat(document.getElementById('vr-total')&&document.getElementById('vr-total').value);
+      if (isNaN(newTotal)) newTotal = total;
       var newPaid = parseFloat(document.getElementById('vr-paid')&&document.getElementById('vr-paid').value || 0);
       var newRef  = (document.getElementById('vr-ref') &&document.getElementById('vr-ref').value)  || r.contractRef || r.id;
       var newMode = (document.getElementById('vr-mode')&&document.getElementById('vr-mode').value) || r.paymentMode;
-      var payStatus = newPaid<=0 ? 'Non payé' : (newPaid>=total ? 'Paiement complet' : 'Paiement partiel');
+      var newCollectedBy = (document.getElementById('vr-collected-by')&&document.getElementById('vr-collected-by').value) || '';
+      var payStatus = newPaid<=0 ? 'Non payé' : (newPaid>=newTotal ? 'Paiement complet' : 'Paiement partiel');
       if (r.status==='pending' && typeof confirmRes==='function') { confirmRes(id); }
       if (typeof ASLDB!=='undefined' && ASLDB.updateReservation) {
-        ASLDB.updateReservation(id, { paid: newPaid, paymentMode: newMode, paymentStatus: payStatus, contractRef: newRef });
+        ASLDB.updateReservation(id, { paid: newPaid, amount: newTotal, paymentMode: newMode, paymentStatus: payStatus, contractRef: newRef, collectedBy: newCollectedBy });
       }
       if (typeof reloadData==='function') reloadData();
       if (typeof renderAllReservations==='function') renderAllReservations();
@@ -1429,16 +1603,26 @@ function viewUnpaidFiche(id) {
     _rCell('Véhicule',  r.car||'—') +
     _rCell('Contrat',   r.contractRef||r.id) +
     '</div>' +
-    '<div style="font-size:22px;font-weight:800;color:var(--red);margin:12px 0;">' + fmtMAD(total) + '</div>' +
+    '<div style="font-size:22px;font-weight:800;color:var(--red);margin:12px 0;" id="vr-total-display">' + fmtMAD(total) + '</div>' +
     '<div style="background:rgba(18,22,30,.04);border-radius:10px;padding:14px;">' +
     '<div style="font-weight:700;margin-bottom:10px;color:var(--red);">Paiement</div>' +
     '<div class="form-row">' +
+    '<div class="form-group"><label class="form-label">Total (MAD)</label>' +
+    '<input class="form-input" type="number" id="vr-total" value="' + total + '" oninput="vrPayCalc(parseFloat(this.value)||0)"></div>' +
     '<div class="form-group"><label class="form-label">Montant reçu (MAD)</label>' +
-    '<input class="form-input" type="number" id="vr-paid" value="' + paid + '" oninput="vrPayCalc(' + total + ')"></div>' +
+    '<input class="form-input" type="number" id="vr-paid" value="' + paid + '" oninput="vrPayCalc(parseFloat(document.getElementById(\'vr-total\').value)||' + total + ')"></div>' +
+    '</div>' +
+    '<div class="form-row">' +
     '<div class="form-group"><label class="form-label">Mode de paiement</label>' +
     '<select class="form-select" id="vr-mode">' +
     ['Espèces','Carte bancaire','Virement','Chèque','Autre'].map(function(m){ return '<option' + (mode===m?' selected':'') + '>' + m + '</option>'; }).join('') +
-    '</select></div></div>' +
+    '</select></div>' +
+    '<div class="form-group"><label class="form-label">Encaissé par</label>' +
+    '<select class="form-select" id="vr-collected-by">' +
+    '<option value=""' + (!r.collectedBy?' selected':'') + '>— Non renseigné —</option>' +
+    ['Mohamed','Younes','Khalid'].map(function(m){ return '<option' + (r.collectedBy===m?' selected':'') + '>' + m + '</option>'; }).join('') +
+    '</select></div>' +
+    '</div>' +
     '<div id="vr-rest" style="font-weight:700;font-size:13px;margin-top:6px;"></div></div>';
 
   if (footEl) footEl.style.display = 'flex';
@@ -1446,11 +1630,15 @@ function viewUnpaidFiche(id) {
   if (saveBtn) {
     saveBtn.textContent = 'Enregistrer le paiement';
     saveBtn.onclick = function() {
+      // ★ Point 9 : total modifiable même après enregistrement, sans doublon.
+      var newTotal = parseFloat(document.getElementById('vr-total') && document.getElementById('vr-total').value);
+      if (isNaN(newTotal)) newTotal = total;
       var newPaid = parseFloat(document.getElementById('vr-paid') && document.getElementById('vr-paid').value || 0);
       var newMode = (document.getElementById('vr-mode') && document.getElementById('vr-mode').value) || r.paymentMode;
-      var payStatus = newPaid<=0 ? 'Non payé' : (newPaid>=total ? 'Paiement complet' : 'Paiement partiel');
+      var newCollectedBy = (document.getElementById('vr-collected-by') && document.getElementById('vr-collected-by').value) || '';
+      var payStatus = newPaid<=0 ? 'Non payé' : (newPaid>=newTotal ? 'Paiement complet' : 'Paiement partiel');
       if (typeof ASLDB!=='undefined' && ASLDB.updateReservation) {
-        ASLDB.updateReservation(id, { paid: newPaid, paymentMode: newMode, paymentStatus: payStatus });
+        ASLDB.updateReservation(id, { paid: newPaid, amount: newTotal, paymentMode: newMode, paymentStatus: payStatus, collectedBy: newCollectedBy });
       }
       if (typeof reloadData==='function') reloadData();
       if (typeof renderAllReservations==='function') renderAllReservations();
@@ -1589,6 +1777,8 @@ function _rCell(label, val) {
 function vrPayCalc(total) {
   var paidEl = document.getElementById('vr-paid');
   var restEl = document.getElementById('vr-rest');
+  var totalDisplay = document.getElementById('vr-total-display');
+  if (totalDisplay) totalDisplay.textContent = fmtMAD(total);
   if (!paidEl || !restEl) return;
   var paid = parseFloat(paidEl.value)||0, reste = Math.max(0, total-paid);
   var statut, col;
@@ -1636,6 +1826,21 @@ document.addEventListener('DOMContentLoaded', function() {
       }, 50);
     });
   }
+  /* ★ CORRECTIF — Un dossier passe de "Réservé" à "Loué" (ou de "Loué" à
+     "En retard") uniquement parce que l'heure réelle a dépassé sa date de
+     départ/retour — computePhase() le recalcule en direct, mais RIEN
+     n'écrit de nouvelle donnée à cet instant précis (aucun événement
+     onChange ne se déclenche). Sans rafraîchissement périodique, les
+     cartes du Dashboard restaient donc figées sur l'ancienne phase (ex. le
+     compteur "Réservés" affichait encore 1 alors que le dossier était déjà
+     "Loué" et la liste, elle, correctement vide) jusqu'à ce qu'une autre
+     action déclenche un re-rendu. Ce minuteur rafraîchit le Dashboard
+     toutes les 30 secondes pour que ces transitions purement temporelles
+     restent toujours à jour, sans attendre une action ou une synchronisation. */
+  setInterval(function () {
+    try { renderDashboard(); } catch (e) {}
+    try { if (typeof updateBadges === 'function') updateBadges(); } catch (e) {}
+  }, 30000);
   /* Enregistrement auto → toast vert */
   document.addEventListener('click', function(e) {
     var btn = e.target && (e.target.tagName==='BUTTON' ? e.target : e.target.closest('button'));

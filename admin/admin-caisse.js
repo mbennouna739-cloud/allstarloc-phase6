@@ -97,7 +97,36 @@
     setTxt('cs-inline-chg', money(t.charges));
     setTxt('cs-inline-reel', money(t.soldeReel));
     setTxt('cs-inline-rest', money(t.aEncaisser));
+
+    // ★ Point 4 : répartition "Encaissé par" — calculée UNIQUEMENT à partir
+    //   du champ collectedBy de chaque paiement, jamais de l'utilisateur
+    //   connecté. Le total global reste toujours la somme des 3 personnes
+    //   (+ éventuels encaissements sans "Encaissé par" renseigné, pour ne
+    //   jamais perdre d'argent dans le total si une ancienne donnée n'a pas
+    //   ce champ).
+    var byPerson = { Mohamed: 0, Younes: 0, Khalid: 0 };
+    var globalCollected = 0;
+    allReservations().forEach(function (r) {
+      if (r.status === 'cancelled') return;
+      var paid = Number(r.paid) || 0;
+      if (paid <= 0) return;
+      globalCollected += paid;
+      var who = r.collectedBy || '';
+      if (byPerson.hasOwnProperty(who)) byPerson[who] += paid;
+    });
+    setTxt('cs-collected-global', money(globalCollected));
+    setTxt('cs-collected-mohamed', money(byPerson.Mohamed));
+    setTxt('cs-collected-younes', money(byPerson.Younes));
+    setTxt('cs-collected-khalid', money(byPerson.Khalid));
   }
+
+  /* ★ Point 4 — Clic sur une carte (Mohamed/Younes/Khalid) : bascule vers
+     l'onglet Rapports (Grand Livre) déjà filtré sur cette personne. */
+  window.caisseShowCollectedBy = function (name) {
+    var btn = document.querySelector('.caisse-tab[data-ctab="rapports"]');
+    if (typeof window.caisseTab === 'function') window.caisseTab('rapports', btn);
+    setTimeout(function () { if (typeof window.glSetCollectedBy === 'function') window.glSetCollectedBy(name); }, 0);
+  };
 
   function setTxt(id, v) { var e = document.getElementById(id); if (e) e.textContent = v; }
 
@@ -354,6 +383,9 @@
     var fMode = (document.getElementById('gl-mode') || {}).value || '';
     var fCat = (document.getElementById('gl-cat') || {}).value || '';
     var fVeh = (document.getElementById('gl-vehicle') || {}).value || '';
+    // ★ Point 4 : filtre "Encaissé par" — indépendant de l'utilisateur connecté,
+    //   basé uniquement sur le champ collectedBy enregistré avec chaque paiement.
+    var fCollectedBy = _glCollectedByFilter || '';
 
     var inRange = function (ts) {
       if (ts == null) return true;
@@ -373,6 +405,7 @@
         if (fVeh && (r.car || '') !== fVeh) return;
         if (fMode && (r.paymentMode || '') !== fMode) return;
         if (fCat) return; // les paiements n'ont pas de catégorie de charge
+        if (fCollectedBy && (r.collectedBy || '') !== fCollectedBy) return;
         var ts = _resDate(r);
         if (!inRange(ts)) return;
         moves.push({
@@ -384,6 +417,7 @@
           vehicle: r.car || '',
           category: '',
           mode: r.paymentMode || '',
+          collectedBy: r.collectedBy || '—',
           entree: paid,
           sortie: 0
         });
@@ -391,7 +425,9 @@
     }
 
     // SORTIES : charges payées
-    if (fType === '' || fType === 'Charge') {
+    if ((fType === '' || fType === 'Charge') && !fCollectedBy) {
+      // ★ Les charges (dépenses) n'ont pas de "encaissé par" — si ce filtre
+      //   est actif, on ne montre que les paiements (voir plus haut).
       readCharges().forEach(function (c) {
         if (c.status === 'pending') return; // hors caisse réelle
         if (fVeh && (c.vehicle || '') !== fVeh) return;
@@ -408,6 +444,7 @@
           vehicle: c.vehicle || '',
           category: c.category || '',
           mode: '',
+          collectedBy: '—',
           entree: 0,
           sortie: Number(c.amount) || 0
         });
@@ -420,6 +457,17 @@
     moves.forEach(function (m) { solde += m.entree - m.sortie; m.solde = solde; });
     return moves;
   }
+
+  /* ★ Point 4 — Filtre "Encaissé par" actif dans le Grand Livre (Mohamed /
+     Younes / Khalid / vide = tous). Appelé depuis les cartes de répartition
+     de la Caisse et depuis le menu déroulant dédié du Grand Livre. */
+  var _glCollectedByFilter = '';
+  window.glSetCollectedBy = function (name) {
+    _glCollectedByFilter = name || '';
+    var sel = document.getElementById('gl-collected-by');
+    if (sel) sel.value = _glCollectedByFilter;
+    renderGrandLivre();
+  };
 
   /* Montants à encaisser (séparés) selon le filtre véhicule. */
   function computeRestForVehicle(fVeh) {
@@ -494,6 +542,7 @@
         + '<td>' + esc(m.vehicle || '—') + '</td>'
         + '<td>' + esc(m.category || '—') + '</td>'
         + '<td>' + esc(m.mode || '—') + '</td>'
+        + '<td>' + esc(m.collectedBy || '—') + '</td>'
         + '<td style="text-align:right;color:#16a34a;font-weight:600;">' + (m.entree ? money(m.entree) : '—') + '</td>'
         + '<td style="text-align:right;color:#dc2626;font-weight:600;">' + (m.sortie ? money(m.sortie) : '—') + '</td>'
         + '<td style="text-align:right;font-weight:700;">' + money(m.solde) + '</td>'

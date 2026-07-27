@@ -616,14 +616,27 @@
     var host = document.getElementById('ma-returns');
     if (!host) return;
     var target = returnsFilter === 'today' ? todayISO() : returnsFilter === 'tomorrow' ? plusDaysISO(1) : returnsDate;
+    var q = (window._maReturnsSearch || '').trim().toLowerCase();
     var list = reservations().filter(function (r) {
       return (r.endDate || '').slice(0, 10) === target && r.status !== 'cancelled' && r.status !== 'completed';
     }).sort(function (a, b) { return (a.endTime || '').localeCompare(b.endTime || ''); });
+    if (q) {
+      list = list.filter(function (r) {
+        var fc = fleet().filter(function (c) { return c.name === r.car || c.id === r.carId; })[0];
+        var plate = (r.assignedPlate || (fc && fc.plate) || '').toLowerCase();
+        return (r.client || '').toLowerCase().indexOf(q) >= 0 ||
+               (r.car || '').toLowerCase().indexOf(q) >= 0 ||
+               plate.indexOf(q) >= 0;
+      });
+    }
     var chips = [['today', "Aujourd'hui"], ['tomorrow', 'Demain'], ['date', 'Date choisie']];
     var head = '<div class="ma-chips">' + chips.map(function (ch) {
       return '<button class="ma-chip ' + (returnsFilter === ch[0] ? 'active' : '') + '" onclick="maReturnsFilter(\'' + ch[0] + '\')">' + ch[1] + '</button>';
     }).join('') + '</div>'
-      + (returnsFilter === 'date' ? '<input type="date" id="ma-returns-date" class="ma-date" value="' + esc(returnsDate) + '" onchange="maReturnsDate(this.value)">' : '');
+      + (returnsFilter === 'date' ? '<input type="date" id="ma-returns-date" class="ma-date" value="' + esc(returnsDate) + '" onchange="maReturnsDate(this.value)">' : '')
+      // ★ Point 7 : recherche rapide (client / véhicule / immatriculation).
+      + '<div class="search-bar" style="margin:10px 0;"><span style="display:flex;align-items:center;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span>'
+      + '<input id="ma-returns-search" placeholder="Rechercher…" value="' + esc(window._maReturnsSearch || '') + '" oninput="maReturnsSearch(this.value)"></div>';
     var body = list.length ? list.map(function (r) {
       var idStr = "'" + String(r.id || '') + "'";
       var reste = Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
@@ -634,9 +647,22 @@
         + (reste > 0 ? '<span class="ma-badge red">Reste ' + money(reste) + '</span>' : '<span class="ma-badge green">Payé</span>') + '</div>'
         + '<div class="ma-return-foot"><span>' + ic('eye') + ' Ouvrir la fiche</span><span class="ma-return-date">' + fmtDateT(r.endDate, r.endTime, '18:00') + '</span></div>'
         + '</div>';
-    }).join('') : '<div class="ma-empty">Aucun retour prévu pour cette date.</div>';
+    }).join('') : '<div class="ma-empty">' + (q ? 'Aucun résultat pour cette recherche.' : 'Aucun retour prévu pour cette date.') + '</div>';
     host.innerHTML = head + body;
   }
+
+  /* ★ Point 7 — recherche rapide mobile, avec restauration du focus/curseur
+     après le re-rendu complet de la liste (comme sur Desktop). */
+  window.maReturnsSearch = function (q) {
+    window._maReturnsSearch = q;
+    renderReturns();
+    var input = document.getElementById('ma-returns-search');
+    if (input) {
+      input.focus();
+      var pos = q.length;
+      try { input.setSelectionRange(pos, pos); } catch (e) {}
+    }
+  };
 
   /* ============ DISPONIBLES (vue mobile native) ============ */
   function renderAvailableM() {
@@ -1440,12 +1466,22 @@
        que les données restaurées sur desktop sont reçues sans attendre le poll. */
     try { if (typeof ASLDB !== 'undefined' && ASLDB.syncNow) ASLDB.syncNow(); } catch (e) {}
     setTimeout(function () { renderNotifications(); window.maGo('dashboard'); }, 200);
-    /* Second passage à 2s pour attraper les données misc (charges, sous-loc, LLD)
+    /* ★ Second passage à 2s pour attraper les données misc (charges, sous-loc, LLD)
        qui arrivent après la première synchro des réservations. */
     setTimeout(function () {
       try { if (typeof ASLDB !== 'undefined' && ASLDB.syncNow) ASLDB.syncNow(); } catch (e) {}
       if (isMobile()) renderScreen(current);
     }, 2000);
+    /* ★ CORRECTIF — Même cause que côté Desktop : un dossier qui passe de
+       "Réservé" à "Loué" (ou "Loué" à "En retard") uniquement parce que
+       l'heure réelle a dépassé sa date de départ/retour n'entraîne AUCUNE
+       écriture de données — rien ne déclenche donc de rafraîchissement.
+       Ce minuteur recalcule l'écran courant toutes les 30 secondes pour
+       que ces transitions purement temporelles restent toujours à jour. */
+    setInterval(function () {
+      if (!isMobile()) return;
+      try { renderScreen(current); } catch (e) {}
+    }, 30000);
     watchSync();
     hookModalLock();
   }

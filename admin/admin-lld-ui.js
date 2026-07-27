@@ -13,14 +13,23 @@
   function carName(id) { var c = fleet().filter(function (x) { return String(x.id) === String(id); })[0]; return c ? c.name : '—'; }
   function carPlate(id) { var c = fleet().filter(function (x) { return String(x.id) === String(id); })[0]; return c ? (c.plate || '') : ''; }
 
+  /* ★ Points 5-6 (refonte) — Les contrats LLD sont désormais de simples
+     réservations avec type:'lld', créées via le MÊME pop-up que Nouvelle
+     location (voir _buildNewLocationModal(true) dans admin-lot5.js). Plus
+     de calendrier mensuel fixe : chaque contrat porte un historique de
+     versements libres (r.payments[]), chacun avec sa date, son montant,
+     son mode et la personne qui l'a encaissé. r.paid = somme des versements. */
+  function lldRes() { try { return (ASLDB.getReservations && ASLDB.getReservations()) || []; } catch (e) { return []; } }
+  function lldList() { return lldRes().filter(function (r) { return r.type === 'lld' && r.status !== 'cancelled'; }); }
+
   window.renderLLD = function () {
     var host = document.getElementById('lld-list');
     if (!host) return;
     var q = ((document.getElementById('lld-search') && document.getElementById('lld-search').value) || '').toLowerCase().trim();
-    var all = ASLLLD.list();
+    var all = lldList();
     if (q) {
       all = all.filter(function (c) {
-        return (c.client || '').toLowerCase().indexOf(q) >= 0 || (carName(c.carId) || '').toLowerCase().indexOf(q) >= 0;
+        return (c.client || '').toLowerCase().indexOf(q) >= 0 || (c.car || '').toLowerCase().indexOf(q) >= 0;
       });
     }
     if (!all.length) {
@@ -28,20 +37,21 @@
       return;
     }
     host.innerHTML = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;">' + all.map(function (c) {
-      var t = ASLLLD.totals(c);
-      var statusColor = c.status === 'ended' ? '#9ca3af' : (t.rest > 0 ? '#d97706' : '#22c55e');
-      var statusLabel = c.status === 'ended' ? 'Terminé' : (t.rest > 0 ? 'En cours' : 'À jour');
+      var totalPaid = (c.payments || []).reduce(function (s, p) { return s + (Number(p.amount) || 0); }, 0);
+      var rest = Math.max(0, (Number(c.amount) || 0) - totalPaid);
+      var statusColor = rest > 0 ? '#d97706' : '#22c55e';
+      var statusLabel = rest > 0 ? 'En cours' : 'Soldé';
       return '<div class="fleet-card" style="cursor:pointer;" onclick="viewLLDContract(\'' + c.id + '\')">'
         + '<div style="padding:16px;">'
         + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">'
         + '<div><div style="font-weight:800;font-size:15px;">' + esc(c.client || 'Client') + '</div>'
-        + '<div style="font-size:12.5px;color:var(--text2);margin-top:2px;">' + esc(carName(c.carId)) + (carPlate(c.carId) ? ' · ' + esc(carPlate(c.carId)) : '') + '</div></div>'
+        + '<div style="font-size:12.5px;color:var(--text2);margin-top:2px;">' + esc(c.car || '') + (c.assignedPlate ? ' · ' + esc(c.assignedPlate) : '') + '</div></div>'
         + '<span class="badge" style="background:' + statusColor + '22;color:' + statusColor + ';white-space:nowrap;">● ' + statusLabel + '</span></div>'
         + '<div style="display:flex;gap:8px 18px;flex-wrap:wrap;margin-top:12px;font-size:12.5px;">'
         + '<div><span style="color:var(--text3);">Début</span><br><b>' + esc(c.startDate || '—') + '</b></div>'
-        + '<div><span style="color:var(--text3);">Durée</span><br><b>' + (c.durationMonths || 0) + ' mois</b></div>'
-        + '<div><span style="color:var(--text3);">Mensualité</span><br><b>' + money(c.monthlyAmount) + '</b></div>'
-        + '<div><span style="color:var(--text3);">Reste</span><br><b style="color:' + (t.rest > 0 ? '#C41E3A' : '#22c55e') + ';">' + money(t.rest) + '</b></div>'
+        + '<div><span style="color:var(--text3);">Durée</span><br><b>' + (c.days || 0) + ' jours</b></div>'
+        + '<div><span style="color:var(--text3);">Total</span><br><b>' + money(c.amount) + '</b></div>'
+        + '<div><span style="color:var(--text3);">Reste</span><br><b style="color:' + (rest > 0 ? '#C41E3A' : '#22c55e') + ';">' + money(rest) + '</b></div>'
         + '</div></div></div>';
     }).join('') + '</div>';
   };
@@ -112,88 +122,128 @@
   };
 
   window.deleteLLD = function (id) {
-    var c = ASLLLD.get(id);
+    var c = lldRes().filter(function (x) { return x.id === id; })[0];
     if (!c) return;
-    if (!confirm('Supprimer ce contrat LLD ?\nLe véhicule redeviendra disponible sur le site client.')) return;
-    // Libérer le véhicule
-    try {
-      if (c.carId && ASLDB.updateVehicle) ASLDB.updateVehicle(c.carId, { status: 'available', lldContractId: null });
-    } catch (e) {}
-    ASLLLD.remove(id);
+    if (!confirm('Supprimer définitivement ce contrat LLD ?\nLe véhicule redeviendra disponible.')) return;
+    if (typeof ASLDB !== 'undefined') {
+      if (c.carId && c.assignedPlate && typeof ASLDB.releaseUnit === 'function') ASLDB.releaseUnit(c.carId, c.assignedPlate);
+      if (ASLDB.deleteReservation) ASLDB.deleteReservation(id);
+    }
     if (typeof reloadData === 'function') reloadData();
     if (typeof renderFleetPage === 'function') renderFleetPage();
-    if (typeof renderAvailability === 'function') renderAvailability();
     if (typeof closeModal === 'function') closeModal();
     renderLLD();
     if (typeof showToast === 'function') showToast('Contrat supprimé — véhicule de nouveau disponible ✓');
   };
 
-  /* Fiche détaillée : échéancier mois par mois + paiements + reste. */
+  /* ★ Points 5-6 (refonte) — Fiche détaillée : historique de versements
+     LIBRES (aucun calendrier mensuel imposé), chacun avec sa date, son
+     montant, son mode et la personne ayant encaissé. Chaque versement met
+     à jour r.paid (= somme des versements) via ASLDB.updateReservation,
+     qui alimente donc automatiquement caisse, Grand Livre et statistiques
+     — sans aucun doublon, puisque c'est toujours le même enregistrement. */
   window.viewLLDContract = function (id) {
-    var c = ASLLLD.get(id);
+    var c = lldRes().filter(function (x) { return x.id === id; })[0];
     if (!c) return;
-    var t = ASLLLD.totals(c);
+    var payments = (c.payments || []).slice().sort(function (a, b) { return String(a.date||'').localeCompare(String(b.date||'')); });
+    var totalPaid = payments.reduce(function (s, p) { return s + (Number(p.amount) || 0); }, 0);
+    var totalDue = Number(c.amount) || 0;
+    var rest = Math.max(0, totalDue - totalPaid);
     var body = document.getElementById('modal-body');
     var title = document.getElementById('modal-title');
     var footer = document.getElementById('modal-footer');
     if (title) title.textContent = 'Contrat LLD — ' + (c.client || '');
-    var rows = t.months.map(function (m) {
-      var col = m.status === 'paid' ? '#22c55e' : (m.status === 'partial' ? '#d97706' : '#9ca3af');
-      var lbl = m.status === 'paid' ? 'Payé' : (m.status === 'partial' ? 'Partiel' : 'En attente');
+
+    var slName = (typeof subLeaseNameFor === 'function') ? subLeaseNameFor(c) : '';
+    var payRows = payments.length ? payments.map(function (p, idx) {
       return '<tr style="border-bottom:1px solid var(--border);">'
-        + '<td style="padding:8px 6px;text-transform:capitalize;">' + esc(m.label) + '</td>'
-        + '<td style="padding:8px 6px;">' + money(m.due) + '</td>'
-        + '<td style="padding:8px 6px;color:#16a34a;">' + money(m.paid) + '</td>'
-        + '<td style="padding:8px 6px;color:' + (m.rest > 0 ? '#C41E3A' : '#16a34a') + ';">' + money(m.rest) + '</td>'
-        + '<td style="padding:8px 6px;"><span style="color:' + col + ';font-weight:600;font-size:12px;">● ' + lbl + '</span></td>'
-        + '<td style="padding:8px 6px;">' + (m.rest > 0 ? '<button class="btn-sm primary" onclick="addLLDPayment(\'' + c.id + '\',' + m.index + ')">Encaisser</button>' : '✓') + '</td>'
+        + '<td style="padding:8px 6px;">' + esc(p.date || '—') + '</td>'
+        + '<td style="padding:8px 6px;color:#16a34a;font-weight:600;">' + money(p.amount) + '</td>'
+        + '<td style="padding:8px 6px;">' + esc(p.mode || '—') + '</td>'
+        + '<td style="padding:8px 6px;">' + esc(p.collectedBy || '—') + '</td>'
+        + '<td style="padding:8px 6px;color:var(--text3);">' + esc(p.comment || '') + '</td>'
+        + '<td style="padding:8px 6px;"><button class="btn-sm ghost" style="color:var(--red);" onclick="deleteLLDPaymentEntry(\'' + c.id + '\',' + idx + ')">✕</button></td>'
         + '</tr>';
-    }).join('');
+    }).join('') : '<tr><td colspan="6" style="padding:14px;text-align:center;color:var(--text3);">Aucun versement enregistré.</td></tr>';
+
     body.innerHTML =
-      '<div style="display:flex;gap:8px 20px;flex-wrap:wrap;margin-bottom:16px;font-size:13px;">'
-      + '<div><span style="color:var(--text3);">Véhicule</span><br><b>' + esc(carName(c.carId)) + (carPlate(c.carId) ? ' (' + esc(carPlate(c.carId)) + ')' : '') + '</b></div>'
-      + '<div><span style="color:var(--text3);">Début</span><br><b>' + esc(c.startDate || '—') + '</b></div>'
-      + '<div><span style="color:var(--text3);">Durée</span><br><b>' + (c.durationMonths || 0) + ' mois</b></div>'
-      + '<div><span style="color:var(--text3);">Mensualité</span><br><b>' + money(c.monthlyAmount) + '</b></div>'
+      (slName ? '<div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.25);border-radius:10px;padding:10px 14px;margin-bottom:12px;"><div style="font-size:11px;color:#8b5cf6;font-weight:700;text-transform:uppercase;">Sous-location</div><div style="font-weight:800;font-size:15px;">' + esc(slName) + '</div></div>' : '')
+      + '<div style="display:flex;gap:8px 20px;flex-wrap:wrap;margin-bottom:16px;font-size:13px;">'
+      + '<div><span style="color:var(--text3);">Client</span><br><b>' + esc(c.client || '') + '</b></div>'
+      + '<div><span style="color:var(--text3);">Véhicule</span><br><b>' + esc(c.car || '') + (c.assignedPlate ? ' (' + esc(c.assignedPlate) + ')' : '') + '</b></div>'
+      + '<div><span style="color:var(--text3);">Période</span><br><b>' + esc(c.startDate || '—') + ' → ' + esc(c.endDate || '—') + '</b></div>'
+      + '<div><span style="color:var(--text3);">Durée</span><br><b>' + (c.days || 0) + ' jours</b></div>'
       + (c.phone ? '<div><span style="color:var(--text3);">Téléphone</span><br><b>' + esc(c.phone) + '</b></div>' : '')
       + '</div>'
       + '<div style="display:flex;gap:8px 20px;flex-wrap:wrap;margin-bottom:16px;padding:12px;background:rgba(18,22,30,.03);border-radius:10px;font-size:13px;">'
-      + '<div><span style="color:var(--text3);">Total dû</span><br><b>' + money(t.totalDue) + '</b></div>'
-      + '<div><span style="color:var(--text3);">Total encaissé</span><br><b style="color:#16a34a;">' + money(t.totalPaid) + '</b></div>'
-      + '<div><span style="color:var(--text3);">Reste à payer</span><br><b style="color:' + (t.rest > 0 ? '#C41E3A' : '#16a34a') + ';">' + money(t.rest) + '</b></div>'
+      + '<div><span style="color:var(--text3);">Montant total du contrat</span><br><b>' + money(totalDue) + '</b></div>'
+      + '<div><span style="color:var(--text3);">Total reçu</span><br><b style="color:#16a34a;">' + money(totalPaid) + '</b></div>'
+      + '<div><span style="color:var(--text3);">Reste à payer</span><br><b style="color:' + (rest > 0 ? '#C41E3A' : '#16a34a') + ';">' + money(rest) + '</b></div>'
       + '</div>'
-      + '<div style="font-weight:700;margin-bottom:8px;">Suivi mois par mois</div>'
-      + '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:480px;">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
+      + '<div style="font-weight:700;">Historique des paiements</div>'
+      + '<button class="btn-sm primary" onclick="addLLDPaymentEntry(\'' + c.id + '\')">+ Ajouter un versement</button>'
+      + '</div>'
+      + '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:520px;">'
       + '<thead><tr style="text-align:left;color:var(--text3);font-size:12px;">'
-      + '<th style="padding:6px;">Mois</th><th style="padding:6px;">Dû</th><th style="padding:6px;">Payé</th><th style="padding:6px;">Reste</th><th style="padding:6px;">Statut</th><th style="padding:6px;"></th></tr></thead>'
-      + '<tbody>' + rows + '</tbody></table></div>';
+      + '<th style="padding:6px;">Date</th><th style="padding:6px;">Montant</th><th style="padding:6px;">Mode</th><th style="padding:6px;">Encaissé par</th><th style="padding:6px;">Commentaire</th><th style="padding:6px;"></th></tr></thead>'
+      + '<tbody>' + payRows + '</tbody></table></div>';
+
     if (footer) {
       footer.style.display = 'flex';
       footer.innerHTML = '<button class="topbar-btn" onclick="closeModal()">Fermer</button>'
-        + '<button class="topbar-btn" onclick="openLLDModal(\'' + c.id + '\')">Modifier le contrat</button>'
+        + '<button class="topbar-btn" style="color:var(--red);" onclick="deleteLLD(\'' + c.id + '\')">🗑 Supprimer le contrat</button>'
         + (c.phone ? '<a class="topbar-btn primary" style="text-decoration:none;" href="https://wa.me/' + esc(c.phone.replace(/[^0-9]/g, '')) + '" target="_blank">WhatsApp</a>' : '');
     }
-    // Ouvre l'overlay SANS passer par openModal() : ce module a son propre pied
-    // de page (boutons specifiques). openModal() restaurerait le pied de page
-    // standard et ecraserait ces boutons.
     var _ov = document.getElementById('modal-overlay'); if (_ov) _ov.classList.add('open');
   };
 
-  window.addLLDPayment = function (id, monthIndex) {
-    var c = ASLLLD.get(id);
+  /* ★ Point 6 — Ajoute un versement LIBRE (aucune date imposée). Met à jour
+     r.paid (= somme des versements) et r.paymentStatus, qui alimentent
+     automatiquement impayés / caisse / Grand Livre / statistiques puisque
+     ceux-ci sont toujours recalculés en direct depuis la réservation. */
+  window.addLLDPaymentEntry = function (id) {
+    var c = lldRes().filter(function (x) { return x.id === id; })[0];
     if (!c) return;
-    var sch = ASLLLD.schedule(c)[monthIndex];
-    if (!sch) return;
-    var def = sch.rest;
-    var val = prompt('Montant encaissé pour ' + sch.label + ' (reste ' + (Number(sch.rest)).toLocaleString('fr-FR') + ' MAD) :', String(def));
-    if (val == null) return;
-    var amount = parseFloat(val) || 0;
+    var rest = Math.max(0, (Number(c.amount) || 0) - (c.payments || []).reduce(function (s, p) { return s + (Number(p.amount) || 0); }, 0));
+    var amountStr = prompt('Montant du versement (MAD) — reste dû : ' + money(rest) + ' :', rest > 0 ? String(rest) : '');
+    if (amountStr == null) return;
+    var amount = parseFloat(amountStr) || 0;
     if (amount <= 0) return;
+    var dateStr = prompt('Date du versement (AAAA-MM-JJ) :', (typeof ASLDB !== 'undefined' && ASLDB.localDateISO) ? ASLDB.localDateISO() : new Date().toISOString().slice(0, 10));
+    if (dateStr == null) return;
+    var modeStr = prompt('Mode de paiement (Espèces / Carte bancaire / Virement / Chèque / Autre) :', c.paymentMode || 'Espèces') || 'Espèces';
+    var collector = prompt('Encaissé par (Mohamed / Younes / Khalid) :', c.collectedBy || '') || '';
+    var comment = prompt('Commentaire (facultatif) :', '') || '';
+
     var payments = (c.payments || []).slice();
-    payments.push({ monthIndex: monthIndex, amount: amount, date: new Date().toISOString().slice(0, 10) });
-    ASLLLD.update(id, { payments: payments });
+    payments.push({ date: dateStr, amount: amount, mode: modeStr, collectedBy: collector, comment: comment });
+    var newPaid = payments.reduce(function (s, p) { return s + (Number(p.amount) || 0); }, 0);
+    var payStatus = newPaid <= 0 ? 'Non payé' : (newPaid >= (Number(c.amount)||0) ? 'Paiement complet' : 'Paiement partiel');
+    if (typeof ASLDB !== 'undefined' && ASLDB.updateReservation) {
+      ASLDB.updateReservation(id, { payments: payments, paid: newPaid, paymentStatus: payStatus, paymentMode: modeStr, collectedBy: collector });
+    }
     if (typeof reloadData === 'function') reloadData();
+    renderLLD();
     viewLLDContract(id);
-    if (typeof showToast === 'function') showToast('Paiement enregistré ✓');
+    if (typeof showToast === 'function') showToast('Versement enregistré ✓');
+  };
+
+  /* Supprime un versement précis (correction d'erreur de saisie). */
+  window.deleteLLDPaymentEntry = function (id, idx) {
+    var c = lldRes().filter(function (x) { return x.id === id; })[0];
+    if (!c) return;
+    if (!confirm('Supprimer ce versement ?')) return;
+    var payments = (c.payments || []).slice();
+    payments.splice(idx, 1);
+    var newPaid = payments.reduce(function (s, p) { return s + (Number(p.amount) || 0); }, 0);
+    var payStatus = newPaid <= 0 ? 'Non payé' : (newPaid >= (Number(c.amount)||0) ? 'Paiement complet' : 'Paiement partiel');
+    if (typeof ASLDB !== 'undefined' && ASLDB.updateReservation) {
+      ASLDB.updateReservation(id, { payments: payments, paid: newPaid, paymentStatus: payStatus });
+    }
+    if (typeof reloadData === 'function') reloadData();
+    renderLLD();
+    viewLLDContract(id);
+    if (typeof showToast === 'function') showToast('Versement supprimé ✓');
   };
 })();

@@ -216,6 +216,20 @@
 
       if (data.reservations.rev > readNum(KEY_REV_R)) {
         let items = data.reservations.items.slice();
+        // ★ CORRECTIF CRITIQUE (régression Mission 2) — Le point 1 (suppression
+        //   définitive) avait ajouté une file d'attente de suppressions en
+        //   attente (KEY_PEND_RD), mais CETTE fusion ne l'appliquait jamais :
+        //   seuls les ajouts et mises à jour en attente étaient rejoués par-
+        //   dessus les données fraîches du serveur. Résultat : un élément
+        //   supprimé localement pouvait littéralement RESSUSCITER dès le
+        //   prochain cycle de synchro (toutes les 8 s), dès que le serveur
+        //   renvoyait encore l'ancienne donnée (suppression pas encore
+        //   confirmée). C'est exactement le bug "une ancienne location
+        //   supprimée continue d'apparaître" — corrigé en filtrant aussi les
+        //   suppressions en attente, exactement comme pour les ajouts/mises
+        //   à jour en attente juste en dessous.
+        const pendingDeletes = readJSON(KEY_PEND_RD, []);
+        if (pendingDeletes.length) items = items.filter(function (r) { return pendingDeletes.indexOf(r.id) === -1; });
         readJSON(KEY_PEND_RA, []).forEach(function (p) {
           if (!items.some(function (r) { return r.id === p.id; })) items.push(p);
         });
@@ -246,10 +260,32 @@
     const adds = readJSON(KEY_PEND_RA, []);
     while (adds.length) {
       const item = adds[0];
-      const out = await apiFetch('/reservations', {
-        method: 'POST', headers: headers(false),
-        body: JSON.stringify({ action: 'add', item: item })
-      });
+      let out;
+      try {
+        out = await apiFetch('/reservations', {
+          method: 'POST', headers: headers(false),
+          body: JSON.stringify({ action: 'add', item: item })
+        });
+      } catch (eAdd) {
+        // ★ CORRECTIF CRITIQUE (régression Mission 2) — Avant ce correctif,
+        //   AUCUNE erreur n'était gérée ici : un ajout définitivement rejeté
+        //   par le serveur (ex. 413 "trop volumineux", 400 données
+        //   invalides) restait indéfiniment en tête de file, bloquant TOUS
+        //   les ajouts suivants derrière lui pour toujours (ils ne
+        //   parvenaient donc jamais au serveur, ni à aucun autre appareil).
+        //   On abandonne désormais un ajout dont l'erreur est clairement
+        //   permanente (ne pourra jamais réussir en réessayant), tout en
+        //   gardant la donnée dans le cache LOCAL (rien n'est perdu pour cet
+        //   appareil) — seule sa diffusion aux autres appareils échoue, ce
+        //   qui est visible et diagnosticable plutôt que silencieux.
+        if (eAdd && (eAdd.status === 400 || eAdd.status === 413 || eAdd.status === 401 || eAdd.status === 403)) {
+          console.error('ASLDB: ajout de réservation définitivement rejeté (id=' + item.id + ', code=' + eAdd.status + ') — abandonné de la file de synchronisation, conservé en cache local uniquement.', eAdd);
+          adds.shift();
+          write(KEY_PEND_RA, adds);
+          continue;
+        }
+        throw eAdd; // erreur réseau/temporaire : on réessaiera au prochain cycle
+      }
       // Le serveur peut ré-attribuer un id en cas de collision
       if (out.id && out.id !== item.id) {
         const list = read(KEY_RES, []);
@@ -278,7 +314,8 @@
         //   retentée indéfiniment à chaque cycle, tout en étant réappliquée
         //   localement par pullState() — ce qui faisait diverger l'appareil
         //   du reste du parc (ex. mobile affichant une location « fantôme »).
-        if (eUpd && (eUpd.status === 401 || eUpd.status === 403 || eUpd.status === 404)) {
+        if (eUpd && (eUpd.status === 401 || eUpd.status === 403 || eUpd.status === 404 || eUpd.status === 400 || eUpd.status === 413)) {
+          if (eUpd.status === 413) console.error('ASLDB: mise à jour définitivement rejetée (trop volumineuse) — abandonnée de la file, conservée en cache local uniquement.', eUpd);
           upds.shift();
           write(KEY_PEND_RU, upds);
           continue;

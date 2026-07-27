@@ -47,7 +47,7 @@
     'ft.colQuick':'Liens Rapides','ft.qAdmin':'Espace Admin',
     'ft.colLegal':'Légal','ft.lCgv':'Conditions Générales','ft.lPriv':'Politique de Confidentialité','ft.lLegal':'Mentions Légales',
     'ft.colCur':'Devises',
-    'ft.copy':'© 2025 All Star Loc — Location de Voitures à Marrakech. Tous droits réservés.',
+    'ft.copy':'© {years} All Star Loc — Location de Voitures à Marrakech. Tous droits réservés.',
     'ft.bCgv':'CGV','ft.bPriv':'Confidentialité','ft.bLegal':'Mentions légales',
     'pf.blog':'Blog','pf.faq':'FAQ',
     /* ---- Page FAQ ---- */
@@ -208,7 +208,7 @@
     'ft.colQuick':'Quick Links','ft.qAdmin':'Admin Area',
     'ft.colLegal':'Legal','ft.lCgv':'Terms & Conditions','ft.lPriv':'Privacy Policy','ft.lLegal':'Legal Notice',
     'ft.colCur':'Currencies',
-    'ft.copy':'© 2025 All Star Loc — Car Rental in Marrakech. All rights reserved.',
+    'ft.copy':'© {years} All Star Loc — Car Rental in Marrakech. All rights reserved.',
     'ft.bCgv':'Terms','ft.bPriv':'Privacy','ft.bLegal':'Legal notice',
     'pf.blog':'Blog','pf.faq':'FAQ',
     /* ---- FAQ page ---- */
@@ -369,7 +369,7 @@
     'ft.colQuick':'Enlaces Rápidos','ft.qAdmin':'Área Admin',
     'ft.colLegal':'Legal','ft.lCgv':'Condiciones Generales','ft.lPriv':'Política de Privacidad','ft.lLegal':'Aviso Legal',
     'ft.colCur':'Divisas',
-    'ft.copy':'© 2025 All Star Loc — Alquiler de Coches en Marrakech. Todos los derechos reservados.',
+    'ft.copy':'© {years} All Star Loc — Alquiler de Coches en Marrakech. Todos los derechos reservados.',
     'ft.bCgv':'Condiciones','ft.bPriv':'Privacidad','ft.bLegal':'Aviso legal',
     'pf.blog':'Blog','pf.faq':'FAQ',
     /* ---- Página FAQ ---- */
@@ -530,7 +530,7 @@
     'ft.colQuick':'روابط سريعة','ft.qAdmin':'فضاء الإدارة',
     'ft.colLegal':'قانوني','ft.lCgv':'الشروط العامة','ft.lPriv':'سياسة الخصوصية','ft.lLegal':'إشعار قانوني',
     'ft.colCur':'العملات',
-    'ft.copy':'© 2025 All Star Loc — كراء السيارات في مراكش. جميع الحقوق محفوظة.',
+    'ft.copy':'© {years} All Star Loc — كراء السيارات في مراكش. جميع الحقوق محفوظة.',
     'ft.bCgv':'الشروط','ft.bPriv':'الخصوصية','ft.bLegal':'إشعار قانوني',
     'pf.blog':'المدونة','pf.faq':'الأسئلة الشائعة',
     /* ---- صفحة الأسئلة الشائعة ---- */

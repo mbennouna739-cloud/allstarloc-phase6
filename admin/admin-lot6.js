@@ -428,6 +428,7 @@ function openCustomerDrawer(encKey) {
   var email = prof.email != null ? prof.email : (cust.email||'');
   var nationality = prof.nationality != null ? prof.nationality : (cust.nationality||'');
   var address = prof.address != null ? prof.address : '';
+  var profession = prof.profession != null ? prof.profession : (custRes[0] && custRes[0].profession || '');
   var totalSpent = custRes.reduce(function(s,r){ return s + (Number(r.amount)||0); }, 0);
   var totalPaid  = custRes.reduce(function(s,r){ return s + (Number(r.paid)||0); }, 0);
   var totalDue   = Math.max(0, totalSpent - totalPaid);
@@ -444,6 +445,7 @@ function openCustomerDrawer(encKey) {
     '<div class="form-group"><label class="form-label">Prénom</label><input class="form-input" id="cd-firstname" value="' + firstName.replace(/"/g,'&quot;') + '"></div>' +
     '<div class="form-group"><label class="form-label">Nom</label><input class="form-input" id="cd-lastname" value="' + lastName.replace(/"/g,'&quot;') + '"></div>' +
     '<div class="form-group"><label class="form-label">Téléphone</label><input class="form-input" id="cd-phone" value="' + phone.replace(/"/g,'&quot;') + '"></div>' +
+    '<div class="form-group"><label class="form-label">Profession</label><input class="form-input" id="cd-profession" value="' + profession.replace(/"/g,'&quot;') + '" placeholder="Ex : Médecin, Ingénieur…"></div>' +
     '<div class="form-group"><label class="form-label">Email</label><input class="form-input" id="cd-email" value="' + email.replace(/"/g,'&quot;') + '"></div>' +
     '<div class="form-group"><label class="form-label">Nationalité</label><input class="form-input" id="cd-nationality" value="' + nationality.replace(/"/g,'&quot;') + '"></div>' +
     '<div class="form-group"><label class="form-label">Adresse</label><input class="form-input" id="cd-address" value="' + address.replace(/"/g,'&quot;') + '" placeholder="Si disponible"></div>' +
@@ -502,6 +504,7 @@ function saveCustomerProfile() {
     firstName: (document.getElementById('cd-firstname') && document.getElementById('cd-firstname').value) || '',
     lastName: (document.getElementById('cd-lastname') && document.getElementById('cd-lastname').value) || '',
     phone: (document.getElementById('cd-phone') && document.getElementById('cd-phone').value) || '',
+    profession: (document.getElementById('cd-profession') && document.getElementById('cd-profession').value) || '',
     email: (document.getElementById('cd-email') && document.getElementById('cd-email').value) || '',
     nationality: (document.getElementById('cd-nationality') && document.getElementById('cd-nationality').value) || '',
     address: (document.getElementById('cd-address') && document.getElementById('cd-address').value) || ''

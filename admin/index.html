@@ -819,7 +819,7 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
           <h2 style="font-size:18px;font-weight:900;">Location longue durée</h2>
           <p style="font-size:12.5px;color:var(--text2);margin-top:2px;">Contrats mensuels. Un véhicule en LLD active est masqué du site client et non réservable.</p>
         </div>
-        <button class="topbar-btn primary" onclick="openLLDModal()">+ Nouveau contrat LLD</button>
+        <button class="topbar-btn primary" onclick="_buildNewLocationModal(true)">+ Nouveau contrat LLD</button>
       </div>
       <input type="search" id="lld-search" class="form-input" placeholder="🔍 Rechercher un contrat (client, véhicule)…" oninput="renderLLD()" style="margin-bottom:16px;max-width:420px;">
       <div id="lld-list"></div>
@@ -1006,6 +1006,30 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
 
       <!-- ===== RÉSUMÉ ===== -->
       <div id="caisse-resume" class="caisse-sub">
+        <!-- ★ Point 4 : répartition par personne ayant encaissé (indépendant de
+             l'utilisateur connecté — basé uniquement sur "Encaissé par"). Le
+             montant global reste toujours = somme des 3 cartes ci-dessous. -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:18px;">
+          <div class="table-card" style="padding:18px;border-left:4px solid #1a1a2e;background:rgba(18,22,30,.03);">
+            <div style="font-size:12.5px;color:#667;margin-bottom:6px;">🏦 Caisse globale</div>
+            <div id="cs-collected-global" style="font-size:24px;font-weight:800;color:#1a1a2e;">0 MAD</div>
+          </div>
+          <div class="table-card" style="padding:18px;border-left:4px solid #16a34a;cursor:pointer;transition:.15s;" onclick="caisseShowCollectedBy('Mohamed')" onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background=''">
+            <div style="font-size:12.5px;color:#667;margin-bottom:6px;">👤 Mohamed</div>
+            <div id="cs-collected-mohamed" style="font-size:22px;font-weight:800;color:#16a34a;">0 MAD</div>
+            <div style="font-size:11px;color:#9aa;margin-top:4px;">Voir le détail →</div>
+          </div>
+          <div class="table-card" style="padding:18px;border-left:4px solid #3b82f6;cursor:pointer;transition:.15s;" onclick="caisseShowCollectedBy('Younes')" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background=''">
+            <div style="font-size:12.5px;color:#667;margin-bottom:6px;">👤 Younes</div>
+            <div id="cs-collected-younes" style="font-size:22px;font-weight:800;color:#3b82f6;">0 MAD</div>
+            <div style="font-size:11px;color:#9aa;margin-top:4px;">Voir le détail →</div>
+          </div>
+          <div class="table-card" style="padding:18px;border-left:4px solid #8b5cf6;cursor:pointer;transition:.15s;" onclick="caisseShowCollectedBy('Khalid')" onmouseover="this.style.background='#f5f3ff'" onmouseout="this.style.background=''">
+            <div style="font-size:12.5px;color:#667;margin-bottom:6px;">👤 Khalid</div>
+            <div id="cs-collected-khalid" style="font-size:22px;font-weight:800;color:#8b5cf6;">0 MAD</div>
+            <div style="font-size:11px;color:#9aa;margin-top:4px;">Voir le détail →</div>
+          </div>
+        </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:8px;">
           <div class="table-card" style="padding:20px;border-left:4px solid #22c55e;">
             <div style="font-size:13px;color:#667;margin-bottom:6px;">💰 Encaissements réels</div>
@@ -1096,6 +1120,10 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
               <select id="gl-cat" class="form-input" style="padding:7px 8px;" onchange="renderGrandLivre()"><option value="">Toutes</option></select></div>
             <div><label style="font-size:11px;color:#667;display:block;margin-bottom:3px;">Véhicule</label>
               <select id="gl-vehicle" class="form-input" style="padding:7px 8px;" onchange="renderGrandLivre()"><option value="">Tous les véhicules</option></select></div>
+            <div><label style="font-size:11px;color:#667;display:block;margin-bottom:3px;">Encaissé par</label>
+              <select id="gl-collected-by" class="form-input" style="padding:7px 8px;" onchange="glSetCollectedBy(this.value)">
+                <option value="">Tous</option><option value="Mohamed">Mohamed</option><option value="Younes">Younes</option><option value="Khalid">Khalid</option>
+              </select></div>
           </div>
         </div>
 
@@ -1123,7 +1151,7 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
             <table class="data-table" style="width:100%;font-size:12.5px;">
               <thead><tr>
                 <th>Date</th><th>Type</th><th>Libellé</th><th>Client / Fourn.</th><th>Véhicule</th>
-                <th>Catégorie</th><th>Mode</th><th style="text-align:right;">Entrée</th><th style="text-align:right;">Sortie</th><th style="text-align:right;">Solde</th>
+                <th>Catégorie</th><th>Mode</th><th>Encaissé par</th><th style="text-align:right;">Entrée</th><th style="text-align:right;">Sortie</th><th style="text-align:right;">Solde</th>
               </tr></thead>
               <tbody id="gl-tbody"></tbody>
             </table>
@@ -1263,6 +1291,31 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
      indépendamment de la page active — c'était la cause exacte du bug
      ("Fiche" ne s'ouvrait pas depuis le Dashboard : le tiroir était
      invisible car nichée dans une page masquée par display:none). -->
+<!-- ★ Combobox (point 1) : listes de suggestions partagées — sélection libre
+     ET saisie personnalisée dans un seul champ, réutilisées par tous les
+     formulaires (Nouvelle réservation, Nouvelle location, LLD). -->
+<datalist id="dl-pickup-options">
+  <option value="Aéroport Marrakech (RAK)">
+  <option value="Centre-Ville">
+  <option value="Gare">
+  <option value="Hôtel">
+</datalist>
+<datalist id="dl-source-options">
+  <option value="Google">
+  <option value="Google Ads">
+  <option value="Facebook">
+  <option value="Instagram">
+  <option value="TikTok">
+  <option value="WhatsApp">
+  <option value="Hôtel">
+  <option value="Concierge">
+  <option value="Recommandation">
+  <option value="Réservation manuelle">
+  <option value="Téléphone">
+  <option value="Site Web">
+  <option value="Partenaire">
+</datalist>
+
 <div id="rental-drawer-bg" onclick="closeRentalDrawer()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:2000;"></div>
 <div id="rental-drawer" style="display:none;position:fixed;top:0;right:0;bottom:0;width:min(500px,100vw);background:var(--dark2,#fff);box-shadow:-6px 0 32px rgba(0,0,0,.18);z-index:2001;flex-direction:column;transition:transform .28s;">
   <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);flex-shrink:0;">
@@ -2313,7 +2366,10 @@ function openModal(type) {
         <div class="form-group"><label class="form-label">Prénom</label><input class="form-input" placeholder="Prénom" id="nr-firstname"></div>
         <div class="form-group"><label class="form-label">Nom</label><input class="form-input" placeholder="Nom" id="nr-lastname"></div>
       </div>
-      <div class="form-group"><label class="form-label">Téléphone / WhatsApp</label><input class="form-input" placeholder="+212 6..." id="nr-phone"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Téléphone / WhatsApp</label><input class="form-input" placeholder="+212 6..." id="nr-phone"></div>
+        <div class="form-group"><label class="form-label">Profession</label><input class="form-input" placeholder="Ex : Médecin, Ingénieur…" id="nr-profession"></div>
+      </div>
       <div class="form-group"><label class="form-label">Véhicule (plaque · couleur)</label>
         <select class="form-select" id="nr-car">${FLEET.map(c=>{
           var ppu = c.priceMAD || Math.round((c.priceEUR||0)*10.8);
@@ -2328,7 +2384,7 @@ function openModal(type) {
           return `<option value="${c.id}" data-ppu="${ppu}">${c.name} (${c.plate||''}) — ${ppu} MAD/j</option>`;
         }).join('')}</select>
       </div>
-      <div class="form-group"><label class="form-label">Prix journalier (MAD)</label><input class="form-input" type="number" id="nr-ppu" placeholder="Prix / jour"></div>
+      <div class="form-group"><label class="form-label">Prix journalier (MAD) — libre</label><input class="form-input" type="number" id="nr-ppu" placeholder="Saisissez le prix négocié"></div>
       <div class="form-group"><label class="form-label">Nombre de jours</label><input class="form-input" type="number" min="1" id="nr-days" placeholder="Nombre de jours"></div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Date départ</label><input type="date" class="form-input" id="nr-start"></div>
@@ -2339,25 +2395,10 @@ function openModal(type) {
         <div class="form-group"><label class="form-label">Heure retour</label><input type="time" class="form-input" id="nr-end-time" value="10:00"></div>
       </div>
       <div class="form-group"><label class="form-label">Lieu de prise en charge</label>
-        <select class="form-select" id="nr-pickup" onchange="document.getElementById('nr-pickup-custom').style.display = (this.value==='custom') ? 'block' : 'none'">
-          <option>Aéroport Marrakech (RAK)</option><option>Centre-Ville</option><option>Gare</option><option>Hôtel</option>
-          <option value="custom">Autre (saisie libre)…</option>
-        </select>
-        <input type="text" id="nr-pickup-custom" class="form-input" placeholder="Ex : Adresse précise, quartier…" style="display:none;margin-top:8px;">
+        <input class="form-input" id="nr-pickup" list="dl-pickup-options" placeholder="Sélectionnez ou saisissez librement…" value="Aéroport Marrakech (RAK)">
       </div>
       <div class="form-group"><label class="form-label">Origine du client</label>
-        <select class="form-select" id="nr-source" onchange="document.getElementById('nr-source-custom').style.display = (this.value==='custom') ? 'block' : 'none'">
-          <option value="manual">Réservation manuelle</option>
-          <option value="phone">Téléphone</option>
-          <option value="whatsapp">WhatsApp</option>
-          <option value="online">Site Web</option>
-          <option value="partner">Partenaire</option>
-          <option value="gbp">Google Business Profile</option>
-          <option value="facebook">Facebook</option>
-          <option value="instagram">Instagram</option>
-          <option value="custom">Autre (saisie libre)…</option>
-        </select>
-        <input type="text" id="nr-source-custom" class="form-input" placeholder="Ex : Hôtel, Ami, Agence de voyage…" style="display:none;margin-top:8px;">
+        <input class="form-input" id="nr-source" list="dl-source-options" placeholder="Sélectionnez ou saisissez librement…">
       </div>
       <div class="form-group" style="background:rgba(18,22,30,.03);border-radius:10px;padding:14px;">
         <label class="form-label" style="color:var(--red);">Paiement</label>
@@ -2365,10 +2406,20 @@ function openModal(type) {
           <div class="form-group"><label class="form-label">Montant total (MAD)</label><input class="form-input" type="number" id="nr-total" placeholder="Calculé auto" oninput="nrPayCalc()"></div>
           <div class="form-group"><label class="form-label">Montant reçu (MAD)</label><input class="form-input" type="number" id="nr-paid" value="0" oninput="nrPayCalc()"></div>
         </div>
-        <div class="form-group"><label class="form-label">Mode de paiement</label>
-          <select class="form-select" id="nr-mode">
-            <option value="Espèces">Espèces</option><option value="Carte bancaire">Carte bancaire</option><option value="Virement">Virement</option><option value="Chèque">Chèque</option><option value="Autre">Autre</option>
-          </select>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Mode de paiement</label>
+            <select class="form-select" id="nr-mode">
+              <option value="Espèces">Espèces</option><option value="Carte bancaire">Carte bancaire</option><option value="Virement">Virement</option><option value="Chèque">Chèque</option><option value="Autre">Autre</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label" style="color:var(--red);">Encaissé par *</label>
+            <select class="form-select" id="nr-collected-by" required>
+              <option value="">— Sélectionner —</option>
+              <option value="Mohamed">Mohamed</option>
+              <option value="Younes">Younes</option>
+              <option value="Khalid">Khalid</option>
+            </select>
+          </div>
         </div>
         <div id="nr-rest" style="font-weight:700;font-size:13.5px;margin-top:4px;"></div>
       </div>
@@ -2399,20 +2450,11 @@ function openModal(type) {
         var id = parseInt(carSel && carSel.value);
         return FLEET.find(function(c){ return c.id === id; });
       }
-      function baseOf(){
-        var opt = carSel && carSel.options[carSel.selectedIndex];
-        return opt ? (parseFloat(opt.getAttribute('data-ppu')) || 0) : 0;
-      }
-      // Prix/jour saisonnier (mois de départ + durée) — sauf si l'admin a saisi un prix manuel.
-      function syncPpu(){
-        if (!ppuEl) return;
-        if (ppuEl.dataset.manual) return;
-        var car = selectedCar();
-        var s = sEl && sEl.value;
-        var d = (s && eEl && eEl.value) ? Math.max(1, Math.round((new Date(eEl.value)-new Date(s))/86400000)) : 1;
-        var rate = (car && typeof ASLDB!=='undefined' && ASLDB.dailyRate) ? ASLDB.dailyRate(car, d, s) : 0;
-        ppuEl.value = rate || baseOf() || ppuEl.value || '';
-      }
+      // ★ CORRECTIF (point 9) — Le prix du véhicule ne remplit plus JAMAIS
+      //   automatiquement ce champ, même à la sélection du véhicule ou au
+      //   changement de dates. Le prix journalier est une valeur totalement
+      //   libre saisie par l'utilisateur ; seul le TOTAL se recalcule
+      //   automatiquement (prix × nombre de jours).
       function autoTotal(){
         var s = sEl?.value, e = eEl?.value;
         var ppu = parseFloat(ppuEl?.value) || 0;
@@ -2422,7 +2464,7 @@ function openModal(type) {
           if (totalEl && !totalEl.dataset.manual) { totalEl.value = ppu*d; nrPayCalc(); }
         }
       }
-      if (carSel) carSel.addEventListener('change', function(){ if(ppuEl) delete ppuEl.dataset.manual; syncPpu(); autoTotal(); });
+      if (carSel) carSel.addEventListener('change', function(){ autoTotal(); });
       // Nombre de jours → date de retour (et inverse), comme dans Nouvelle location.
       var daysEl = document.getElementById('nr-days');
       function nrDaysToEnd(){
@@ -2431,7 +2473,7 @@ function openModal(type) {
         if (!sEl.value || !days || days < 1) return;
         var d = new Date(sEl.value + 'T00:00:00'); d.setDate(d.getDate() + days);
         eEl.value = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-        syncPpu(); autoTotal();
+        autoTotal();
       }
       function nrEndToDays(){
         if (!sEl || !eEl || !daysEl || !sEl.value || !eEl.value) return;
@@ -2441,12 +2483,15 @@ function openModal(type) {
       if (daysEl) daysEl.addEventListener('input', nrDaysToEnd);
       if (sEl) sEl.addEventListener('change', nrDaysToEnd);
       if (eEl) eEl.addEventListener('change', nrEndToDays);
-      [sEl, eEl].forEach(function(el){ if(el) el.addEventListener('change', function(){ syncPpu(); autoTotal(); }); });
-      if (ppuEl) ppuEl.addEventListener('input', function(){ this.dataset.manual = '1'; autoTotal(); });
+      [sEl, eEl].forEach(function(el){ if(el) el.addEventListener('change', function(){ autoTotal(); }); });
+      if (ppuEl) ppuEl.addEventListener('input', function(){ autoTotal(); });
       var totalEl = document.getElementById('nr-total');
       if (totalEl) totalEl.addEventListener('input', function(){ this.dataset.manual = '1'; });
-      syncPpu();
       autoTotal();
+      // ★ Point 8 : restaure un brouillon existant, puis surveille la saisie.
+      var NR_DRAFT_FIELDS = ['nr-ref','nr-firstname','nr-lastname','nr-phone','nr-profession','nr-car','nr-ppu','nr-days','nr-start','nr-start-time','nr-end','nr-end-time','nr-pickup','nr-source','nr-total','nr-paid','nr-mode','nr-collected-by','nr-notes','nr-doctype','nr-sublease'];
+      if (typeof draftRestore === 'function' && draftRestore('nr', NR_DRAFT_FIELDS)) { if (typeof showToast === 'function') showToast('Brouillon restauré ✓'); }
+      if (typeof draftWatch === 'function') draftWatch('nr', document.getElementById('modal-body'), NR_DRAFT_FIELDS);
     }, 60);
     document.getElementById('modal-save').onclick = () => {
       const fn = document.getElementById('nr-firstname')?.value;
@@ -2461,8 +2506,11 @@ function openModal(type) {
       const endTime = document.getElementById('nr-end-time')?.value || '10:00';
       if(!fn||!start||!end){ alert('Complétez les champs obligatoires'); return; }
       const days = Math.max(1, Math.round((new Date(end)-new Date(start))/(1000*60*60*24)));
+      // ★ CORRECTIF (point 9) : le prix journalier est une saisie libre et
+      //   obligatoire — plus aucun repli silencieux sur le prix de la fiche
+      //   véhicule (qui ne sert plus que d'information/référence).
       let ppu = parseFloat(document.getElementById('nr-ppu')?.value);
-      if (!ppu || isNaN(ppu)) ppu = (car && ASLDB.dailyRate) ? ASLDB.dailyRate(car, days, start) : (car?.priceMAD || 0);
+      if (!ppu || isNaN(ppu) || ppu <= 0) { alert('Merci de saisir le prix journalier (le prix de la fiche véhicule n\'est qu\'une référence, il n\'est plus appliqué automatiquement).'); return; }
       const totalEl = document.getElementById('nr-total');
       const total = parseFloat(totalEl?.value) || ppu*days;
       const paid = parseFloat(document.getElementById('nr-paid')?.value) || 0;
@@ -2502,21 +2550,31 @@ function openModal(type) {
         }
       }
 
+      // ★ Point 3 : "Encaissé par" est obligatoire — indépendant de l'utilisateur connecté.
+      const nrCollectedBy = document.getElementById('nr-collected-by')?.value || '';
+      if (!nrCollectedBy) { alert('Merci de renseigner « Encaissé par » avant d\'enregistrer.'); return; }
+
       const newRes = ASLDB.addReservation({
         client: `${fn} ${ln||''}`.trim(),
         contractRef: contractRef,
         email: '', phone: document.getElementById('nr-phone')?.value||'',
+        profession: document.getElementById('nr-profession')?.value||'',
         car: car?.name||'', carId,
         pricePerDay: ppu, assignedPlate: chosenPlate, assignedColor: chosenColor,
         days, amount: total, paid: paid, paymentStatus: payStatus, paymentMode: paymentMode,
+        collectedBy: nrCollectedBy,
         startDate: start, endDate: end,
         startTime: startTime, endTime: endTime,
-        pickup: (function(){ var v = document.getElementById('nr-pickup')?.value||''; if (v==='custom') return (document.getElementById('nr-pickup-custom')?.value||'').trim(); return v; })(),
-        source: (function(){ var v = document.getElementById('nr-source')?.value||'phone'; if (v==='custom') { var c = (document.getElementById('nr-source-custom')?.value||'').trim(); return c || 'manual'; } return v; })(),
+        pickup: document.getElementById('nr-pickup')?.value || '',
+        source: document.getElementById('nr-source')?.value || 'manual',
         status: 'confirmed', type: 'reservation', payment: 'onsite', nationality: 'N/A',
         subleaseId: nrSubleaseId, finalClient: nrSubleaseId ? nrFinalClient : '',
-        docs: (typeof collectDocs === 'function' ? collectDocs('nr-doc-permis', 'nr-doc-identity') : {}),
         notes: document.getElementById('nr-notes')?.value||'',
+        // ★ CORRECTIF CRITIQUE (régression Mission 2) : les documents ne sont
+        //   plus embarqués directement ici (voir _nrDocs plus bas) — une
+        //   photo compressée dépassait largement la limite de taille du
+        //   serveur pour un ajout, rejeté en permanence et bloquant TOUTES
+        //   les réservations suivantes dans la file de synchronisation.
       });
       // Réservation = unité passe en "réservée" (pas encore louée)
       if (car && chosenPlate && typeof ASLDB.setUnitStatusByPlate === 'function') {
@@ -2529,7 +2587,9 @@ function openModal(type) {
       if (typeof renderSubleases === 'function') renderSubleases();
       if (typeof renderMobileDash === 'function') renderMobileDash();
       closeModal();
-      if (typeof saveCustomerDocs === 'function' && newRes && newRes.docs) saveCustomerDocs(newRes.email, newRes.client, newRes.docs);
+      draftClear('nr'); // ★ Point 8 : enregistrement réussi = brouillon effacé
+      const _nrDocs = (typeof collectDocs === 'function') ? collectDocs('nr-doc-permis', 'nr-doc-identity') : {};
+      if (typeof saveCustomerDocs === 'function' && newRes && (_nrDocs.permis || _nrDocs.identite)) saveCustomerDocs(newRes.email, newRes.client, _nrDocs);
       if (typeof clearPendingDocs === 'function') clearPendingDocs();
       alert(`Réservation ${newRes.id} créée et enregistrée !`);
     };

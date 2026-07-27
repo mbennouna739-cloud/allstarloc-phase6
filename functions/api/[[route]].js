@@ -326,66 +326,54 @@ export async function onRequest(context) {
       if (!item || typeof item !== 'object') return err(400, 'item manquant');
       if (JSON.stringify(item).length > 20_000) return err(413, 'Réservation trop volumineuse');
       /* ============================================================
-         ★ CORRECTIF (point 9 — désynchronisation Desktop/Mobile) :
-         l'ancien code faisait un simple "lire → ajouter → écrire" SANS
-         aucune protection contre les écritures concurrentes. Cloudflare
-         KV n'offre pas d'écriture atomique (pas de compare-and-swap) :
-         si deux requêtes "add" arrivaient presque en même temps (ex :
-         plusieurs locations créées rapidement à la suite, ou une
-         réservation du site client au même moment qu'une création
-         manuelle), la DEUXIÈME écriture pouvait silencieusement écraser
-         la PREMIÈRE, qui reposait sur une lecture désormais périmée —
-         cette réservation disparaissait alors purement et simplement du
-         serveur. Un appareil qui l'avait ajoutée localement (Desktop)
-         continuait de l'afficher depuis son propre cache, tandis que
-         tout appareil qui se synchronise depuis le serveur (Mobile)
-         ne la voyait jamais — exactement le symptôme observé.
-         Cette boucle relit les données fraîches, retente l'ajout, et
-         VÉRIFIE après écriture que l'élément est bien resté présent —
-         sinon elle recommence contre l'état le plus récent, jusqu'à
-         5 tentatives. Cela ferme la fenêtre de course au lieu de la
-         masquer. ============================================================ */
-      let out = null, savedId = null;
-      for (let attempt = 0; attempt < 5; attempt++) {
-        const freshDoc = attempt === 0 ? doc : ((await readDoc(env, 'reservations')) || { rev: 0, items: [] });
-        let freshItems = Array.isArray(freshDoc.items) ? freshDoc.items.slice() : [];
-        if (freshItems.length >= 5000) return err(409, 'Capacité maximale atteinte');
-        let id = String(item.id || 'ASL' + Date.now().toString().slice(-6));
-        if (freshItems.some(function (r) { return r.id === id; })) id = id + '-' + randId(4);
-        item.id = id;
-        if (!item.createdAt) item.createdAt = new Date().toISOString();
-        freshItems.push(item);
-        const attemptOut = await writeReservationsDoc(env, freshItems, freshDoc.resetAt);
-        // Vérification post-écriture : notre élément est-il toujours là ?
-        const verify = await readDoc(env, 'reservations');
-        const stillThere = verify && Array.isArray(verify.items) && verify.items.some(function (r) { return r.id === id; });
-        if (stillThere) { out = { rev: verify.rev }; savedId = id; break; }
-        // Conflit détecté (une autre écriture a eu lieu entre-temps) : on relit et on retente.
-      }
-      if (!out) return err(409, 'Conflit d\'écriture répété — réessayez.');
-      return json({ ok: true, rev: out.rev, id: savedId });
+         ★ CORRECTIF (régression Mission 2 — cause exacte trouvée) :
+         une version précédente ajoutait ici une boucle "écrire puis relire
+         immédiatement pour vérifier", dans le but d'éviter les pertes lors
+         d'écritures concurrentes. Cloudflare KV est cependant à cohérence
+         EVENTUELLE au niveau mondial : une lecture menée juste après une
+         écriture peut atterrir sur un autre nœud edge qui ne voit pas
+         encore cette écriture. La vérification échouait alors à tort,
+         déclenchant une nouvelle tentative complète (nouvelle lecture +
+         nouvelle écriture + nouvelle vérification) — sur CHAQUE opération,
+         même sans aucun conflit réel. Résultat : usage KV multiplié
+         inutilement (cohérent avec l'alerte de quota reçue), et un risque
+         de voir cette suite d'écritures redondantes elle-même entrer en
+         collision avec d'autres appareils, aggravant la désynchronisation
+         au lieu de la corriger. Retour à un simple "lire → ajouter →
+         écrire" — le comportement qui fonctionnait correctement avant. Le
+         risque résiduel (deux écritures strictement simultanées depuis
+         deux appareils différents) est réel mais rare en usage normal, et
+         largement préférable à la regression provoquée par le correctif
+         précédent. ============================================================ */
+      let items2 = Array.isArray(doc.items) ? doc.items.slice() : [];
+      if (items2.length >= 5000) return err(409, 'Capacité maximale atteinte');
+      let id = String(item.id || 'ASL' + Date.now().toString().slice(-6));
+      if (items2.some(function (r) { return r.id === id; })) id = id + '-' + randId(4);
+      item.id = id;
+      if (!item.createdAt) item.createdAt = new Date().toISOString();
+      items2.push(item);
+      const out = await writeReservationsDoc(env, items2, doc.resetAt);
+      return json({ ok: true, rev: out.rev, id: id });
     }
 
     if (body.action === 'update') {
       if (!authorized(request, env)) return err(403, 'Clé admin invalide ou absente (X-ASL-Key)');
       if (!body.patch || typeof body.patch !== 'object') return err(400, 'patch manquant');
-      // ★ Même correctif que "add" ci-dessus : relecture fraîche + vérification
-      //   post-écriture, pour ne jamais perdre une modification concurrente.
-      let out = null, patchOk = false;
-      for (let attempt = 0; attempt < 5; attempt++) {
-        const freshDoc = attempt === 0 ? doc : ((await readDoc(env, 'reservations')) || { rev: 0, items: [] });
-        let freshItems = Array.isArray(freshDoc.items) ? freshDoc.items.slice() : [];
-        const r = freshItems.find(function (x) { return x.id === body.id; });
-        if (!r) return err(404, 'Réservation introuvable: ' + body.id);
-        Object.assign(r, body.patch);
-        const attemptOut = await writeReservationsDoc(env, freshItems, freshDoc.resetAt);
-        const verify = await readDoc(env, 'reservations');
-        const vr = verify && Array.isArray(verify.items) ? verify.items.find(function (x) { return x.id === body.id; }) : null;
-        const matches = vr && Object.keys(body.patch).every(function (k) { return JSON.stringify(vr[k]) === JSON.stringify(body.patch[k]); });
-        if (matches) { out = { rev: verify.rev }; patchOk = true; break; }
-      }
-      if (!patchOk) return err(409, 'Conflit d\'écriture répété — réessayez.');
-      return json({ ok: true, rev: out.rev });
+      // ★ CORRECTIF DÉFENSIF (régression Mission 2) : même limite que "add" —
+      //   sans elle, une mise à jour trop volumineuse (ex. pièce jointe mal
+      //   embarquée par erreur, historique de versements LLD très long)
+      //   pouvait rester bloquée indéfiniment côté client (aucune limite
+      //   ici auparavant), sans jamais aboutir ni jamais être signalée.
+      if (JSON.stringify(body.patch).length > 20_000) return err(413, 'Modification trop volumineuse (max 20 Ko) — vérifiez qu\'aucune image n\'est embarquée directement.');
+      // ★ Même correctif que "add" ci-dessus : simple lecture → écriture,
+      //   sans relecture de vérification (incompatible avec la cohérence
+      //   éventuelle de KV — voir le commentaire détaillé plus haut).
+      let items3 = Array.isArray(doc.items) ? doc.items.slice() : [];
+      const r = items3.find(function (x) { return x.id === body.id; });
+      if (!r) return err(404, 'Réservation introuvable: ' + body.id);
+      Object.assign(r, body.patch);
+      const out2 = await writeReservationsDoc(env, items3, doc.resetAt);
+      return json({ ok: true, rev: out2.rev });
     }
 
     if (body.action === 'delete') {
@@ -393,23 +381,12 @@ export async function onRequest(context) {
       if (!body.id) return err(400, 'id manquant');
       // ★ Point 1 — suppression DÉFINITIVE (distincte d'une annulation, qui
       //   garde le dossier marqué "cancelled" pour l'historique/la
-      //   comptabilité). Même correctif que add/update : relecture fraîche +
-      //   vérification post-écriture, pour ne jamais perdre une opération
-      //   concurrente ni la resusciter par erreur.
-      let outDel = null, delOk = false;
-      for (let attempt = 0; attempt < 5; attempt++) {
-        const freshDoc = attempt === 0 ? doc : ((await readDoc(env, 'reservations')) || { rev: 0, items: [] });
-        let freshItems = Array.isArray(freshDoc.items) ? freshDoc.items.slice() : [];
-        const existed = freshItems.some(function (x) { return x.id === body.id; });
-        if (!existed) { outDel = { rev: freshDoc.rev || Date.now() }; delOk = true; break; } // déjà absent : rien à faire
-        freshItems = freshItems.filter(function (x) { return x.id !== body.id; });
-        const attemptOut = await writeReservationsDoc(env, freshItems, freshDoc.resetAt);
-        const verify = await readDoc(env, 'reservations');
-        const stillThere = verify && Array.isArray(verify.items) && verify.items.some(function (x) { return x.id === body.id; });
-        if (!stillThere) { outDel = { rev: verify ? verify.rev : attemptOut.rev }; delOk = true; break; }
-      }
-      if (!delOk) return err(409, 'Conflit d\'écriture répété — réessayez.');
-      return json({ ok: true, rev: outDel.rev });
+      //   comptabilité). Même correctif que add/update ci-dessus : simple
+      //   lecture → suppression → écriture, sans relecture de vérification.
+      let items4 = Array.isArray(doc.items) ? doc.items.slice() : [];
+      items4 = items4.filter(function (x) { return x.id !== body.id; });
+      const out3 = await writeReservationsDoc(env, items4, doc.resetAt);
+      return json({ ok: true, rev: out3.rev });
     }
 
     if (body.action === 'replace') {
