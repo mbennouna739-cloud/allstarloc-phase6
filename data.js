@@ -280,6 +280,7 @@
         //   qui est visible et diagnosticable plutôt que silencieux.
         if (eAdd && (eAdd.status === 400 || eAdd.status === 413 || eAdd.status === 401 || eAdd.status === 403)) {
           console.error('ASLDB: ajout de réservation définitivement rejeté (id=' + item.id + ', code=' + eAdd.status + ') — abandonné de la file de synchronisation, conservé en cache local uniquement.', eAdd);
+          noteAbandonedSync('add:' + eAdd.status);
           adds.shift();
           write(KEY_PEND_RA, adds);
           continue;
@@ -316,6 +317,7 @@
         //   du reste du parc (ex. mobile affichant une location « fantôme »).
         if (eUpd && (eUpd.status === 401 || eUpd.status === 403 || eUpd.status === 404 || eUpd.status === 400 || eUpd.status === 413)) {
           if (eUpd.status === 413) console.error('ASLDB: mise à jour définitivement rejetée (trop volumineuse) — abandonnée de la file, conservée en cache local uniquement.', eUpd);
+          noteAbandonedSync('update:' + eUpd.status);
           upds.shift();
           write(KEY_PEND_RU, upds);
           continue;
@@ -339,6 +341,10 @@
         // Même garde-fou que pour les mises à jour : une clé refusée ou un id
         // déjà absent ne pourra jamais aboutir depuis cet appareil.
         if (eDel && (eDel.status === 401 || eDel.status === 403 || eDel.status === 404)) {
+          if (eDel.status === 401 || eDel.status === 403) {
+            console.error('ASLDB: suppression définitivement rejetée (clé admin invalide) — abandonnée de la file, conservée en cache local uniquement.', eDel);
+            noteAbandonedSync('delete:' + eDel.status);
+          }
           dels.shift();
           write(KEY_PEND_RD, dels);
           continue;
@@ -365,6 +371,22 @@
      résout à la fin de CE cycle — toute écriture mise en file avant l'appel
      est donc garantie envoyée quand la promesse se résout. */
   let authError = false; // clé admin refusée par le serveur
+  /* ★ CORRECTIF (Mission — écarts Desktop/Mobile) : un ajout/modification/
+     suppression définitivement rejeté par le serveur (ex. clé admin
+     invalide sur CET appareil) était jusqu'ici abandonné SILENCIEUSEMENT
+     (juste un console.error, invisible en usage normal) — l'appareil
+     continuait d'afficher la donnée localement, à jamais divergente du
+     serveur (donc des autres appareils) sans que personne ne le sache.
+     C'est exactement la cause plausible d'écarts comme "15 loués sur
+     Desktop, 13 sur Mobile" : cet appareil garde une donnée qui n'a en
+     réalité jamais atteint la source de vérité. On rend maintenant cet
+     état VISIBLE via le badge de synchronisation existant. */
+  let abandonedSyncCount = 0;
+  function noteAbandonedSync(reason) {
+    abandonedSyncCount++;
+    try { localStorage.setItem('asl_sync_abandoned_v1', String(abandonedSyncCount)); } catch (e) {}
+    try { updateBadge(); } catch (e) {}
+  }
   let syncChain = Promise.resolve(false);
   let cyclePlanned = false;
   /* ----- Synchro des données auxiliaires (sous-locations, charges,
@@ -511,13 +533,15 @@
     const b = (typeof document !== 'undefined') && document.getElementById('asl-sync-badge');
     if (!b) return;
     const st = syncStatus();
-    const msg = authError ? 'Clé admin invalide — vérifiez ADMIN_KEY (data.js & Cloudflare)'
+    const msg = abandonedSyncCount > 0 ? '⚠ ' + abandonedSyncCount + ' donnée(s) non synchronisée(s) — cliquez pour recharger'
+      : authError ? 'Clé admin invalide — vérifiez ADMIN_KEY (data.js & Cloudflare)'
       : st === 'online' ? 'Synchronisé (serveur)'
       : st === 'offline' ? 'Hors ligne — données locales, renvoi auto'
       : 'Mode local';
-    const c2 = authError ? '#ef4444' : (st === 'online' ? '#22c55e' : st === 'offline' ? '#f59e0b' : '#9a9a9a');
+    const c2 = (abandonedSyncCount > 0 || authError) ? '#ef4444' : (st === 'online' ? '#22c55e' : st === 'offline' ? '#f59e0b' : '#9a9a9a');
     const dot2 = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + c2 + ';"></span>';
     b.innerHTML = dot2 + ' ' + msg;
+    if (abandonedSyncCount > 0) b.style.cursor = 'pointer';
   }
   function mountBadge() {
     if (typeof document === 'undefined' || !document.body) return;
@@ -528,8 +552,21 @@
     b.id = 'asl-sync-badge';
     b.style.cssText = 'position:fixed;left:14px;bottom:14px;z-index:9999;display:flex;align-items:center;gap:7px;' +
       'background:rgba(20,20,20,0.92);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.8);' +
-      'font:600 11px/1 Outfit,sans-serif;padding:8px 12px;border-radius:99px;pointer-events:none;';
+      'font:600 11px/1 Outfit,sans-serif;padding:8px 12px;border-radius:99px;pointer-events:auto;';
+    // ★ Clic = recharge la page pour forcer une resynchronisation complète
+    //   depuis le serveur — utile si le badge signale des données non
+    //   synchronisées (voir noteAbandonedSync ci-dessus).
+    b.addEventListener('click', function () {
+      if (abandonedSyncCount > 0) {
+        try { localStorage.removeItem('asl_sync_abandoned_v1'); } catch (e) {}
+        location.reload();
+      }
+    });
     document.body.appendChild(b);
+    try {
+      const stored = parseInt(localStorage.getItem('asl_sync_abandoned_v1') || '0', 10);
+      if (stored > 0) abandonedSyncCount = stored;
+    } catch (e) {}
     updateBadge();
   }
 

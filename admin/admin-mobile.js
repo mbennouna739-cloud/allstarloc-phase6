@@ -544,7 +544,7 @@
 
   /* Fiche location en POPUP mobile propre (centrée, stable, scroll vertical,
      bouton fermer = croix, aucun bouton caché). */
-  window.maRentalFiche = function (id) {
+  window.maRentalFiche = function (id, mode) {
     var r = (ASLDB.getReservations() || []).filter(function (x) { return x.id === id; })[0];
     if (!r) return;
     var reste = Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
@@ -552,6 +552,16 @@
     function row(label, val, color) {
       return '<div class="ma-fiche-row"><span class="ma-fiche-lbl">' + label + '</span><span class="ma-fiche-val"' + (color ? ' style="color:' + color + ';"' : '') + '>' + val + '</span></div>';
     }
+    // ★ CORRECTIF (point 4, cohérence Desktop/Mobile) — "Retours aujourd'hui"
+    //   devient une consultation PURE : plus de bouton "Confirmer le
+    //   retour" ici (ni "Prolonger"). La gestion se fait désormais depuis
+    //   "En retard" (ou depuis la fiche générale d'une location en cours,
+    //   pour un retour anticipé).
+    var actionsHTML = (mode === 'returns') ? '' :
+      '<div class="ma-actions" style="margin-top:16px;">'
+      + '<button class="ma-act-btn" onclick="maCloseSheet();maExtend(\'' + r.id + '\')">' + ic('plus') + 'Prolonger</button>'
+      + '<button class="ma-act-btn ok" onclick="maCloseSheet();maReturnVehicle(\'' + r.id + '\')">' + ic('returns') + 'Confirmer retour</button>'
+      + '</div>';
     openSheet(
       '<div class="ma-sheet-title">' + esc(r.car || 'Location') + '</div>'
       + '<div style="font-size:13px;color:#6b7280;margin:-6px 0 14px;">' + esc(plate || '') + '</div>'
@@ -563,10 +573,7 @@
       + row('Total', money(r.amount || 0))
       + row('Payé', money(r.paid || 0), '#16a34a')
       + row('Reste à payer', money(reste), reste > 0 ? '#C41E3A' : '#16a34a')
-      + '<div class="ma-actions" style="margin-top:16px;">'
-      + '<button class="ma-act-btn" onclick="maCloseSheet();maExtend(\'' + r.id + '\')">' + ic('plus') + 'Prolonger</button>'
-      + '<button class="ma-act-btn ok" onclick="maCloseSheet();maReturnVehicle(\'' + r.id + '\')">' + ic('returns') + 'Confirmer retour</button>'
-      + '</div>'
+      + actionsHTML
       + (r.phone ? '<a class="ma-act-btn" style="margin-top:8px;text-decoration:none;background:#25D366;color:#fff;border:none;" href="https://wa.me/' + esc(r.phone.replace(/[^0-9]/g, '')) + '" target="_blank">' + ic('phone') + 'WhatsApp</a>' : '')
     );
   };
@@ -575,7 +582,7 @@
     if (typeof window.viewRes === 'function') { window.viewRes(id); return; }
     if (typeof window.viewRental === 'function') window.viewRental(id);
   };
-  window.maViewRental = function (id) { maRentalFiche(id); };
+  window.maViewRental = function (id, mode) { maRentalFiche(id, mode); };
   window.maConfirmRes = function (id) { if (typeof window.confirmRes === 'function') window.confirmRes(id); refreshSoon(); };
   window.maCancelRes = function (id) {
     var r = (ASLDB.getReservations() || []).filter(function (x) { return x.id === id; })[0];
@@ -640,7 +647,7 @@
     var body = list.length ? list.map(function (r) {
       var idStr = "'" + String(r.id || '') + "'";
       var reste = Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
-      return '<div class="ma-card ma-return-card" onclick="maViewRental(' + idStr + ')">'
+      return '<div class="ma-card ma-return-card" onclick="maViewRental(' + idStr + ',\'returns\')">'
         + '<div class="ma-card-top"><div class="ma-card-ico-box red">' + ic('returns') + '</div>'
         + '<div class="ma-card-info"><div class="ma-card-name">' + esc(r.car || 'Véhicule') + '</div>'
         + '<div class="ma-card-sub">' + esc(r.client || '') + (r.endTime ? ' · retour ' + esc(r.endTime) : '') + '</div></div>'
@@ -789,9 +796,13 @@
     var host = document.getElementById('ma-late');
     if (!host) return;
     var ts = todayISO();
-    // Vrai retard : date de retour STRICTEMENT dépassée ET location non clôturée
+    // ★ CORRECTIF (cohérence Desktop/Mobile) : cette liste utilisait encore
+    //   l'ancienne comparaison de chaînes de date (ignorant l'heure et le
+    //   fuseau), contrairement au reste de ce fichier et à Desktop — elle
+    //   pouvait donc afficher un retard un jour trop tôt ou trop tard.
+    //   Alignée sur ASLDB.computePhase(), la même source de vérité partout.
     var list = reservations().filter(function (r) {
-      return (r.endDate || '') < ts && (r.status === 'active' || r.status === 'confirmed');
+      return (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? ASLDB.computePhase(r) === 'late' : ((r.endDate || '') < ts && (r.status === 'active' || r.status === 'confirmed'));
     }).sort(function (a, b) { return (a.endDate || '').localeCompare(b.endDate || ''); });
     host.innerHTML = list.length ? list.map(function (r) {
       var idStr = "'" + String(r.id || '') + "'";
@@ -827,12 +838,25 @@
   function renderRevenueM() {
     var host = document.getElementById('ma-revenue');
     if (!host) return;
-    var rev = computeRev();
+    // ★ CORRECTIF (point 2) — Même remplacement que sur Desktop : répartition
+    //   par personne ayant réellement encaissé (champ "Encaissé par"),
+    //   jamais l'utilisateur connecté, à la place des revenus
+    //   semaine/mois/année. Seul ce résumé du Dashboard change — l'onglet
+    //   complet "Caisse" reste identique.
+    var byPerson = { Mohamed: 0, Younes: 0, Khalid: 0 };
+    var dueGlobal = 0;
+    reservations().forEach(function (r) {
+      if (r.status === 'cancelled') return;
+      var amount = Number(r.amount) || 0;
+      var paid = Number(r.paid) || 0;
+      dueGlobal += Math.max(0, amount - paid);
+      if (paid > 0 && byPerson.hasOwnProperty(r.collectedBy)) byPerson[r.collectedBy] += paid;
+    });
     host.innerHTML =
-      cashLine('Revenus de la semaine', rev.week, '#16a34a', 'Du lundi au dimanche en cours')
-      + cashLine('Revenus du mois', rev.month, '#16a34a', 'Mois calendaire en cours')
-      + cashLine("Revenus de l'année", rev.year, '#16a34a', 'Année ' + new Date().getFullYear())
-      + cashLine('Reste à encaisser', rev.dueGlobal, (rev.dueGlobal > 0 ? '#C41E3A' : '#16a34a'), 'Somme de tous les soldes dus');
+      cashLine('Montant encaissé par Mohamed', byPerson.Mohamed, '#16a34a')
+      + cashLine('Montant encaissé par Younes', byPerson.Younes, '#3b82f6')
+      + cashLine('Montant encaissé par Khalid', byPerson.Khalid, '#8b5cf6')
+      + cashLine('Reste à encaisser', dueGlobal, (dueGlobal > 0 ? '#C41E3A' : '#16a34a'), 'Total de tous les impayés');
   }
   function cashLine(label, val, color, note) {
     return '<div class="ma-cash-card" style="border-left-color:' + color + ';">'

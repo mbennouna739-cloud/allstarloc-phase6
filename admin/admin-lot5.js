@@ -426,7 +426,7 @@ function openDashDrawer(type) {
     title = '🔴 Retards (date et heure de retour dépassées)';
     // ★ CORRECTIF : phase réelle (date+heure+fuseau) — un véhicule n'est en
     //   retard QUE si l'heure de retour est réellement dépassée et que le
-    //   retour n'a pas été confirmé (item 6).
+    //   retour n'a pas été confirmé.
     res.filter(function(r) { return (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? ASLDB.computePhase(r) === 'late' : ((r.endDate||'')<ts && (r.status==='active'||r.status==='confirmed')); }).forEach(function(r) {
       var end = new Date((r.endDate||'') + 'T' + (r.endTime || '12:00'));
       var diffMs = new Date() - end;
@@ -434,18 +434,20 @@ function openDashDrawer(type) {
       var diffLabel = diff >= 24 ? (Math.floor(diff/24) + ' j ' + (diff%24) + ' h') : (diff + ' h');
       rows.push(
         '<div style="padding:12px 0;border-bottom:1px solid var(--border);">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">' +
+        '<div style="min-width:0;">' +
         '<div style="font-weight:700;color:var(--red);">' + (r.car||'') + ' — ' + diffLabel + ' de retard</div>' +
         '<div style="font-size:12px;color:var(--text3);">' + (r.client||'') + ' — devait revenir le ' + fmtD(r.endDate||'') + (r.endTime ? ' à ' + r.endTime : '') + '</div>' +
-        '<div style="font-size:12px;margin-bottom:8px;">' + (r.phone||'') + '</div>' +
-        // ★ Item 1D : simple alerte, AUCUNE action de gestion ici — la gestion
-        //   des retours (confirmer/prolonger) se fait uniquement depuis
-        //   "Retours aujourd'hui / demain / date sélectionnée".
-        (r.phone ? '<a href="tel:'+r.phone+'" class="btn-sm ghost" style="text-decoration:none;">📞 Appeler</a>' : '') +
+        '</div>' +
+        // ★ Point 4 : "En retard" devient l'endroit principal pour gérer un
+        //   retour — la fiche ouvre désormais Confirmer le retour + Prolonger.
+        '<div style="flex-shrink:0;"><button class="btn-sm primary" data-rid="' + r.id + '" onclick="setDashReturnContext(\'late\');closeDashDrawer();viewRental(this.dataset.rid,\'late\')">Fiche →</button></div>' +
+        '</div>' +
+        (r.phone ? '<a href="tel:'+r.phone+'" class="btn-sm ghost" style="text-decoration:none;margin-top:6px;display:inline-block;">📞 Appeler</a>' : '') +
         '</div>'
       );
     });
     if (!rows.length) rows.push('<div style="color:#22c55e;text-align:center;padding:30px;">✓ Aucun retard — tout est à l\'heure</div>');
-    else rows.unshift('<div style="font-size:12px;color:var(--text3);margin-bottom:10px;">ℹ Alerte uniquement. Pour confirmer un retour ou prolonger, utilisez « Retours aujourd\'hui / demain / date sélectionnée ».</div>');
 
   } else if (type === 'unpaid') {
     title = '💳 Dossiers avec impayés';
@@ -713,12 +715,26 @@ function viewRental(id, mode) {
   var dr = document.getElementById('rental-drawer');
   if (!dr) return;
 
-  if (titleEl) titleEl.textContent = (mode === 'returns' ? 'Retour — ' : 'Location ') + (r.contractRef||r.id);
+  if (titleEl) titleEl.textContent = (mode === 'returns' ? 'Retour — ' : mode === 'late' ? 'En retard — ' : 'Location ') + (r.contractRef||r.id);
 
-  var actionsHTML = (mode === 'returns')
+  // ★ Point 4 (refonte retours/retards) :
+  //   - "Retours aujourd'hui" (mode='returns') devient une consultation
+  //     PURE : plus de bouton "Confirmer le retour" ici.
+  //   - "En retard" (mode='late') devient l'endroit principal pour gérer
+  //     un retour : Confirmer le retour + Prolonger, exactement les deux
+  //     actions demandées, rien d'autre.
+  var actionsHTML = (mode === 'late')
     ? ('<button class="topbar-btn primary" data-rid="' + r.id + '" onclick="terminerLocation(this.dataset.rid)">✅ Confirmer le retour</button>' +
        '<button class="topbar-btn secondary" data-rid="' + r.id + '" onclick="prolongerLocation(this.dataset.rid)">📅 Prolonger</button>')
-    : ('<button class="topbar-btn secondary" style="color:var(--red);border-color:var(--red);" data-rid="' + r.id + '" onclick="cancelRental(this.dataset.rid)">❌ Annuler la location</button>');
+    : (mode === 'returns')
+    ? '' // consultation uniquement — aucune action de retour ici
+    // ★ Retour anticipé : depuis la fiche normale d'une location en cours
+    //   (ni en retard, ni dans "Retours aujourd'hui"), on peut modifier la
+    //   date/heure de retour ci-dessus (déjà éditable) PUIS confirmer
+    //   directement le retour — sans attendre la date prévue ni passer par
+    //   la liste des retards.
+    : ('<button class="topbar-btn primary" data-rid="' + r.id + '" onclick="terminerLocation(this.dataset.rid)">✅ Confirmer le retour</button>' +
+       '<button class="topbar-btn secondary" style="color:var(--red);border-color:var(--red);" data-rid="' + r.id + '" onclick="cancelRental(this.dataset.rid)">❌ Annuler la location</button>');
   // ★ Point 1 : suppression définitive toujours disponible, quel que soit le statut.
   actionsHTML += '<button class="topbar-btn secondary" style="color:var(--text3);" data-rid="' + r.id + '" onclick="deleteReservationPermanently(this.dataset.rid)">🗑 Supprimer définitivement</button>';
 
@@ -976,13 +992,27 @@ function terminerLocation(id) {
       ASLDB.releaseUnit(r.carId, r.assignedPlate);
     }
     if (ASLDB.updateReservation) {
-      // ★ Enregistre le moment RÉEL du retour (peut différer de la date
-      //   prévue si le client rend le véhicule en avance ou en retard) —
-      //   l'historique reflète ainsi ce qui s'est réellement passé.
+      // ★ CORRECTIF (point 4 — retour anticipé) : si la fiche est ouverte et
+      //   que l'admin a modifié la date/heure de retour (ex. le client rend
+      //   le véhicule plus tôt que prévu), on utilise CETTE date réelle
+      //   plutôt que de toujours forcer l'instant présent — sinon la
+      //   correction saisie était silencieusement ignorée. On recalcule
+      //   aussi la durée réelle à partir des dates effectives.
+      var endDateEl = document.getElementById('rd-end-date');
+      var endTimeEl = document.getElementById('rd-end-time');
+      var startDateEl = document.getElementById('rd-start-date');
       var now = new Date();
-      var actualEndDate = (typeof ASLDB !== 'undefined' && ASLDB.localDateISO) ? ASLDB.localDateISO(now) : now.toISOString().slice(0,10);
-      var actualEndTime = (typeof ASLDB !== 'undefined' && ASLDB.localTimeHM) ? ASLDB.localTimeHM(now) : (String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0'));
-      ASLDB.updateReservation(id, { status: 'completed', endDate: actualEndDate, endTime: actualEndTime, plannedEndDate: r.endDate, plannedEndTime: r.endTime || '' });
+      var actualEndDate = (endDateEl && endDateEl.value) ? endDateEl.value
+        : ((typeof ASLDB !== 'undefined' && ASLDB.localDateISO) ? ASLDB.localDateISO(now) : now.toISOString().slice(0,10));
+      var actualEndTime = (endTimeEl && endTimeEl.value) ? endTimeEl.value
+        : ((typeof ASLDB !== 'undefined' && ASLDB.localTimeHM) ? ASLDB.localTimeHM(now) : (String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0')));
+      var actualStartDate = (startDateEl && startDateEl.value) ? startDateEl.value : r.startDate;
+      var patch = { status: 'completed', endDate: actualEndDate, endTime: actualEndTime, plannedEndDate: r.plannedEndDate || r.endDate, plannedEndTime: r.plannedEndTime || r.endTime || '' };
+      if (actualStartDate && actualEndDate) {
+        var realDays = Math.max(1, Math.round((new Date(actualEndDate) - new Date(actualStartDate)) / 86400000));
+        patch.days = realDays;
+      }
+      ASLDB.updateReservation(id, patch);
     }
   }
   if (typeof reloadData === 'function') reloadData();
@@ -1164,6 +1194,24 @@ function nlEndToDays() {
   if (days >= 1) dEl.value = days;
 }
 
+/* ★ Point 3 (LLD) — Deuxième méthode, plus rapide, pour fixer la date de
+   fin : un nombre de mois directement, en plus du calendrier existant
+   (conservé intact). Le résultat reste ensuite modifiable librement via le
+   calendrier, comme n'importe quelle autre date de fin. */
+function nlApplyLLDMonths(months) {
+  months = parseInt(months, 10);
+  var sEl = document.getElementById('nl-start');
+  var eEl = document.getElementById('nl-end');
+  if (!months) return;
+  if (!sEl || !sEl.value) { alert('Choisissez d\'abord la date de départ.'); return; }
+  if (!eEl) return;
+  var d = new Date(sEl.value + 'T00:00:00');
+  d.setMonth(d.getMonth() + months);
+  eEl.value = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  nlEndToDays();
+  try { eEl.dispatchEvent(new Event('change')); } catch (e) {}
+}
+
 function _buildNewLocationModal(isLLD) {
   // Garantit la présence du bouton #modal-save même si un autre module (LLD…)
   // a remplacé le pied de page du pop-up partagé juste avant.
@@ -1231,6 +1279,14 @@ function _buildNewLocationModal(isLLD) {
     '<div class="form-group"><label class="form-label">Date départ</label><input type="date" class="form-input" id="nl-start"></div>' +
     '<div class="form-group"><label class="form-label">Heure départ</label><input type="time" class="form-input" id="nl-start-time" value="10:00"></div>' +
     '</div>' +
+    (isLLD ?
+      '<div class="form-group"><label class="form-label">Durée rapide (facultatif)</label>' +
+      '<select class="form-select" id="nl-lld-months" onchange="nlApplyLLDMonths(this.value)">' +
+      '<option value="">— Utiliser le calendrier ci-dessous —</option>' +
+      Array.from({length:12}, function(_,i){ var m=i+1; return '<option value="'+m+'">'+m+' mois</option>'; }).join('') +
+      '</select>' +
+      '<div style="font-size:11px;color:var(--text3);margin-top:4px;">Calcule automatiquement la date de fin — vous pouvez toujours l\'ajuster manuellement ensuite via le calendrier.</div></div>'
+      : '') +
     '<div class="form-row">' +
     '<div class="form-group"><label class="form-label">Date retour</label><input type="date" class="form-input" id="nl-end"></div>' +
     '<div class="form-group"><label class="form-label">Heure retour</label><input type="time" class="form-input" id="nl-end-time" value="10:00"></div>' +
