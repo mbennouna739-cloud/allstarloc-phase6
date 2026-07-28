@@ -414,6 +414,46 @@
       if (MISC_MAP[name] === localKey) markMiscDirty(name);
     });
   }
+  /* ★ CORRECTIF CRITIQUE (cause racine des écarts de Caisse/impayés) —
+     syncMisc() poussait auparavant la valeur locale ENTIÈRE avec un simple
+     PUT, sans jamais la fusionner avec ce qui existait déjà sur le
+     serveur : un écrasement pur et simple. Si Desktop ET Mobile avaient
+     chacun ajouté des données localement (ex. une charge/dépense
+     différente sur chaque appareil) avant leur prochain cycle de
+     synchronisation, celui des deux qui poussait EN SECOND effaçait
+     purement et simplement l'ajout de l'autre sur le serveur — sans
+     erreur, sans avertissement, silencieusement. Comme "Caisse" se calcule
+     à partir des charges (en plus des paiements, déjà protégés
+     individuellement côté réservations), c'est une cause directe et
+     sérieuse de l'écart constaté (17 625 MAD vs 13 XXX MAD : l'ordre de
+     grandeur correspond à la perte d'un ou plusieurs lots de charges/
+     paiements auxiliaires entiers, pas à un simple élément isolé).
+     Corrigé en fusionnant systématiquement avec l'état serveur juste avant
+     d'écrire, au lieu d'écraser. */
+  function mergeMiscValue(serverValue, localValue) {
+    if (Array.isArray(localValue) && Array.isArray(serverValue)) {
+      // Fusion par identifiant : on part du serveur (garde ce que d'autres
+      // appareils ont ajouté entre-temps), puis on applique les entrées
+      // locales par-dessus (l'admin qui vient de modifier gagne sur un
+      // même id). Les entrées sans id ne peuvent pas être déduplique
+      // de façon fiable : on les garde toutes pour ne jamais rien perdre.
+      var byId = {}; var noId = [];
+      serverValue.forEach(function (item) { if (item && item.id != null) byId[item.id] = item; else noId.push(item); });
+      localValue.forEach(function (item) { if (item && item.id != null) byId[item.id] = item; else noId.push(item); });
+      var out = Object.keys(byId).map(function (k) { return byId[k]; }).concat(noId);
+      return out;
+    }
+    if (localValue && typeof localValue === 'object' && !Array.isArray(localValue) &&
+        serverValue && typeof serverValue === 'object' && !Array.isArray(serverValue)) {
+      // Fusion superficielle par clé (ex. documents clients indexés par
+      // client) : les clés modifiées localement gagnent, celles qui
+      // n'existent QUE côté serveur (ajoutées par un autre appareil) sont
+      // conservées au lieu d'être effacées.
+      return Object.assign({}, serverValue, localValue);
+    }
+    return localValue; // types différents ou rien côté serveur : valeur locale telle quelle
+  }
+
   async function syncMisc() {
     if (!remoteEnabled) return;
     for (var name in MISC_MAP) {
@@ -422,15 +462,24 @@
       var dirty = localStorage.getItem(miscDirtyKey(name));
       try {
         if (dirty) {
-          // Pousser la version locale
           var value = readJSON(localKey, null);
           if (value !== null) {
             try {
+              // ★ On relit l'état serveur ACTUEL juste avant d'écrire, pour
+              //   fusionner au lieu d'écraser (voir correctif ci-dessus).
+              var beforePush = await apiFetch('/misc?name=' + name, { method: 'GET' });
+              var serverBefore = (beforePush && beforePush.doc) ? beforePush.doc.value : null;
+              var merged = mergeMiscValue(serverBefore, value);
               var res = await apiFetch('/misc', {
                 method: 'PUT', headers: headers(true),
-                body: JSON.stringify({ name: name, value: value })
+                body: JSON.stringify({ name: name, value: merged })
               });
               if (res && res.rev != null) writeNum(miscRevKey(name), res.rev);
+              // Le cache local reflète désormais la version FUSIONNÉE (et non
+              // plus seulement ce que cet appareil connaissait), pour ne pas
+              // perdre à son tour ce qui vient d'être récupéré du serveur.
+              write(localKey, merged);
+              emit(localKey);
               try { localStorage.removeItem(miscDirtyKey(name)); } catch (e) {}
             } catch (ePush) {
               // Pas de clé admin (employé) : on ne peut pas pousser. On abandonne

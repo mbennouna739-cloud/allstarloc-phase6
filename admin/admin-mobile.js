@@ -712,14 +712,19 @@
   function renderReservedM() {
     var host = document.getElementById('ma-reserved');
     if (!host) return;
+    // ★ CORRECTIF (cohérence Desktop/Mobile, point 1) : cette liste utilisait
+    //   encore l'ancienne comparaison de chaînes de date (ignorant l'heure
+    //   et le fuseau) au lieu de ASLDB.computePhase() — même correction que
+    //   pour "En retard". Actions ajoutées : confirmer la prise en charge
+    //   (devient une location active) et ouvrir la fiche, comme sur Desktop.
     var ts = todayISO();
-    // Réservations futures (à venir), pas encore commencées
     var list = reservations().filter(function (r) {
-      return (r.status === 'confirmed' || r.status === 'reserved' || r.status === 'pending') && (r.startDate || '') > ts;
+      return (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? ASLDB.computePhase(r) === 'reserved' : ((r.status === 'confirmed' || r.status === 'reserved' || r.status === 'pending') && (r.startDate || '') > ts);
     }).sort(function (a, b) { return String(a.startDate || '').localeCompare(String(b.startDate || '')); });
     host.innerHTML = list.length ? list.map(function (r) {
       // Immatriculation depuis la flotte
       var plate = r.assignedPlate || (function () { try { var c = fleet().filter(function (x) { return x.name === r.car || x.id === r.carId; })[0]; return c ? (c.plate || '') : ''; } catch (e) { return ''; } })();
+      var idStr = "'" + String(r.id || '') + "'";
       return '<div class="ma-card">'
         + '<div class="ma-card-top"><div class="ma-card-ico-box purple">' + ic('calendar') + '</div>'
         + '<div class="ma-card-info"><div class="ma-card-name">' + esc(r.car || 'Véhicule') + '</div>'
@@ -727,9 +732,19 @@
         + '<span class="ma-badge purple">Réservé</span></div>'
         + '<div class="ma-card-note blue">' + ic('calendar') + ' Réservée du ' + fmtDMT(r.startDate, r.startTime, '10:00') + ' au ' + fmtDMT(r.endDate, r.endTime, '18:00') + '</div>'
         + '<div class="ma-card-note">' + ic('user') + ' ' + esc(r.client || r.finalClient || 'Client') + '</div>'
+        + '<div class="ma-actions">'
+        + '<button class="ma-act-btn" onclick="maViewRes(' + idStr + ')">' + ic('eye') + 'Fiche</button>'
+        + '<button class="ma-act-btn ok" onclick="maConfirmPickup(' + idStr + ')">' + ic('check') + 'Prise en charge</button>'
+        + '</div>'
         + '</div>';
     }).join('') : '<div class="ma-empty">Aucun véhicule réservé.</div>';
   }
+  /* ★ Point 1 (Option 2) — Même comportement que Desktop : réutilise la
+     fonction partagée confirmPickup() pour ne jamais dupliquer la logique. */
+  window.maConfirmPickup = function (id) {
+    if (typeof window.confirmPickup === 'function') window.confirmPickup(id);
+    refreshSoon();
+  };
 
   /* ============ ACTIVITÉS DU JOUR (dynamique) ============ */
   function renderActivitesM() {
@@ -786,7 +801,7 @@
     var idStr = "'" + String(x.id || '') + "'";
     return '<div class="ma-card"><div class="ma-card-top"><div class="ma-card-ico-box ' + (kind === 'sortant' ? 'blue' : 'orange') + '">' + ic(kind === 'sortant' ? 'key' : 'returns') + '</div>'
       + '<div class="ma-card-info"><div class="ma-card-name">' + esc(x.car || 'Véhicule') + '</div>'
-      + '<div class="ma-card-sub">' + esc(x.client || '') + (plate ? ' · ' + esc(plate) + (r.assignedColor ? ' — ' + esc(r.assignedColor) : '') : '') + '</div></div>'
+      + '<div class="ma-card-sub">' + esc(x.client || '') + (plate ? ' · ' + esc(plate) + (x.assignedColor ? ' — ' + esc(x.assignedColor) : '') : '') + '</div></div>'
       + '<span class="ma-badge ' + (kind === 'sortant' ? 'blue' : 'orange') + '">' + (kind === 'sortant' ? 'Départ' : 'Retour') + '</span></div>'
       + '<div class="ma-actions"><button class="ma-act-btn" onclick="maViewRental(' + idStr + ')">' + ic('eye') + 'Fiche</button></div></div>';
   }

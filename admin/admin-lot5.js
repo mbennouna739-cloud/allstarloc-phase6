@@ -360,7 +360,10 @@ function openDashDrawer(type) {
         + (plateColor ? '<div style="font-size:12px;color:var(--text3);">🚗 ' + plateColor + '</div>' : '')
         + '<div style="font-size:13px;margin-top:2px;">Départ :<br><strong>' + fmtD(r.startDate||'') + (r.startTime ? ' à ' + r.startTime : '') + '</strong></div>'
         + '</div>'
-        + '<div style="flex-shrink:0;"><button class="btn-sm primary" data-rid="' + r.id + '" onclick="setDashReturnContext(\'reserved\');closeDashDrawer();viewRes(this.dataset.rid)">Fiche →</button></div>'
+        + '<div style="flex-shrink:0;display:flex;flex-direction:column;gap:6px;">'
+        + '<button class="btn-sm primary" data-rid="' + r.id + '" onclick="confirmPickup(this.dataset.rid)">✓ Prise en charge</button>'
+        + '<button class="btn-sm ghost" data-rid="' + r.id + '" onclick="setDashReturnContext(\'reserved\');closeDashDrawer();viewRes(this.dataset.rid)">Fiche →</button>'
+        + '</div>'
         + '</div>'
       );
     });
@@ -1031,6 +1034,39 @@ function terminerLocation(id) {
       après remise du véhicule) : mêmes effets que "Confirmer la
       récupération", mais explicitement nommé "annulation" et enregistre
       la date/heure réelle de restitution (souvent avant la date prévue). */
+/* ★ Point 1 (Option 2) — Confirme la prise en charge d'une réservation :
+   elle devient une location active, quitte immédiatement la liste des
+   réservations, apparaît dans les véhicules loués, et toutes les
+   informations (client, véhicule, dates, paiements...) sont conservées à
+   l'identique — aucune nouvelle fiche n'est créée, c'est le même
+   enregistrement qui change simplement de statut. */
+function confirmPickup(id) {
+  var res = aslRes();
+  var r = res.find(function(x) { return String(x.id) === String(id); });
+  if (!r) return;
+  if (!confirm('Confirmer la prise en charge de « ' + (r.car||'') + ' » par ' + (r.client||'') + ' ?\nCette réservation deviendra une location active.')) return;
+  if (typeof ASLDB !== 'undefined' && ASLDB.updateReservation) {
+    ASLDB.updateReservation(id, { status: 'active', type: 'location' });
+  }
+  // ★ Le véhicule doit être marqué comme réellement occupé — sans ça, sa
+  //   fiche flotte pouvait rester sur un statut de réservation figé même
+  //   après la prise en charge (déconnecté du statut réel de la location).
+  if (r.carId != null && typeof ASLDB !== 'undefined') {
+    if (r.assignedPlate && typeof ASLDB.setUnitStatusByPlate === 'function') {
+      ASLDB.setUnitStatusByPlate(r.carId, r.assignedPlate, 'active');
+    } else if (typeof ASLDB.assignUnit === 'function') {
+      ASLDB.assignUnit(r.carId, 'active');
+    }
+  }
+  if (typeof reloadData === 'function') reloadData();
+  renderRentals(); renderDashboard();
+  if (typeof renderAllReservations === 'function') renderAllReservations();
+  if (typeof renderFleetPage === 'function') renderFleetPage();
+  updateBadges();
+  if (typeof closeDashDrawer === 'function') closeDashDrawer();
+  showToast('Prise en charge confirmée — location active ✓');
+}
+
 function cancelReservation(id) {
   var res = aslRes();
   var r = res.find(function(x) { return String(x.id) === String(id); });
