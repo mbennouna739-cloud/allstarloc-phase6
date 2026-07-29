@@ -1205,6 +1205,84 @@
   }
   function customFeatureIconSvg(key) { return CUSTOM_FEATURE_ICONS[key] || CUSTOM_FEATURE_ICONS.star; }
 
+  /* ============================================================
+     ★ SOURCE UNIQUE DE VÉRITÉ — Sélecteurs partagés (Desktop + Mobile)
+     ------------------------------------------------------------
+     CAUSE RACINE des écarts constatés : chaque écran (Desktop, Mobile,
+     compteurs, listes) réimplémentait SON PROPRE filtre. Il suffisait
+     qu'une seule copie diverge d'un mot pour créer un écart permanent.
+     Exemple réel trouvé et corrigé : la LISTE "Véhicules loués" du Mobile
+     filtrait sur (actif OU en retard) alors que son propre COMPTEUR — et
+     Desktop des deux côtés — filtraient sur (actif) seulement. D'où à la
+     fois "liste ≠ compteur" sur Mobile et "Mobile ≠ Desktop".
+     Désormais TOUT (listes, compteurs, cartes, statistiques, Desktop et
+     Mobile) appelle littéralement ces mêmes fonctions : une divergence
+     n'est plus possible par construction.
+     ============================================================ */
+  function _activeRes() {
+    return getReservations().filter(function (r) { return r.status !== 'cancelled'; });
+  }
+  function selectRented(now) {
+    return _activeRes().filter(function (r) { return computePhase(r, now) === 'active'; });
+  }
+  function selectReserved(now) {
+    return _activeRes().filter(function (r) { return computePhase(r, now) === 'reserved'; });
+  }
+  function selectLate(now) {
+    return _activeRes().filter(function (r) { return computePhase(r, now) === 'late'; });
+  }
+  /* Retours prévus à une date donnée : on exclut les retours déjà confirmés
+     ('completed') ET les annulés — un retour confirmé n'est plus "à venir". */
+  function selectReturnsOn(dateISO) {
+    return _activeRes().filter(function (r) {
+      return (r.endDate || '').slice(0, 10) === dateISO && r.status !== 'completed';
+    });
+  }
+  function selectUnpaid() {
+    return _activeRes().filter(function (r) {
+      return (Number(r.amount) || 0) > (Number(r.paid) || 0);
+    });
+  }
+  /* Activité du jour : entrants = retours prévus ce jour ; sortants =
+     départs prévus ce jour. */
+  function selectEntrantsOn(dateISO) { return selectReturnsOn(dateISO); }
+  function selectSortantsOn(dateISO) {
+    return _activeRes().filter(function (r) { return (r.startDate || '').slice(0, 10) === dateISO; });
+  }
+  /* Caisse : total réellement encaissé et total restant dû, calculés une
+     seule fois pour tout le monde (Desktop, Mobile, cartes, rapports). */
+  function computeCashTotals() {
+    var encaisse = 0, reste = 0, byPerson = { Mohamed: 0, Younes: 0, Khalid: 0 };
+    _activeRes().forEach(function (r) {
+      var amount = Number(r.amount) || 0;
+      var paid = Number(r.paid) || 0;
+      encaisse += paid;
+      reste += Math.max(0, amount - paid);
+      if (paid > 0 && byPerson.hasOwnProperty(r.collectedBy)) byPerson[r.collectedBy] += paid;
+    });
+    return { encaisse: encaisse, reste: reste, byPerson: byPerson };
+  }
+
+  /* ★ Bouton "Resynchroniser les données" (outil de maintenance) —
+     LECTURE SEULE : force une relecture complète depuis le serveur puis
+     notifie toutes les vues de se recalculer. N'écrit jamais rien, ne
+     crée aucun doublon, ne supprime rien. */
+  async function resyncAll() {
+    if (!remoteEnabled) throw new Error('Mode local : aucune base distante à relire.');
+    // On oublie les révisions connues pour forcer l'adoption de la version
+    // serveur, même si elle porte un numéro de révision plus ancien que
+    // celui mémorisé localement (cas d'un cache local désynchronisé).
+    try {
+      writeNum(KEY_REV_F, 0);
+      writeNum(KEY_REV_R, 0);
+      Object.keys(MISC_MAP).forEach(function (name) { writeNum(miscRevKey(name), 0); });
+    } catch (e) {}
+    await syncNow();          // envoie d'abord ce qui est en attente, puis relit tout
+    emit(KEY_FLEET); emit(KEY_RES);
+    Object.keys(MISC_MAP).forEach(function (name) { emit(MISC_MAP[name]); });
+    return true;
+  }
+
   function modelAvailability(car) {
     var units = normalizeUnits(car);
     var availableCount = units.filter(function (u) { return (u.status || 'available') === 'available'; }).length;
@@ -1377,6 +1455,9 @@
     checkAvailability, checkReservationConflict, AVAIL_MARGIN_H,
     // ★ Source unique : phase réelle (reserved/active/late) + dates locales
     computePhase, localDateISO, localTimeHM,
+    // ★ Source unique de vérité — sélecteurs partagés Desktop + Mobile
+    selectRented, selectReserved, selectLate, selectReturnsOn, selectUnpaid,
+    selectEntrantsOn, selectSortantsOn, computeCashTotals, resyncAll,
     // ★ Équipements personnalisés — lecture seule côté site client (écriture
     //   toujours réservée au back-office, admin-custom-features.js)
     getCustomFeaturesDef, customFeatureIconSvg,

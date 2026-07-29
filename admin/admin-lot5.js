@@ -202,11 +202,15 @@ function renderDashboard() {
     }
     var availUnitsTotal = fleet.reduce(function (s, c) { return s + _avUnits(c); }, 0);
     var avail    = fleet.filter(function(c) { return c.status === 'available'; });
-    var rented   = res.filter(function(r) { return phase(r) === 'active'; });
-    var reserved = res.filter(function(r) { return phase(r) === 'reserved'; });
-    var returns  = res.filter(function(r) { return (r.endDate||'').slice(0,10) === ts && r.status !== 'cancelled' && r.status !== 'completed'; });
-    var late     = res.filter(function(r) { return phase(r) === 'late'; });
-    var unpaid   = res.filter(function(r) { if (r.status === 'cancelled') return false; return (Number(r.amount)||0) > (Number(r.paid)||0); });
+    // ★ SOURCE UNIQUE (Mission) : ces compteurs appellent désormais
+    //   littéralement les mêmes fonctions que Mobile et que les listes —
+    //   une divergence n'est plus possible par construction.
+    var D = (typeof ASLDB !== 'undefined') ? ASLDB : null;
+    var rented   = (D && D.selectRented)     ? D.selectRented()      : res.filter(function(r) { return phase(r) === 'active'; });
+    var reserved = (D && D.selectReserved)   ? D.selectReserved()    : res.filter(function(r) { return phase(r) === 'reserved'; });
+    var returns  = (D && D.selectReturnsOn)  ? D.selectReturnsOn(ts) : res.filter(function(r) { return (r.endDate||'').slice(0,10) === ts && r.status !== 'cancelled' && r.status !== 'completed'; });
+    var late     = (D && D.selectLate)       ? D.selectLate()        : res.filter(function(r) { return phase(r) === 'late'; });
+    var unpaid   = (D && D.selectUnpaid)     ? D.selectUnpaid()      : res.filter(function(r) { if (r.status === 'cancelled') return false; return (Number(r.amount)||0) > (Number(r.paid)||0); });
 
     function setV(id, val, col) {
       var el = document.getElementById(id);
@@ -317,7 +321,7 @@ function openDashDrawer(type) {
     title = '🔵 Véhicules loués actuellement';
     // ★ CORRECTIF : phase réelle (date+heure+fuseau), plus l'ancien filtre
     //   "date seule" qui retardait d'un jour le passage en "Loué".
-    res.filter(function(r) { return (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? ASLDB.computePhase(r) === 'active' : ((r.status==='active'||r.status==='confirmed') && (r.startDate||'')<=ts && (r.endDate||'')>=ts); }).forEach(function(r) {
+    (ASLDB.selectRented ? ASLDB.selectRented() : []).forEach(function(r) {
       var plateColor = '';
       if (r.assignedPlate) {
         plateColor = r.assignedPlate + (r.assignedColor ? ' — ' + r.assignedColor : '');
@@ -344,7 +348,7 @@ function openDashDrawer(type) {
   } else if (type === 'reserved') {
     title = '🟣 Véhicules réservés';
     // ★ Vue rapide (item 7) : uniquement la DATE+HEURE DE DÉPART.
-    res.filter(function(r) { return (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? ASLDB.computePhase(r) === 'reserved' : ((r.status==='confirmed'||r.status==='reserved'||r.status==='pending') && (r.startDate||'')>ts); }).forEach(function(r) {
+    (ASLDB.selectReserved ? ASLDB.selectReserved() : []).forEach(function(r) {
       var plateColor = '';
       if (r.assignedPlate) {
         plateColor = r.assignedPlate + (r.assignedColor ? ' — ' + r.assignedColor : '');
@@ -396,7 +400,7 @@ function openDashDrawer(type) {
       '<input id="returns-search" placeholder="Rechercher : client, véhicule, immatriculation…" value="' + ((window._returnsSearchQuery||'').replace(/"/g,'&quot;')) + '" oninput="setReturnsSearch(this.value)"></div>'
     );
     var searchQ = (window._returnsSearchQuery || '').trim().toLowerCase();
-    var matches = res.filter(function(r) { return (r.endDate||'').slice(0,10)===targetDate && r.status!=='cancelled' && r.status!=='completed'; });
+    var matches = (ASLDB.selectReturnsOn ? ASLDB.selectReturnsOn(targetDate) : []);
     if (searchQ) {
       matches = matches.filter(function(r) {
         var fc2 = fleet.filter(function(c){ return c.name===r.car || c.id===r.carId; })[0];
@@ -430,7 +434,7 @@ function openDashDrawer(type) {
     // ★ CORRECTIF : phase réelle (date+heure+fuseau) — un véhicule n'est en
     //   retard QUE si l'heure de retour est réellement dépassée et que le
     //   retour n'a pas été confirmé.
-    res.filter(function(r) { return (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? ASLDB.computePhase(r) === 'late' : ((r.endDate||'')<ts && (r.status==='active'||r.status==='confirmed')); }).forEach(function(r) {
+    (ASLDB.selectLate ? ASLDB.selectLate() : []).forEach(function(r) {
       var end = new Date((r.endDate||'') + 'T' + (r.endTime || '12:00'));
       var diffMs = new Date() - end;
       var diff = Math.max(0, Math.round(diffMs / 3600000));
@@ -454,7 +458,7 @@ function openDashDrawer(type) {
 
   } else if (type === 'unpaid') {
     title = '💳 Dossiers avec impayés';
-    res.filter(function(r) { if(r.status==='cancelled') return false; return (Number(r.amount)||0)>(Number(r.paid)||0); }).forEach(function(r) {
+    (ASLDB.selectUnpaid ? ASLDB.selectUnpaid() : []).forEach(function(r) {
       var reste = (Number(r.amount)||0) - (Number(r.paid)||0);
       var slName = subLeaseNameFor(r);
       rows.push(

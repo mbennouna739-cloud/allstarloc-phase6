@@ -87,12 +87,20 @@
 
   /* ---------- Calculs financiers (mêmes règles que la Caisse) ---------- */
   function totals() {
+    // ★ SOURCE UNIQUE : le total encaissé et le reste dû proviennent
+    //   désormais de la même fonction que Desktop (ASLDB.computeCashTotals),
+    //   au lieu d'un calcul réimplémenté ici — garantit un montant de
+    //   Caisse strictement identique sur les deux versions.
+    var ct = ASLDB.computeCashTotals ? ASLDB.computeCashTotals() : null;
     var enc = 0, rest = 0;
-    reservations().forEach(function (r) {
-      if (r.status === 'cancelled') return;
-      enc += Number(r.paid) || 0;
-      rest += Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
-    });
+    if (ct) { enc = ct.encaisse; rest = ct.reste; }
+    else {
+      reservations().forEach(function (r) {
+        if (r.status === 'cancelled') return;
+        enc += Number(r.paid) || 0;
+        rest += Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
+      });
+    }
     var chg = 0;
     charges().forEach(function (c) { if (c.status !== 'pending') chg += Number(c.amount) || 0; });
     return { enc: enc, rest: rest, chg: chg, soldeReel: enc - chg, soldeEstime: enc + rest - chg };
@@ -121,25 +129,17 @@
         var ma = (typeof ASLDB !== 'undefined' && ASLDB.modelAvailability) ? ASLDB.modelAvailability(c) : null;
         return n + (ma ? ma.available : (c.status === 'available' ? 1 : 0));
       }, 0),
-      // Loués = réservations dont le départ est passé/atteint et le retour pas encore dépassé
-      rented: r.filter(function (x) { return phase(x) === 'active'; }).length,
-      // Réservés = réservations futures non encore commencées (à venir)
-      reserved: r.filter(function (x) { return phase(x) === 'reserved'; }).length,
-      // ★ CORRECTIF (point 3) : le compteur excluait bien les annulées mais
-      //   pas les retours déjà CONFIRMÉS ('completed') — après confirmation
-      //   du retour, le compteur restait bloqué à 1 alors que la liste
-      //   (qui exclut déjà 'completed') s'affichait vide. Les deux filtres
-      //   sont désormais strictement identiques.
-      returnsToday: r.filter(function (x) { return (x.endDate || '').slice(0, 10) === ts && x.status !== 'cancelled' && x.status !== 'completed'; }).length,
-      late: r.filter(function (x) { return phase(x) === 'late'; }).length,
-      unpaid: r.filter(function (x) { return x.status !== 'cancelled' && (Number(x.amount) || 0) > (Number(x.paid) || 0); }).length,
-      // Activités du jour
-      // ★ CORRECTIF (point 4) : même bug que returnsToday — le compteur
-      //   "entrants" (retours du jour) doit exclure les retours déjà
-      //   confirmés ('completed'), pas seulement les annulés, pour rester
-      //   cohérent avec la liste détaillée (qui l'exclut déjà).
-      entrants: r.filter(function (x) { return (x.endDate || '').slice(0, 10) === ts && x.status !== 'cancelled' && x.status !== 'completed'; }).length,
-      sortants: r.filter(function (x) { return (x.startDate || '').slice(0, 10) === ts && x.status !== 'cancelled'; }).length,
+      // ★ SOURCE UNIQUE (Mission) : tous ces compteurs appellent désormais
+      //   littéralement les mêmes fonctions que Desktop et que les listes
+      //   Mobile — plus aucune réimplémentation locale, donc plus aucune
+      //   divergence possible entre compteur, liste, Desktop et Mobile.
+      rented: (ASLDB.selectRented ? ASLDB.selectRented().length : r.filter(function (x) { return phase(x) === 'active'; }).length),
+      reserved: (ASLDB.selectReserved ? ASLDB.selectReserved().length : r.filter(function (x) { return phase(x) === 'reserved'; }).length),
+      returnsToday: (ASLDB.selectReturnsOn ? ASLDB.selectReturnsOn(ts).length : 0),
+      late: (ASLDB.selectLate ? ASLDB.selectLate().length : r.filter(function (x) { return phase(x) === 'late'; }).length),
+      unpaid: (ASLDB.selectUnpaid ? ASLDB.selectUnpaid().length : r.filter(function (x) { return x.status !== 'cancelled' && (Number(x.amount) || 0) > (Number(x.paid) || 0); }).length),
+      entrants: (ASLDB.selectEntrantsOn ? ASLDB.selectEntrantsOn(ts).length : 0),
+      sortants: (ASLDB.selectSortantsOn ? ASLDB.selectSortantsOn(ts).length : 0),
       vt: vt,
       vidanges: vid
     };
@@ -476,7 +476,7 @@
     // ★ CORRECTIF (item 3, parité Desktop) : phase réelle plutôt que statut
     //   brut — dès qu'une réservation démarre réellement (devient "louée"),
     //   elle disparaît automatiquement de cette liste.
-    var list = reservations().filter(function (r) { return (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? ASLDB.computePhase(r) === 'reserved' : (r.status === 'pending' || r.status === 'confirmed' || r.status === 'reserved'); })
+    var list = (ASLDB.selectReserved ? ASLDB.selectReserved() : [])
       .sort(function (a, b) { return (b.createdAt || '').localeCompare(a.createdAt || ''); });
     host.innerHTML = list.length ? list.map(function (r) { return resCard(r, 'reservation'); }).join('') : '<div class="ma-empty">Aucune réservation en cours.</div>';
   }
@@ -488,7 +488,11 @@
     // ★ CORRECTIF (item 1/6, parité Desktop) : phase réelle (date+heure+
     //   fuseau réels) au lieu de la comparaison de chaînes de date qui
     //   retardait d'un jour le passage "Réservé" → "Loué".
-    var list = reservations().filter(function (r) { return (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? (ASLDB.computePhase(r) === 'active' || ASLDB.computePhase(r) === 'late') : ((r.status === 'active' || r.status === 'confirmed')); });
+    // ★ SOURCE UNIQUE : identique au compteur et à Desktop (bug corrigé :
+    //   cette liste incluait aussi les véhicules EN RETARD, contrairement à
+    //   son propre compteur et à Desktop — d'où liste ≠ compteur et
+    //   Mobile ≠ Desktop).
+    var list = ASLDB.selectRented ? ASLDB.selectRented() : reservations().filter(function (r) { return ASLDB.computePhase(r) === 'active'; });
     host.innerHTML = list.length ? list.map(function (r) { return resCard(r, 'rental'); }).join('') : '<div class="ma-empty">Aucune location en cours aujourd\'hui.</div>';
   }
 
@@ -624,9 +628,9 @@
     if (!host) return;
     var target = returnsFilter === 'today' ? todayISO() : returnsFilter === 'tomorrow' ? plusDaysISO(1) : returnsDate;
     var q = (window._maReturnsSearch || '').trim().toLowerCase();
-    var list = reservations().filter(function (r) {
-      return (r.endDate || '').slice(0, 10) === target && r.status !== 'cancelled' && r.status !== 'completed';
-    }).sort(function (a, b) { return (a.endTime || '').localeCompare(b.endTime || ''); });
+    // ★ SOURCE UNIQUE : même fonction que le compteur et que Desktop.
+    var list = (ASLDB.selectReturnsOn ? ASLDB.selectReturnsOn(target) : [])
+      .sort(function (a, b) { return (a.endTime || '').localeCompare(b.endTime || ''); });
     if (q) {
       list = list.filter(function (r) {
         var fc = fleet().filter(function (c) { return c.name === r.car || c.id === r.carId; })[0];
@@ -718,9 +722,7 @@
     //   pour "En retard". Actions ajoutées : confirmer la prise en charge
     //   (devient une location active) et ouvrir la fiche, comme sur Desktop.
     var ts = todayISO();
-    var list = reservations().filter(function (r) {
-      return (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? ASLDB.computePhase(r) === 'reserved' : ((r.status === 'confirmed' || r.status === 'reserved' || r.status === 'pending') && (r.startDate || '') > ts);
-    }).sort(function (a, b) { return String(a.startDate || '').localeCompare(String(b.startDate || '')); });
+    var list = (ASLDB.selectReserved ? ASLDB.selectReserved() : []).sort(function (a, b) { return String(a.startDate || '').localeCompare(String(b.startDate || '')); });
     host.innerHTML = list.length ? list.map(function (r) {
       // Immatriculation depuis la flotte
       var plate = r.assignedPlate || (function () { try { var c = fleet().filter(function (x) { return x.name === r.car || x.id === r.carId; })[0]; return c ? (c.plate || '') : ''; } catch (e) { return ''; } })();
@@ -755,10 +757,12 @@
     var MAINT = {}; try { MAINT = JSON.parse(localStorage.getItem('asl_maint_v1') || '{}'); } catch (e) {}
     var todayMs = new Date(ts).getTime();
 
-    // Véhicules entrants (retours du jour)
-    var entrants = r.filter(function (x) { return (x.endDate || '').slice(0, 10) === ts && x.status !== 'cancelled'; });
-    // Véhicules sortants (départs du jour)
-    var sortants = r.filter(function (x) { return (x.startDate || '').slice(0, 10) === ts && x.status !== 'cancelled'; });
+    // ★ SOURCE UNIQUE (bug corrigé) : cette liste de détail n'excluait pas
+    //   les retours déjà confirmés, contrairement à son propre compteur —
+    //   d'où un détail incohérent avec le chiffre affiché. Les deux
+    //   appellent désormais la même fonction.
+    var entrants = ASLDB.selectEntrantsOn ? ASLDB.selectEntrantsOn(ts) : [];
+    var sortants = ASLDB.selectSortantsOn ? ASLDB.selectSortantsOn(ts) : [];
     // Visites techniques proches + vidanges dues
     var f = fleet();
     var vts = [], vids = [];
@@ -816,9 +820,7 @@
     //   fuseau), contrairement au reste de ce fichier et à Desktop — elle
     //   pouvait donc afficher un retard un jour trop tôt ou trop tard.
     //   Alignée sur ASLDB.computePhase(), la même source de vérité partout.
-    var list = reservations().filter(function (r) {
-      return (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? ASLDB.computePhase(r) === 'late' : ((r.endDate || '') < ts && (r.status === 'active' || r.status === 'confirmed'));
-    }).sort(function (a, b) { return (a.endDate || '').localeCompare(b.endDate || ''); });
+    var list = (ASLDB.selectLate ? ASLDB.selectLate() : []).sort(function (a, b) { return (a.endDate || '').localeCompare(b.endDate || ''); });
     host.innerHTML = list.length ? list.map(function (r) {
       var idStr = "'" + String(r.id || '') + "'";
       var days = Math.max(0, Math.round((new Date(ts) - new Date(r.endDate)) / 86400000));
@@ -979,9 +981,7 @@
     var host = document.getElementById('ma-unpaid');
     if (!host) return;
     var ts = todayISO();
-    var list = reservations().filter(function (r) {
-      return r.status !== 'cancelled' && (Number(r.amount) || 0) > (Number(r.paid) || 0);
-    }).sort(function (a, b) { return (b.endDate || '').localeCompare(a.endDate || ''); });
+    var list = (ASLDB.selectUnpaid ? ASLDB.selectUnpaid() : []).sort(function (a, b) { return (b.endDate || '').localeCompare(a.endDate || ''); });
     var total = list.reduce(function (s, r) { return s + ((Number(r.amount) || 0) - (Number(r.paid) || 0)); }, 0);
     if (!list.length) { host.innerHTML = '<div class="ma-empty">✓ Aucun impayé. Tout est encaissé.</div>'; return; }
     host.innerHTML =

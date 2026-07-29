@@ -37,6 +37,20 @@
 
   /* ---- Calculs financiers (source unique : amount / paid) ---- */
   function computeTotals(fromTs, toTs) {
+    // ★ SOURCE UNIQUE : sans filtre de période, on délègue à la fonction
+    //   partagée (ASLDB.computeCashTotals) utilisée aussi par Mobile —
+    //   impossible d'obtenir deux montants différents. Le calcul détaillé
+    //   ci-dessous ne sert plus que lorsqu'un filtre de période est demandé
+    //   (fonctionnalité propre à l'onglet Caisse Desktop).
+    if (!fromTs && !toTs && typeof ASLDB !== 'undefined' && ASLDB.computeCashTotals) {
+      var ct = ASLDB.computeCashTotals();
+      var chgTot = 0;
+      readCharges().forEach(function (c) { if (c.status !== 'pending') chgTot += Number(c.amount) || 0; });
+      return {
+        encaisse: ct.encaisse, charges: chgTot, aEncaisser: ct.reste,
+        soldeReel: ct.encaisse - chgTot, soldeEstime: ct.encaisse + ct.reste - chgTot
+      };
+    }
     var res = allReservations();
     var encaisse = 0, aEncaisser = 0;
     res.forEach(function (r) {
