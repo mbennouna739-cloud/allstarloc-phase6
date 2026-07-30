@@ -96,32 +96,9 @@ input:-webkit-autofill:focus{ border-color:rgba(196,30,58,.6) !important; }
     </div>
     <div class="fg">
       <label>Mot de passe</label>
-      <!-- ★ Œil : affiche/masque le mot de passe saisi. -->
-      <div style="position:relative;">
-        <input type="password" id="p" autocomplete="current-password" placeholder="••••••••"
-          style="padding-right:44px;"
-          onkeydown="if(event.key==='Enter')login()">
-        <button type="button" id="p-eye" onclick="togglePwd()" aria-label="Afficher le mot de passe"
-          style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;padding:6px;display:flex;align-items:center;color:rgba(255,255,255,.55);">
-          <svg id="p-eye-icon" viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-        </button>
-      </div>
+      <input type="password" id="p" autocomplete="current-password" placeholder="••••••••"
+        onkeydown="if(event.key==='Enter')login()">
     </div>
-    <script>
-      function togglePwd() {
-        var f = document.getElementById('p');
-        var b = document.getElementById('p-eye');
-        var i = document.getElementById('p-eye-icon');
-        if (!f || !i) return;
-        var show = f.type === 'password';
-        f.type = show ? 'text' : 'password';
-        if (b) b.setAttribute('aria-label', show ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
-        i.innerHTML = show
-          ? '<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.5 13.5 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/>'
-          : '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>';
-        f.focus();
-      }
-    </script>
     <button class="btn" onclick="login()" id="btn">Se connecter →</button>
     <div class="footer">ALL STAR LOC &copy; 2024 — Accès réservé</div>
   </div>
