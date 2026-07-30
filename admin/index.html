@@ -183,20 +183,6 @@ tr:hover td{background:rgba(18,22,30,0.025);}
   .cal-event{font-size:8.5px;}
   .cal-sum-val{font-size:17px;}
 }
-/* ★ CORRECTIF (point 4) — Zoom automatique iOS Safari : ce navigateur zoome
-   automatiquement la page dès qu'un champ de saisie reçoit le focus si sa
-   taille de police est inférieure à 16px. Tous les champs (recherche,
-   formulaires, dates...) étaient à 13-14px — d'où le zoom constaté,
-   notamment dans "Retours aujourd'hui". Remonté à 16px uniquement sur
-   mobile (aucun changement visuel sur Desktop), ce qui supprime la cause
-   réelle du zoom plutôt que de le masquer après coup. */
-@media(max-width:768px){
-  input, select, textarea,
-  .form-input, .form-select, .form-textarea,
-  .search-bar input, .ma-date, .ma-search-input {
-    font-size: 16px !important;
-  }
-}
 
 /* FLEET GRID */
 .fleet-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}

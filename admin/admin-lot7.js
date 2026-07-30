@@ -319,6 +319,7 @@ function updateRevenueCard() {
 }
 
 function openRevenueDrawer() {
+  var r = computeRevenues();
   var body = document.getElementById('rev-drawer-body');
   if (body) {
     function row(label, val, color, note) {
@@ -328,26 +329,37 @@ function openRevenueDrawer() {
         (note ? '<div style="font-size:11px;color:var(--text3);margin-top:4px;">' + note + '</div>' : '') +
         '</div>';
     }
-    // ★ CORRECTIF (point 2) — Le résumé du Dashboard (uniquement ce
-    //   pop-up ; l'onglet complet "Caisse" n'est pas modifié) affiche
-    //   désormais la répartition par personne ayant réellement encaissé
-    //   (champ "Encaissé par", jamais l'utilisateur connecté) + le reste à
-    //   encaisser global, à la place des revenus semaine/mois/année.
-    var byPerson = { Mohamed: 0, Younes: 0, Khalid: 0 };
-    var dueGlobal = 0;
-    asl7Res().forEach(function (r) {
-      if (r.status === 'cancelled') return;
-      var amount = Number(r.amount) || 0;
-      var paid = Number(r.paid) || 0;
-      dueGlobal += Math.max(0, amount - paid);
-      if (paid > 0 && byPerson.hasOwnProperty(r.collectedBy)) byPerson[r.collectedBy] += paid;
-    });
     body.innerHTML =
-      '<div style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.5;">Montants <strong>réellement encaissés</strong>, uniquement selon la personne renseignée dans « Encaissé par » (jamais l\'utilisateur connecté).</div>' +
-      row('Montant encaissé par Mohamed', byPerson.Mohamed, '#16a34a') +
-      row('Montant encaissé par Younes', byPerson.Younes, '#3b82f6') +
-      row('Montant encaissé par Khalid', byPerson.Khalid, '#8b5cf6') +
-      row('Reste à encaisser', dueGlobal, (dueGlobal > 0 ? '#ef4444' : '#16a34a'), 'Total de tous les impayés');
+      '<div style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.5;">Montants <strong>réellement encaissés</strong> (paiements enregistrés), hors contrats théoriques.</div>' +
+      row('Revenus de la semaine', r.week, '#16a34a', 'Du lundi au dimanche en cours') +
+      row('Revenus du mois', r.month, '#16a34a', 'Mois calendaire en cours') +
+      row('Revenus de l\'année', r.year, '#16a34a', 'Année ' + new Date().getFullYear()) +
+      row('Reste à payer global', r.dueGlobal, (r.dueGlobal > 0 ? '#ef4444' : '#16a34a'), 'Somme de tous les soldes dus');
+
+    // ★ CORRECTIF (item 1 — transparence) : détail des dossiers comptés dans
+    //   "Revenus du mois", pour vérifier visuellement qu'aucun doublon ni
+    //   dossier annulé n'est compté par erreur.
+    var now2 = new Date();
+    var y2 = now2.getFullYear(), mm2 = String(now2.getMonth()+1).padStart(2,'0');
+    var monthFrom2 = y2 + '-' + mm2 + '-01', monthTo2 = y2 + '-' + mm2 + '-31';
+    var contributing = asl7Res().filter(function(x) {
+      if (x.status === 'cancelled') return false;
+      var paid = Number(x.paid) || 0;
+      if (paid <= 0) return false;
+      var d = _revDateOf(x);
+      return d && d >= monthFrom2 && d <= monthTo2;
+    });
+    body.innerHTML += '<div style="font-weight:700;font-size:13px;margin:18px 0 10px;border-top:1px solid var(--border);padding-top:14px;">Détail — Revenus du mois (' + contributing.length + ' dossier(s))</div>';
+    if (!contributing.length) {
+      body.innerHTML += '<div style="color:var(--text3);font-size:12.5px;">Aucun dossier ce mois-ci.</div>';
+    } else {
+      body.innerHTML += contributing.map(function(x) {
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:12.5px;">' +
+          '<div><strong>' + (x.contractRef||x.id) + '</strong> — ' + (x.client||'') + '<div style="color:var(--text3);font-size:11px;">' + (x.car||'') + ' · ' + (x.startDate||'') + '</div></div>' +
+          '<strong style="color:#16a34a;">' + (Number(x.paid)||0).toLocaleString('fr-FR') + ' MAD</strong>' +
+          '</div>';
+      }).join('');
+    }
   }
   var bg = document.getElementById('rev-drawer-bg');
   var dr = document.getElementById('rev-drawer');
