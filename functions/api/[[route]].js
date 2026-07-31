@@ -347,7 +347,27 @@ export async function onRequest(context) {
          précédent. ============================================================ */
       let items2 = Array.isArray(doc.items) ? doc.items.slice() : [];
       if (items2.length >= 5000) return err(409, 'Capacité maximale atteinte');
-      let id = String(item.id || 'ASL' + Date.now().toString().slice(-6));
+      /* ============================================================
+         ★ CORRECTIF (cause exacte de "2 voitures réservées pour 1 seule
+         réservation") : lorsque la RÉPONSE réseau d'un ajout se perdait
+         (ex. coupure mobile) alors que le serveur avait déjà bien
+         enregistré la réservation, le client — ne recevant aucune
+         confirmation — réessayait automatiquement le MÊME envoi (même
+         item.id, généré côté client). Sans protection ici, ce deuxième
+         envoi recevait un id ALÉATOIRE différent et créait un second
+         enregistrement complet pour la même réservation : deux dossiers,
+         donc deux voitures "prises" pour une seule réservation réelle.
+         Désormais, si un enregistrement avec cet id EXACT existe déjà, on
+         reconnaît qu'il s'agit d'une répétition du même ajout : on ne crée
+         rien de plus, on renvoie simplement le succès avec l'id existant. */
+      var clientId = item.id ? String(item.id) : '';
+      if (clientId) {
+        var already = items2.find(function (r) { return r.id === clientId; });
+        if (already) {
+          return json({ ok: true, rev: doc.rev, id: clientId });
+        }
+      }
+      let id = clientId || ('ASL' + Date.now().toString().slice(-6));
       if (items2.some(function (r) { return r.id === id; })) id = id + '-' + randId(4);
       item.id = id;
       if (!item.createdAt) item.createdAt = new Date().toISOString();

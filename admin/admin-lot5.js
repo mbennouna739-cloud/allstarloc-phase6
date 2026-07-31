@@ -787,22 +787,22 @@ function viewRental(id, mode) {
   if (titleEl) titleEl.textContent = (mode === 'returns' ? 'Retour — ' : mode === 'late' ? 'En retard — ' : 'Location ') + (r.contractRef||r.id);
 
   // ★ Point 4 (refonte retours/retards) :
-  //   - "Retours aujourd'hui" (mode='returns') devient une consultation
-  //     PURE : plus de bouton "Confirmer le retour" ici.
-  //   - "En retard" (mode='late') devient l'endroit principal pour gérer
-  //     un retour : Confirmer le retour + Prolonger, exactement les deux
-  //     actions demandées, rien d'autre.
-  var actionsHTML = (mode === 'late')
+  //   - "Retours aujourd'hui" (mode='returns') et "En retard" (mode='late') :
+  //     Confirmer le retour + Prolonger.
+  //   - "Voitures louées" (mode='rented', par défaut) : CORRECTIF — le
+  //     bouton "Prolonger" manquait ici (seuls Confirmer + Annuler étaient
+  //     proposés), alors que Mobile permettait déjà de prolonger depuis
+  //     n'importe quelle fiche de location en cours. Ajouté pour un
+  //     comportement identique aux deux endroits.
+  var actionsHTML = (mode === 'late' || mode === 'returns')
     ? ('<button class="topbar-btn primary" data-rid="' + r.id + '" onclick="terminerLocation(this.dataset.rid)">✅ Confirmer le retour</button>' +
        '<button class="topbar-btn secondary" data-rid="' + r.id + '" onclick="prolongerLocation(this.dataset.rid)">📅 Prolonger</button>')
-    : (mode === 'returns')
-    ? '' // consultation uniquement — aucune action de retour ici
-    // ★ Retour anticipé : depuis la fiche normale d'une location en cours
-    //   (ni en retard, ni dans "Retours aujourd'hui"), on peut modifier la
-    //   date/heure de retour ci-dessus (déjà éditable) PUIS confirmer
-    //   directement le retour — sans attendre la date prévue ni passer par
-    //   la liste des retards.
+    // ★ Retour anticipé / prolongation : depuis la fiche normale d'une
+    //   location en cours (ni en retard, ni dans "Retours aujourd'hui"),
+    //   on peut modifier la date/heure de retour ci-dessus (déjà éditable),
+    //   confirmer directement le retour, OU prolonger la location.
     : ('<button class="topbar-btn primary" data-rid="' + r.id + '" onclick="terminerLocation(this.dataset.rid)">✅ Confirmer le retour</button>' +
+       '<button class="topbar-btn secondary" data-rid="' + r.id + '" onclick="prolongerLocation(this.dataset.rid)">📅 Prolonger</button>' +
        '<button class="topbar-btn secondary" style="color:var(--red);border-color:var(--red);" data-rid="' + r.id + '" onclick="cancelRental(this.dataset.rid)">❌ Annuler la location</button>');
   // ★ Point 1 : suppression définitive toujours disponible, quel que soit le statut.
   actionsHTML += '<button class="topbar-btn secondary" style="color:var(--text3);" data-rid="' + r.id + '" onclick="deleteReservationPermanently(this.dataset.rid)">🗑 Supprimer définitivement</button>';

@@ -568,12 +568,11 @@
     function row(label, val, color) {
       return '<div class="ma-fiche-row"><span class="ma-fiche-lbl">' + label + '</span><span class="ma-fiche-val"' + (color ? ' style="color:' + color + ';"' : '') + '>' + val + '</span></div>';
     }
-    // ★ CORRECTIF (point 4, cohérence Desktop/Mobile) — "Retours aujourd'hui"
-    //   devient une consultation PURE : plus de bouton "Confirmer le
-    //   retour" ici (ni "Prolonger"). La gestion se fait désormais depuis
-    //   "En retard" (ou depuis la fiche générale d'une location en cours,
-    //   pour un retour anticipé).
-    var actionsHTML = (mode === 'returns') ? '' :
+    // ★ Boutons Confirmer le retour / Prolonger restaurés dans "Retour
+    //   aujourd'hui" (demande explicite) — même comportement que "En
+    //   retard" : Prolonger garde le véhicule loué, Confirmer le libère et
+    //   recalcule dates/prix.
+    var actionsHTML =
       '<div class="ma-actions" style="margin-top:16px;">'
       + '<button class="ma-act-btn" onclick="maCloseSheet();maExtend(\'' + r.id + '\')">' + ic('plus') + 'Prolonger</button>'
       + '<button class="ma-act-btn ok" onclick="maCloseSheet();maReturnVehicle(\'' + r.id + '\')">' + ic('returns') + 'Confirmer retour</button>'
