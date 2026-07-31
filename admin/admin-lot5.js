@@ -1990,6 +1990,13 @@ function viewUnpaidFiche(id) {
       return out;
     })() +
     '</select></div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">' +
+    '<div class="form-group"><label class="form-label">Date départ</label><input type="date" class="form-input" id="vr-start-date" value="' + (r.startDate||'') + '" onchange="vrDaysToEnd()"></div>' +
+    '<div class="form-group"><label class="form-label">Heure départ</label><input type="time" class="form-input" id="vr-start-time" value="' + (r.startTime||'10:00') + '"></div>' +
+    '<div class="form-group"><label class="form-label">Nombre de jours</label><input type="number" min="1" class="form-input" id="vr-days" value="' + (r.days||1) + '" oninput="vrDaysToEnd()"></div>' +
+    '<div class="form-group"><label class="form-label">Date retour</label><input type="date" class="form-input" id="vr-end-date" value="' + (r.endDate||'') + '" onchange="vrEndToDays()"></div>' +
+    '<div class="form-group"><label class="form-label">Heure retour</label><input type="time" class="form-input" id="vr-end-time" value="' + (r.endTime||'10:00') + '"></div>' +
+    '</div>' +
     '<div style="font-size:22px;font-weight:800;color:var(--red);margin:12px 0;" id="vr-total-display">' + fmtMAD(total) + '</div>' +
     '<div style="background:rgba(18,22,30,.04);border-radius:10px;padding:14px;">' +
     '<div style="font-weight:700;margin-bottom:10px;color:var(--red);">Paiement</div>' +
@@ -2029,7 +2036,15 @@ function viewUnpaidFiche(id) {
       var newRefU = (document.getElementById('vr-ref') && document.getElementById('vr-ref').value) || r.contractRef || r.id;
       var newClientU = (document.getElementById('vr-client') && document.getElementById('vr-client').value) || r.client;
       var newPhoneU = (document.getElementById('vr-phone') && document.getElementById('vr-phone').value) || '';
-      var patchU = { paid: newPaid, amount: newTotal, paymentMode: newMode, paymentStatus: payStatus, collectedBy: newCollectedBy, contractRef: newRefU, client: newClientU, phone: newPhoneU };
+      var newStartDateU = (document.getElementById('vr-start-date') && document.getElementById('vr-start-date').value) || r.startDate;
+      var newStartTimeU = (document.getElementById('vr-start-time') && document.getElementById('vr-start-time').value) || r.startTime || '10:00';
+      var newEndDateU = (document.getElementById('vr-end-date') && document.getElementById('vr-end-date').value) || r.endDate;
+      var newEndTimeU = (document.getElementById('vr-end-time') && document.getElementById('vr-end-time').value) || r.endTime || '10:00';
+      var newDaysElU = document.getElementById('vr-days');
+      var newDaysU = newDaysElU ? parseInt(newDaysElU.value, 10) : r.days;
+      var patchU = { paid: newPaid, amount: newTotal, paymentMode: newMode, paymentStatus: payStatus, collectedBy: newCollectedBy, contractRef: newRefU, client: newClientU, phone: newPhoneU,
+                     startDate: newStartDateU, startTime: newStartTimeU, endDate: newEndDateU, endTime: newEndTimeU };
+      if (newDaysU && newDaysU >= 1) patchU.days = newDaysU;
       var carSelU = document.getElementById('vr-car');
       var newCarIdU = carSelU ? parseInt(carSelU.value, 10) : null;
       if (newCarIdU && (String(newCarIdU) !== String(r.carId)) && typeof ASLDB !== 'undefined') {
