@@ -166,20 +166,30 @@
         + '</tr>';
     }).join('') : '<tr><td colspan="6" style="padding:14px;text-align:center;color:var(--text3);">Aucun versement enregistré.</td></tr>';
 
+    var carOptsLLD = fleet().map(function(fc){
+      var sel = (String(fc.id)===String(c.carId)) ? ' selected' : '';
+      return '<option value="'+fc.id+'"'+sel+'>'+esc(fc.name)+(fc.plate?' — '+esc(fc.plate):'')+'</option>';
+    }).join('');
     body.innerHTML =
       (slName ? '<div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.25);border-radius:10px;padding:10px 14px;margin-bottom:12px;"><div style="font-size:11px;color:#8b5cf6;font-weight:700;text-transform:uppercase;">Sous-location</div><div style="font-weight:800;font-size:15px;">' + esc(slName) + '</div></div>' : '')
-      + '<div style="display:flex;gap:8px 20px;flex-wrap:wrap;margin-bottom:16px;font-size:13px;">'
-      + '<div><span style="color:var(--text3);">Client</span><br><b>' + esc(c.client || '') + '</b></div>'
-      + '<div><span style="color:var(--text3);">Véhicule</span><br><b>' + esc(c.car || '') + (c.assignedPlate ? ' (' + esc(c.assignedPlate) + ')' : '') + '</b></div>'
-      + '<div><span style="color:var(--text3);">Période</span><br><b>' + esc(c.startDate || '—') + ' → ' + esc(c.endDate || '—') + '</b></div>'
-      + '<div><span style="color:var(--text3);">Durée</span><br><b>' + (c.days || 0) + ' jours</b></div>'
-      + (c.phone ? '<div><span style="color:var(--text3);">Téléphone</span><br><b>' + esc(c.phone) + '</b></div>' : '')
+      // ★ MISSION « FINI TOUT » (point 1) : contrat LLD entièrement
+      //   modifiable — client, téléphone, véhicule, dates, montant total.
+      + '<div class="form-row">'
+      + '<div class="form-group"><label class="form-label">Client</label><input class="form-input" id="lld-client" value="' + esc(c.client||'') + '"></div>'
+      + '<div class="form-group"><label class="form-label">Téléphone</label><input class="form-input" id="lld-phone" value="' + esc(c.phone||'') + '"></div>'
       + '</div>'
+      + '<div class="form-group"><label class="form-label">Véhicule</label><select class="form-select" id="lld-car">' + carOptsLLD + '</select></div>'
+      + '<div class="form-row">'
+      + '<div class="form-group"><label class="form-label">Date début</label><input type="date" class="form-input" id="lld-start" value="' + esc(c.startDate||'') + '" onchange="lldSyncDays()"></div>'
+      + '<div class="form-group"><label class="form-label">Date fin</label><input type="date" class="form-input" id="lld-end" value="' + esc(c.endDate||'') + '" onchange="lldSyncDays()"></div>'
+      + '</div>'
+      + '<div class="form-group"><label class="form-label">Durée (jours, calculée)</label><input class="form-input" id="lld-days-display" value="' + (c.days||0) + ' jours" disabled></div>'
       + '<div style="display:flex;gap:8px 20px;flex-wrap:wrap;margin-bottom:16px;padding:12px;background:rgba(18,22,30,.03);border-radius:10px;font-size:13px;">'
-      + '<div><span style="color:var(--text3);">Montant total du contrat</span><br><b>' + money(totalDue) + '</b></div>'
+      + '<div class="form-group" style="margin:0;"><label class="form-label">Montant total du contrat (MAD)</label><input class="form-input" type="number" id="lld-amount" value="' + totalDue + '"></div>'
       + '<div><span style="color:var(--text3);">Total reçu</span><br><b style="color:#16a34a;">' + money(totalPaid) + '</b></div>'
       + '<div><span style="color:var(--text3);">Reste à payer</span><br><b style="color:' + (rest > 0 ? '#C41E3A' : '#16a34a') + ';">' + money(rest) + '</b></div>'
       + '</div>'
+      + '<button class="btn-sm primary" style="margin-bottom:14px;" onclick="saveLLDContractInfo(\'' + c.id + '\')">💾 Enregistrer les modifications du contrat</button>'
       + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
       + '<div style="font-weight:700;">Historique des paiements</div>'
       + '<button class="btn-sm primary" onclick="addLLDPaymentEntry(\'' + c.id + '\')">+ Ajouter un versement</button>'
@@ -213,7 +223,7 @@
     var dateStr = prompt('Date du versement (AAAA-MM-JJ) :', (typeof ASLDB !== 'undefined' && ASLDB.localDateISO) ? ASLDB.localDateISO() : new Date().toISOString().slice(0, 10));
     if (dateStr == null) return;
     var modeStr = prompt('Mode de paiement (Espèces / Carte bancaire / Virement / Chèque / Autre) :', c.paymentMode || 'Espèces') || 'Espèces';
-    var collector = prompt('Encaissé par (Mohamed / Younes / Khalid) :', c.collectedBy || '') || '';
+    var collector = prompt('Encaissé par (Mohamed / Younes / Khalil) :', c.collectedBy || '') || '';
     var comment = prompt('Commentaire (facultatif) :', '') || '';
 
     var payments = (c.payments || []).slice();
@@ -230,6 +240,48 @@
   };
 
   /* Supprime un versement précis (correction d'erreur de saisie). */
+  /* Recalcule la durée affichée quand les dates changent (info seule — le
+     montant du contrat reste un champ libre, comme demandé). */
+  window.lldSyncDays = function () {
+    var s = document.getElementById('lld-start'), e = document.getElementById('lld-end'), d = document.getElementById('lld-days-display');
+    if (!s || !e || !d || !s.value || !e.value) return;
+    var days = Math.max(0, Math.round((new Date(e.value+'T00:00:00') - new Date(s.value+'T00:00:00')) / 86400000));
+    d.value = days + ' jours';
+  };
+
+  /* ★ MISSION « FINI TOUT » (point 1) : enregistre les modifications du
+     contrat LLD (client, téléphone, véhicule, dates, montant). Changer de
+     véhicule bascule la disponibilité exactement comme pour une location
+     normale (l'ancien redevient disponible, le nouveau devient occupé). */
+  window.saveLLDContractInfo = function (id) {
+    var c = lldRes().filter(function (x) { return x.id === id; })[0];
+    if (!c) return;
+    var newClient = (document.getElementById('lld-client')||{}).value || c.client;
+    var newPhone = (document.getElementById('lld-phone')||{}).value || '';
+    var newStart = (document.getElementById('lld-start')||{}).value || c.startDate;
+    var newEnd = (document.getElementById('lld-end')||{}).value || c.endDate;
+    var newAmount = parseFloat((document.getElementById('lld-amount')||{}).value);
+    if (isNaN(newAmount)) newAmount = c.amount;
+    var newDays = (newStart && newEnd) ? Math.max(1, Math.round((new Date(newEnd) - new Date(newStart)) / 86400000)) : c.days;
+    var patch = { client: newClient, phone: newPhone, startDate: newStart, endDate: newEnd, days: newDays, amount: newAmount };
+
+    var carSel = document.getElementById('lld-car');
+    var newCarId = carSel ? parseInt(carSel.value, 10) : null;
+    if (newCarId && String(newCarId) !== String(c.carId) && typeof ASLDB !== 'undefined') {
+      var newCar = fleet().filter(function (x) { return String(x.id) === String(newCarId); })[0];
+      if (c.carId && c.assignedPlate && typeof ASLDB.releaseUnit === 'function') { try { ASLDB.releaseUnit(c.carId, c.assignedPlate); } catch(e) {} }
+      var newPlate = newCar ? (newCar.plate || '') : '';
+      if (typeof ASLDB.setUnitStatusByPlate === 'function' && newPlate) { try { ASLDB.setUnitStatusByPlate(newCarId, newPlate, 'active'); } catch(e) {} }
+      else if (typeof ASLDB.assignUnit === 'function') { try { ASLDB.assignUnit(newCarId, 'active'); } catch(e) {} }
+      patch.carId = newCarId; patch.car = newCar ? newCar.name : (c.car||''); patch.assignedPlate = newPlate; patch.assignedColor = newCar ? (newCar.color||'') : '';
+    }
+    if (typeof ASLDB !== 'undefined' && ASLDB.updateReservation) ASLDB.updateReservation(id, patch);
+    if (typeof reloadData === 'function') reloadData();
+    renderLLD();
+    viewLLDContract(id);
+    if (typeof showToast === 'function') showToast('Contrat LLD mis à jour ✓');
+  };
+
   window.deleteLLDPaymentEntry = function (id, idx) {
     var c = lldRes().filter(function (x) { return x.id === id; })[0];
     if (!c) return;

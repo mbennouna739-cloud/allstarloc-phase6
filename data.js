@@ -280,6 +280,7 @@
         //   qui est visible et diagnosticable plutôt que silencieux.
         if (eAdd && (eAdd.status === 400 || eAdd.status === 413 || eAdd.status === 401 || eAdd.status === 403)) {
           console.error('ASLDB: ajout de réservation définitivement rejeté (id=' + item.id + ', code=' + eAdd.status + ') — abandonné de la file de synchronisation, conservé en cache local uniquement.', eAdd);
+          noteAbandonedSync('add:' + eAdd.status);
           adds.shift();
           write(KEY_PEND_RA, adds);
           continue;
@@ -316,6 +317,7 @@
         //   du reste du parc (ex. mobile affichant une location « fantôme »).
         if (eUpd && (eUpd.status === 401 || eUpd.status === 403 || eUpd.status === 404 || eUpd.status === 400 || eUpd.status === 413)) {
           if (eUpd.status === 413) console.error('ASLDB: mise à jour définitivement rejetée (trop volumineuse) — abandonnée de la file, conservée en cache local uniquement.', eUpd);
+          noteAbandonedSync('update:' + eUpd.status);
           upds.shift();
           write(KEY_PEND_RU, upds);
           continue;
@@ -339,6 +341,10 @@
         // Même garde-fou que pour les mises à jour : une clé refusée ou un id
         // déjà absent ne pourra jamais aboutir depuis cet appareil.
         if (eDel && (eDel.status === 401 || eDel.status === 403 || eDel.status === 404)) {
+          if (eDel.status === 401 || eDel.status === 403) {
+            console.error('ASLDB: suppression définitivement rejetée (clé admin invalide) — abandonnée de la file, conservée en cache local uniquement.', eDel);
+            noteAbandonedSync('delete:' + eDel.status);
+          }
           dels.shift();
           write(KEY_PEND_RD, dels);
           continue;
@@ -365,6 +371,22 @@
      résout à la fin de CE cycle — toute écriture mise en file avant l'appel
      est donc garantie envoyée quand la promesse se résout. */
   let authError = false; // clé admin refusée par le serveur
+  /* ★ CORRECTIF (Mission — écarts Desktop/Mobile) : un ajout/modification/
+     suppression définitivement rejeté par le serveur (ex. clé admin
+     invalide sur CET appareil) était jusqu'ici abandonné SILENCIEUSEMENT
+     (juste un console.error, invisible en usage normal) — l'appareil
+     continuait d'afficher la donnée localement, à jamais divergente du
+     serveur (donc des autres appareils) sans que personne ne le sache.
+     C'est exactement la cause plausible d'écarts comme "15 loués sur
+     Desktop, 13 sur Mobile" : cet appareil garde une donnée qui n'a en
+     réalité jamais atteint la source de vérité. On rend maintenant cet
+     état VISIBLE via le badge de synchronisation existant. */
+  let abandonedSyncCount = 0;
+  function noteAbandonedSync(reason) {
+    abandonedSyncCount++;
+    try { localStorage.setItem('asl_sync_abandoned_v1', String(abandonedSyncCount)); } catch (e) {}
+    try { updateBadge(); } catch (e) {}
+  }
   let syncChain = Promise.resolve(false);
   let cyclePlanned = false;
   /* ----- Synchro des données auxiliaires (sous-locations, charges,
@@ -392,6 +414,46 @@
       if (MISC_MAP[name] === localKey) markMiscDirty(name);
     });
   }
+  /* ★ CORRECTIF CRITIQUE (cause racine des écarts de Caisse/impayés) —
+     syncMisc() poussait auparavant la valeur locale ENTIÈRE avec un simple
+     PUT, sans jamais la fusionner avec ce qui existait déjà sur le
+     serveur : un écrasement pur et simple. Si Desktop ET Mobile avaient
+     chacun ajouté des données localement (ex. une charge/dépense
+     différente sur chaque appareil) avant leur prochain cycle de
+     synchronisation, celui des deux qui poussait EN SECOND effaçait
+     purement et simplement l'ajout de l'autre sur le serveur — sans
+     erreur, sans avertissement, silencieusement. Comme "Caisse" se calcule
+     à partir des charges (en plus des paiements, déjà protégés
+     individuellement côté réservations), c'est une cause directe et
+     sérieuse de l'écart constaté (17 625 MAD vs 13 XXX MAD : l'ordre de
+     grandeur correspond à la perte d'un ou plusieurs lots de charges/
+     paiements auxiliaires entiers, pas à un simple élément isolé).
+     Corrigé en fusionnant systématiquement avec l'état serveur juste avant
+     d'écrire, au lieu d'écraser. */
+  function mergeMiscValue(serverValue, localValue) {
+    if (Array.isArray(localValue) && Array.isArray(serverValue)) {
+      // Fusion par identifiant : on part du serveur (garde ce que d'autres
+      // appareils ont ajouté entre-temps), puis on applique les entrées
+      // locales par-dessus (l'admin qui vient de modifier gagne sur un
+      // même id). Les entrées sans id ne peuvent pas être déduplique
+      // de façon fiable : on les garde toutes pour ne jamais rien perdre.
+      var byId = {}; var noId = [];
+      serverValue.forEach(function (item) { if (item && item.id != null) byId[item.id] = item; else noId.push(item); });
+      localValue.forEach(function (item) { if (item && item.id != null) byId[item.id] = item; else noId.push(item); });
+      var out = Object.keys(byId).map(function (k) { return byId[k]; }).concat(noId);
+      return out;
+    }
+    if (localValue && typeof localValue === 'object' && !Array.isArray(localValue) &&
+        serverValue && typeof serverValue === 'object' && !Array.isArray(serverValue)) {
+      // Fusion superficielle par clé (ex. documents clients indexés par
+      // client) : les clés modifiées localement gagnent, celles qui
+      // n'existent QUE côté serveur (ajoutées par un autre appareil) sont
+      // conservées au lieu d'être effacées.
+      return Object.assign({}, serverValue, localValue);
+    }
+    return localValue; // types différents ou rien côté serveur : valeur locale telle quelle
+  }
+
   async function syncMisc() {
     if (!remoteEnabled) return;
     for (var name in MISC_MAP) {
@@ -400,15 +462,24 @@
       var dirty = localStorage.getItem(miscDirtyKey(name));
       try {
         if (dirty) {
-          // Pousser la version locale
           var value = readJSON(localKey, null);
           if (value !== null) {
             try {
+              // ★ On relit l'état serveur ACTUEL juste avant d'écrire, pour
+              //   fusionner au lieu d'écraser (voir correctif ci-dessus).
+              var beforePush = await apiFetch('/misc?name=' + name, { method: 'GET' });
+              var serverBefore = (beforePush && beforePush.doc) ? beforePush.doc.value : null;
+              var merged = mergeMiscValue(serverBefore, value);
               var res = await apiFetch('/misc', {
                 method: 'PUT', headers: headers(true),
-                body: JSON.stringify({ name: name, value: value })
+                body: JSON.stringify({ name: name, value: merged })
               });
               if (res && res.rev != null) writeNum(miscRevKey(name), res.rev);
+              // Le cache local reflète désormais la version FUSIONNÉE (et non
+              // plus seulement ce que cet appareil connaissait), pour ne pas
+              // perdre à son tour ce qui vient d'être récupéré du serveur.
+              write(localKey, merged);
+              emit(localKey);
               try { localStorage.removeItem(miscDirtyKey(name)); } catch (e) {}
             } catch (ePush) {
               // Pas de clé admin (employé) : on ne peut pas pousser. On abandonne
@@ -511,13 +582,15 @@
     const b = (typeof document !== 'undefined') && document.getElementById('asl-sync-badge');
     if (!b) return;
     const st = syncStatus();
-    const msg = authError ? 'Clé admin invalide — vérifiez ADMIN_KEY (data.js & Cloudflare)'
+    const msg = abandonedSyncCount > 0 ? '⚠ ' + abandonedSyncCount + ' donnée(s) non synchronisée(s) — cliquez pour recharger'
+      : authError ? 'Clé admin invalide — vérifiez ADMIN_KEY (data.js & Cloudflare)'
       : st === 'online' ? 'Synchronisé (serveur)'
       : st === 'offline' ? 'Hors ligne — données locales, renvoi auto'
       : 'Mode local';
-    const c2 = authError ? '#ef4444' : (st === 'online' ? '#22c55e' : st === 'offline' ? '#f59e0b' : '#9a9a9a');
+    const c2 = (abandonedSyncCount > 0 || authError) ? '#ef4444' : (st === 'online' ? '#22c55e' : st === 'offline' ? '#f59e0b' : '#9a9a9a');
     const dot2 = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + c2 + ';"></span>';
     b.innerHTML = dot2 + ' ' + msg;
+    if (abandonedSyncCount > 0) b.style.cursor = 'pointer';
   }
   function mountBadge() {
     if (typeof document === 'undefined' || !document.body) return;
@@ -528,8 +601,21 @@
     b.id = 'asl-sync-badge';
     b.style.cssText = 'position:fixed;left:14px;bottom:14px;z-index:9999;display:flex;align-items:center;gap:7px;' +
       'background:rgba(20,20,20,0.92);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.8);' +
-      'font:600 11px/1 Outfit,sans-serif;padding:8px 12px;border-radius:99px;pointer-events:none;';
+      'font:600 11px/1 Outfit,sans-serif;padding:8px 12px;border-radius:99px;pointer-events:auto;';
+    // ★ Clic = recharge la page pour forcer une resynchronisation complète
+    //   depuis le serveur — utile si le badge signale des données non
+    //   synchronisées (voir noteAbandonedSync ci-dessus).
+    b.addEventListener('click', function () {
+      if (abandonedSyncCount > 0) {
+        try { localStorage.removeItem('asl_sync_abandoned_v1'); } catch (e) {}
+        location.reload();
+      }
+    });
     document.body.appendChild(b);
+    try {
+      const stored = parseInt(localStorage.getItem('asl_sync_abandoned_v1') || '0', 10);
+      if (stored > 0) abandonedSyncCount = stored;
+    } catch (e) {}
     updateBadge();
   }
 
@@ -1119,7 +1205,200 @@
   }
   function customFeatureIconSvg(key) { return CUSTOM_FEATURE_ICONS[key] || CUSTOM_FEATURE_ICONS.star; }
 
+  /* ============================================================
+     ★ SOURCE UNIQUE DE VÉRITÉ — Sélecteurs partagés (Desktop + Mobile)
+     ------------------------------------------------------------
+     CAUSE RACINE des écarts constatés : chaque écran (Desktop, Mobile,
+     compteurs, listes) réimplémentait SON PROPRE filtre. Il suffisait
+     qu'une seule copie diverge d'un mot pour créer un écart permanent.
+     Exemple réel trouvé et corrigé : la LISTE "Véhicules loués" du Mobile
+     filtrait sur (actif OU en retard) alors que son propre COMPTEUR — et
+     Desktop des deux côtés — filtraient sur (actif) seulement. D'où à la
+     fois "liste ≠ compteur" sur Mobile et "Mobile ≠ Desktop".
+     Désormais TOUT (listes, compteurs, cartes, statistiques, Desktop et
+     Mobile) appelle littéralement ces mêmes fonctions : une divergence
+     n'est plus possible par construction.
+     ============================================================ */
+  function _activeRes() {
+    return getReservations().filter(function (r) { return r.status !== 'cancelled'; });
+  }
+  function selectRented(now) {
+    return _activeRes().filter(function (r) { return computePhase(r, now) === 'active'; });
+  }
+  function selectReserved(now) {
+    return _activeRes().filter(function (r) { return computePhase(r, now) === 'reserved'; });
+  }
+  function selectLate(now) {
+    return _activeRes().filter(function (r) { return computePhase(r, now) === 'late'; });
+  }
+  /* Retours prévus à une date donnée : on exclut les retours déjà confirmés
+     ('completed') ET les annulés — un retour confirmé n'est plus "à venir". */
+  function selectReturnsOn(dateISO) {
+    return _activeRes().filter(function (r) {
+      return (r.endDate || '').slice(0, 10) === dateISO && r.status !== 'completed';
+    });
+  }
+  function selectUnpaid() {
+    return _activeRes().filter(function (r) {
+      return (Number(r.amount) || 0) > (Number(r.paid) || 0);
+    });
+  }
+  /* Activité du jour : entrants = retours prévus ce jour ; sortants =
+     départs prévus ce jour. */
+  function selectEntrantsOn(dateISO) { return selectReturnsOn(dateISO); }
+  function selectSortantsOn(dateISO) {
+    return _activeRes().filter(function (r) { return (r.startDate || '').slice(0, 10) === dateISO; });
+  }
+  /* Caisse : total réellement encaissé et total restant dû, calculés une
+     seule fois pour tout le monde (Desktop, Mobile, cartes, rapports). */
+  /* ★ Renommage "Khalid" → "Khalil" (orthographe corrigée) — les dossiers
+     déjà enregistrés avec l'ancienne orthographe sont migrés une seule
+     fois, pour ne pas les faire disparaître des cartes "Encaissé par". */
+  function migrateCollectedByName() {
+    try {
+      var items = getReservations();
+      var changed = false;
+      items.forEach(function (r) {
+        if (r.collectedBy === 'Khalid') { r.collectedBy = 'Khalil'; changed = true; }
+        if (Array.isArray(r.payments)) {
+          r.payments.forEach(function (p) { if (p && p.collectedBy === 'Khalid') { p.collectedBy = 'Khalil'; changed = true; } });
+        }
+      });
+      if (changed) {
+        write(KEY_RES, items);
+        noteLocalChange(KEY_RES);
+        emit(KEY_RES);
+      }
+    } catch (e) {}
+  }
+
+  function computeCashTotals() {
+    var encaisse = 0, reste = 0, byPerson = { Mohamed: 0, Younes: 0, Khalil: 0 };
+    _activeRes().forEach(function (r) {
+      var amount = Number(r.amount) || 0;
+      var paid = Number(r.paid) || 0;
+      encaisse += paid;
+      reste += Math.max(0, amount - paid);
+      if (paid > 0 && byPerson.hasOwnProperty(r.collectedBy)) byPerson[r.collectedBy] += paid;
+    });
+    return { encaisse: encaisse, reste: reste, byPerson: byPerson };
+  }
+
+  /* ★ Bouton "Resynchroniser les données" (outil de maintenance) —
+     LECTURE SEULE : force une relecture complète depuis le serveur puis
+     notifie toutes les vues de se recalculer. N'écrit jamais rien, ne
+     crée aucun doublon, ne supprime rien. */
+  async function resyncAll() {
+    if (!remoteEnabled) throw new Error('Mode local : aucune base distante à relire.');
+    // On oublie les révisions connues pour forcer l'adoption de la version
+    // serveur, même si elle porte un numéro de révision plus ancien que
+    // celui mémorisé localement (cas d'un cache local désynchronisé).
+    try {
+      writeNum(KEY_REV_F, 0);
+      writeNum(KEY_REV_R, 0);
+      Object.keys(MISC_MAP).forEach(function (name) { writeNum(miscRevKey(name), 0); });
+    } catch (e) {}
+    await syncNow();          // envoie d'abord ce qui est en attente, puis relit tout
+    emit(KEY_FLEET); emit(KEY_RES);
+    Object.keys(MISC_MAP).forEach(function (name) { emit(MISC_MAP[name]); });
+    return true;
+  }
+
+  /* ============================================================
+     ★ CORRECTIF RACINE — Disponibilité DÉRIVÉE des dates réelles
+     ------------------------------------------------------------
+     La disponibilité reposait sur un DRAPEAU STOCKÉ (car.units[].status)
+     qu'il fallait penser à mettre à jour à la main. Une seule cause, deux
+     bugs :
+       1) Une réservation qui devient "louée" toute seule au fil du temps
+          (computePhase) ne touche évidemment aucun drapeau — la voiture
+          apparaissait donc LOUÉE (d'après les réservations) ET DISPONIBLE
+          (d'après le drapeau resté à 'available').
+       2) Une réservation pour une date FUTURE marquait l'unité 'reserved'
+          en permanence — impossible de louer cette voiture aujourd'hui,
+          alors qu'aucun chevauchement de dates n'existait.
+     La disponibilité est désormais CALCULÉE à partir des réservations
+     réelles et de leurs dates : elle ne peut plus se désynchroniser.
+     ============================================================ */
+  function _sameUnit(r, carId, plate) {
+    if (String(r.carId) !== String(carId)) return false;
+    // Sans plaque assignée, la réservation occupe le modèle en général.
+    if (!plate || !r.assignedPlate) return true;
+    return r.assignedPlate === plate;
+  }
+  /* Une unité est occupée MAINTENANT si une réservation non annulée et non
+     clôturée la concerne et qu'elle est en cours (ou en retard). */
+  function unitBusyAt(carId, plate, when) {
+    when = when || new Date();
+    return _activeRes().some(function (r) {
+      if (r.status === 'completed') return false;
+      if (!_sameUnit(r, carId, plate)) return false;
+      var ph = computePhase(r, when);
+      return ph === 'active' || ph === 'late';
+    });
+  }
+  /* Unités réellement libres à l'instant présent (base des compteurs). */
+  function unitsAvailableNow(car, when) {
+    var units = normalizeUnits(car);
+    var free = units.filter(function (u) { return !unitBusyAt(car.id, u.plate, when); });
+    return { total: units.length, available: free.length, isAvailable: free.length > 0, freeUnits: free };
+  }
+
+  /* ★ CORRECTIF (LLD fantôme) — L'ancien magasin LLD (asl_lld_v1) n'est plus
+     utilisé nulle part : les contrats sont désormais des réservations
+     type:'lld'. Les contrats qui y subsistaient continuaient pourtant de
+     s'afficher sur mobile, sans aucun moyen de les supprimer depuis
+     Desktop. On les migre une seule fois vers le nouveau format (aucune
+     donnée perdue), puis on vide l'ancien magasin pour de bon. */
+  function migrateLegacyLLD() {
+    try {
+      var raw = localStorage.getItem('asl_lld_v1');
+      if (!raw) return 0;
+      var old = JSON.parse(raw) || [];
+      if (!Array.isArray(old) || !old.length) { localStorage.setItem('asl_lld_v1', '[]'); return 0; }
+      var existing = getReservations();
+      var migrated = 0;
+      old.forEach(function (c) {
+        if (!c) return;
+        // Déjà migré ? (même client + même date de début en type lld)
+        var dup = existing.some(function (r) {
+          return r.type === 'lld' && (r.client || '') === (c.client || '') && (r.startDate || '') === (c.startDate || '');
+        });
+        if (dup) return;
+        var months = Number(c.durationMonths) || 0;
+        var monthly = Number(c.monthlyAmount) || 0;
+        var pays = (c.payments || []).map(function (p) {
+          return { date: p.date || '', amount: Number(p.amount) || 0, mode: p.mode || 'Espèces', collectedBy: p.collectedBy || '', comment: 'Migré depuis l\'ancien module LLD' };
+        });
+        var paid = pays.reduce(function (s2, p) { return s2 + (Number(p.amount) || 0); }, 0);
+        var endD = c.endDate || '';
+        if (!endD && c.startDate && months) {
+          var d = new Date(c.startDate + 'T00:00:00'); d.setMonth(d.getMonth() + months);
+          endD = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        }
+        addReservation({
+          client: c.client || 'Client LLD', phone: c.phone || '', car: '', carId: c.carId || null,
+          amount: monthly * months, paid: paid, payments: pays,
+          startDate: c.startDate || '', endDate: endD, startTime: '10:00', endTime: '10:00',
+          days: (c.startDate && endD) ? Math.max(1, Math.round((new Date(endD) - new Date(c.startDate)) / 86400000)) : 0,
+          type: 'lld', status: (c.status === 'ended') ? 'completed' : 'active',
+          notes: 'Contrat repris de l\'ancien module LLD.'
+        });
+        migrated++;
+      });
+      localStorage.setItem('asl_lld_v1', '[]');
+      try { noteLocalChange('asl_lld_v1'); } catch (e) {}
+      return migrated;
+    } catch (e) { return 0; }
+  }
+
   function modelAvailability(car) {
+    // ★ Désormais dérivée des réservations réelles (voir ci-dessus), et non
+    //   plus d'un drapeau stocké susceptible d'être périmé.
+    return unitsAvailableNow(car);
+  }
+
+  function _modelAvailabilityStored(car) {
     var units = normalizeUnits(car);
     var availableCount = units.filter(function (u) { return (u.status || 'available') === 'available'; }).length;
     return {
@@ -1140,7 +1419,7 @@
     if (idx === -1) return null;
     car.units[idx].status = newStatus || 'reserved';
     // Statut agrégé de la fiche
-    car.status = modelAvailability(car).isAvailable ? 'available' : 'reserved';
+    car.status = _modelAvailabilityStored(car).isAvailable ? 'available' : 'reserved';
     saveFleet(fleet);
     return { plate: car.units[idx].plate, color: car.units[idx].color, index: idx };
   }
@@ -1174,7 +1453,7 @@
     }
     if (idx === -1) return null;
     car.units[idx].status = newStatus || 'active';
-    car.status = modelAvailability(car).isAvailable ? 'available' : 'reserved';
+    car.status = _modelAvailabilityStored(car).isAvailable ? 'available' : 'reserved';
     saveFleet(fleet);
     return car.units[idx];
   }
@@ -1291,6 +1570,10 @@
     checkAvailability, checkReservationConflict, AVAIL_MARGIN_H,
     // ★ Source unique : phase réelle (reserved/active/late) + dates locales
     computePhase, localDateISO, localTimeHM,
+    // ★ Source unique de vérité — sélecteurs partagés Desktop + Mobile
+    selectRented, selectReserved, selectLate, selectReturnsOn, selectUnpaid,
+    selectEntrantsOn, selectSortantsOn, computeCashTotals, resyncAll,
+    unitBusyAt, unitsAvailableNow, migrateLegacyLLD, migrateCollectedByName,
     // ★ Équipements personnalisés — lecture seule côté site client (écriture
     //   toujours réservée au back-office, admin-custom-features.js)
     getCustomFeaturesDef, customFeatureIconSvg,

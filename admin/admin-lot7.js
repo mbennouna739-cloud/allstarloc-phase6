@@ -318,8 +318,38 @@ function updateRevenueCard() {
   } catch(e) {}
 }
 
+/* ★ Détail des encaissements d'une personne : liste des dossiers avec
+   n° de contrat, véhicule, client et montant encaissé. */
+function showCollectorDetail(name) {
+  var box = document.getElementById('collector-detail');
+  if (!box) return;
+  var rows = asl7Res().filter(function (r) {
+    if (r.status === 'cancelled') return false;
+    var paid = Number(r.paid) || 0;
+    if (paid <= 0) return false;
+    var who = r.collectedBy || '';
+    return (name === 'Non attribué') ? !['Mohamed','Younes','Khalil'].includes(who) : who === name;
+  });
+  var total = rows.reduce(function (s2, r) { return s2 + (Number(r.paid) || 0); }, 0);
+  box.innerHTML =
+    '<div style="margin-top:18px;border-top:1px solid var(--border);padding-top:14px;">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
+    '<div style="font-weight:700;font-size:13.5px;">Détail — ' + name + ' (' + rows.length + ' dossier(s))</div>' +
+    '<button class="btn-sm ghost" onclick="document.getElementById(\'collector-detail\').innerHTML=\'\'">Fermer ✕</button></div>' +
+    (rows.length ? rows.map(function (r) {
+      var resteImpaye = Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
+      return '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:12.5px;">' +
+        '<div style="min-width:0;"><strong>' + (r.contractRef || r.id) + '</strong>' +
+        '<div style="color:var(--text3);font-size:11.5px;">' + (r.client || '') + ' · ' + (r.car || '') + (r.assignedPlate ? ' (' + r.assignedPlate + ')' : '') + '</div>' +
+        '<div style="color:var(--text3);font-size:11px;margin-top:2px;">' + (r.days || 0) + ' jour(s)' + (resteImpaye > 0 ? ' · <span style="color:#ef4444;font-weight:600;">reste ' + resteImpaye.toLocaleString('fr-FR') + ' MAD</span>' : ' · <span style="color:#16a34a;">soldé</span>') + '</div></div>' +
+        '<strong style="color:#16a34a;white-space:nowrap;">' + (Number(r.paid) || 0).toLocaleString('fr-FR') + ' MAD</strong></div>';
+    }).join('') : '<div style="color:var(--text3);font-size:12.5px;padding:10px 0;">Aucun encaissement.</div>') +
+    '<div style="display:flex;justify-content:space-between;padding-top:10px;font-weight:800;font-size:13.5px;">' +
+    '<span>Total</span><span style="color:#16a34a;">' + total.toLocaleString('fr-FR') + ' MAD</span></div></div>';
+  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
 function openRevenueDrawer() {
-  var r = computeRevenues();
   var body = document.getElementById('rev-drawer-body');
   if (body) {
     function row(label, val, color, note) {
@@ -329,37 +359,46 @@ function openRevenueDrawer() {
         (note ? '<div style="font-size:11px;color:var(--text3);margin-top:4px;">' + note + '</div>' : '') +
         '</div>';
     }
-    body.innerHTML =
-      '<div style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.5;">Montants <strong>réellement encaissés</strong> (paiements enregistrés), hors contrats théoriques.</div>' +
-      row('Revenus de la semaine', r.week, '#16a34a', 'Du lundi au dimanche en cours') +
-      row('Revenus du mois', r.month, '#16a34a', 'Mois calendaire en cours') +
-      row('Revenus de l\'année', r.year, '#16a34a', 'Année ' + new Date().getFullYear()) +
-      row('Reste à payer global', r.dueGlobal, (r.dueGlobal > 0 ? '#ef4444' : '#16a34a'), 'Somme de tous les soldes dus');
-
-    // ★ CORRECTIF (item 1 — transparence) : détail des dossiers comptés dans
-    //   "Revenus du mois", pour vérifier visuellement qu'aucun doublon ni
-    //   dossier annulé n'est compté par erreur.
-    var now2 = new Date();
-    var y2 = now2.getFullYear(), mm2 = String(now2.getMonth()+1).padStart(2,'0');
-    var monthFrom2 = y2 + '-' + mm2 + '-01', monthTo2 = y2 + '-' + mm2 + '-31';
-    var contributing = asl7Res().filter(function(x) {
-      if (x.status === 'cancelled') return false;
-      var paid = Number(x.paid) || 0;
-      if (paid <= 0) return false;
-      var d = _revDateOf(x);
-      return d && d >= monthFrom2 && d <= monthTo2;
+    // ★ CORRECTIF (point 2) — Le résumé du Dashboard (uniquement ce
+    //   pop-up ; l'onglet complet "Caisse" n'est pas modifié) affiche
+    //   désormais la répartition par personne ayant réellement encaissé
+    //   (champ "Encaissé par", jamais l'utilisateur connecté) + le reste à
+    //   encaisser global, à la place des revenus semaine/mois/année.
+    var byPerson = { Mohamed: 0, Younes: 0, Khalil: 0 };
+    var dueGlobal = 0, nonAttribue = 0;
+    asl7Res().forEach(function (r) {
+      if (r.status === 'cancelled') return;
+      var amount = Number(r.amount) || 0;
+      var paid = Number(r.paid) || 0;
+      dueGlobal += Math.max(0, amount - paid);
+      if (paid > 0) {
+        if (byPerson.hasOwnProperty(r.collectedBy)) byPerson[r.collectedBy] += paid;
+        else nonAttribue += paid;   // encaissé mais « Encaissé par » non renseigné
+      }
     });
-    body.innerHTML += '<div style="font-weight:700;font-size:13px;margin:18px 0 10px;border-top:1px solid var(--border);padding-top:14px;">Détail — Revenus du mois (' + contributing.length + ' dossier(s))</div>';
-    if (!contributing.length) {
-      body.innerHTML += '<div style="color:var(--text3);font-size:12.5px;">Aucun dossier ce mois-ci.</div>';
-    } else {
-      body.innerHTML += contributing.map(function(x) {
-        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:12.5px;">' +
-          '<div><strong>' + (x.contractRef||x.id) + '</strong> — ' + (x.client||'') + '<div style="color:var(--text3);font-size:11px;">' + (x.car||'') + ' · ' + (x.startDate||'') + '</div></div>' +
-          '<strong style="color:#16a34a;">' + (Number(x.paid)||0).toLocaleString('fr-FR') + ' MAD</strong>' +
-          '</div>';
-      }).join('');
+    // ★ Total global en haut (identique à la carte du Dashboard), puis la
+    //   répartition par personne, puis le reste à encaisser.
+    var totalEncaisse = byPerson.Mohamed + byPerson.Younes + byPerson.Khalil + (nonAttribue || 0);
+    function personCard(name, val, color) {
+      return '<div style="border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer;transition:.15s;" ' +
+        'onclick="showCollectorDetail(\'' + name + '\')" onmouseover="this.style.background=\'rgba(18,22,30,.03)\'" onmouseout="this.style.background=\'\'">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;">' +
+        '<div><div style="font-size:12px;color:var(--text3);">Montant encaissé par ' + name + '</div>' +
+        '<div style="font-size:22px;font-weight:800;color:' + color + ';">' + (val||0).toLocaleString('fr-FR') + ' <span style="font-size:13px;">MAD</span></div></div>' +
+        '<div style="font-size:11px;color:var(--text3);white-space:nowrap;">Voir le détail →</div></div></div>';
     }
+    body.innerHTML =
+      '<div style="background:linear-gradient(135deg,#16a34a,#15803d);border-radius:14px;padding:18px;margin-bottom:16px;color:#fff;">' +
+        '<div style="font-size:12.5px;opacity:.9;">Total encaissé (agence)</div>' +
+        '<div style="font-size:30px;font-weight:800;">' + totalEncaisse.toLocaleString('fr-FR') + ' <span style="font-size:15px;">MAD</span></div>' +
+      '</div>' +
+      '<div style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.5;">Répartition selon la personne renseignée dans « Encaissé par ». Cliquez sur une carte pour voir le détail des dossiers.</div>' +
+      personCard('Mohamed', byPerson.Mohamed, '#16a34a') +
+      personCard('Younes', byPerson.Younes, '#3b82f6') +
+      personCard('Khalil', byPerson.Khalil, '#8b5cf6') +
+      (nonAttribue > 0 ? personCard('Non attribué', nonAttribue, '#9ca3af') : '') +
+      row('Reste à encaisser', dueGlobal, (dueGlobal > 0 ? '#ef4444' : '#16a34a'), 'Total de tous les impayés') +
+      '<div id="collector-detail"></div>';
   }
   var bg = document.getElementById('rev-drawer-bg');
   var dr = document.getElementById('rev-drawer');

@@ -28,7 +28,18 @@
     var d = new Date();
     return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   }
-  function plusDaysISO(n) { var d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); }
+  function plusDaysISO(n) {
+    // ★ CORRECTIF (doublon/contradiction "Retour aujourd'hui" / "Retour
+    //   demain") — CAUSE EXACTE : cette fonction utilisait toISOString()
+    //   (fuseau UTC) alors que todayISO() utilise désormais l'heure LOCALE
+    //   (ASLDB.localDateISO). Dans un fuseau en avance sur UTC, les deux
+    //   pouvaient renvoyer LA MÊME date de chaîne, faisant apparaître le
+    //   même retour à la fois dans "aujourd'hui" et "demain". Utilise
+    //   désormais la même base locale que todayISO(), sans jamais passer
+    //   par toISOString().
+    var d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + n);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
 
   function fleet() { try { return (ASLDB.getFleet && ASLDB.getFleet()) || []; } catch (e) { return []; } }
   function reservations() { try { return (ASLDB.getReservations && ASLDB.getReservations()) || []; } catch (e) { return []; } }
@@ -87,12 +98,20 @@
 
   /* ---------- Calculs financiers (mêmes règles que la Caisse) ---------- */
   function totals() {
+    // ★ SOURCE UNIQUE : le total encaissé et le reste dû proviennent
+    //   désormais de la même fonction que Desktop (ASLDB.computeCashTotals),
+    //   au lieu d'un calcul réimplémenté ici — garantit un montant de
+    //   Caisse strictement identique sur les deux versions.
+    var ct = ASLDB.computeCashTotals ? ASLDB.computeCashTotals() : null;
     var enc = 0, rest = 0;
-    reservations().forEach(function (r) {
-      if (r.status === 'cancelled') return;
-      enc += Number(r.paid) || 0;
-      rest += Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
-    });
+    if (ct) { enc = ct.encaisse; rest = ct.reste; }
+    else {
+      reservations().forEach(function (r) {
+        if (r.status === 'cancelled') return;
+        enc += Number(r.paid) || 0;
+        rest += Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
+      });
+    }
     var chg = 0;
     charges().forEach(function (c) { if (c.status !== 'pending') chg += Number(c.amount) || 0; });
     return { enc: enc, rest: rest, chg: chg, soldeReel: enc - chg, soldeEstime: enc + rest - chg };
@@ -121,25 +140,17 @@
         var ma = (typeof ASLDB !== 'undefined' && ASLDB.modelAvailability) ? ASLDB.modelAvailability(c) : null;
         return n + (ma ? ma.available : (c.status === 'available' ? 1 : 0));
       }, 0),
-      // Loués = réservations dont le départ est passé/atteint et le retour pas encore dépassé
-      rented: r.filter(function (x) { return phase(x) === 'active'; }).length,
-      // Réservés = réservations futures non encore commencées (à venir)
-      reserved: r.filter(function (x) { return phase(x) === 'reserved'; }).length,
-      // ★ CORRECTIF (point 3) : le compteur excluait bien les annulées mais
-      //   pas les retours déjà CONFIRMÉS ('completed') — après confirmation
-      //   du retour, le compteur restait bloqué à 1 alors que la liste
-      //   (qui exclut déjà 'completed') s'affichait vide. Les deux filtres
-      //   sont désormais strictement identiques.
-      returnsToday: r.filter(function (x) { return (x.endDate || '').slice(0, 10) === ts && x.status !== 'cancelled' && x.status !== 'completed'; }).length,
-      late: r.filter(function (x) { return phase(x) === 'late'; }).length,
-      unpaid: r.filter(function (x) { return x.status !== 'cancelled' && (Number(x.amount) || 0) > (Number(x.paid) || 0); }).length,
-      // Activités du jour
-      // ★ CORRECTIF (point 4) : même bug que returnsToday — le compteur
-      //   "entrants" (retours du jour) doit exclure les retours déjà
-      //   confirmés ('completed'), pas seulement les annulés, pour rester
-      //   cohérent avec la liste détaillée (qui l'exclut déjà).
-      entrants: r.filter(function (x) { return (x.endDate || '').slice(0, 10) === ts && x.status !== 'cancelled' && x.status !== 'completed'; }).length,
-      sortants: r.filter(function (x) { return (x.startDate || '').slice(0, 10) === ts && x.status !== 'cancelled'; }).length,
+      // ★ SOURCE UNIQUE (Mission) : tous ces compteurs appellent désormais
+      //   littéralement les mêmes fonctions que Desktop et que les listes
+      //   Mobile — plus aucune réimplémentation locale, donc plus aucune
+      //   divergence possible entre compteur, liste, Desktop et Mobile.
+      rented: (ASLDB.selectRented ? ASLDB.selectRented().length : r.filter(function (x) { return phase(x) === 'active'; }).length),
+      reserved: (ASLDB.selectReserved ? ASLDB.selectReserved().length : r.filter(function (x) { return phase(x) === 'reserved'; }).length),
+      returnsToday: (ASLDB.selectReturnsOn ? ASLDB.selectReturnsOn(ts).length : 0),
+      late: (ASLDB.selectLate ? ASLDB.selectLate().length : r.filter(function (x) { return phase(x) === 'late'; }).length),
+      unpaid: (ASLDB.selectUnpaid ? ASLDB.selectUnpaid().length : r.filter(function (x) { return x.status !== 'cancelled' && (Number(x.amount) || 0) > (Number(x.paid) || 0); }).length),
+      entrants: (ASLDB.selectEntrantsOn ? ASLDB.selectEntrantsOn(ts).length : 0),
+      sortants: (ASLDB.selectSortantsOn ? ASLDB.selectSortantsOn(ts).length : 0),
       vt: vt,
       vidanges: vid
     };
@@ -476,7 +487,7 @@
     // ★ CORRECTIF (item 3, parité Desktop) : phase réelle plutôt que statut
     //   brut — dès qu'une réservation démarre réellement (devient "louée"),
     //   elle disparaît automatiquement de cette liste.
-    var list = reservations().filter(function (r) { return (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? ASLDB.computePhase(r) === 'reserved' : (r.status === 'pending' || r.status === 'confirmed' || r.status === 'reserved'); })
+    var list = (ASLDB.selectReserved ? ASLDB.selectReserved() : [])
       .sort(function (a, b) { return (b.createdAt || '').localeCompare(a.createdAt || ''); });
     host.innerHTML = list.length ? list.map(function (r) { return resCard(r, 'reservation'); }).join('') : '<div class="ma-empty">Aucune réservation en cours.</div>';
   }
@@ -488,7 +499,11 @@
     // ★ CORRECTIF (item 1/6, parité Desktop) : phase réelle (date+heure+
     //   fuseau réels) au lieu de la comparaison de chaînes de date qui
     //   retardait d'un jour le passage "Réservé" → "Loué".
-    var list = reservations().filter(function (r) { return (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? (ASLDB.computePhase(r) === 'active' || ASLDB.computePhase(r) === 'late') : ((r.status === 'active' || r.status === 'confirmed')); });
+    // ★ SOURCE UNIQUE : identique au compteur et à Desktop (bug corrigé :
+    //   cette liste incluait aussi les véhicules EN RETARD, contrairement à
+    //   son propre compteur et à Desktop — d'où liste ≠ compteur et
+    //   Mobile ≠ Desktop).
+    var list = ASLDB.selectRented ? ASLDB.selectRented() : reservations().filter(function (r) { return ASLDB.computePhase(r) === 'active'; });
     host.innerHTML = list.length ? list.map(function (r) { return resCard(r, 'rental'); }).join('') : '<div class="ma-empty">Aucune location en cours aujourd\'hui.</div>';
   }
 
@@ -503,7 +518,8 @@
       var plate = r.assignedPlate || (function () { try { var c = fleet().filter(function (z) { return z.name === r.car || z.id === r.carId; })[0]; return c ? (c.plate || '') : ''; } catch (e) { return ''; } })();
       return '<div class="ma-card">'
         + '<div class="ma-card-top"><div class="ma-card-ico-box blue">' + ic('key') + '</div>'
-        + '<div class="ma-card-info"><div class="ma-card-name">' + esc(r.car || 'Véhicule') + '</div>'
+        // ★ Badge LLD (cohérent avec Desktop)
+        + '<div class="ma-card-info"><div class="ma-card-name">' + esc(r.car || 'Véhicule') + (r.type === 'lld' ? ' <span style="font-size:9.5px;font-weight:700;color:#8b5cf6;background:rgba(139,92,246,.12);border-radius:6px;padding:2px 6px;">📅 LLD</span>' : '') + '</div>'
         + '<div class="ma-card-sub">' + esc(r.client || 'Client') + (plate ? ' · ' + esc(plate) + (r.assignedColor ? ' — ' + esc(r.assignedColor) : '') : '') + '</div></div>'
         + payBadge + '</div>'
         + '<div class="ma-card-meta">'
@@ -544,7 +560,7 @@
 
   /* Fiche location en POPUP mobile propre (centrée, stable, scroll vertical,
      bouton fermer = croix, aucun bouton caché). */
-  window.maRentalFiche = function (id) {
+  window.maRentalFiche = function (id, mode) {
     var r = (ASLDB.getReservations() || []).filter(function (x) { return x.id === id; })[0];
     if (!r) return;
     var reste = Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
@@ -552,30 +568,70 @@
     function row(label, val, color) {
       return '<div class="ma-fiche-row"><span class="ma-fiche-lbl">' + label + '</span><span class="ma-fiche-val"' + (color ? ' style="color:' + color + ';"' : '') + '>' + val + '</span></div>';
     }
+    // ★ CORRECTIF (point 4, cohérence Desktop/Mobile) — "Retours aujourd'hui"
+    //   devient une consultation PURE : plus de bouton "Confirmer le
+    //   retour" ici (ni "Prolonger"). La gestion se fait désormais depuis
+    //   "En retard" (ou depuis la fiche générale d'une location en cours,
+    //   pour un retour anticipé).
+    var actionsHTML = (mode === 'returns') ? '' :
+      '<div class="ma-actions" style="margin-top:16px;">'
+      + '<button class="ma-act-btn" onclick="maCloseSheet();maExtend(\'' + r.id + '\')">' + ic('plus') + 'Prolonger</button>'
+      + '<button class="ma-act-btn ok" onclick="maCloseSheet();maReturnVehicle(\'' + r.id + '\')">' + ic('returns') + 'Confirmer retour</button>'
+      + '</div>';
+    // ★ CORRECTIF CRITIQUE (« tout modifiable ») — Cette fiche mobile était
+    //   entièrement en lecture seule : ni téléphone, ni dates, ni véhicule,
+    //   ni prix modifiables — exactement le problème signalé. Plutôt que de
+    //   dupliquer toute cette logique (et risquer de la faire diverger de
+    //   Desktop), le bouton "Modifier tout" ouvre la VRAIE fiche éditable
+    //   déjà utilisée par Desktop (mêmes champs, mêmes fonctions, mêmes
+    //   sauvegardes) — garantit une édition strictement identique partout.
+    var editBtn = '<div class="ma-actions" style="margin-top:10px;">'
+      + '<button class="ma-act-btn" style="background:#1a1a2e;color:#fff;border:none;" onclick="maEditRental(\'' + r.id + '\',\'' + (mode||'rented') + '\')">' + ic('edit') + ' Modifier tout (client, téléphone, véhicule, dates, prix…)</button>'
+      + '</div>';
     openSheet(
-      '<div class="ma-sheet-title">' + esc(r.car || 'Location') + '</div>'
+      '<div class="ma-sheet-title">' + esc(r.car || 'Location') + (r.type === 'lld' ? ' <span style="font-size:11px;font-weight:700;color:#8b5cf6;background:rgba(139,92,246,.12);border-radius:6px;padding:2px 7px;vertical-align:middle;">LLD</span>' : '') + '</div>'
       + '<div style="font-size:13px;color:#6b7280;margin:-6px 0 14px;">' + esc(plate || '') + '</div>'
       + row('Client', esc(r.client || '—'))
       + (r.phone ? row('Téléphone', '<a href="tel:' + esc(r.phone) + '" style="color:#2563eb;text-decoration:none;">' + esc(r.phone) + '</a>') : '')
       + row('Contrat', esc(r.contractRef || r.id || '—'))
       + row('Départ', fmtDateT(r.startDate, r.startTime, '10:00'))
       + row('Retour', fmtDateT(r.endDate, r.endTime, '18:00'))
+      + row('Durée', (r.days || 0) + ' jours')
       + row('Total', money(r.amount || 0))
       + row('Payé', money(r.paid || 0), '#16a34a')
       + row('Reste à payer', money(reste), reste > 0 ? '#C41E3A' : '#16a34a')
-      + '<div class="ma-actions" style="margin-top:16px;">'
-      + '<button class="ma-act-btn" onclick="maCloseSheet();maExtend(\'' + r.id + '\')">' + ic('plus') + 'Prolonger</button>'
-      + '<button class="ma-act-btn ok" onclick="maCloseSheet();maReturnVehicle(\'' + r.id + '\')">' + ic('returns') + 'Confirmer retour</button>'
-      + '</div>'
+      + editBtn
+      + actionsHTML
       + (r.phone ? '<a class="ma-act-btn" style="margin-top:8px;text-decoration:none;background:#25D366;color:#fff;border:none;" href="https://wa.me/' + esc(r.phone.replace(/[^0-9]/g, '')) + '" target="_blank">' + ic('phone') + 'WhatsApp</a>' : '')
     );
   };
+  /* ★ Ouvre la vraie fiche éditable (identique à Desktop) pour cette
+     location/réservation — tous les champs y sont modifiables. */
+  window.maEditRental = function (id, mode) {
+    maCloseSheet();
+    enterDesktopView();
+    var r = (ASLDB.getReservations() || []).filter(function (x) { return x.id === id; })[0];
+    var isLLD = r && r.type === 'lld';
+    if (isLLD && typeof window.viewLLDContract === 'function') {
+      if (typeof window.showPage === 'function') window.showPage('lld', null);
+      setTimeout(function () { window.viewLLDContract(id); }, 120);
+    } else if (typeof window.viewRental === 'function') {
+      if (typeof window.showPage === 'function') window.showPage('rentals', null);
+      setTimeout(function () { window.viewRental(id, mode); }, 120);
+    }
+    maShowBackToApp();
+  };
   /* Actions réservations / locations — réutilisent les fonctions desktop */
   window.maViewRes = function (id) {
-    if (typeof window.viewRes === 'function') { window.viewRes(id); return; }
-    if (typeof window.viewRental === 'function') window.viewRental(id);
+    enterDesktopView();
+    if (typeof window.showPage === 'function') window.showPage('reservations', null);
+    setTimeout(function () {
+      if (typeof window.viewRes === 'function') { window.viewRes(id); return; }
+      if (typeof window.viewRental === 'function') window.viewRental(id);
+    }, 120);
+    maShowBackToApp();
   };
-  window.maViewRental = function (id) { maRentalFiche(id); };
+  window.maViewRental = function (id, mode) { maRentalFiche(id, mode); };
   window.maConfirmRes = function (id) { if (typeof window.confirmRes === 'function') window.confirmRes(id); refreshSoon(); };
   window.maCancelRes = function (id) {
     var r = (ASLDB.getReservations() || []).filter(function (x) { return x.id === id; })[0];
@@ -617,9 +673,9 @@
     if (!host) return;
     var target = returnsFilter === 'today' ? todayISO() : returnsFilter === 'tomorrow' ? plusDaysISO(1) : returnsDate;
     var q = (window._maReturnsSearch || '').trim().toLowerCase();
-    var list = reservations().filter(function (r) {
-      return (r.endDate || '').slice(0, 10) === target && r.status !== 'cancelled' && r.status !== 'completed';
-    }).sort(function (a, b) { return (a.endTime || '').localeCompare(b.endTime || ''); });
+    // ★ SOURCE UNIQUE : même fonction que le compteur et que Desktop.
+    var list = (ASLDB.selectReturnsOn ? ASLDB.selectReturnsOn(target) : [])
+      .sort(function (a, b) { return (a.endTime || '').localeCompare(b.endTime || ''); });
     if (q) {
       list = list.filter(function (r) {
         var fc = fleet().filter(function (c) { return c.name === r.car || c.id === r.carId; })[0];
@@ -640,7 +696,7 @@
     var body = list.length ? list.map(function (r) {
       var idStr = "'" + String(r.id || '') + "'";
       var reste = Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
-      return '<div class="ma-card ma-return-card" onclick="maViewRental(' + idStr + ')">'
+      return '<div class="ma-card ma-return-card" onclick="maViewRental(' + idStr + ',\'returns\')">'
         + '<div class="ma-card-top"><div class="ma-card-ico-box red">' + ic('returns') + '</div>'
         + '<div class="ma-card-info"><div class="ma-card-name">' + esc(r.car || 'Véhicule') + '</div>'
         + '<div class="ma-card-sub">' + esc(r.client || '') + (r.endTime ? ' · retour ' + esc(r.endTime) : '') + '</div></div>'
@@ -705,14 +761,17 @@
   function renderReservedM() {
     var host = document.getElementById('ma-reserved');
     if (!host) return;
+    // ★ CORRECTIF (cohérence Desktop/Mobile, point 1) : cette liste utilisait
+    //   encore l'ancienne comparaison de chaînes de date (ignorant l'heure
+    //   et le fuseau) au lieu de ASLDB.computePhase() — même correction que
+    //   pour "En retard". Actions ajoutées : confirmer la prise en charge
+    //   (devient une location active) et ouvrir la fiche, comme sur Desktop.
     var ts = todayISO();
-    // Réservations futures (à venir), pas encore commencées
-    var list = reservations().filter(function (r) {
-      return (r.status === 'confirmed' || r.status === 'reserved' || r.status === 'pending') && (r.startDate || '') > ts;
-    }).sort(function (a, b) { return String(a.startDate || '').localeCompare(String(b.startDate || '')); });
+    var list = (ASLDB.selectReserved ? ASLDB.selectReserved() : []).sort(function (a, b) { return String(a.startDate || '').localeCompare(String(b.startDate || '')); });
     host.innerHTML = list.length ? list.map(function (r) {
       // Immatriculation depuis la flotte
       var plate = r.assignedPlate || (function () { try { var c = fleet().filter(function (x) { return x.name === r.car || x.id === r.carId; })[0]; return c ? (c.plate || '') : ''; } catch (e) { return ''; } })();
+      var idStr = "'" + String(r.id || '') + "'";
       return '<div class="ma-card">'
         + '<div class="ma-card-top"><div class="ma-card-ico-box purple">' + ic('calendar') + '</div>'
         + '<div class="ma-card-info"><div class="ma-card-name">' + esc(r.car || 'Véhicule') + '</div>'
@@ -720,9 +779,19 @@
         + '<span class="ma-badge purple">Réservé</span></div>'
         + '<div class="ma-card-note blue">' + ic('calendar') + ' Réservée du ' + fmtDMT(r.startDate, r.startTime, '10:00') + ' au ' + fmtDMT(r.endDate, r.endTime, '18:00') + '</div>'
         + '<div class="ma-card-note">' + ic('user') + ' ' + esc(r.client || r.finalClient || 'Client') + '</div>'
+        + '<div class="ma-actions">'
+        + '<button class="ma-act-btn" onclick="maViewRes(' + idStr + ')">' + ic('eye') + 'Fiche</button>'
+        + '<button class="ma-act-btn ok" onclick="maConfirmPickup(' + idStr + ')">' + ic('check') + 'Prise en charge</button>'
+        + '</div>'
         + '</div>';
     }).join('') : '<div class="ma-empty">Aucun véhicule réservé.</div>';
   }
+  /* ★ Point 1 (Option 2) — Même comportement que Desktop : réutilise la
+     fonction partagée confirmPickup() pour ne jamais dupliquer la logique. */
+  window.maConfirmPickup = function (id) {
+    if (typeof window.confirmPickup === 'function') window.confirmPickup(id);
+    refreshSoon();
+  };
 
   /* ============ ACTIVITÉS DU JOUR (dynamique) ============ */
   function renderActivitesM() {
@@ -733,10 +802,12 @@
     var MAINT = {}; try { MAINT = JSON.parse(localStorage.getItem('asl_maint_v1') || '{}'); } catch (e) {}
     var todayMs = new Date(ts).getTime();
 
-    // Véhicules entrants (retours du jour)
-    var entrants = r.filter(function (x) { return (x.endDate || '').slice(0, 10) === ts && x.status !== 'cancelled'; });
-    // Véhicules sortants (départs du jour)
-    var sortants = r.filter(function (x) { return (x.startDate || '').slice(0, 10) === ts && x.status !== 'cancelled'; });
+    // ★ SOURCE UNIQUE (bug corrigé) : cette liste de détail n'excluait pas
+    //   les retours déjà confirmés, contrairement à son propre compteur —
+    //   d'où un détail incohérent avec le chiffre affiché. Les deux
+    //   appellent désormais la même fonction.
+    var entrants = ASLDB.selectEntrantsOn ? ASLDB.selectEntrantsOn(ts) : [];
+    var sortants = ASLDB.selectSortantsOn ? ASLDB.selectSortantsOn(ts) : [];
     // Visites techniques proches + vidanges dues
     var f = fleet();
     var vts = [], vids = [];
@@ -779,7 +850,7 @@
     var idStr = "'" + String(x.id || '') + "'";
     return '<div class="ma-card"><div class="ma-card-top"><div class="ma-card-ico-box ' + (kind === 'sortant' ? 'blue' : 'orange') + '">' + ic(kind === 'sortant' ? 'key' : 'returns') + '</div>'
       + '<div class="ma-card-info"><div class="ma-card-name">' + esc(x.car || 'Véhicule') + '</div>'
-      + '<div class="ma-card-sub">' + esc(x.client || '') + (plate ? ' · ' + esc(plate) + (r.assignedColor ? ' — ' + esc(r.assignedColor) : '') : '') + '</div></div>'
+      + '<div class="ma-card-sub">' + esc(x.client || '') + (plate ? ' · ' + esc(plate) + (x.assignedColor ? ' — ' + esc(x.assignedColor) : '') : '') + '</div></div>'
       + '<span class="ma-badge ' + (kind === 'sortant' ? 'blue' : 'orange') + '">' + (kind === 'sortant' ? 'Départ' : 'Retour') + '</span></div>'
       + '<div class="ma-actions"><button class="ma-act-btn" onclick="maViewRental(' + idStr + ')">' + ic('eye') + 'Fiche</button></div></div>';
   }
@@ -789,10 +860,12 @@
     var host = document.getElementById('ma-late');
     if (!host) return;
     var ts = todayISO();
-    // Vrai retard : date de retour STRICTEMENT dépassée ET location non clôturée
-    var list = reservations().filter(function (r) {
-      return (r.endDate || '') < ts && (r.status === 'active' || r.status === 'confirmed');
-    }).sort(function (a, b) { return (a.endDate || '').localeCompare(b.endDate || ''); });
+    // ★ CORRECTIF (cohérence Desktop/Mobile) : cette liste utilisait encore
+    //   l'ancienne comparaison de chaînes de date (ignorant l'heure et le
+    //   fuseau), contrairement au reste de ce fichier et à Desktop — elle
+    //   pouvait donc afficher un retard un jour trop tôt ou trop tard.
+    //   Alignée sur ASLDB.computePhase(), la même source de vérité partout.
+    var list = (ASLDB.selectLate ? ASLDB.selectLate() : []).sort(function (a, b) { return (a.endDate || '').localeCompare(b.endDate || ''); });
     host.innerHTML = list.length ? list.map(function (r) {
       var idStr = "'" + String(r.id || '') + "'";
       var days = Math.max(0, Math.round((new Date(ts) - new Date(r.endDate)) / 86400000));
@@ -827,12 +900,41 @@
   function renderRevenueM() {
     var host = document.getElementById('ma-revenue');
     if (!host) return;
-    var rev = computeRev();
+    // ★ CORRECTIF (point 2) — Même remplacement que sur Desktop : répartition
+    //   par personne ayant réellement encaissé (champ "Encaissé par"),
+    //   jamais l'utilisateur connecté, à la place des revenus
+    //   semaine/mois/année. Seul ce résumé du Dashboard change — l'onglet
+    //   complet "Caisse" reste identique.
+    var byPerson = { Mohamed: 0, Younes: 0, Khalil: 0 };
+    var dueGlobal = 0;
+    reservations().forEach(function (r) {
+      if (r.status === 'cancelled') return;
+      var amount = Number(r.amount) || 0;
+      var paid = Number(r.paid) || 0;
+      dueGlobal += Math.max(0, amount - paid);
+      if (paid > 0 && byPerson.hasOwnProperty(r.collectedBy)) byPerson[r.collectedBy] += paid;
+    });
+    var nonAttr = 0;
+    reservations().forEach(function (r) {
+      if (r.status === 'cancelled') return;
+      var paid = Number(r.paid) || 0;
+      if (paid > 0 && !byPerson.hasOwnProperty(r.collectedBy)) nonAttr += paid;
+    });
+    var totalEnc = byPerson.Mohamed + byPerson.Younes + byPerson.Khalil + nonAttr;
+    function pCard(name, val, color) {
+      return '<div class="ma-cash-card" style="border-color:' + color + ';cursor:pointer;" onclick="maCollectorDetail(\'' + name + '\')">'
+        + '<div class="ma-cash-lbl">Encaissé par ' + name + ' ›</div>'
+        + '<div class="ma-cash-num" style="color:' + color + ';">' + money(val) + '</div></div>';
+    }
     host.innerHTML =
-      cashLine('Revenus de la semaine', rev.week, '#16a34a', 'Du lundi au dimanche en cours')
-      + cashLine('Revenus du mois', rev.month, '#16a34a', 'Mois calendaire en cours')
-      + cashLine("Revenus de l'année", rev.year, '#16a34a', 'Année ' + new Date().getFullYear())
-      + cashLine('Reste à encaisser', rev.dueGlobal, (rev.dueGlobal > 0 ? '#C41E3A' : '#16a34a'), 'Somme de tous les soldes dus');
+      '<div class="ma-cash-card" style="border-color:#16a34a;margin-bottom:14px;"><div class="ma-cash-lbl">Total encaissé (agence)</div>'
+      + '<div class="ma-cash-num" style="color:#16a34a;font-size:26px;">' + money(totalEnc) + '</div></div>'
+      + pCard('Mohamed', byPerson.Mohamed, '#16a34a')
+      + pCard('Younes', byPerson.Younes, '#3b82f6')
+      + pCard('Khalil', byPerson.Khalil, '#8b5cf6')
+      + (nonAttr > 0 ? pCard('Non attribué', nonAttr, '#9ca3af') : '')
+      + cashLine('Reste à encaisser', dueGlobal, (dueGlobal > 0 ? '#C41E3A' : '#16a34a'), 'Total de tous les impayés')
+      + '<div id="ma-collector-detail"></div>';
   }
   function cashLine(label, val, color, note) {
     return '<div class="ma-cash-card" style="border-left-color:' + color + ';">'
@@ -940,9 +1042,7 @@
     var host = document.getElementById('ma-unpaid');
     if (!host) return;
     var ts = todayISO();
-    var list = reservations().filter(function (r) {
-      return r.status !== 'cancelled' && (Number(r.amount) || 0) > (Number(r.paid) || 0);
-    }).sort(function (a, b) { return (b.endDate || '').localeCompare(a.endDate || ''); });
+    var list = (ASLDB.selectUnpaid ? ASLDB.selectUnpaid() : []).sort(function (a, b) { return (b.endDate || '').localeCompare(a.endDate || ''); });
     var total = list.reduce(function (s, r) { return s + ((Number(r.amount) || 0) - (Number(r.paid) || 0)); }, 0);
     if (!list.length) { host.innerHTML = '<div class="ma-empty">✓ Aucun impayé. Tout est encaissé.</div>'; return; }
     host.innerHTML =
@@ -1098,93 +1198,123 @@
   };
 
   /* ============ LOCATION LONGUE DURÉE (mobile) ============ */
+  /* ★ CORRECTIF RACINE (LLD fantôme sur mobile) — Cause exacte : cet écran
+     lisait encore l'ANCIEN magasin ASLLLD (clé asl_lld_v1), alors que
+     Desktop a été migré vers les réservations type:'lld'. Deux sources de
+     données différentes pour le même écran : d'où un contrat visible
+     uniquement sur mobile, impossible à supprimer depuis Desktop.
+     Mobile lit désormais EXACTEMENT la même source que Desktop. */
+  function lldList() {
+    try { return (ASLDB.getReservations() || []).filter(function (r) { return r.type === 'lld' && r.status !== 'cancelled'; }); }
+    catch (e) { return []; }
+  }
+  function lldTotals(c) {
+    var paid = (c.payments || []).reduce(function (s, p) { return s + (Number(p.amount) || 0); }, 0);
+    var due = Number(c.amount) || 0;
+    return { due: due, paid: paid, rest: Math.max(0, due - paid) };
+  }
   function renderLLDM() {
     var host = document.getElementById('ma-lld');
-    if (!host || typeof ASLLLD === 'undefined') return;
+    if (!host) return;
     var head = '<button class="ma-action" onclick="maNewLLD()">' + ic('plus') + ' Nouveau contrat LLD</button>'
       + '<input type="search" id="ma-lld-search" class="ma-search" placeholder="Rechercher (client, véhicule)…" oninput="maRenderLLDList()">';
     host.innerHTML = head + '<div id="ma-lld-list"></div>';
     maRenderLLDList();
   }
-  function lldCarName(id) { try { var c = fleet().filter(function (x) { return String(x.id) === String(id); })[0]; return c ? c.name : '—'; } catch (e) { return '—'; } }
-  function lldCarPlate(id) { try { var c = fleet().filter(function (x) { return String(x.id) === String(id); })[0]; return c ? (c.plate || '') : ''; } catch (e) { return ''; } }
   window.maRenderLLDList = function () {
     var box = document.getElementById('ma-lld-list');
     if (!box) return;
     var q = ((document.getElementById('ma-lld-search') || {}).value || '').toLowerCase().trim();
-    var list = ASLLLD.list();
-    if (q) list = list.filter(function (c) { return ((c.client || '') + ' ' + lldCarName(c.carId)).toLowerCase().indexOf(q) >= 0; });
+    var list = lldList();
+    if (q) list = list.filter(function (c) { return ((c.client || '') + ' ' + (c.car || '')).toLowerCase().indexOf(q) >= 0; });
     if (!list.length) { box.innerHTML = '<div class="ma-empty">Aucun contrat de location longue durée.</div>'; return; }
     box.innerHTML = list.map(function (c) {
-      var t = ASLLLD.totals(c);
+      var t = lldTotals(c);
       return '<div class="ma-card" onclick="maLLDFiche(\'' + c.id + '\')">'
         + '<div class="ma-card-top"><div class="ma-card-ico-box purple">' + ic('calendar') + '</div>'
         + '<div class="ma-card-info"><div class="ma-card-name">' + esc(c.client || 'Client') + '</div>'
-        + '<div class="ma-card-sub">' + esc(lldCarName(c.carId)) + (lldCarPlate(c.carId) ? ' · ' + esc(lldCarPlate(c.carId)) : '') + '</div></div>'
-        + '<span class="ma-badge ' + (t.rest > 0 ? 'red' : 'green') + '">' + (t.rest > 0 ? money(t.rest) : 'À jour') + '</span></div>'
+        + '<div class="ma-card-sub">' + esc(c.car || '—') + (c.assignedPlate ? ' · ' + esc(c.assignedPlate) : '') + '</div></div>'
+        + '<span class="ma-badge ' + (t.rest > 0 ? 'red' : 'green') + '">' + (t.rest > 0 ? money(t.rest) : 'Soldé') + '</span></div>'
         + '<div class="ma-card-meta">'
         + '<div class="ma-meta">Début<b>' + esc(c.startDate || '—') + '</b></div>'
-        + '<div class="ma-meta">Durée<b>' + (c.durationMonths || 0) + ' mois</b></div>'
-        + '<div class="ma-meta">Mensualité<b>' + money(c.monthlyAmount) + '</b></div>'
+        + '<div class="ma-meta">Durée<b>' + (c.days || 0) + ' j</b></div>'
+        + '<div class="ma-meta">Total<b>' + money(t.due) + '</b></div>'
         + '<div class="ma-meta">Reste<b style="color:' + (t.rest > 0 ? '#C41E3A' : '#16a34a') + ';">' + money(t.rest) + '</b></div></div>'
         + '</div>';
     }).join('');
   };
   window.maNewLLD = function () {
-    // On réutilise le formulaire desktop via une vue desktop ponctuelle
     enterDesktopView();
     if (typeof window.showPage === 'function') window.showPage('lld', null);
-    setTimeout(function () { if (typeof window.openLLDModal === 'function') window.openLLDModal(); }, 120);
+    setTimeout(function () { if (typeof window._buildNewLocationModal === 'function') window._buildNewLocationModal(true); }, 120);
     maShowBackToApp();
   };
+  /* Fiche LLD mobile : historique de versements LIBRES, identique à Desktop. */
   window.maLLDFiche = function (id) {
-    var c = ASLLLD.get(id);
+    var c = lldList().filter(function (x) { return String(x.id) === String(id); })[0];
     if (!c) return;
-    var t = ASLLLD.totals(c);
+    var t = lldTotals(c);
     function row(label, val, color) {
       return '<div class="ma-fiche-row"><span class="ma-fiche-lbl">' + label + '</span><span class="ma-fiche-val"' + (color ? ' style="color:' + color + ';"' : '') + '>' + val + '</span></div>';
     }
-    var monthsHtml = t.months.map(function (m) {
-      var col = m.status === 'paid' ? '#16a34a' : (m.status === 'partial' ? '#d97706' : '#9ca3af');
-      var lbl = m.status === 'paid' ? 'Payé' : (m.status === 'partial' ? 'Partiel' : 'En attente');
+    var pays = (c.payments || []).slice().sort(function (a, b) { return String(a.date || '').localeCompare(String(b.date || '')); });
+    var paysHtml = pays.length ? pays.map(function (pmt) {
       return '<div class="ma-card" style="margin-bottom:8px;"><div class="ma-card-top">'
-        + '<div class="ma-card-info"><div class="ma-card-name" style="text-transform:capitalize;font-size:14px;">' + esc(m.label) + '</div>'
-        + '<div class="ma-card-sub">Dû ' + money(m.due) + ' · Payé ' + money(m.paid) + '</div></div>'
-        + '<span class="ma-badge" style="background:' + col + '22;color:' + col + ';">' + lbl + '</span></div>'
-        + (m.rest > 0 ? '<div class="ma-actions"><button class="ma-act-btn ok" onclick="event.stopPropagation();maLLDPay(\'' + c.id + '\',' + m.index + ')">' + ic('check') + 'Encaisser (' + money(m.rest) + ')</button></div>' : '')
-        + '</div>';
-    }).join('');
+        + '<div class="ma-card-info"><div class="ma-card-name" style="font-size:14px;">' + money(pmt.amount) + '</div>'
+        + '<div class="ma-card-sub">' + esc(pmt.date || '—') + ' · ' + esc(pmt.mode || '—') + ' · ' + esc(pmt.collectedBy || 'non renseigné') + '</div></div>'
+        + '</div></div>';
+    }).join('') : '<div class="ma-empty" style="padding:14px;">Aucun versement enregistré.</div>';
     openSheet(
       '<div class="ma-sheet-title">' + esc(c.client || 'Contrat LLD') + '</div>'
-      + '<div style="font-size:13px;color:#6b7280;margin:-6px 0 14px;">' + esc(lldCarName(c.carId)) + (lldCarPlate(c.carId) ? ' · ' + esc(lldCarPlate(c.carId)) : '') + '</div>'
-      + row('Début', esc(c.startDate || '—'))
-      + row('Durée', (c.durationMonths || 0) + ' mois')
-      + row('Mensualité', money(c.monthlyAmount))
-      + (c.phone ? row('Téléphone', '<a href="tel:' + esc(c.phone) + '" style="color:#2563eb;text-decoration:none;">' + esc(c.phone) + '</a>') : '')
-      + row('Total dû', money(t.totalDue))
-      + row('Total encaissé', money(t.totalPaid), '#16a34a')
+      + '<div style="font-size:13px;color:#6b7280;margin:-6px 0 14px;">' + esc(c.car || '—') + (c.assignedPlate ? ' · ' + esc(c.assignedPlate) : '') + '</div>'
+      + row('Période', esc(c.startDate || '—') + ' → ' + esc(c.endDate || '—'))
+      + row('Durée', (c.days || 0) + ' jours')
+      + row('Montant total', money(t.due))
+      + row('Total reçu', money(t.paid), '#16a34a')
       + row('Reste à payer', money(t.rest), t.rest > 0 ? '#C41E3A' : '#16a34a')
-      + '<div class="ma-sheet-section">Suivi mois par mois</div>'
-      + monthsHtml
-      + (c.phone ? '<a class="ma-act-btn" style="margin-top:10px;text-decoration:none;background:#25D366;color:#fff;border:none;" href="https://wa.me/' + esc(c.phone.replace(/[^0-9]/g, '')) + '" target="_blank">' + ic('phone') + 'WhatsApp</a>' : '')
+      + '<div style="font-weight:700;margin:16px 0 8px;">Historique des paiements</div>'
+      + paysHtml
+      + '<div class="ma-actions" style="margin-top:12px;"><button class="ma-act-btn ok" onclick="maLLDPay(\'' + c.id + '\')">' + ic('plus') + 'Ajouter un versement</button></div>'
     );
   };
-  window.maLLDPay = function (id, monthIndex) {
-    var c = ASLLLD.get(id);
-    if (!c) return;
-    var sch = ASLLLD.schedule(c)[monthIndex];
-    if (!sch) return;
-    var val = prompt('Montant encaissé pour ' + sch.label + ' (reste ' + (Number(sch.rest)).toLocaleString('fr-FR') + ' MAD) :', String(sch.rest));
-    if (val == null) return;
-    var amount = parseFloat(val) || 0;
-    if (amount <= 0) return;
-    var payments = (c.payments || []).slice();
-    payments.push({ monthIndex: monthIndex, amount: amount, date: new Date().toISOString().slice(0, 10) });
-    ASLLLD.update(id, { payments: payments });
-    if (typeof showToast === 'function') showToast('Paiement enregistré ✓');
-    maCloseSheet();
-    setTimeout(function () { maLLDFiche(id); }, 100);
-    maRenderLLDList();
+  /* Ajout d'un versement LIBRE — délègue à la fonction partagée avec
+     Desktop pour ne jamais dupliquer la logique (donc jamais diverger). */
+  window.maLLDPay = function (id) {
+    if (typeof window.addLLDPaymentEntry === 'function') {
+      window.addLLDPaymentEntry(id);
+      maCloseSheet();
+      setTimeout(function () { maRenderLLDList(); }, 150);
+      return;
+    }
+    if (typeof showToast === 'function') showToast('Module LLD indisponible.');
+  };
+
+  /* ★ Détail des encaissements d'une personne (identique à Desktop). */
+  window.maCollectorDetail = function (name) {
+    var box = document.getElementById('ma-collector-detail');
+    if (!box) return;
+    var names = ['Mohamed', 'Younes', 'Khalil'];
+    var rows = reservations().filter(function (r) {
+      if (r.status === 'cancelled') return false;
+      if ((Number(r.paid) || 0) <= 0) return false;
+      var who = r.collectedBy || '';
+      return (name === 'Non attribué') ? names.indexOf(who) < 0 : who === name;
+    });
+    var total = rows.reduce(function (s2, r) { return s2 + (Number(r.paid) || 0); }, 0);
+    box.innerHTML = '<div style="margin-top:14px;">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
+      + '<b style="font-size:14px;">Détail — ' + esc(name) + ' (' + rows.length + ')</b>'
+      + '<button class="ma-act-btn" style="padding:4px 10px;" onclick="document.getElementById(\'ma-collector-detail\').innerHTML=\'\'">Fermer</button></div>'
+      + (rows.length ? rows.map(function (r) {
+          var resteImpaye = Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
+          return '<div class="ma-card" style="margin-bottom:8px;"><div class="ma-card-top">'
+            + '<div class="ma-card-info"><div class="ma-card-name" style="font-size:14px;">' + esc(r.contractRef || r.id) + '</div>'
+            + '<div class="ma-card-sub">' + esc(r.client || '') + ' · ' + esc(r.car || '') + '</div>'
+            + '<div class="ma-card-sub" style="margin-top:2px;">' + (r.days || 0) + ' jour(s)' + (resteImpaye > 0 ? ' · <span style="color:#C41E3A;font-weight:700;">reste ' + money(resteImpaye) + '</span>' : ' · <span style="color:#16a34a;">soldé</span>') + '</div></div>'
+            + '<span class="ma-badge green">' + money(r.paid) + '</span></div></div>';
+        }).join('') : '<div class="ma-empty">Aucun encaissement.</div>')
+      + '<div class="ma-cash-card" style="border-color:#16a34a;"><div class="ma-cash-lbl">Total</div>'
+      + '<div class="ma-cash-num" style="color:#16a34a;">' + money(total) + '</div></div></div>';
   };
 
   /* ============ CAISSE / PAIEMENTS (simplifiée) ============ */
@@ -1250,14 +1380,16 @@
     var r = reservations(), ts = todayISO();
     var notifs = [];
     function add(icon, tone, title, sub, id) { notifs.push({ icon: icon, tone: tone, title: title, sub: sub, id: id }); }
-    r.filter(function (x) { return (x.endDate || '').slice(0, 10) === ts && x.status !== 'cancelled' && x.status !== 'completed'; })
+    // ★ Point 2 : mêmes fonctions PARTAGÉES que Desktop (ASLDB.select*) —
+    //   plus aucune divergence possible entre les deux versions.
+    (ASLDB.selectReturnsOn ? ASLDB.selectReturnsOn(ts) : r.filter(function (x) { return (x.endDate || '').slice(0, 10) === ts && x.status !== 'cancelled' && x.status !== 'completed'; }))
       .forEach(function (x) { add('returns', 'orange', 'Retour aujourd\'hui', (x.car || '') + ' — ' + (x.client || ''), x.id); });
     var tmStr = plusDaysISO(1);
-    r.filter(function (x) { return (x.endDate || '').slice(0, 10) === tmStr && x.status !== 'cancelled' && x.status !== 'completed'; })
+    (ASLDB.selectReturnsOn ? ASLDB.selectReturnsOn(tmStr) : r.filter(function (x) { return (x.endDate || '').slice(0, 10) === tmStr && x.status !== 'cancelled' && x.status !== 'completed'; }))
       .forEach(function (x) { add('calendarClock', 'blue', 'Retour demain', (x.car || '') + ' — ' + (x.client || ''), x.id); });
-    r.filter(function (x) { return (x.endDate || '') < ts && (x.status === 'active' || x.status === 'confirmed'); })
+    (ASLDB.selectLate ? ASLDB.selectLate() : r.filter(function (x) { return (x.endDate || '') < ts && (x.status === 'active' || x.status === 'confirmed'); }))
       .forEach(function (x) { add('alert', 'red', 'Véhicule en retard', (x.car || '') + ' — ' + (x.client || '') + ' (prévu le ' + (x.endDate || '') + ')', x.id); });
-    r.filter(function (x) { return x.status !== 'cancelled' && (Number(x.amount) || 0) > (Number(x.paid) || 0); })
+    (ASLDB.selectUnpaid ? ASLDB.selectUnpaid() : r.filter(function (x) { return x.status !== 'cancelled' && (Number(x.amount) || 0) > (Number(x.paid) || 0); }))
       .forEach(function (x) { var reste = (Number(x.amount) || 0) - (Number(x.paid) || 0); add('card', 'red', 'Impayé : ' + money(reste), (x.client || '') + ' — ' + (x.car || ''), x.id); });
     var cutoff = Date.now() - 48 * 3600 * 1000;
     r.filter(function (x) { return x.createdAt && new Date(x.createdAt).getTime() > cutoff && x.status === 'pending'; })
@@ -1267,17 +1399,26 @@
     r.filter(function (x) { return x.createdAt && new Date(x.createdAt).getTime() > cutoff && (Number(x.paid) || 0) > 0 && (Number(x.paid) || 0) >= (Number(x.amount) || 0); })
       .forEach(function (x) { add('checkCircle', 'green', 'Paiement reçu', (x.client || '') + ' — ' + money(x.paid), x.id); });
 
-    /* Rappels de vérification vidange (tous les 20 jours) */
+    /* Rappels de vérification vidange (tous les 20 jours) — une notification
+       PAR IMMATRICULATION, cohérent avec le suivi d'entretien par plaque. */
     var MAINT = {};
     try { MAINT = JSON.parse(localStorage.getItem('asl_maint_v1') || '{}'); } catch (e) {}
     var fl = fleet();
     var todayMs = (function () { var d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime(); })();
+    var seenReminder = {};
     fl.forEach(function (c) {
-      var m = MAINT[String(c.id)] || {};
-      if (m.reminder_next && new Date(m.reminder_next).getTime() <= todayMs + 86400000) {
-        var kmTxt = m.km_vidange_next ? Number(m.km_vidange_next).toLocaleString('fr-FR') + ' km' : '—';
-        notifs.push({ icon: 'wrench', tone: 'orange', title: 'Vérifier le km de ' + (c.name || ''), sub: 'Prochaine vidange prévue à ' + kmTxt, id: '', maint: true });
-      }
+      var units = (typeof ASLDB !== 'undefined' && ASLDB.normalizeUnits) ? ASLDB.normalizeUnits(c) : [{ plate: c.plate || '' }];
+      units.forEach(function (u) {
+        var key = String(c.id) + '::' + (u.plate || '_');
+        var m = MAINT[key] || MAINT[String(c.id)] || {}; // compat pendant la migration
+        if (!m.reminder_next || seenReminder[key]) return;
+        if (new Date(m.reminder_next).getTime() <= todayMs + 86400000) {
+          seenReminder[key] = true;
+          var kmTxt = m.km_vidange_next ? Number(m.km_vidange_next).toLocaleString('fr-FR') + ' km' : '—';
+          var lbl = (c.name || '') + (u.plate ? ' (' + u.plate + ')' : '');
+          notifs.push({ icon: 'wrench', tone: 'orange', title: 'Vérifier le km de ' + lbl, sub: 'Prochaine vidange prévue à ' + kmTxt, id: '', maint: true });
+        }
+      });
     });
 
     if (host) {
@@ -1371,7 +1512,7 @@
       '<div class="ma-head">'
       + '<button class="ma-head-back" id="ma-head-back" aria-label="Retour" onclick="window.maGo(\'dashboard\')" style="display:none;">' + ic('arrowLeft') + '</button>'
       + '<img class="ma-head-logo" src="data:image/png;base64,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" alt="All Star Loc">'
-      + '<div class="ma-head-txt"><h1 id="ma-title">Tableau de bord</h1><div class="ma-greet">Bonjour ' + esc(greet) + '</div></div>'
+      + '<div class="ma-head-txt"><h1 id="ma-title">Tableau de bord</h1><div class="ma-greet">Bonjour ' + esc(greet) + '</div><div id="ma-clock" style="font-size:11.5px;color:rgba(255,255,255,.65);font-weight:600;margin-top:2px;">—</div></div>'
       + '<button class="ma-head-btn" aria-label="Notifications" onclick="maToggleNotifications()">' + ic('bell') + '<span class="ma-dot" id="ma-head-dot" style="display:none;"></span></button></div>'
       + screen('dashboard') + screen('vehicles') + screen('available') + screen('reserved') + screen('activites') + screen('reservations') + screen('rentals')
       + screen('returns') + screen('late') + screen('clients') + screen('sublease') + screen('lld') + screen('unpaid') + screen('revenue') + screen('caisse') + screen('notifications');
@@ -1482,6 +1623,21 @@
       if (!isMobile()) return;
       try { renderScreen(current); } catch (e) {}
     }, 30000);
+    /* ★ Affichage de la date/heure en direct, sobre et professionnel. */
+    (function () {
+      var DAYS = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+      var MONTHS = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+      function tick() {
+        var el = document.getElementById('ma-clock');
+        if (!el) return;
+        var d = new Date();
+        var txt = DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MONTHS[d.getMonth()] + ' — '
+          + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+        el.textContent = txt.charAt(0).toUpperCase() + txt.slice(1);
+      }
+      tick();
+      setInterval(tick, 1000 * 30);
+    })();
     watchSync();
     hookModalLock();
   }

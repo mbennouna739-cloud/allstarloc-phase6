@@ -183,6 +183,20 @@ tr:hover td{background:rgba(18,22,30,0.025);}
   .cal-event{font-size:8.5px;}
   .cal-sum-val{font-size:17px;}
 }
+/* ★ CORRECTIF (point 4) — Zoom automatique iOS Safari : ce navigateur zoome
+   automatiquement la page dès qu'un champ de saisie reçoit le focus si sa
+   taille de police est inférieure à 16px. Tous les champs (recherche,
+   formulaires, dates...) étaient à 13-14px — d'où le zoom constaté,
+   notamment dans "Retours aujourd'hui". Remonté à 16px uniquement sur
+   mobile (aucun changement visuel sur Desktop), ce qui supprime la cause
+   réelle du zoom plutôt que de le masquer après coup. */
+@media(max-width:768px){
+  input, select, textarea,
+  .form-input, .form-select, .form-textarea,
+  .search-bar input, .ma-date, .ma-search-input {
+    font-size: 16px !important;
+  }
+}
 
 /* FLEET GRID */
 .fleet-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
@@ -557,9 +571,14 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
 <main class="main">
   <div class="topbar">
     <div class="topbar-title" id="topbar-title">Tableau de bord</div>
+    <div id="asl-clock" style="font-size:12.5px;color:var(--text3);font-weight:600;margin-left:14px;white-space:nowrap;display:flex;align-items:center;gap:6px;">
+      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:.7;flex-shrink:0;"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      <span id="asl-clock-text">—</span>
+    </div>
     <div class="topbar-right">
       <div class="notif-btn" onclick="showNotifications()" style="cursor:pointer;" title="Notifications"><span><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span><div class="notif-dot"></div></div>
       <button class="topbar-btn secondary" onclick="exportReservationsCSV()"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg> Exporter</button>
+      <button class="topbar-btn secondary" id="btn-resync" onclick="resyncData()" title="Relit toutes les données depuis la base et recalcule tous les compteurs (lecture seule)"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg> Resynchroniser</button>
       <button class="topbar-btn secondary" onclick="openModal('new-location')">+ Nouvelle location</button>
       <button class="topbar-btn primary" onclick="openModal('new-reservation')">+ Nouvelle réservation</button>
     </div>
@@ -771,7 +790,7 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
         <!-- ===== CUSTOMERS ===== -->
     <div id="page-customers" class="page">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
-        <div class="search-bar" style="flex:1;min-width:180px;"><span style="display:flex;align-items:center;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span><input id="cust-search" placeholder="Rechercher un client..." oninput="renderCustomers()"></div>
+        <div class="search-bar" style="flex:1;min-width:180px;"><span style="display:flex;align-items:center;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span><input id="cust-search" placeholder="Client, téléphone, véhicule ou immatriculation..." oninput="renderCustomers()"></div>
         <select class="form-select" id="cust-month-filter" style="width:190px;" onchange="renderCustomers()">
           <option value="">Tous les mois</option>
           <option value="1">Janvier</option><option value="2">Février</option><option value="3">Mars</option>
@@ -947,7 +966,7 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
         <div class="table-header"><div class="table-title">Suivi entretien flotte</div></div>
         <div style="overflow-x:auto;">
         <table>
-          <thead><tr><th>Véhicule</th><th>Immatriculation</th><th>Km prochaine vidange</th><th>Dernière mise à jour</th><th>Prochain rappel</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Véhicule</th><th>Immatriculation</th><th>Km prochaine vidange</th><th>Prochaine visite technique</th><th>Dernière mise à jour</th><th>Prochain rappel</th><th>Actions</th></tr></thead>
           <tbody id="maintenance-table"></tbody>
         </table>
         </div>
@@ -1024,8 +1043,8 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
             <div id="cs-collected-younes" style="font-size:22px;font-weight:800;color:#3b82f6;">0 MAD</div>
             <div style="font-size:11px;color:#9aa;margin-top:4px;">Voir le détail →</div>
           </div>
-          <div class="table-card" style="padding:18px;border-left:4px solid #8b5cf6;cursor:pointer;transition:.15s;" onclick="caisseShowCollectedBy('Khalid')" onmouseover="this.style.background='#f5f3ff'" onmouseout="this.style.background=''">
-            <div style="font-size:12.5px;color:#667;margin-bottom:6px;">👤 Khalid</div>
+          <div class="table-card" style="padding:18px;border-left:4px solid #8b5cf6;cursor:pointer;transition:.15s;" onclick="caisseShowCollectedBy('Khalil')" onmouseover="this.style.background='#f5f3ff'" onmouseout="this.style.background=''">
+            <div style="font-size:12.5px;color:#667;margin-bottom:6px;">👤 Khalil</div>
             <div id="cs-collected-khalid" style="font-size:22px;font-weight:800;color:#8b5cf6;">0 MAD</div>
             <div style="font-size:11px;color:#9aa;margin-top:4px;">Voir le détail →</div>
           </div>
@@ -1122,7 +1141,7 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
               <select id="gl-vehicle" class="form-input" style="padding:7px 8px;" onchange="renderGrandLivre()"><option value="">Tous les véhicules</option></select></div>
             <div><label style="font-size:11px;color:#667;display:block;margin-bottom:3px;">Encaissé par</label>
               <select id="gl-collected-by" class="form-input" style="padding:7px 8px;" onchange="glSetCollectedBy(this.value)">
-                <option value="">Tous</option><option value="Mohamed">Mohamed</option><option value="Younes">Younes</option><option value="Khalid">Khalid</option>
+                <option value="">Tous</option><option value="Mohamed">Mohamed</option><option value="Younes">Younes</option><option value="Khalil">Khalil</option>
               </select></div>
           </div>
         </div>
@@ -1352,6 +1371,74 @@ function esc(s) {
 }
 let RESERVATIONS = ASLDB.getReservations();
 
+/* ★ Bouton "Resynchroniser les données" (outil de maintenance).
+   LECTURE SEULE : relit toute la base depuis le serveur, puis force le
+   recalcul de tous les compteurs, listes, statistiques, caisse, Grand
+   Livre et activités du jour — sur Desktop ET Mobile (les deux partagent
+   désormais les mêmes fonctions de calcul). N'écrit rien, ne crée aucun
+   doublon, ne supprime rien. */
+async function resyncData() {
+  var btn = document.getElementById('btn-resync');
+  var original = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Resynchronisation…'; }
+  try {
+    if (typeof ASLDB === 'undefined' || !ASLDB.resyncAll) throw new Error('Module de synchronisation indisponible.');
+    await ASLDB.resyncAll();
+    // Recalcul complet de toutes les vues (chacune protégée : une vue
+    // absente sur cet écran ne doit jamais interrompre les autres).
+    if (typeof reloadData === 'function') reloadData();
+    [['renderDashboard'],['updateBadges'],['renderRentals'],['renderAllReservations'],
+     ['renderFleetPage'],['renderPayments'],['renderCustomers'],['renderSubleases'],
+     ['renderLLD'],['renderResume'],['renderGrandLivre'],['renderChargesList'],
+     ['renderNotifications'],['renderMobileDash']].forEach(function (f) {
+      try { if (typeof window[f[0]] === 'function') window[f[0]](); } catch (e) {}
+    });
+    if (typeof showToast === 'function') showToast('Resynchronisation terminée avec succès.');
+    else alert('Resynchronisation terminée avec succès.');
+  } catch (e) {
+    console.error('resyncData:', e);
+    if (typeof showToast === 'function') showToast('Erreur lors de la resynchronisation.');
+    else alert('Erreur lors de la resynchronisation.');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = original; }
+  }
+}
+
+/* ★ Migration unique de l'ancien module LLD (source du contrat fantôme
+   visible uniquement sur mobile). Exécutée une seule fois par appareil. */
+(function(){
+  try {
+    if (localStorage.getItem('asl_lld_migrated_v1')) return;
+    var run = function(){
+      try {
+        if (typeof ASLDB === 'undefined' || !ASLDB.migrateLegacyLLD) return;
+        var n = ASLDB.migrateLegacyLLD();
+        try { if (ASLDB.migrateCollectedByName) ASLDB.migrateCollectedByName(); } catch(e) {}
+        localStorage.setItem('asl_lld_migrated_v1', '1');
+        if (n > 0 && typeof showToast === 'function') showToast(n + ' contrat(s) LLD repris de l\'ancien module ✓');
+      } catch(e) {}
+    };
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ setTimeout(run, 800); });
+    else setTimeout(run, 800);
+  } catch(e) {}
+})();
+
+/* ★ Affichage de la date/heure en direct, sobre et professionnel. */
+(function () {
+  var DAYS = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+  var MONTHS = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+  function tickClock() {
+    var el = document.getElementById('asl-clock-text');
+    if (!el) return;
+    var d = new Date();
+    var txt = DAYS[d.getDay()] + ' ' + d.getDate() + ' ' + MONTHS[d.getMonth()] + ' ' + d.getFullYear()
+      + ' — ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+    el.textContent = txt.charAt(0).toUpperCase() + txt.slice(1);
+  }
+  tickClock();
+  setInterval(tickClock, 1000 * 30);
+})();
+
 function reloadData() {
   FLEET = ASLDB.getFleet();
   RESERVATIONS = ASLDB.getReservations();
@@ -1375,6 +1462,9 @@ const AVAIL_LABELS = {
 
 // ==================== NAVIGATION ====================
 function showPage(id, el) {
+  // ★ CORRECTIF (pop-ups surgissant par erreur) : changer de page annule
+  //   tout « retour au tiroir du Dashboard » encore armé.
+  try { if (typeof clearDashReturnContext === 'function') clearDashReturnContext(); } catch(e) {}
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
   document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
@@ -2376,9 +2466,13 @@ function openModal(type) {
           var units = (typeof ASLDB!=='undefined' && ASLDB.normalizeUnits) ? ASLDB.normalizeUnits(c) : null;
           if (units && units.length) {
             return units.map((u,i)=>{
-              var av = (u.status||'available')==='available';
-              var lbl = c.name+' — '+(u.plate||'sans plaque')+(u.color?' · '+u.color:'')+' — '+ppu+' MAD/j'+(av?'':' (occupée)');
-              return `<option value="${c.id}" data-unit="${i}" data-plate="${u.plate||''}" data-color="${u.color||''}" data-ppu="${ppu}"${av?'':' disabled'}>${lbl}</option>`;
+              // ★ CORRECTIF RACINE : plus de blocage sur un drapeau stocké —
+              //   une voiture réservée pour une date future reste
+              //   sélectionnable. Seul le chevauchement RÉEL de dates
+              //   (checkAvailability) peut refuser l'enregistrement.
+              var busyNow = (typeof ASLDB!=='undefined' && ASLDB.unitBusyAt) ? ASLDB.unitBusyAt(c.id, u.plate) : ((u.status||'available')!=='available');
+              var lbl = c.name+' — '+(u.plate||'sans plaque')+(u.color?' · '+u.color:'')+' — '+ppu+' MAD/j'+(busyNow?' (louée actuellement)':'');
+              return `<option value="${c.id}" data-unit="${i}" data-plate="${u.plate||''}" data-color="${u.color||''}" data-ppu="${ppu}">${lbl}</option>`;
             }).join('');
           }
           return `<option value="${c.id}" data-ppu="${ppu}">${c.name} (${c.plate||''}) — ${ppu} MAD/j</option>`;
@@ -2412,12 +2506,12 @@ function openModal(type) {
               <option value="Espèces">Espèces</option><option value="Carte bancaire">Carte bancaire</option><option value="Virement">Virement</option><option value="Chèque">Chèque</option><option value="Autre">Autre</option>
             </select>
           </div>
-          <div class="form-group"><label class="form-label" style="color:var(--red);">Encaissé par *</label>
+          <div class="form-group"><label class="form-label" >Encaissé par</label>
             <select class="form-select" id="nr-collected-by" required>
               <option value="">— Sélectionner —</option>
               <option value="Mohamed">Mohamed</option>
               <option value="Younes">Younes</option>
-              <option value="Khalid">Khalid</option>
+              <option value="Khalil">Khalil</option>
             </select>
           </div>
         </div>
@@ -2550,9 +2644,11 @@ function openModal(type) {
         }
       }
 
-      // ★ Point 3 : "Encaissé par" est obligatoire — indépendant de l'utilisateur connecté.
+      // ★ « Encaissé par » : obligatoire UNIQUEMENT si un montant est
+      //   réellement encaissé (paid > 0). Si aucun montant n'est reçu à la
+      //   création, on ne sait pas encore qui l'encaissera — pas de blocage.
       const nrCollectedBy = document.getElementById('nr-collected-by')?.value || '';
-      if (!nrCollectedBy) { alert('Merci de renseigner « Encaissé par » avant d\'enregistrer.'); return; }
+      if (paid > 0 && !nrCollectedBy) { alert('Un montant a été saisi comme reçu : merci d\'indiquer qui l\'a encaissé (Mohamed / Younes / Khalil).'); return; }
 
       const newRes = ASLDB.addReservation({
         client: `${fn} ${ln||''}`.trim(),

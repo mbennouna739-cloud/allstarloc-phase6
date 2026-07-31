@@ -202,11 +202,15 @@ function renderDashboard() {
     }
     var availUnitsTotal = fleet.reduce(function (s, c) { return s + _avUnits(c); }, 0);
     var avail    = fleet.filter(function(c) { return c.status === 'available'; });
-    var rented   = res.filter(function(r) { return phase(r) === 'active'; });
-    var reserved = res.filter(function(r) { return phase(r) === 'reserved'; });
-    var returns  = res.filter(function(r) { return (r.endDate||'').slice(0,10) === ts && r.status !== 'cancelled' && r.status !== 'completed'; });
-    var late     = res.filter(function(r) { return phase(r) === 'late'; });
-    var unpaid   = res.filter(function(r) { if (r.status === 'cancelled') return false; return (Number(r.amount)||0) > (Number(r.paid)||0); });
+    // ★ SOURCE UNIQUE (Mission) : ces compteurs appellent désormais
+    //   littéralement les mêmes fonctions que Mobile et que les listes —
+    //   une divergence n'est plus possible par construction.
+    var D = (typeof ASLDB !== 'undefined') ? ASLDB : null;
+    var rented   = (D && D.selectRented)     ? D.selectRented()      : res.filter(function(r) { return phase(r) === 'active'; });
+    var reserved = (D && D.selectReserved)   ? D.selectReserved()    : res.filter(function(r) { return phase(r) === 'reserved'; });
+    var returns  = (D && D.selectReturnsOn)  ? D.selectReturnsOn(ts) : res.filter(function(r) { return (r.endDate||'').slice(0,10) === ts && r.status !== 'cancelled' && r.status !== 'completed'; });
+    var late     = (D && D.selectLate)       ? D.selectLate()        : res.filter(function(r) { return phase(r) === 'late'; });
+    var unpaid   = (D && D.selectUnpaid)     ? D.selectUnpaid()      : res.filter(function(r) { if (r.status === 'cancelled') return false; return (Number(r.amount)||0) > (Number(r.paid)||0); });
 
     function setV(id, val, col) {
       var el = document.getElementById(id);
@@ -317,7 +321,7 @@ function openDashDrawer(type) {
     title = '🔵 Véhicules loués actuellement';
     // ★ CORRECTIF : phase réelle (date+heure+fuseau), plus l'ancien filtre
     //   "date seule" qui retardait d'un jour le passage en "Loué".
-    res.filter(function(r) { return (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? ASLDB.computePhase(r) === 'active' : ((r.status==='active'||r.status==='confirmed') && (r.startDate||'')<=ts && (r.endDate||'')>=ts); }).forEach(function(r) {
+    (ASLDB.selectRented ? ASLDB.selectRented() : []).forEach(function(r) {
       var plateColor = '';
       if (r.assignedPlate) {
         plateColor = r.assignedPlate + (r.assignedColor ? ' — ' + r.assignedColor : '');
@@ -331,7 +335,9 @@ function openDashDrawer(type) {
         '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);gap:10px;">'
         + '<div style="min-width:0;">'
         + (subLeaseNameFor(r) ? '<div style="font-size:10.5px;color:#8b5cf6;font-weight:700;text-transform:uppercase;letter-spacing:.3px;">' + subLeaseNameFor(r) + '</div>' : '')
-        + '<div style="font-weight:700;">' + (r.car||'') + '</div>'
+        // ★ Badge distinctif "Location Longue Durée" — pour repérer d'un
+        //   coup d'œil, depuis "Véhicules loués", lesquelles sont des LLD.
+        + '<div style="font-weight:700;">' + (r.car||'') + (r.type === 'lld' ? ' <span style="font-size:10px;font-weight:700;color:#8b5cf6;background:rgba(139,92,246,.12);border-radius:6px;padding:2px 7px;vertical-align:middle;">📅 LLD</span>' : '') + '</div>'
         + (plateColor ? '<div style="font-size:12px;color:var(--text3);">🚗 ' + plateColor + '</div>' : '')
         + '<div style="font-size:13px;margin-top:2px;">Retour :<br><strong>' + fmtD(r.endDate||'') + (r.endTime ? ' à ' + r.endTime : '') + '</strong></div>'
         + '</div>'
@@ -344,7 +350,7 @@ function openDashDrawer(type) {
   } else if (type === 'reserved') {
     title = '🟣 Véhicules réservés';
     // ★ Vue rapide (item 7) : uniquement la DATE+HEURE DE DÉPART.
-    res.filter(function(r) { return (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? ASLDB.computePhase(r) === 'reserved' : ((r.status==='confirmed'||r.status==='reserved'||r.status==='pending') && (r.startDate||'')>ts); }).forEach(function(r) {
+    (ASLDB.selectReserved ? ASLDB.selectReserved() : []).forEach(function(r) {
       var plateColor = '';
       if (r.assignedPlate) {
         plateColor = r.assignedPlate + (r.assignedColor ? ' — ' + r.assignedColor : '');
@@ -360,7 +366,10 @@ function openDashDrawer(type) {
         + (plateColor ? '<div style="font-size:12px;color:var(--text3);">🚗 ' + plateColor + '</div>' : '')
         + '<div style="font-size:13px;margin-top:2px;">Départ :<br><strong>' + fmtD(r.startDate||'') + (r.startTime ? ' à ' + r.startTime : '') + '</strong></div>'
         + '</div>'
-        + '<div style="flex-shrink:0;"><button class="btn-sm primary" data-rid="' + r.id + '" onclick="setDashReturnContext(\'reserved\');closeDashDrawer();viewRes(this.dataset.rid)">Fiche →</button></div>'
+        + '<div style="flex-shrink:0;display:flex;flex-direction:column;gap:6px;">'
+        + '<button class="btn-sm primary" data-rid="' + r.id + '" onclick="confirmPickup(this.dataset.rid)">✓ Prise en charge</button>'
+        + '<button class="btn-sm ghost" data-rid="' + r.id + '" onclick="setDashReturnContext(\'reserved\');closeDashDrawer();viewRes(this.dataset.rid)">Fiche →</button>'
+        + '</div>'
         + '</div>'
       );
     });
@@ -393,7 +402,7 @@ function openDashDrawer(type) {
       '<input id="returns-search" placeholder="Rechercher : client, véhicule, immatriculation…" value="' + ((window._returnsSearchQuery||'').replace(/"/g,'&quot;')) + '" oninput="setReturnsSearch(this.value)"></div>'
     );
     var searchQ = (window._returnsSearchQuery || '').trim().toLowerCase();
-    var matches = res.filter(function(r) { return (r.endDate||'').slice(0,10)===targetDate && r.status!=='cancelled' && r.status!=='completed'; });
+    var matches = (ASLDB.selectReturnsOn ? ASLDB.selectReturnsOn(targetDate) : []);
     if (searchQ) {
       matches = matches.filter(function(r) {
         var fc2 = fleet.filter(function(c){ return c.name===r.car || c.id===r.carId; })[0];
@@ -426,30 +435,32 @@ function openDashDrawer(type) {
     title = '🔴 Retards (date et heure de retour dépassées)';
     // ★ CORRECTIF : phase réelle (date+heure+fuseau) — un véhicule n'est en
     //   retard QUE si l'heure de retour est réellement dépassée et que le
-    //   retour n'a pas été confirmé (item 6).
-    res.filter(function(r) { return (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? ASLDB.computePhase(r) === 'late' : ((r.endDate||'')<ts && (r.status==='active'||r.status==='confirmed')); }).forEach(function(r) {
+    //   retour n'a pas été confirmé.
+    (ASLDB.selectLate ? ASLDB.selectLate() : []).forEach(function(r) {
       var end = new Date((r.endDate||'') + 'T' + (r.endTime || '12:00'));
       var diffMs = new Date() - end;
       var diff = Math.max(0, Math.round(diffMs / 3600000));
       var diffLabel = diff >= 24 ? (Math.floor(diff/24) + ' j ' + (diff%24) + ' h') : (diff + ' h');
       rows.push(
         '<div style="padding:12px 0;border-bottom:1px solid var(--border);">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">' +
+        '<div style="min-width:0;">' +
         '<div style="font-weight:700;color:var(--red);">' + (r.car||'') + ' — ' + diffLabel + ' de retard</div>' +
         '<div style="font-size:12px;color:var(--text3);">' + (r.client||'') + ' — devait revenir le ' + fmtD(r.endDate||'') + (r.endTime ? ' à ' + r.endTime : '') + '</div>' +
-        '<div style="font-size:12px;margin-bottom:8px;">' + (r.phone||'') + '</div>' +
-        // ★ Item 1D : simple alerte, AUCUNE action de gestion ici — la gestion
-        //   des retours (confirmer/prolonger) se fait uniquement depuis
-        //   "Retours aujourd'hui / demain / date sélectionnée".
-        (r.phone ? '<a href="tel:'+r.phone+'" class="btn-sm ghost" style="text-decoration:none;">📞 Appeler</a>' : '') +
+        '</div>' +
+        // ★ Point 4 : "En retard" devient l'endroit principal pour gérer un
+        //   retour — la fiche ouvre désormais Confirmer le retour + Prolonger.
+        '<div style="flex-shrink:0;"><button class="btn-sm primary" data-rid="' + r.id + '" onclick="setDashReturnContext(\'late\');closeDashDrawer();viewRental(this.dataset.rid,\'late\')">Fiche →</button></div>' +
+        '</div>' +
+        (r.phone ? '<a href="tel:'+r.phone+'" class="btn-sm ghost" style="text-decoration:none;margin-top:6px;display:inline-block;">📞 Appeler</a>' : '') +
         '</div>'
       );
     });
     if (!rows.length) rows.push('<div style="color:#22c55e;text-align:center;padding:30px;">✓ Aucun retard — tout est à l\'heure</div>');
-    else rows.unshift('<div style="font-size:12px;color:var(--text3);margin-bottom:10px;">ℹ Alerte uniquement. Pour confirmer un retour ou prolonger, utilisez « Retours aujourd\'hui / demain / date sélectionnée ».</div>');
 
   } else if (type === 'unpaid') {
     title = '💳 Dossiers avec impayés';
-    res.filter(function(r) { if(r.status==='cancelled') return false; return (Number(r.amount)||0)>(Number(r.paid)||0); }).forEach(function(r) {
+    (ASLDB.selectUnpaid ? ASLDB.selectUnpaid() : []).forEach(function(r) {
       var reste = (Number(r.amount)||0) - (Number(r.paid)||0);
       var slName = subLeaseNameFor(r);
       rows.push(
@@ -487,12 +498,49 @@ function closeDashDrawer() {
 /* ==================== ENTRETIEN VEHICULES ==================== */
 
 var _maintCarId = null;
+var _maintPlate = null;
+
+/* ★ MISSION (point 1) — Clé d'entretien PAR IMMATRICULATION.
+   CAUSE RACINE de "toutes les voitures en stock ne sont pas prises en
+   compte" : l'entretien était enregistré par MODÈLE (clé = id de la
+   fiche flotte), donc un seul suivi partagé entre plusieurs voitures
+   identiques (ex. 3 Dacia Duster à immatriculations différentes). Chaque
+   immatriculation a désormais sa PROPRE clé et sa propre ligne. Les
+   anciennes données (clé = id seul) sont migrées automatiquement vers la
+   première immatriculation du modèle concerné, sans rien perdre. */
+function maintKey(carId, plate) { return String(carId) + '::' + (plate || '_'); }
+function migrateLegacyMaint(MAINT, fleet) {
+  var changed = false;
+  fleet.forEach(function (c) {
+    var legacy = MAINT[String(c.id)];
+    if (!legacy) return;
+    var units = normalizeUnits(c);
+    var firstPlate = units[0] ? units[0].plate : '';
+    var newKey = maintKey(c.id, firstPlate);
+    if (!MAINT[newKey]) { MAINT[newKey] = legacy; changed = true; }
+    delete MAINT[String(c.id)];
+    changed = true;
+  });
+  return changed;
+}
 
 function renderMaintenance() {
   try {
     var fleet = aslFleet();
     var MAINT = {};
     try { MAINT = JSON.parse(localStorage.getItem('asl_maint_v1') || '{}'); } catch(e) {}
+    if (migrateLegacyMaint(MAINT, fleet)) {
+      try { localStorage.setItem('asl_maint_v1', JSON.stringify(MAINT)); } catch(e) {}
+      try { if (typeof ASLDB !== 'undefined' && ASLDB.noteLocalChange) ASLDB.noteLocalChange('asl_maint_v1'); ASLDB.syncNow(); } catch(e) {}
+    }
+    // ★ Une ligne PAR IMMATRICULATION (et non plus par modèle) : chaque
+    //   véhicule en stock (même modèle) a son propre suivi individuel.
+    var rowsData = [];
+    fleet.forEach(function (c) {
+      normalizeUnits(c).forEach(function (u) {
+        rowsData.push({ car: c, plate: u.plate || '', color: u.color || '' });
+      });
+    });
     var today = new Date(); today.setHours(0,0,0,0);
 
     function diffD(dateStr) {
@@ -510,11 +558,11 @@ function renderMaintenance() {
 
     /* Barre alertes : rappels de vérification vidange dus (tous les 20 jours) */
     var alerts = [];
-    fleet.forEach(function(c) {
-      var m = MAINT[String(c.id)] || {};
+    rowsData.forEach(function(rd) {
+      var m = MAINT[maintKey(rd.car.id, rd.plate)] || {};
       if (m.reminder_next) {
         var dd = diffD(m.reminder_next.slice(0,10));
-        if (dd !== null && dd <= 0) alerts.push({ car: c.name, km: m.km_vidange_next });
+        if (dd !== null && dd <= 0) alerts.push({ car: rd.car.name + (rd.plate ? ' (' + rd.plate + ')' : ''), km: m.km_vidange_next });
       }
     });
     var bar = document.getElementById('maint-alerts-bar');
@@ -532,8 +580,9 @@ function renderMaintenance() {
 
     var tbody = document.getElementById('maintenance-table');
     if (!tbody) return;
-    tbody.innerHTML = fleet.map(function(c) {
-      var m = MAINT[String(c.id)] || {};
+    tbody.innerHTML = rowsData.map(function(rd) {
+      var c = rd.car;
+      var m = MAINT[maintKey(c.id, rd.plate)] || {};
       var kmNext = m.km_vidange_next ? Number(m.km_vidange_next).toLocaleString('fr-FR') + ' km' : '<span style="color:var(--text3);">—</span>';
       var maj = m.updated ? new Date(m.updated).toLocaleDateString('fr-FR') : '<span style="color:var(--text3);">—</span>';
       var rappelCell = '<span style="color:var(--text3);">—</span>';
@@ -543,37 +592,48 @@ function renderMaintenance() {
         var txt = dd < 0 ? 'À vérifier (' + Math.abs(dd) + 'j)' : dd === 0 ? 'À vérifier auj.' : 'Dans ' + dd + 'j';
         rappelCell = '<span class="badge ' + cls + '">● ' + txt + '</span><br><span style="font-size:11px;color:var(--text3);">' + m.reminder_next.slice(0,10) + '</span>';
       }
+      // ★ Point 1 : la prochaine visite technique (m.vt_next) était déjà
+      //   enregistrée mais jamais affichée dans le tableau — ajoutée ici.
+      var vtCell = m.vt_next ? dateCell(m.vt_next) : '<span style="color:var(--text3);">—</span>';
       return '<tr>' +
         '<td><strong>' + c.name + '</strong></td>' +
-        '<td style="font-size:12px;color:var(--text3);">' + (c.plate||'—') + '</td>' +
+        '<td style="font-size:12px;color:var(--text3);">' + (rd.plate||'—') + (rd.color ? ' · ' + rd.color : '') + '</td>' +
         '<td>' + kmNext + '</td>' +
+        '<td>' + vtCell + '</td>' +
         '<td style="font-size:12px;">' + maj + '</td>' +
         '<td>' + rappelCell + '</td>' +
-        '<td><button class="btn-sm primary" data-cid="' + c.id + '" onclick="openMaintModal(parseInt(this.dataset.cid))">Modifier</button></td>' +
+        '<td><button class="btn-sm primary" data-cid="' + c.id + '" data-plate="' + (rd.plate||'') + '" onclick="openMaintModal(parseInt(this.dataset.cid), this.dataset.plate)">Modifier</button></td>' +
         '</tr>';
     }).join('');
     updateBadges();
   } catch(e) { console.error('renderMaintenance:', e); }
 }
 
-function openMaintModal(carId) {
+function openMaintModal(carId, plate) {
   _maintCarId = carId || null;
+  _maintPlate = (plate != null) ? plate : null;
   var fleet = aslFleet();
   var MAINT = {};
   try { MAINT = JSON.parse(localStorage.getItem('asl_maint_v1') || '{}'); } catch(e) {}
   var car = carId ? fleet.find(function(c) { return c.id === carId; }) : null;
-  var m = carId ? (MAINT[String(carId)] || {}) : {};
+  // ★ Point 1 : entretien identifié par IMMATRICULATION, pas seulement par modèle.
+  var m = (carId != null && _maintPlate != null) ? (MAINT[maintKey(carId, _maintPlate)] || {}) : {};
 
   var titleEl = document.getElementById('maint-modal-title');
   var bodyEl = document.getElementById('maint-modal-body');
   if (!bodyEl) return;
-  if (titleEl) titleEl.textContent = car ? 'Entretien — ' + car.name : 'Mettre à jour l\'entretien';
+  if (titleEl) titleEl.textContent = car ? 'Entretien — ' + car.name + (_maintPlate ? ' (' + _maintPlate + ')' : '') : 'Mettre à jour l\'entretien';
 
   var carSel = '';
   if (!carId) {
-    carSel = '<div class="form-group"><label class="form-label">Véhicule</label><select class="form-select" id="maint-car-sel">' +
-      fleet.map(function(c) { return '<option value="' + c.id + '">' + c.name + ' (' + (c.plate||'') + ')</option>'; }).join('') +
-      '</select></div>';
+    // ★ Une option PAR IMMATRICULATION, pas par modèle.
+    var opts = [];
+    fleet.forEach(function(c) {
+      normalizeUnits(c).forEach(function(u) {
+        opts.push('<option value="' + c.id + '::' + (u.plate||'') + '">' + c.name + ' (' + (u.plate||'sans plaque') + ')</option>');
+      });
+    });
+    carSel = '<div class="form-group"><label class="form-label">Véhicule</label><select class="form-select" id="maint-car-sel">' + opts.join('') + '</select></div>';
   }
   bodyEl.innerHTML = carSel +
     '<div class="form-group"><label class="form-label">Kilométrage actuel (info)</label><input class="form-input" type="number" id="maint-km" placeholder="ex : 42500" value="' + (m.km_current||'') + '"></div>' +
@@ -596,12 +656,19 @@ function saveMaintRecord() {
   var MAINT = {};
   try { MAINT = JSON.parse(localStorage.getItem('asl_maint_v1') || '{}'); } catch(e) {}
   var id = _maintCarId;
+  var plate = _maintPlate;
   if (!id) {
     var sel = document.getElementById('maint-car-sel');
-    if (sel) id = parseInt(sel.value);
+    if (sel && sel.value) {
+      var parts = sel.value.split('::');
+      id = parseInt(parts[0]);
+      plate = parts[1] || '';
+    }
   }
   if (!id) { alert('Sélectionnez un véhicule'); return; }
-  var prev = MAINT[String(id)] || {};
+  // ★ Point 1 : clé d'entretien PAR IMMATRICULATION.
+  var key = maintKey(id, plate);
+  var prev = MAINT[key] || {};
   var kmNext = parseInt(document.getElementById('maint-km-next') && document.getElementById('maint-km-next').value) || null;
   var now = new Date();
   /* Rappel tous les 20 jours : si le km de prochaine vidange change (ou
@@ -610,13 +677,17 @@ function saveMaintRecord() {
   var reminderBase = (kmChanged || !prev.reminder_set) ? now.getTime() : (prev.reminder_set || now.getTime());
   var nextReminder = new Date(reminderBase + 20 * 86400000);
 
-  MAINT[String(id)] = {
+  MAINT[key] = {
+    carId: id, plate: plate || '',
     km_current: parseInt(document.getElementById('maint-km') && document.getElementById('maint-km').value) || null,
     km_vidange_next: kmNext,
     vt_next:      (document.getElementById('maint-vt')      && document.getElementById('maint-vt').value)      || '',
     notes:        (document.getElementById('maint-notes')   && document.getElementById('maint-notes').value)   || '',
     reminder_set: kmChanged ? now.getTime() : reminderBase,       // date de base du compteur 20j
     reminder_next: nextReminder.toISOString(),                    // prochaine vérification
+    // ★ Point 1 (notifications) : mémorise la valeur de vt_next au moment
+    //   de l'enregistrement — permet de savoir si la notification VT en
+    //   cours correspond toujours à cette date ou doit disparaître.
     updated: now.toISOString()
   };
   try { localStorage.setItem('asl_maint_v1', JSON.stringify(MAINT)); } catch(e) {}
@@ -713,12 +784,26 @@ function viewRental(id, mode) {
   var dr = document.getElementById('rental-drawer');
   if (!dr) return;
 
-  if (titleEl) titleEl.textContent = (mode === 'returns' ? 'Retour — ' : 'Location ') + (r.contractRef||r.id);
+  if (titleEl) titleEl.textContent = (mode === 'returns' ? 'Retour — ' : mode === 'late' ? 'En retard — ' : 'Location ') + (r.contractRef||r.id);
 
-  var actionsHTML = (mode === 'returns')
+  // ★ Point 4 (refonte retours/retards) :
+  //   - "Retours aujourd'hui" (mode='returns') devient une consultation
+  //     PURE : plus de bouton "Confirmer le retour" ici.
+  //   - "En retard" (mode='late') devient l'endroit principal pour gérer
+  //     un retour : Confirmer le retour + Prolonger, exactement les deux
+  //     actions demandées, rien d'autre.
+  var actionsHTML = (mode === 'late')
     ? ('<button class="topbar-btn primary" data-rid="' + r.id + '" onclick="terminerLocation(this.dataset.rid)">✅ Confirmer le retour</button>' +
        '<button class="topbar-btn secondary" data-rid="' + r.id + '" onclick="prolongerLocation(this.dataset.rid)">📅 Prolonger</button>')
-    : ('<button class="topbar-btn secondary" style="color:var(--red);border-color:var(--red);" data-rid="' + r.id + '" onclick="cancelRental(this.dataset.rid)">❌ Annuler la location</button>');
+    : (mode === 'returns')
+    ? '' // consultation uniquement — aucune action de retour ici
+    // ★ Retour anticipé : depuis la fiche normale d'une location en cours
+    //   (ni en retard, ni dans "Retours aujourd'hui"), on peut modifier la
+    //   date/heure de retour ci-dessus (déjà éditable) PUIS confirmer
+    //   directement le retour — sans attendre la date prévue ni passer par
+    //   la liste des retards.
+    : ('<button class="topbar-btn primary" data-rid="' + r.id + '" onclick="terminerLocation(this.dataset.rid)">✅ Confirmer le retour</button>' +
+       '<button class="topbar-btn secondary" style="color:var(--red);border-color:var(--red);" data-rid="' + r.id + '" onclick="cancelRental(this.dataset.rid)">❌ Annuler la location</button>');
   // ★ Point 1 : suppression définitive toujours disponible, quel que soit le statut.
   actionsHTML += '<button class="topbar-btn secondary" style="color:var(--text3);" data-rid="' + r.id + '" onclick="deleteReservationPermanently(this.dataset.rid)">🗑 Supprimer définitivement</button>';
 
@@ -732,19 +817,43 @@ function viewRental(id, mode) {
     '<input class="form-input" id="rd-ref" value="' + (r.contractRef||r.id||'') + '" style="font-weight:700;">' +
     '<div style="font-size:11px;color:var(--text3);margin-top:3px;">Modifiable — synchronisé Paiements, Clients, Tableau de bord</div></div>' +
 
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">' +
-    _infoCell('Client', '<strong>' + (r.client||'') + '</strong>') +
-    _infoCell('Téléphone', r.phone||'—') +
-    _infoCell('Véhicule', r.car||'—') +
-    _infoCell('Durée', (r.days||'—') + ' jours') +
+    '<div class="form-row">' +
+    '<div class="form-group"><label class="form-label">Client</label><input class="form-input" id="rd-client" value="' + (r.client||'').replace(/"/g,'&quot;') + '"></div>' +
+    '<div class="form-group"><label class="form-label">Téléphone</label><input class="form-input" id="rd-phone" value="' + (r.phone||'').replace(/"/g,'&quot;') + '"></div>' +
     '</div>' +
 
-    // ★ CORRECTIF (item 2) : dates ET heures de départ/retour désormais
-    //   modifiables directement depuis cette fiche, sans recréer la location.
+    // ★ Véhicule MODIFIABLE : en cas d'erreur de saisie, on peut changer de
+    //   voiture depuis la fiche. L'ancienne redevient disponible et la
+    //   nouvelle passe en louée automatiquement (voir saveRentalChanges).
+    '<div class="form-group"><label class="form-label">Véhicule</label>' +
+    '<select class="form-select" id="rd-car">' +
+    (function(){
+      var out = '';
+      aslFleet().forEach(function(c) {
+        var units = (typeof ASLDB !== 'undefined' && ASLDB.normalizeUnits) ? ASLDB.normalizeUnits(c) : [];
+        if (units.length) {
+          units.forEach(function(u) {
+            var sel = (String(c.id) === String(r.carId) && (u.plate||'') === (r.assignedPlate||'')) ? ' selected' : '';
+            out += '<option value="' + c.id + '" data-plate="' + (u.plate||'') + '" data-color="' + (u.color||'') + '"' + sel + '>' +
+                   c.name + ' — ' + (u.plate||'sans plaque') + '</option>';
+          });
+        } else {
+          var sel2 = (String(c.id) === String(r.carId)) ? ' selected' : '';
+          out += '<option value="' + c.id + '" data-plate="' + (c.plate||'') + '"' + sel2 + '>' + c.name + '</option>';
+        }
+      });
+      return out;
+    })() +
+    '</select></div>' +
+
+    // ★ CORRECTIF (item 2) : dates, heures ET nombre de jours modifiables.
+    //   Modifier le nombre de jours recalcule la date de retour ET le
+    //   montant total automatiquement (plus besoin de calculatrice).
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">' +
-    '<div class="form-group"><label class="form-label">Date départ</label><input type="date" class="form-input" id="rd-start-date" value="' + (r.startDate||'') + '"></div>' +
+    '<div class="form-group"><label class="form-label">Date départ</label><input type="date" class="form-input" id="rd-start-date" value="' + (r.startDate||'') + '" onchange="rdDaysToEnd()"></div>' +
     '<div class="form-group"><label class="form-label">Heure départ</label><input type="time" class="form-input" id="rd-start-time" value="' + (r.startTime||'10:00') + '"></div>' +
-    '<div class="form-group"><label class="form-label">Date retour</label><input type="date" class="form-input" id="rd-end-date" value="' + (r.endDate||'') + '"></div>' +
+    '<div class="form-group"><label class="form-label">Nombre de jours</label><input type="number" min="1" class="form-input" id="rd-days" value="' + (r.days||1) + '" oninput="rdDaysToEnd()"></div>' +
+    '<div class="form-group"><label class="form-label">Date retour</label><input type="date" class="form-input" id="rd-end-date" value="' + (r.endDate||'') + '" onchange="rdEndToDays()"></div>' +
     '<div class="form-group"><label class="form-label">Heure retour</label><input type="time" class="form-input" id="rd-end-time" value="' + (r.endTime||'10:00') + '"></div>' +
     '</div>' +
 
@@ -762,7 +871,7 @@ function viewRental(id, mode) {
     //   aussi modifiable directement (ex. remise ponctuelle sur le total).
     '<div class="form-row">' +
     '<div class="form-group"><label class="form-label">Prix / jour (MAD)</label>' +
-    '<input class="form-input" type="number" id="rd-ppu" value="' + (r.pricePerDay || Math.round(total/Math.max(1,r.days||1))) + '" oninput="rdRecalcTotal(' + (r.days||1) + ')"></div>' +
+    '<input class="form-input" type="number" id="rd-ppu" value="' + (r.pricePerDay || Math.round(total/Math.max(1,r.days||1))) + '" oninput="rdRecalcTotal()"></div>' +
     '<div class="form-group"><label class="form-label">Total (MAD)</label>' +
     '<input class="form-input" type="number" id="rd-total" value="' + total + '" oninput="rdPayCalc(parseFloat(this.value)||0)"></div>' +
     '</div>' +
@@ -778,7 +887,7 @@ function viewRental(id, mode) {
     '<div class="form-group"><label class="form-label">Encaissé par</label>' +
     '<select class="form-select" id="rd-collected-by">' +
     '<option value=""' + (!r.collectedBy?' selected':'') + '>— Non renseigné —</option>' +
-    ['Mohamed','Younes','Khalid'].map(function(m) {
+    ['Mohamed','Younes','Khalil'].map(function(m) {
       return '<option' + (r.collectedBy===m?' selected':'') + '>' + m + '</option>';
     }).join('') +
     '</select></div>' +
@@ -821,10 +930,64 @@ function _infoCell(label, val) {
 /* ★ CORRECTIF (point 9) — Recalcule le Total (MAD) quand le prix/jour change,
    puis met à jour l'affichage payé/reste. Le Total reste lui-même
    directement modifiable (remise ponctuelle) via son propre champ. */
+/* ★ Nombre de jours → date de retour + recalcul automatique du montant.
+   Plus besoin de recalculer quoi que ce soit à la main. */
+/* ★ Mêmes fonctions que la fiche Location, pour la fiche Réservation
+   (préfixe vr-) : nb de jours <-> date de retour, avec recalcul auto du
+   montant total à chaque changement. */
+function vrDaysToEnd() {
+  var sEl = document.getElementById('vr-start-date'), dEl = document.getElementById('vr-days'), eEl = document.getElementById('vr-end-date');
+  if (!sEl || !dEl || !eEl || !sEl.value) return;
+  var days = parseInt(dEl.value, 10);
+  if (!days || days < 1) return;
+  var d = new Date(sEl.value + 'T00:00:00'); d.setDate(d.getDate() + days);
+  eEl.value = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  vrRecalcTotal();
+}
+function vrEndToDays() {
+  var sEl = document.getElementById('vr-start-date'), dEl = document.getElementById('vr-days'), eEl = document.getElementById('vr-end-date');
+  if (!sEl || !dEl || !eEl || !sEl.value || !eEl.value) return;
+  var days = Math.round((new Date(eEl.value+'T00:00:00') - new Date(sEl.value+'T00:00:00')) / 86400000);
+  if (days >= 1) { dEl.value = days; vrRecalcTotal(); }
+}
+function vrRecalcTotal() {
+  var ppuEl = document.getElementById('vr-ppu'), totalEl = document.getElementById('vr-total'), daysEl = document.getElementById('vr-days');
+  if (!ppuEl || !totalEl) return;
+  var days = daysEl ? parseInt(daysEl.value, 10) : 1;
+  var ppu = parseFloat(ppuEl.value) || 0;
+  totalEl.value = ppu * (days || 1);
+  vrPayCalc(parseFloat(totalEl.value) || 0);
+}
+
+function rdDaysToEnd() {
+  var sEl = document.getElementById('rd-start-date');
+  var dEl = document.getElementById('rd-days');
+  var eEl = document.getElementById('rd-end-date');
+  if (!sEl || !dEl || !eEl || !sEl.value) return;
+  var days = parseInt(dEl.value, 10);
+  if (!days || days < 1) return;
+  var d = new Date(sEl.value + 'T00:00:00');
+  d.setDate(d.getDate() + days);
+  eEl.value = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  rdRecalcTotal(days);
+}
+/* Date de retour → nombre de jours + recalcul automatique du montant. */
+function rdEndToDays() {
+  var sEl = document.getElementById('rd-start-date');
+  var dEl = document.getElementById('rd-days');
+  var eEl = document.getElementById('rd-end-date');
+  if (!sEl || !dEl || !eEl || !sEl.value || !eEl.value) return;
+  var days = Math.round((new Date(eEl.value + 'T00:00:00') - new Date(sEl.value + 'T00:00:00')) / 86400000);
+  if (days >= 1) { dEl.value = days; rdRecalcTotal(days); }
+}
+
 function rdRecalcTotal(days) {
   var ppuEl = document.getElementById('rd-ppu');
   var totalEl = document.getElementById('rd-total');
+  var daysEl = document.getElementById('rd-days');
   if (!ppuEl || !totalEl) return;
+  // Le nombre de jours du champ fait foi (il peut venir d'être modifié).
+  if (days == null && daysEl) days = parseInt(daysEl.value, 10);
   var ppu = parseFloat(ppuEl.value) || 0;
   totalEl.value = ppu * (days || 1);
   rdPayCalc(parseFloat(totalEl.value) || 0);
@@ -856,6 +1019,9 @@ function saveRentalChanges(id, totalFallback) {
   var newRef  = (document.getElementById('rd-ref')  && document.getElementById('rd-ref').value)  || '';
   var newMode = (document.getElementById('rd-mode') && document.getElementById('rd-mode').value) || 'Espèces';
   var newCollectedBy = (document.getElementById('rd-collected-by') && document.getElementById('rd-collected-by').value) || '';
+  // ★ « Encaissé par » : obligatoire uniquement s'il y a réellement un
+  //   montant encaissé — jamais forcé si le montant reçu est à 0.
+  if (newPaid > 0 && !newCollectedBy) { alert('Un montant reçu est indiqué : merci de préciser qui l\'a encaissé (Mohamed / Younes / Khalil).'); return; }
   // ★ CORRECTIF (item 2) : dates/heures modifiables directement depuis la fiche.
   var newStartDate = (document.getElementById('rd-start-date') && document.getElementById('rd-start-date').value) || '';
   var newStartTime = (document.getElementById('rd-start-time') && document.getElementById('rd-start-time').value) || '10:00';
@@ -865,11 +1031,49 @@ function saveRentalChanges(id, totalFallback) {
 
   var res = aslRes();
   var r = res.find(function(x) { return String(x.id) === String(id); });
+
+  // ★ CHANGEMENT DE VÉHICULE : si l'admin a corrigé la voiture, on libère
+  //   l'ancienne unité (elle redevient disponible) et on occupe la nouvelle.
+  var carSel = document.getElementById('rd-car');
+  var newCarId = carSel ? parseInt(carSel.value, 10) : null;
+  var newPlate = carSel && carSel.options[carSel.selectedIndex] ? (carSel.options[carSel.selectedIndex].getAttribute('data-plate') || '') : '';
+  var newColor = carSel && carSel.options[carSel.selectedIndex] ? (carSel.options[carSel.selectedIndex].getAttribute('data-color') || '') : '';
+  var carChanged = r && newCarId && (String(newCarId) !== String(r.carId) || newPlate !== (r.assignedPlate || ''));
+
+  // ★ Nombre de jours modifiable : il fait foi pour la durée enregistrée.
+  var newDaysEl = document.getElementById('rd-days');
+  var newDays = newDaysEl ? parseInt(newDaysEl.value, 10) : null;
+
+  // ★ CORRECTIF (client/téléphone non modifiables signalé) : ces champs
+  //   étaient encore en simple affichage — désormais lus et enregistrés
+  //   comme le reste.
+  var newClientR = (document.getElementById('rd-client') && document.getElementById('rd-client').value) || (r && r.client) || '';
+  var newPhoneR = (document.getElementById('rd-phone') && document.getElementById('rd-phone').value) || '';
+
   // ★ Point 9 : aucune donnée financière n'est dupliquée — cette écriture met
   //   à jour DIRECTEMENT le même enregistrement (amount/pricePerDay/paid...),
   //   qui alimente automatiquement impayés, caisse, Grand Livre et
   //   statistiques (tous calculés en direct depuis cette même réservation).
-  var patch = { paid: newPaid, amount: newTotal, pricePerDay: newPpu, paymentMode: newMode, paymentStatus: payStatus, contractRef: newRef, collectedBy: newCollectedBy };
+  var patch = { paid: newPaid, amount: newTotal, pricePerDay: newPpu, paymentMode: newMode, paymentStatus: payStatus, contractRef: newRef, collectedBy: newCollectedBy, client: newClientR, phone: newPhoneR };
+  if (newDays && newDays >= 1) patch.days = newDays;
+  if (carChanged && typeof ASLDB !== 'undefined') {
+    var fleetNow = aslFleet();
+    var newCar = fleetNow.find(function(c) { return String(c.id) === String(newCarId); });
+    // Libérer l'ancienne unité (redevient disponible)
+    if (r.carId && r.assignedPlate && typeof ASLDB.releaseUnit === 'function') {
+      try { ASLDB.releaseUnit(r.carId, r.assignedPlate); } catch (e) {}
+    }
+    // Occuper la nouvelle
+    if (typeof ASLDB.setUnitStatusByPlate === 'function' && newPlate) {
+      try { ASLDB.setUnitStatusByPlate(newCarId, newPlate, 'active'); } catch (e) {}
+    } else if (typeof ASLDB.assignUnit === 'function') {
+      try { ASLDB.assignUnit(newCarId, 'active'); } catch (e) {}
+    }
+    patch.carId = newCarId;
+    patch.car = newCar ? newCar.name : (r.car || '');
+    patch.assignedPlate = newPlate;
+    patch.assignedColor = newColor;
+  }
   var total = newTotal;
 
   if (r && newStartDate && newEndDate) {
@@ -925,6 +1129,16 @@ window._dashReturnContext = null;
 function setDashReturnContext(type, filter) {
   window._dashReturnContext = { type: type, filter: filter || null };
 }
+/* ★ CORRECTIF (pop-ups qui s'ouvraient par erreur) — Ce contexte mémorise
+   « je viens du tiroir X du Dashboard » pour y revenir en fermant la fiche.
+   Problème : si l'utilisateur naviguait ailleurs (ex. clic sur « Clients »)
+   au lieu de fermer la fiche, le contexte restait armé indéfiniment — et la
+   fermeture d'une TOUTE AUTRE fenêtre, bien plus tard, rouvrait
+   soudainement le tiroir du Dashboard. D'où les pop-ups surgissant sans
+   raison. Le contexte est désormais effacé dès qu'on change de page
+   (voir clearDashReturnContext appelé par showPage). */
+function clearDashReturnContext() { window._dashReturnContext = null; }
+
 function restoreDashReturnContext() {
   var ctx = window._dashReturnContext;
   if (!ctx) return;
@@ -976,13 +1190,27 @@ function terminerLocation(id) {
       ASLDB.releaseUnit(r.carId, r.assignedPlate);
     }
     if (ASLDB.updateReservation) {
-      // ★ Enregistre le moment RÉEL du retour (peut différer de la date
-      //   prévue si le client rend le véhicule en avance ou en retard) —
-      //   l'historique reflète ainsi ce qui s'est réellement passé.
+      // ★ CORRECTIF (point 4 — retour anticipé) : si la fiche est ouverte et
+      //   que l'admin a modifié la date/heure de retour (ex. le client rend
+      //   le véhicule plus tôt que prévu), on utilise CETTE date réelle
+      //   plutôt que de toujours forcer l'instant présent — sinon la
+      //   correction saisie était silencieusement ignorée. On recalcule
+      //   aussi la durée réelle à partir des dates effectives.
+      var endDateEl = document.getElementById('rd-end-date');
+      var endTimeEl = document.getElementById('rd-end-time');
+      var startDateEl = document.getElementById('rd-start-date');
       var now = new Date();
-      var actualEndDate = (typeof ASLDB !== 'undefined' && ASLDB.localDateISO) ? ASLDB.localDateISO(now) : now.toISOString().slice(0,10);
-      var actualEndTime = (typeof ASLDB !== 'undefined' && ASLDB.localTimeHM) ? ASLDB.localTimeHM(now) : (String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0'));
-      ASLDB.updateReservation(id, { status: 'completed', endDate: actualEndDate, endTime: actualEndTime, plannedEndDate: r.endDate, plannedEndTime: r.endTime || '' });
+      var actualEndDate = (endDateEl && endDateEl.value) ? endDateEl.value
+        : ((typeof ASLDB !== 'undefined' && ASLDB.localDateISO) ? ASLDB.localDateISO(now) : now.toISOString().slice(0,10));
+      var actualEndTime = (endTimeEl && endTimeEl.value) ? endTimeEl.value
+        : ((typeof ASLDB !== 'undefined' && ASLDB.localTimeHM) ? ASLDB.localTimeHM(now) : (String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0')));
+      var actualStartDate = (startDateEl && startDateEl.value) ? startDateEl.value : r.startDate;
+      var patch = { status: 'completed', endDate: actualEndDate, endTime: actualEndTime, plannedEndDate: r.plannedEndDate || r.endDate, plannedEndTime: r.plannedEndTime || r.endTime || '' };
+      if (actualStartDate && actualEndDate) {
+        var realDays = Math.max(1, Math.round((new Date(actualEndDate) - new Date(actualStartDate)) / 86400000));
+        patch.days = realDays;
+      }
+      ASLDB.updateReservation(id, patch);
     }
   }
   if (typeof reloadData === 'function') reloadData();
@@ -1001,6 +1229,39 @@ function terminerLocation(id) {
       après remise du véhicule) : mêmes effets que "Confirmer la
       récupération", mais explicitement nommé "annulation" et enregistre
       la date/heure réelle de restitution (souvent avant la date prévue). */
+/* ★ Point 1 (Option 2) — Confirme la prise en charge d'une réservation :
+   elle devient une location active, quitte immédiatement la liste des
+   réservations, apparaît dans les véhicules loués, et toutes les
+   informations (client, véhicule, dates, paiements...) sont conservées à
+   l'identique — aucune nouvelle fiche n'est créée, c'est le même
+   enregistrement qui change simplement de statut. */
+function confirmPickup(id) {
+  var res = aslRes();
+  var r = res.find(function(x) { return String(x.id) === String(id); });
+  if (!r) return;
+  if (!confirm('Confirmer la prise en charge de « ' + (r.car||'') + ' » par ' + (r.client||'') + ' ?\nCette réservation deviendra une location active.')) return;
+  if (typeof ASLDB !== 'undefined' && ASLDB.updateReservation) {
+    ASLDB.updateReservation(id, { status: 'active', type: 'location' });
+  }
+  // ★ Le véhicule doit être marqué comme réellement occupé — sans ça, sa
+  //   fiche flotte pouvait rester sur un statut de réservation figé même
+  //   après la prise en charge (déconnecté du statut réel de la location).
+  if (r.carId != null && typeof ASLDB !== 'undefined') {
+    if (r.assignedPlate && typeof ASLDB.setUnitStatusByPlate === 'function') {
+      ASLDB.setUnitStatusByPlate(r.carId, r.assignedPlate, 'active');
+    } else if (typeof ASLDB.assignUnit === 'function') {
+      ASLDB.assignUnit(r.carId, 'active');
+    }
+  }
+  if (typeof reloadData === 'function') reloadData();
+  renderRentals(); renderDashboard();
+  if (typeof renderAllReservations === 'function') renderAllReservations();
+  if (typeof renderFleetPage === 'function') renderFleetPage();
+  updateBadges();
+  if (typeof closeDashDrawer === 'function') closeDashDrawer();
+  showToast('Prise en charge confirmée — location active ✓');
+}
+
 function cancelReservation(id) {
   var res = aslRes();
   var r = res.find(function(x) { return String(x.id) === String(id); });
@@ -1164,6 +1425,24 @@ function nlEndToDays() {
   if (days >= 1) dEl.value = days;
 }
 
+/* ★ Point 3 (LLD) — Deuxième méthode, plus rapide, pour fixer la date de
+   fin : un nombre de mois directement, en plus du calendrier existant
+   (conservé intact). Le résultat reste ensuite modifiable librement via le
+   calendrier, comme n'importe quelle autre date de fin. */
+function nlApplyLLDMonths(months) {
+  months = parseInt(months, 10);
+  var sEl = document.getElementById('nl-start');
+  var eEl = document.getElementById('nl-end');
+  if (!months) return;
+  if (!sEl || !sEl.value) { alert('Choisissez d\'abord la date de départ.'); return; }
+  if (!eEl) return;
+  var d = new Date(sEl.value + 'T00:00:00');
+  d.setMonth(d.getMonth() + months);
+  eEl.value = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  nlEndToDays();
+  try { eEl.dispatchEvent(new Event('change')); } catch (e) {}
+}
+
 function _buildNewLocationModal(isLLD) {
   // Garantit la présence du bouton #modal-save même si un autre module (LLD…)
   // a remplacé le pied de page du pop-up partagé juste avant.
@@ -1186,9 +1465,15 @@ function _buildNewLocationModal(isLLD) {
     var units = (typeof ASLDB !== 'undefined' && ASLDB.normalizeUnits) ? ASLDB.normalizeUnits(c) : null;
     if (units && units.length) {
       return units.map(function(u, i) {
-        var av = (u.status||'available') === 'available';
-        return '<option value="' + c.id + '" data-unit="' + i + '" data-plate="' + (u.plate||'') + '" data-color="' + (u.color||'') + '" data-ppu="' + ppu + '"' + (av ? '' : ' disabled') + '>' +
-          c.name + ' — ' + (u.plate||'sans plaque') + (u.color ? ' · ' + u.color : '') + ' — ' + ppu + ' MAD/j' + (av ? '' : ' (occupée)') + '</option>';
+        // ★ CORRECTIF RACINE (2e bug) : on n'interdit PLUS la sélection à
+        //   partir d'un drapeau stocké. Une voiture réservée pour une date
+        //   FUTURE doit rester louable aujourd'hui. L'occupation affichée
+        //   est celle de l'instant présent (simple information) ; le refus
+        //   éventuel vient uniquement du contrôle de chevauchement RÉEL des
+        //   dates au moment d'enregistrer (checkAvailability).
+        var busyNow = (typeof ASLDB !== 'undefined' && ASLDB.unitBusyAt) ? ASLDB.unitBusyAt(c.id, u.plate) : ((u.status||'available') !== 'available');
+        return '<option value="' + c.id + '" data-unit="' + i + '" data-plate="' + (u.plate||'') + '" data-color="' + (u.color||'') + '" data-ppu="' + ppu + '">' +
+          c.name + ' — ' + (u.plate||'sans plaque') + (u.color ? ' · ' + u.color : '') + ' — ' + ppu + ' MAD/j' + (busyNow ? ' (louée actuellement)' : '') + '</option>';
       }).join('');
     }
     return '<option value="' + c.id + '" data-ppu="' + ppu + '">' + c.name + ' (' + (c.plate||'') + ') — ' + ppu + ' MAD/j</option>';
@@ -1231,6 +1516,14 @@ function _buildNewLocationModal(isLLD) {
     '<div class="form-group"><label class="form-label">Date départ</label><input type="date" class="form-input" id="nl-start"></div>' +
     '<div class="form-group"><label class="form-label">Heure départ</label><input type="time" class="form-input" id="nl-start-time" value="10:00"></div>' +
     '</div>' +
+    (isLLD ?
+      '<div class="form-group"><label class="form-label">Durée rapide (facultatif)</label>' +
+      '<select class="form-select" id="nl-lld-months" onchange="nlApplyLLDMonths(this.value)">' +
+      '<option value="">— Utiliser le calendrier ci-dessous —</option>' +
+      Array.from({length:12}, function(_,i){ var m=i+1; return '<option value="'+m+'">'+m+' mois</option>'; }).join('') +
+      '</select>' +
+      '<div style="font-size:11px;color:var(--text3);margin-top:4px;">Calcule automatiquement la date de fin — vous pouvez toujours l\'ajuster manuellement ensuite via le calendrier.</div></div>'
+      : '') +
     '<div class="form-row">' +
     '<div class="form-group"><label class="form-label">Date retour</label><input type="date" class="form-input" id="nl-end"></div>' +
     '<div class="form-group"><label class="form-label">Heure retour</label><input type="time" class="form-input" id="nl-end-time" value="10:00"></div>' +
@@ -1248,9 +1541,9 @@ function _buildNewLocationModal(isLLD) {
     '<div class="form-row">' +
     '<div class="form-group"><label class="form-label">Mode de paiement</label>' +
     '<select class="form-select" id="nl-mode"><option>Espèces</option><option>Carte bancaire</option><option>Virement</option><option>Chèque</option><option>Autre</option></select></div>' +
-    '<div class="form-group"><label class="form-label" style="color:var(--red);">Encaissé par *</label>' +
+    '<div class="form-group"><label class="form-label" >Encaissé par</label>' +
     '<select class="form-select" id="nl-collected-by" required>' +
-    '<option value="">— Sélectionner —</option><option value="Mohamed">Mohamed</option><option value="Younes">Younes</option><option value="Khalid">Khalid</option>' +
+    '<option value="">— Sélectionner —</option><option value="Mohamed">Mohamed</option><option value="Younes">Younes</option><option value="Khalil">Khalil</option>' +
     '</select></div>' +
     '</div>' +
     '<div id="nl-rest" style="font-weight:700;font-size:13px;margin-top:4px;"></div></div>' +
@@ -1382,9 +1675,10 @@ function _saveNewLocation() {
     }
   }
 
-  // ★ Point 3 : "Encaissé par" est obligatoire — indépendant de l'utilisateur connecté.
+  // ★ « Encaissé par » : obligatoire UNIQUEMENT si un montant est
+  //   réellement encaissé (paid > 0) — jamais forcé si aucun paiement.
   var nlCollectedBy = (document.getElementById('nl-collected-by') && document.getElementById('nl-collected-by').value) || '';
-  if (!nlCollectedBy) { alert('Merci de renseigner « Encaissé par » avant d\'enregistrer.'); return; }
+  if (paid > 0 && !nlCollectedBy) { alert('Un montant a été saisi comme reçu : merci d\'indiquer qui l\'a encaissé (Mohamed / Younes / Khalil).'); return; }
 
   // ★ Points 5-6 : Location Longue Durée = même fiche, seul le type change,
   //   + le premier versement initialise un historique de paiements LIBRE
@@ -1486,19 +1780,48 @@ function viewRes(id) {
     '<div class="form-group"><label class="form-label">N° Contrat</label>' +
     '<input class="form-input" id="vr-ref" value="' + (r.contractRef||r.id||'') + '" style="font-weight:700;">' +
     '<div style="font-size:11px;color:var(--text3);margin-top:3px;">Modifiable — synchronisé avec Paiements, Clients et Tableau de bord</div></div>' +
+    // ★ MISSION « FINI TOUT » (point 1) : absolument tout devient modifiable
+    //   (client, téléphone, véhicule, dates, durée, prix), pas seulement le
+    //   paiement. Le montant se recalcule automatiquement, comme à la
+    //   création.
+    '<div class="form-row">' +
+    '<div class="form-group"><label class="form-label">Client</label><input class="form-input" id="vr-client" value="' + (r.client||'').replace(/"/g,'&quot;') + '"></div>' +
+    '<div class="form-group"><label class="form-label">Téléphone</label><input class="form-input" id="vr-phone" value="' + (r.phone||'').replace(/"/g,'&quot;') + '"></div>' +
+    '</div>' +
+    '<div class="form-group"><label class="form-label">Véhicule</label>' +
+    '<select class="form-select" id="vr-car">' +
+    (function(){
+      var out = '';
+      aslFleet().forEach(function(c) {
+        var units = (typeof ASLDB !== 'undefined' && ASLDB.normalizeUnits) ? ASLDB.normalizeUnits(c) : [];
+        if (units.length) {
+          units.forEach(function(u) {
+            var sel = (String(c.id) === String(r.carId) && (u.plate||'') === (r.assignedPlate||'')) ? ' selected' : '';
+            out += '<option value="' + c.id + '" data-plate="' + (u.plate||'') + '" data-color="' + (u.color||'') + '"' + sel + '>' + c.name + ' — ' + (u.plate||'sans plaque') + '</option>';
+          });
+        } else {
+          var sel2 = (String(c.id) === String(r.carId)) ? ' selected' : '';
+          out += '<option value="' + c.id + '" data-plate="' + (c.plate||'') + '"' + sel2 + '>' + c.name + '</option>';
+        }
+      });
+      return out;
+    })() +
+    '</select></div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">' +
+    '<div class="form-group"><label class="form-label">Date départ</label><input type="date" class="form-input" id="vr-start-date" value="' + (r.startDate||'') + '" onchange="vrDaysToEnd()"></div>' +
+    '<div class="form-group"><label class="form-label">Heure départ</label><input type="time" class="form-input" id="vr-start-time" value="' + (r.startTime||'10:00') + '"></div>' +
+    '<div class="form-group"><label class="form-label">Nombre de jours</label><input type="number" min="1" class="form-input" id="vr-days" value="' + (r.days||1) + '" oninput="vrDaysToEnd()"></div>' +
+    '<div class="form-group"><label class="form-label">Date retour</label><input type="date" class="form-input" id="vr-end-date" value="' + (r.endDate||'') + '" onchange="vrEndToDays()"></div>' +
+    '<div class="form-group"><label class="form-label">Heure retour</label><input type="time" class="form-input" id="vr-end-time" value="' + (r.endTime||'10:00') + '"></div>' +
+    '<div class="form-group"><label class="form-label">Lieu de prise en charge</label><input class="form-input" id="vr-pickup" list="dl-pickup-options" value="' + (r.pickup||'').replace(/"/g,'&quot;') + '"></div>' +
+    '</div>' +
     '<div class="res-detail-grid">' +
-    _rCell('Client',       '<strong>' + (r.client||'') + '</strong>') +
-    _rCell('Téléphone',    r.phone||'—') +
     _rCell('Email',        '<span style="font-size:12px;">' + (r.email||'—') + '</span>') +
     _rCell('Nationalité',  r.nationality||'—') +
-    _rCell('Véhicule',     r.car||'—') +
-    _rCell('Durée',        (r.days||'—') + ' jours') +
-    _rCell('Départ',       (r.pickup||'') + '<br><small>' + fmtD(r.startDate||'') + (r.startTime ? ' à ' + r.startTime : '') + '</small>') +
-    _rCell('Retour',       fmtD(r.endDate||'') + (r.endTime ? ' à ' + r.endTime : '')) +
     _rCell('Source',       '<span class="badge badge-gray">' + (r.source||'—') + '</span>' + ((r.source==='phone'||r.source==='manual')?' <span style="font-size:10px;background:rgba(0,0,0,.07);padding:2px 6px;border-radius:4px;">Manuelle</span>':'')) +
     _rCell('Statut',       statusBadge(r.status)) +
     '</div>' +
-    '<div style="font-size:22px;font-weight:800;color:var(--red);margin:12px 0;">' + fmtMAD(total) + '</div>' +
+    '<div style="font-size:22px;font-weight:800;color:var(--red);margin:12px 0;" id="vr-total-display-top">' + fmtMAD(total) + '</div>' +
     ((r.status !== 'cancelled' && r.status !== 'completed') ?
       (function() {
         // ★ CORRECTIF : le bouton et l'action doivent correspondre au TYPE
@@ -1518,8 +1841,12 @@ function viewRes(id) {
     '<div style="background:rgba(18,22,30,.04);border-radius:10px;padding:14px;">' +
     '<div style="font-weight:700;margin-bottom:10px;color:var(--red);">Paiement</div>' +
     '<div class="form-row">' +
+    '<div class="form-group"><label class="form-label">Prix / jour (MAD)</label>' +
+    '<input class="form-input" type="number" id="vr-ppu" value="' + (r.pricePerDay || Math.round(total/Math.max(1,r.days||1))) + '" oninput="vrRecalcTotal()"></div>' +
     '<div class="form-group"><label class="form-label">Total (MAD)</label>' +
     '<input class="form-input" type="number" id="vr-total" value="' + total + '" oninput="vrPayCalc(parseFloat(this.value)||0)"></div>' +
+    '</div>' +
+    '<div class="form-row">' +
     '<div class="form-group"><label class="form-label">Montant reçu (MAD)</label>' +
     '<input class="form-input" type="number" id="vr-paid" value="' + paid + '" oninput="vrPayCalc(parseFloat(document.getElementById(\'vr-total\').value)||' + total + ')"></div>' +
     '</div>' +
@@ -1531,7 +1858,7 @@ function viewRes(id) {
     '<div class="form-group"><label class="form-label">Encaissé par</label>' +
     '<select class="form-select" id="vr-collected-by">' +
     '<option value=""' + (!r.collectedBy?' selected':'') + '>— Non renseigné —</option>' +
-    ['Mohamed','Younes','Khalid'].map(function(m){ return '<option' + (r.collectedBy===m?' selected':'') + '>' + m + '</option>'; }).join('') +
+    ['Mohamed','Younes','Khalil'].map(function(m){ return '<option' + (r.collectedBy===m?' selected':'') + '>' + m + '</option>'; }).join('') +
     '</select></div>' +
     '</div>' +
     '<div id="vr-rest" style="font-weight:700;font-size:13px;margin-top:6px;"></div></div>' +
@@ -1553,10 +1880,47 @@ function viewRes(id) {
       var newRef  = (document.getElementById('vr-ref') &&document.getElementById('vr-ref').value)  || r.contractRef || r.id;
       var newMode = (document.getElementById('vr-mode')&&document.getElementById('vr-mode').value) || r.paymentMode;
       var newCollectedBy = (document.getElementById('vr-collected-by')&&document.getElementById('vr-collected-by').value) || '';
+      // ★ « Encaissé par » : obligatoire uniquement si un montant est reçu.
+      if (newPaid > 0 && !newCollectedBy) { alert('Un montant reçu est indiqué : merci de préciser qui l\'a encaissé (Mohamed / Younes / Khalil).'); return; }
       var payStatus = newPaid<=0 ? 'Non payé' : (newPaid>=newTotal ? 'Paiement complet' : 'Paiement partiel');
+      // ★ MISSION « FINI TOUT » (point 1) : tout est désormais modifiable —
+      //   client, téléphone, véhicule, dates, durée, prix/jour. Le montant
+      //   est déjà recalculé automatiquement à la saisie (vrRecalcTotal).
+      var newPpu = parseFloat(document.getElementById('vr-ppu')&&document.getElementById('vr-ppu').value) || 0;
+      var newClient = (document.getElementById('vr-client')&&document.getElementById('vr-client').value) || r.client;
+      var newPhone = (document.getElementById('vr-phone')&&document.getElementById('vr-phone').value) || '';
+      var newPickup = (document.getElementById('vr-pickup')&&document.getElementById('vr-pickup').value) || r.pickup || '';
+      var newStartDate = (document.getElementById('vr-start-date')&&document.getElementById('vr-start-date').value) || r.startDate;
+      var newStartTime = (document.getElementById('vr-start-time')&&document.getElementById('vr-start-time').value) || r.startTime || '10:00';
+      var newEndDate = (document.getElementById('vr-end-date')&&document.getElementById('vr-end-date').value) || r.endDate;
+      var newEndTime = (document.getElementById('vr-end-time')&&document.getElementById('vr-end-time').value) || r.endTime || '10:00';
+      var newDaysEl = document.getElementById('vr-days');
+      var newDays = newDaysEl ? parseInt(newDaysEl.value, 10) : r.days;
+      var patch = { paid: newPaid, amount: newTotal, pricePerDay: newPpu, paymentMode: newMode, paymentStatus: payStatus, contractRef: newRef, collectedBy: newCollectedBy,
+                    client: newClient, phone: newPhone, pickup: newPickup,
+                    startDate: newStartDate, startTime: newStartTime, endDate: newEndDate, endTime: newEndTime };
+      if (newDays && newDays >= 1) patch.days = newDays;
+      // Changement de véhicule éventuel (même logique que la fiche Location).
+      var carSelR = document.getElementById('vr-car');
+      var newCarIdR = carSelR ? parseInt(carSelR.value, 10) : null;
+      var newPlateR = carSelR && carSelR.options[carSelR.selectedIndex] ? (carSelR.options[carSelR.selectedIndex].getAttribute('data-plate') || '') : '';
+      var newColorR = carSelR && carSelR.options[carSelR.selectedIndex] ? (carSelR.options[carSelR.selectedIndex].getAttribute('data-color') || '') : '';
+      if (newCarIdR && (String(newCarIdR) !== String(r.carId) || newPlateR !== (r.assignedPlate || '')) && typeof ASLDB !== 'undefined') {
+        var fleetR = aslFleet();
+        var newCarR = fleetR.find(function(c) { return String(c.id) === String(newCarIdR); });
+        if (r.carId && r.assignedPlate && typeof ASLDB.releaseUnit === 'function') { try { ASLDB.releaseUnit(r.carId, r.assignedPlate); } catch(e) {} }
+        // Si la réservation est déjà "louée" (phase active), on occupe la nouvelle unité tout de suite ;
+        // sinon (simple réservation à venir), rien à occuper avant la prise en charge.
+        var phaseNow = (typeof ASLDB.computePhase === 'function') ? ASLDB.computePhase(r) : 'reserved';
+        if (phaseNow === 'active' || phaseNow === 'late') {
+          if (typeof ASLDB.setUnitStatusByPlate === 'function' && newPlateR) { try { ASLDB.setUnitStatusByPlate(newCarIdR, newPlateR, 'active'); } catch(e) {} }
+          else if (typeof ASLDB.assignUnit === 'function') { try { ASLDB.assignUnit(newCarIdR, 'active'); } catch(e) {} }
+        }
+        patch.carId = newCarIdR; patch.car = newCarR ? newCarR.name : (r.car||''); patch.assignedPlate = newPlateR; patch.assignedColor = newColorR;
+      }
       if (r.status==='pending' && typeof confirmRes==='function') { confirmRes(id); }
       if (typeof ASLDB!=='undefined' && ASLDB.updateReservation) {
-        ASLDB.updateReservation(id, { paid: newPaid, amount: newTotal, paymentMode: newMode, paymentStatus: payStatus, contractRef: newRef, collectedBy: newCollectedBy });
+        ASLDB.updateReservation(id, patch);
       }
       if (typeof reloadData==='function') reloadData();
       if (typeof renderAllReservations==='function') renderAllReservations();
@@ -1597,12 +1961,35 @@ function viewUnpaidFiche(id) {
       var slName = subLeaseNameFor(r);
       return slName ? '<div style="background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.25);border-radius:10px;padding:10px 14px;margin-bottom:12px;"><div style="font-size:11px;color:#8b5cf6;font-weight:700;text-transform:uppercase;letter-spacing:.4px;">Sous-location</div><div style="font-weight:800;font-size:15px;">' + slName + '</div></div>' : '';
     })() +
-    '<div class="res-detail-grid">' +
-    _rCell('Client',    '<strong>' + (r.client||'') + '</strong>') +
-    _rCell('Téléphone', r.phone||'—') +
-    _rCell('Véhicule',  r.car||'—') +
-    _rCell('Contrat',   r.contractRef||r.id) +
+    // ★ MISSION (« tout modifiable, partout ») : cette fiche (ouverte depuis
+    //   Impayés) n'avait ENCORE que le paiement modifiable — contrat,
+    //   client, téléphone, véhicule restaient en simple affichage. Corrigé :
+    //   tout est désormais modifiable, comme dans les autres fiches.
+    '<div class="form-group"><label class="form-label">N° Contrat</label>' +
+    '<input class="form-input" id="vr-ref" value="' + (r.contractRef||r.id||'').toString().replace(/"/g,'&quot;') + '" style="font-weight:700;"></div>' +
+    '<div class="form-row">' +
+    '<div class="form-group"><label class="form-label">Client</label><input class="form-input" id="vr-client" value="' + (r.client||'').replace(/"/g,'&quot;') + '"></div>' +
+    '<div class="form-group"><label class="form-label">Téléphone</label><input class="form-input" id="vr-phone" value="' + (r.phone||'').replace(/"/g,'&quot;') + '"></div>' +
     '</div>' +
+    '<div class="form-group"><label class="form-label">Véhicule</label>' +
+    '<select class="form-select" id="vr-car">' +
+    (function(){
+      var out = '';
+      aslFleet().forEach(function(c) {
+        var units = (typeof ASLDB !== 'undefined' && ASLDB.normalizeUnits) ? ASLDB.normalizeUnits(c) : [];
+        if (units.length) {
+          units.forEach(function(u) {
+            var sel = (String(c.id) === String(r.carId) && (u.plate||'') === (r.assignedPlate||'')) ? ' selected' : '';
+            out += '<option value="' + c.id + '" data-plate="' + (u.plate||'') + '" data-color="' + (u.color||'') + '"' + sel + '>' + c.name + ' — ' + (u.plate||'sans plaque') + '</option>';
+          });
+        } else {
+          var sel2 = (String(c.id) === String(r.carId)) ? ' selected' : '';
+          out += '<option value="' + c.id + '" data-plate="' + (c.plate||'') + '"' + sel2 + '>' + c.name + '</option>';
+        }
+      });
+      return out;
+    })() +
+    '</select></div>' +
     '<div style="font-size:22px;font-weight:800;color:var(--red);margin:12px 0;" id="vr-total-display">' + fmtMAD(total) + '</div>' +
     '<div style="background:rgba(18,22,30,.04);border-radius:10px;padding:14px;">' +
     '<div style="font-weight:700;margin-bottom:10px;color:var(--red);">Paiement</div>' +
@@ -1620,7 +2007,7 @@ function viewUnpaidFiche(id) {
     '<div class="form-group"><label class="form-label">Encaissé par</label>' +
     '<select class="form-select" id="vr-collected-by">' +
     '<option value=""' + (!r.collectedBy?' selected':'') + '>— Non renseigné —</option>' +
-    ['Mohamed','Younes','Khalid'].map(function(m){ return '<option' + (r.collectedBy===m?' selected':'') + '>' + m + '</option>'; }).join('') +
+    ['Mohamed','Younes','Khalil'].map(function(m){ return '<option' + (r.collectedBy===m?' selected':'') + '>' + m + '</option>'; }).join('') +
     '</select></div>' +
     '</div>' +
     '<div id="vr-rest" style="font-weight:700;font-size:13px;margin-top:6px;"></div></div>';
@@ -1636,9 +2023,25 @@ function viewUnpaidFiche(id) {
       var newPaid = parseFloat(document.getElementById('vr-paid') && document.getElementById('vr-paid').value || 0);
       var newMode = (document.getElementById('vr-mode') && document.getElementById('vr-mode').value) || r.paymentMode;
       var newCollectedBy = (document.getElementById('vr-collected-by') && document.getElementById('vr-collected-by').value) || '';
+      // ★ « Encaissé par » : obligatoire uniquement si un montant est reçu.
+      if (newPaid > 0 && !newCollectedBy) { alert('Un montant reçu est indiqué : merci de préciser qui l\'a encaissé (Mohamed / Younes / Khalil).'); return; }
       var payStatus = newPaid<=0 ? 'Non payé' : (newPaid>=newTotal ? 'Paiement complet' : 'Paiement partiel');
+      var newRefU = (document.getElementById('vr-ref') && document.getElementById('vr-ref').value) || r.contractRef || r.id;
+      var newClientU = (document.getElementById('vr-client') && document.getElementById('vr-client').value) || r.client;
+      var newPhoneU = (document.getElementById('vr-phone') && document.getElementById('vr-phone').value) || '';
+      var patchU = { paid: newPaid, amount: newTotal, paymentMode: newMode, paymentStatus: payStatus, collectedBy: newCollectedBy, contractRef: newRefU, client: newClientU, phone: newPhoneU };
+      var carSelU = document.getElementById('vr-car');
+      var newCarIdU = carSelU ? parseInt(carSelU.value, 10) : null;
+      if (newCarIdU && (String(newCarIdU) !== String(r.carId)) && typeof ASLDB !== 'undefined') {
+        var fleetU = aslFleet();
+        var newCarU = fleetU.find(function(c) { return String(c.id) === String(newCarIdU); });
+        var newPlateU = carSelU.options[carSelU.selectedIndex] ? (carSelU.options[carSelU.selectedIndex].getAttribute('data-plate') || '') : '';
+        if (r.carId && r.assignedPlate && typeof ASLDB.releaseUnit === 'function') { try { ASLDB.releaseUnit(r.carId, r.assignedPlate); } catch(e) {} }
+        if (typeof ASLDB.setUnitStatusByPlate === 'function' && newPlateU) { try { ASLDB.setUnitStatusByPlate(newCarIdU, newPlateU, 'active'); } catch(e) {} }
+        patchU.carId = newCarIdU; patchU.car = newCarU ? newCarU.name : (r.car||''); patchU.assignedPlate = newPlateU;
+      }
       if (typeof ASLDB!=='undefined' && ASLDB.updateReservation) {
-        ASLDB.updateReservation(id, { paid: newPaid, amount: newTotal, paymentMode: newMode, paymentStatus: payStatus, collectedBy: newCollectedBy });
+        ASLDB.updateReservation(id, patchU);
       }
       if (typeof reloadData==='function') reloadData();
       if (typeof renderAllReservations==='function') renderAllReservations();
@@ -1778,7 +2181,9 @@ function vrPayCalc(total) {
   var paidEl = document.getElementById('vr-paid');
   var restEl = document.getElementById('vr-rest');
   var totalDisplay = document.getElementById('vr-total-display');
+  var totalDisplayTop = document.getElementById('vr-total-display-top');
   if (totalDisplay) totalDisplay.textContent = fmtMAD(total);
+  if (totalDisplayTop) totalDisplayTop.textContent = fmtMAD(total);
   if (!paidEl || !restEl) return;
   var paid = parseFloat(paidEl.value)||0, reste = Math.max(0, total-paid);
   var statut, col;

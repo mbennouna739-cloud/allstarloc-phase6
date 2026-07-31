@@ -330,7 +330,7 @@ function renderCustomers() {
     res.forEach(function(r) {
       var key = _custId(r.email, r.client);
       if (!customers[key]) {
-        customers[key] = { key: key, name: r.client, email: r.email || '', phone: r.phone || '', nationality: r.nationality || '', count: 0, total: 0, unpaid: 0, last: '', months: {}, origin: r.source || '' };
+        customers[key] = { key: key, name: r.client, email: r.email || '', phone: r.phone || '', nationality: r.nationality || '', count: 0, total: 0, unpaid: 0, last: '', months: {}, origin: r.source || '', vehicles: [] };
       }
       var c = customers[key];
       c.count++;
@@ -347,13 +347,22 @@ function renderCustomers() {
       if (!c.name && r.client) c.name = r.client;
       if (!c.phone && r.phone) c.phone = r.phone;
       if (!c.nationality && r.nationality) c.nationality = r.nationality;
+      // ★ Point 2 : mémorise chaque véhicule (+ immatriculation) loué par ce
+      //   client, pour permettre la recherche « par véhicule ».
+      if (r.car || r.assignedPlate) {
+        var vLabel = ((r.car||'') + ' ' + (r.assignedPlate||'')).trim();
+        if (vLabel && c.vehicles.indexOf(vLabel) < 0) c.vehicles.push(vLabel);
+      }
     });
 
     var list = Object.keys(customers).map(function(k){ return customers[k]; });
 
     if (monthFilter) list = list.filter(function(c){ return c.months[monthFilter]; });
     if (q) list = list.filter(function(c){
-      return ((c.name||'') + ' ' + (c.email||'') + ' ' + (c.phone||'')).toLowerCase().indexOf(q) >= 0;
+      // ★ Point 2 : recherche également par véhicule ou immatriculation —
+      //   saisir "Kia Picanto" ou "1234-A-56" retrouve tous les clients
+      //   ayant loué ce véhicule.
+      return ((c.name||'') + ' ' + (c.email||'') + ' ' + (c.phone||'') + ' ' + (c.vehicles||[]).join(' ')).toLowerCase().indexOf(q) >= 0;
     });
     list.sort(function(a,b){ return String(b.last).localeCompare(String(a.last)); });
 

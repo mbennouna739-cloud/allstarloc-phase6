@@ -37,6 +37,20 @@
 
   /* ---- Calculs financiers (source unique : amount / paid) ---- */
   function computeTotals(fromTs, toTs) {
+    // ★ SOURCE UNIQUE : sans filtre de période, on délègue à la fonction
+    //   partagée (ASLDB.computeCashTotals) utilisée aussi par Mobile —
+    //   impossible d'obtenir deux montants différents. Le calcul détaillé
+    //   ci-dessous ne sert plus que lorsqu'un filtre de période est demandé
+    //   (fonctionnalité propre à l'onglet Caisse Desktop).
+    if (!fromTs && !toTs && typeof ASLDB !== 'undefined' && ASLDB.computeCashTotals) {
+      var ct = ASLDB.computeCashTotals();
+      var chgTot = 0;
+      readCharges().forEach(function (c) { if (c.status !== 'pending') chgTot += Number(c.amount) || 0; });
+      return {
+        encaisse: ct.encaisse, charges: chgTot, aEncaisser: ct.reste,
+        soldeReel: ct.encaisse - chgTot, soldeEstime: ct.encaisse + ct.reste - chgTot
+      };
+    }
     var res = allReservations();
     var encaisse = 0, aEncaisser = 0;
     res.forEach(function (r) {
@@ -104,7 +118,7 @@
     //   (+ éventuels encaissements sans "Encaissé par" renseigné, pour ne
     //   jamais perdre d'argent dans le total si une ancienne donnée n'a pas
     //   ce champ).
-    var byPerson = { Mohamed: 0, Younes: 0, Khalid: 0 };
+    var byPerson = { Mohamed: 0, Younes: 0, Khalil: 0 };
     var globalCollected = 0;
     allReservations().forEach(function (r) {
       if (r.status === 'cancelled') return;
@@ -117,10 +131,10 @@
     setTxt('cs-collected-global', money(globalCollected));
     setTxt('cs-collected-mohamed', money(byPerson.Mohamed));
     setTxt('cs-collected-younes', money(byPerson.Younes));
-    setTxt('cs-collected-khalid', money(byPerson.Khalid));
+    setTxt('cs-collected-khalid', money(byPerson.Khalil));
   }
 
-  /* ★ Point 4 — Clic sur une carte (Mohamed/Younes/Khalid) : bascule vers
+  /* ★ Point 4 — Clic sur une carte (Mohamed/Younes/Khalil) : bascule vers
      l'onglet Rapports (Grand Livre) déjà filtré sur cette personne. */
   window.caisseShowCollectedBy = function (name) {
     var btn = document.querySelector('.caisse-tab[data-ctab="rapports"]');
@@ -459,7 +473,7 @@
   }
 
   /* ★ Point 4 — Filtre "Encaissé par" actif dans le Grand Livre (Mohamed /
-     Younes / Khalid / vide = tous). Appelé depuis les cartes de répartition
+     Younes / Khalil / vide = tous). Appelé depuis les cartes de répartition
      de la Caisse et depuis le menu déroulant dédié du Grand Livre. */
   var _glCollectedByFilter = '';
   window.glSetCollectedBy = function (name) {

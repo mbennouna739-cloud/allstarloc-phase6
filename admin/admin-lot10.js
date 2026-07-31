@@ -56,7 +56,8 @@ function buildNotifList() {
   });
 
   /* Retours prévus aujourd'hui */
-  res.filter(function(r){ return (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? ((r.endDate||'').slice(0,10) === ts && ASLDB.computePhase(r) === 'active') : ((r.endDate||'').slice(0,10) === ts && (r.status==='active'||r.status==='confirmed')); }).forEach(function(r){
+  // ★ Point 2 : même fonction PARTAGÉE que Mobile — aucune divergence possible.
+  (typeof ASLDB !== 'undefined' && ASLDB.selectReturnsOn ? ASLDB.selectReturnsOn(ts) : res.filter(function(r){ return (r.endDate||'').slice(0,10) === ts && (r.status==='active'||r.status==='confirmed'); })).forEach(function(r){
     items.push({
       type: 'return', icon: '🔄', color: '#3b82f6',
       title: 'Retour prévu aujourd\'hui',
@@ -66,7 +67,7 @@ function buildNotifList() {
   });
 
   /* Véhicules en retard (date+heure de retour réellement dépassées) */
-  res.filter(function(r){ return (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? ASLDB.computePhase(r) === 'late' : (r.endDate && (r.endDate||'').slice(0,10) < ts && (r.status==='active'||r.status==='confirmed')); }).forEach(function(r){
+  (typeof ASLDB !== 'undefined' && ASLDB.selectLate ? ASLDB.selectLate() : res.filter(function(r){ return r.endDate && (r.endDate||'').slice(0,10) < ts && (r.status==='active'||r.status==='confirmed'); })).forEach(function(r){
     var diff = Math.round((today - new Date(r.endDate)) / 86400000);
     items.push({
       type: 'late', icon: '⚠', color: '#ef4444',
@@ -79,34 +80,42 @@ function buildNotifList() {
   /* Entretien : rappel de vérification vidange (tous les 20 jours) + visite technique */
   var MAINT = {};
   try { MAINT = JSON.parse(localStorage.getItem('asl_maint_v1') || '{}'); } catch(e) {}
+  // ★ Point 1/2 : une notification PAR IMMATRICULATION (et non plus par
+  //   modèle) — cohérent avec le suivi d'entretien désormais par plaque.
+  //   Chaque véhicule en stock (même modèle) est vérifié individuellement.
   fleet.forEach(function(c){
-    var m = MAINT[String(c.id)] || {};
-    function check(date, label, type) {
-      if (!date) return;
-      var diff = Math.round((new Date(date) - today) / 86400000);
-      if (diff <= 7) {
-        items.push({
-          type: type, icon: '🔧', color: (diff < 0 ? '#ef4444' : '#d97706'),
-          title: label + (diff < 0 ? ' — en retard' : ' — proche'),
-          desc: c.name + (c.plate?' ('+c.plate+')':'') + ' · ' + (diff < 0 ? 'dépassé de ' + Math.abs(diff) + 'j' : 'dans ' + diff + 'j'),
-          action: 'notifGoMaint', arg: c.id
-        });
+    var units = (typeof ASLDB !== 'undefined' && ASLDB.normalizeUnits) ? ASLDB.normalizeUnits(c) : [{plate:c.plate||''}];
+    units.forEach(function(u) {
+      var key = (typeof maintKey === 'function') ? maintKey(c.id, u.plate) : (String(c.id) + '::' + (u.plate||'_'));
+      var m = MAINT[key] || MAINT[String(c.id)] || {}; // compat pendant la migration
+      var label = c.name + (u.plate ? ' (' + u.plate + ')' : '');
+      function check(date, lbl, type) {
+        if (!date) return;
+        var diff = Math.round((new Date(date) - today) / 86400000);
+        if (diff <= 7) {
+          items.push({
+            type: type, icon: '🔧', color: (diff < 0 ? '#ef4444' : '#d97706'),
+            title: lbl + (diff < 0 ? ' — en retard' : ' — proche'),
+            desc: label + ' · ' + (diff < 0 ? 'dépassé de ' + Math.abs(diff) + 'j' : 'dans ' + diff + 'j'),
+            action: 'notifGoMaint', arg: c.id
+          });
+        }
       }
-    }
-    /* Rappel vidange : vérifier le km tous les 20 jours (pas de calcul auto). */
-    if (m.reminder_next) {
-      var dd = Math.round((new Date(m.reminder_next) - today) / 86400000);
-      if (dd <= 0) {
-        var kmTxt = m.km_vidange_next ? Number(m.km_vidange_next).toLocaleString('fr-FR') + ' km' : '—';
-        items.push({
-          type: 'vidange', icon: '🔧', color: '#d97706',
-          title: 'Vérifier le kilométrage de ' + c.name,
-          desc: 'Prochaine vidange prévue à ' + kmTxt + (c.plate ? ' · ' + c.plate : ''),
-          action: 'notifGoMaint', arg: c.id
-        });
+      /* Rappel vidange : vérifier le km tous les 20 jours (pas de calcul auto). */
+      if (m.reminder_next) {
+        var dd = Math.round((new Date(m.reminder_next) - today) / 86400000);
+        if (dd <= 0) {
+          var kmTxt = m.km_vidange_next ? Number(m.km_vidange_next).toLocaleString('fr-FR') + ' km' : '—';
+          items.push({
+            type: 'vidange', icon: '🔧', color: '#d97706',
+            title: 'Vérifier le kilométrage de ' + c.name,
+            desc: 'Prochaine vidange prévue à ' + kmTxt + ' · ' + label,
+            action: 'notifGoMaint', arg: c.id
+          });
+        }
       }
-    }
-    check(m.vt_next, 'Visite technique', 'vt');
+      check(m.vt_next, 'Visite technique', 'vt');
+    });
   });
 
   /* Impayés importants */
