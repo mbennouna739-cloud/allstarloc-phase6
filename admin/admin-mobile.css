@@ -21,7 +21,7 @@
    en paysage) est ≤768px, pour rester stable dans les deux orientations
    sur un téléphone, sans affecter un vrai Desktop (qui a rarement une
    fenêtre de moins de 768px de haut). */
-@media (max-width: 768px), (max-height: 768px) and (orientation: landscape) {
+@media (max-width: 768px), (max-height: 500px) and (orientation: landscape) and (pointer: coarse) {
   /* ---- Reset léger borné à l'app (évite débordements / scroll horizontal) ---- */
   #asl-mobile-app, #asl-mobile-app * , #asl-mobile-tabbar, #asl-mobile-tabbar *,
   .ma-sheet, .ma-sheet * { box-sizing: border-box; }

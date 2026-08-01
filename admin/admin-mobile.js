@@ -30,8 +30,23 @@
   //   la largeur seule qui, elle, change radicalement selon l'orientation.
   function isMobile() {
     var isTouchPrimary = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
-    var smallestSide = Math.min(window.innerWidth, window.innerHeight);
-    return isTouchPrimary && smallestSide <= 768;
+    var w = window.innerWidth, h = window.innerHeight;
+    // ★ CORRECTIF CRITIQUE (barre latérale Desktop disparue / page blanche)
+    //   — CAUSE EXACTE : la version précédente réutilisait le seuil 768px
+    //   à la fois pour la largeur ET pour la hauteur. Or 768px de HAUTEUR
+    //   est une résolution d'ordinateur portable très répandue (1366×768).
+    //   Un Desktop équipé d'un écran tactile (courant sur beaucoup de
+    //   portables) à cette hauteur d'écran se retrouvait donc classé à
+    //   tort comme "mobile", masquant toute la barre latérale.
+    //   - Largeur ≤768px : seuil D'ORIGINE, inchangé, sans condition de
+    //     tactile — c'est le comportement qui fonctionnait déjà avant le
+    //     correctif de rotation et qui n'a jamais posé de problème.
+    //   - Paysage sur téléphone (largeur >768px) : nécessite désormais un
+    //     seuil de HAUTEUR bien plus bas (500px, jamais atteint par un
+    //     écran d'ordinateur même petit) ET un pointeur tactile — un vrai
+    //     Desktop ne peut plus jamais tomber dans ce cas.
+    if (w <= 768) return true;
+    return isTouchPrimary && h <= 500;
   }
   window.isMobile = isMobile;
   function money(n) { n = Math.round(Number(n) || 0); return n.toLocaleString('fr-FR').replace(/\u202f/g, ' ') + ' MAD'; }
