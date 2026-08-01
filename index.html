@@ -1665,11 +1665,30 @@ body.scrolled .fade-in { animation: none !important; opacity: 1 !important; tran
 let CARS = [];
 
 function loadCars() {
-  // Unité « louable » = ni maintenance, ni hors service, ni location longue durée.
-  const isRentable = (s) => { s = s || 'available'; return s !== 'maintenance' && s !== 'offroad' && s !== 'lld'; };
+  // ★ CORRECTIF (véhicules affichés disponibles sur le site alors qu'ils
+  //   ne le sont pas) — CAUSE EXACTE : cette fonction avait sa PROPRE
+  //   logique de calcul du catalogue, séparée de celle de l'admin et
+  //   jamais mise à jour avec son correctif. Elle utilisait
+  //   normalizeUnits() qui, quand le champ "Stock" (nombre) de la fiche
+  //   véhicule est plus grand que le nombre d'immatriculations réellement
+  //   suivies, complète avec des unités FANTÔMES (sans plaque). Une
+  //   unité fantôme comptait comme "louable" — un modèle dont la seule
+  //   vraie voiture est en maintenance, hors service ou déjà louée
+  //   pouvait donc rester affiché comme disponible au catalogue. Utilise
+  //   désormais EXACTEMENT le même calcul (ASLDB.unitsAvailableNow) que
+  //   le Dashboard et Mobile — une seule source de vérité partout,
+  //   site client inclus.
   const rentableUnits = (c) => {
-    let units = (typeof ASLDB !== 'undefined' && ASLDB.normalizeUnits) ? ASLDB.normalizeUnits(c) : null;
-    if (units && units.length) return units.filter(u => isRentable(u && u.status)).length;
+    if (typeof ASLDB !== 'undefined' && ASLDB.unitsAvailableNow) {
+      // Compte les unités qui existent VRAIMENT (avec plaque) et ne sont
+      // ni en maintenance, ni hors service — qu'elles soient occupées ou
+      // non aujourd'hui n'a pas d'importance ici : c'est carAvailability()
+      // (calée sur les dates choisies par le client) qui tranche.
+      let units = (typeof ASLDB.normalizeUnits === 'function') ? ASLDB.normalizeUnits(c) : [];
+      const isRentableStatus = (s) => { s = s || 'available'; return s !== 'maintenance' && s !== 'offroad' && s !== 'lld'; };
+      return units.filter(u => u && u.plate && isRentableStatus(u.status)).length
+        || (units.length === 0 && (c.status === 'available' || c.status === 'reserved') ? Math.max(1, c.stock || 1) : 0);
+    }
     return (c.status === 'available' || c.status === 'reserved') ? Math.max(1, c.stock || 1) : 0;
   };
   CARS = ASLDB.getFleet()

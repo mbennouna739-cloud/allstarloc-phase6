@@ -18,7 +18,22 @@
 (function () {
   'use strict';
 
-  function isMobile() { return window.innerWidth <= 768; }
+  // ★ CORRECTIF (rotation d'écran qui fait apparaître la barre latérale
+  //   Desktop) — CAUSE EXACTE : cette détection se basait uniquement sur
+  //   la largeur de la fenêtre (window.innerWidth). En paysage sur
+  //   téléphone, cette largeur dépasse souvent 768px — l'app croyait donc
+  //   être sur un Desktop et basculait vers sa mise en page à la moindre
+  //   rotation. Corrigé pour se baser sur le TYPE d'appareil (écran
+  //   tactile à pointeur "grossier", jamais vrai sur un ordinateur même
+  //   fenêtre réduite) ET sur le plus PETIT des deux côtés de l'écran —
+  //   qui reste le même qu'on soit en portrait ou en paysage — au lieu de
+  //   la largeur seule qui, elle, change radicalement selon l'orientation.
+  function isMobile() {
+    var isTouchPrimary = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+    var smallestSide = Math.min(window.innerWidth, window.innerHeight);
+    return isTouchPrimary && smallestSide <= 768;
+  }
+  window.isMobile = isMobile;
   function money(n) { n = Math.round(Number(n) || 0); return n.toLocaleString('fr-FR').replace(/\u202f/g, ' ') + ' MAD'; }
   function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
   function todayISO() {
@@ -55,6 +70,7 @@
      stroke=currentColor. Aucune image, aucun emoji.
      ============================================================ */
   var ICONS = {
+    history: '<path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/>',
     refresh: '<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>',
     grid: '<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>',
     car: '<path d="M19 17h2l.64-2.54a6 6 0 0 0-1.4-5.01l-1.07-1.21A2 2 0 0 0 17.66 7H6.34a2 2 0 0 0-1.51.69L3.76 8.9a6 6 0 0 0-1.4 5.01L3 17h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>',
@@ -214,6 +230,7 @@
     else if (screen === 'revenue') renderRevenueM();
     else if (screen === 'caisse') renderCaisse();
     else if (screen === 'notifications') renderNotifications();
+    else if (screen === 'history') renderHistoryM();
   }
 
   /* ============ TABLEAU DE BORD ============ */
@@ -494,6 +511,149 @@
       doUpload(file);
     }
   }
+
+  /* ============ HISTORIQUE — conçu MOBILE D'ABORD (pas un clone du
+     Desktop) ============
+     - Recherche en haut, grande, immédiate.
+     - Véhicules suggérés en chips défilables horizontalement au toucher.
+     - Filtre de date déporté dans une feuille inférieure (raccourcis
+       "Aujourd'hui / Cette semaine / Ce mois / Personnalisé"), plutôt que
+       deux champs de date qui encombrent l'écran en permanence.
+     - Résultats groupés par mois, en timeline verticale — bien plus
+       naturel à parcourir au pouce qu'un tableau condensé en cartes.
+     Utilise EXACTEMENT la même fonction de calcul que Desktop
+     (computeHistoryResults, définie dans admin-lot5.js) : la recherche et
+     le filtrage donnent toujours le même résultat des deux côtés — seule
+     la présentation change, pensée spécifiquement pour le tactile. */
+  var _histDateFrom = '', _histDateTo = '';
+  function renderHistoryM() {
+    var host = document.getElementById('ma-history');
+    if (!host) return;
+    host.innerHTML =
+      '<div class="ma-hist-searchrow">'
+      + '<div class="ma-search-wrap ma-hist-search-bar">' + ic('search') + '<input id="ma-hist-search" class="ma-search" placeholder="Contrat, client, véhicule…" value="' + esc(window._histSelectedVehicle || '') + '" oninput="renderHistoryListM()"></div>'
+      + '<button class="ma-hist-filter-btn' + ((_histDateFrom || _histDateTo) ? ' active' : '') + '" aria-label="Filtrer par date" onclick="maOpenHistDateSheet()">' + ic('calendar') + '</button>'
+      + '</div>'
+      + '<div id="ma-hist-chips" class="ma-hist-chipsrow"></div>'
+      + '<div id="ma-hist-title" class="ma-hist-title"></div>'
+      + '<div id="ma-hist-list"></div>';
+    renderHistoryListM();
+  }
+  window.renderHistoryListM = function () {
+    var q = (document.getElementById('ma-hist-search') || {}).value || '';
+    var r = computeHistoryResults(q, window._histSelectedVehicle || '', _histDateFrom, _histDateTo);
+
+    var chipsEl = document.getElementById('ma-hist-chips');
+    if (chipsEl) {
+      if (r.q && !r.selectedVehicle) {
+        var names = (typeof historyVehicleSuggestions === 'function') ? historyVehicleSuggestions(r.q) : [];
+        chipsEl.innerHTML = names.length ? names.map(function (n) {
+          return '<button class="ma-chip" onclick="maSelectHistoryVehicle(\'' + n.replace(/'/g, "\\'") + '\')">' + ic('car') + ' ' + esc(n) + '</button>';
+        }).join('') : '';
+      } else if (r.selectedVehicle) {
+        chipsEl.innerHTML = '<button class="ma-chip active" onclick="maResetHistoryFilters()">' + ic('car') + ' ' + esc(r.selectedVehicle) + '  ✕</button>';
+      } else {
+        chipsEl.innerHTML = '';
+      }
+    }
+    var titleEl = document.getElementById('ma-hist-title');
+    if (titleEl) {
+      var dateLabel = (_histDateFrom || _histDateTo) ? ' · ' + (_histDateFrom ? fmtD(_histDateFrom) : '…') + ' → ' + (_histDateTo ? fmtD(_histDateTo) : '…') : '';
+      titleEl.textContent = (r.selectedVehicle ? r.selectedVehicle : (r.q ? 'Résultats' : 'Tous les contrats')) + ' (' + r.list.length + ')' + dateLabel;
+    }
+
+    var listEl = document.getElementById('ma-hist-list');
+    if (!listEl) return;
+    if (!r.list.length) {
+      listEl.innerHTML = '<div class="ma-hist-empty">' + ic('history') + '<div style="margin-top:10px;font-weight:700;">Aucun contrat trouvé</div>'
+        + '<div style="margin-top:4px;font-size:12.5px;color:#8a909a;">Essayez un autre nom de véhicule, de client, ou changez la période.</div></div>';
+      return;
+    }
+    // ★ Regroupement par mois — timeline naturelle au pouce, plutôt qu'une
+    //   longue liste plate comme sur Desktop (adapté à chaque support).
+    var groups = [];
+    var groupMap = {};
+    var MONTHS = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+    r.list.forEach(function (x) {
+      var d = x.startDate || x.endDate || '';
+      var key = d ? d.slice(0, 7) : '—';
+      if (!groupMap[key]) {
+        var label = '—';
+        if (d) { var parts = d.split('-'); label = MONTHS[parseInt(parts[1], 10) - 1] + ' ' + parts[0]; }
+        groupMap[key] = { label: label, items: [] };
+        groups.push(groupMap[key]);
+      }
+      groupMap[key].items.push(x);
+    });
+    listEl.innerHTML = groups.map(function (g) {
+      return '<div class="ma-hist-month">' + esc(g.label) + '</div>'
+        + g.items.map(function (x) {
+            var idStr = "'" + String(x.id || '') + "'";
+            var days = x.days ? x.days + ' j' : '';
+            return '<div class="ma-hist-card" onclick="maViewRes(' + idStr + ')">'
+              + '<div class="ma-hist-card-ico">' + ic('key') + '</div>'
+              + '<div class="ma-hist-card-body">'
+              + '<div class="ma-hist-card-top"><span class="ma-hist-client">' + esc(x.client || '') + '</span>' + (days ? '<span class="ma-hist-days">' + days + '</span>' : '') + '</div>'
+              + '<div class="ma-hist-car">' + esc(x.car || '') + (x.assignedPlate ? ' · ' + esc(x.assignedPlate) : '') + '</div>'
+              + '<div class="ma-hist-bottom"><span class="ma-hist-dates">' + fmtD(x.startDate) + ' → ' + fmtD(x.endDate) + '</span><span class="ma-hist-ref">' + esc(x.contractRef || x.id || '') + '</span></div>'
+              + '</div></div>';
+          }).join('');
+    }).join('');
+  };
+  function fmtD(iso) {
+    if (!iso) return '—';
+    var p = iso.split('-'); if (p.length !== 3) return iso;
+    var MONTHS_SHORT = ['jan','fév','mar','avr','mai','juin','juil','août','sep','oct','nov','déc'];
+    return parseInt(p[2], 10) + ' ' + MONTHS_SHORT[parseInt(p[1], 10) - 1];
+  }
+  window.maResetHistoryFilters = function () {
+    window._histSelectedVehicle = '';
+    _histDateFrom = ''; _histDateTo = '';
+    renderHistoryM();
+  };
+  window.maSelectHistoryVehicle = function (name) {
+    window._histSelectedVehicle = name;
+    var s = document.getElementById('ma-hist-search'); if (s) s.value = name;
+    renderHistoryListM();
+  };
+  /* Feuille inférieure de filtre par date — raccourcis + période
+     personnalisée, pattern mobile natif plutôt que des champs toujours
+     visibles à l'écran. */
+  window.maOpenHistDateSheet = function () {
+    var today = todayISO();
+    function daysAgoISO(n) { var d = new Date(); d.setDate(d.getDate() - n); return (typeof ASLDB !== 'undefined' && ASLDB.localDateISO) ? ASLDB.localDateISO(d) : d.toISOString().slice(0, 10); }
+    function monthStartISO() { var d = new Date(); d.setDate(1); return (typeof ASLDB !== 'undefined' && ASLDB.localDateISO) ? ASLDB.localDateISO(d) : d.toISOString().slice(0, 10); }
+    openSheet(
+      '<div class="ma-sheet-title">Filtrer par date</div>'
+      + '<div class="ma-actions" style="flex-wrap:wrap;">'
+      + '<button class="ma-act-btn" onclick="maApplyHistPreset(\'' + today + '\',\'' + today + '\')">Aujourd\'hui</button>'
+      + '<button class="ma-act-btn" onclick="maApplyHistPreset(\'' + daysAgoISO(7) + '\',\'' + today + '\')">7 derniers jours</button>'
+      + '<button class="ma-act-btn" onclick="maApplyHistPreset(\'' + monthStartISO() + '\',\'' + today + '\')">Ce mois-ci</button>'
+      + '</div>'
+      + '<div class="ma-sheet-section">Période personnalisée</div>'
+      + '<div class="form-row">'
+      + '<div class="form-group"><label class="form-label">Du</label><input type="date" class="form-input" id="ma-hist-date-from" value="' + esc(_histDateFrom) + '"></div>'
+      + '<div class="form-group"><label class="form-label">Au</label><input type="date" class="form-input" id="ma-hist-date-to" value="' + esc(_histDateTo) + '"></div>'
+      + '</div>'
+      + '<button class="ma-act-btn ok" style="margin-top:10px;" onclick="maApplyHistCustom()">Appliquer</button>'
+      + (_histDateFrom || _histDateTo ? '<button class="ma-act-btn" style="margin-top:8px;color:var(--red,#C41E3A);" onclick="maApplyHistPreset(\'\',\'\')">✕ Retirer le filtre de date</button>' : '')
+    );
+  };
+  window.maApplyHistPreset = function (from, to) {
+    _histDateFrom = from; _histDateTo = to;
+    closeSheet();
+    renderHistoryListM();
+    var btn = document.querySelector('.ma-hist-filter-btn');
+    if (btn) btn.classList.toggle('active', !!(from || to));
+  };
+  window.maApplyHistCustom = function () {
+    _histDateFrom = (document.getElementById('ma-hist-date-from') || {}).value || '';
+    _histDateTo = (document.getElementById('ma-hist-date-to') || {}).value || '';
+    closeSheet();
+    renderHistoryListM();
+    var btn = document.querySelector('.ma-hist-filter-btn');
+    if (btn) btn.classList.toggle('active', !!(_histDateFrom || _histDateTo));
+  };
 
   /* ============ RÉSERVATIONS ============ */
   function renderReservations() {
@@ -1486,6 +1646,7 @@
   window.maOpenMore = function () {
     var items = [
       { ico: 'key', label: 'Locations en cours', act: "maMore('rentals')", perm: null },
+      { ico: 'history', label: 'Historique', act: "maMore('history')", perm: null },
       { ico: 'handshake', label: 'Sous-location', act: "maMore('sublease')", perm: 'sublease' },
       { ico: 'calendar', label: 'Location longue durée', act: "maMore('lld')", perm: 'sublease' },
       { ico: 'users', label: 'Clients', act: "maMore('clients')", perm: null }
@@ -1568,7 +1729,7 @@
       + '<button class="ma-head-btn" id="ma-resync-btn" aria-label="Resynchroniser" title="Resynchroniser depuis le serveur" onclick="maResyncData()">' + ic('refresh') + '</button>'
       + '<button class="ma-head-btn" aria-label="Notifications" onclick="maToggleNotifications()">' + ic('bell') + '<span class="ma-dot" id="ma-head-dot" style="display:none;"></span></button></div>'
       + screen('dashboard') + screen('vehicles') + screen('available') + screen('reserved') + screen('activites') + screen('reservations') + screen('rentals')
-      + screen('returns') + screen('late') + screen('clients') + screen('sublease') + screen('lld') + screen('unpaid') + screen('revenue') + screen('caisse') + screen('notifications');
+      + screen('returns') + screen('late') + screen('clients') + screen('sublease') + screen('lld') + screen('unpaid') + screen('revenue') + screen('caisse') + screen('notifications') + screen('history');
     document.body.appendChild(app);
 
     var tabsAll = [

@@ -11,7 +11,17 @@
 /* Masqués par défaut (desktop intact) */
 #asl-mobile-app, #asl-mobile-tabbar, #ma-sync-error { display: none; }
 
-@media (max-width: 768px) {
+/* ★ CORRECTIF (rotation d'écran fait réapparaître la barre Desktop) —
+   CAUSE PROFONDE : tout ce CSS mobile ne s'appliquait qu'en dessous de
+   768px de LARGEUR. En paysage sur téléphone, la largeur dépasse presque
+   toujours 768px (ex. ~926px sur un grand téléphone) — ce CSS se
+   désactivait alors entièrement, faisant réapparaître la mise en page
+   Desktop, quelle que soit la détection faite côté JavaScript. La règle
+   s'applique désormais aussi quand la HAUTEUR (le côté qui devient petit
+   en paysage) est ≤768px, pour rester stable dans les deux orientations
+   sur un téléphone, sans affecter un vrai Desktop (qui a rarement une
+   fenêtre de moins de 768px de haut). */
+@media (max-width: 768px), (max-height: 768px) and (orientation: landscape) {
   /* ---- Reset léger borné à l'app (évite débordements / scroll horizontal) ---- */
   #asl-mobile-app, #asl-mobile-app * , #asl-mobile-tabbar, #asl-mobile-tabbar *,
   .ma-sheet, .ma-sheet * { box-sizing: border-box; }
@@ -198,6 +208,44 @@
     background: #fff; font-size: 13px; font-weight: 600; color: #475569; cursor: pointer; white-space: nowrap; font-family: inherit;
   }
   .ma-chip.active { background: #101216; color: #fff; border-color: #101216; }
+
+  /* ---- Historique : conçu pour le tactile, pas un tableau réduit ---- */
+  .ma-hist-searchrow { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+  .ma-hist-search-bar { flex: 1; margin-bottom: 0 !important; }
+  .ma-hist-filter-btn {
+    flex-shrink: 0; width: 44px; height: 44px; border-radius: 12px; border: 1px solid rgba(18,22,30,.12);
+    background: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #101216;
+  }
+  .ma-hist-filter-btn .ma-ic { width: 19px; height: 19px; }
+  .ma-hist-filter-btn.active { background: var(--red, #C41E3A); border-color: var(--red, #C41E3A); color: #fff; }
+  .ma-hist-chipsrow { display: flex; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 4px; }
+  .ma-hist-chipsrow:empty { margin: 0; }
+  .ma-hist-chipsrow::-webkit-scrollbar { display: none; }
+  .ma-hist-title { font-size: 12px; font-weight: 700; color: #8a909a; text-transform: uppercase; letter-spacing: .3px; margin: 14px 2px 6px; }
+  .ma-hist-month {
+    font-size: 12.5px; font-weight: 800; color: #101216; margin: 16px 2px 8px; text-transform: capitalize;
+  }
+  .ma-hist-month:first-child { margin-top: 4px; }
+  .ma-hist-card {
+    display: flex; gap: 12px; background: #fff; border-radius: 14px; padding: 13px 14px; margin-bottom: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.04); border: 1px solid rgba(18,22,30,.06); cursor: pointer;
+  }
+  .ma-hist-card:active { background: #FAFAFB; }
+  .ma-hist-card-ico {
+    flex-shrink: 0; width: 38px; height: 38px; border-radius: 10px; background: rgba(196,30,58,.08); color: var(--red, #C41E3A);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .ma-hist-card-ico .ma-ic { width: 18px; height: 18px; }
+  .ma-hist-card-body { flex: 1; min-width: 0; }
+  .ma-hist-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .ma-hist-client { font-size: 14.5px; font-weight: 800; color: #101216; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ma-hist-days { flex-shrink: 0; font-size: 11px; font-weight: 700; color: #2563eb; background: rgba(37,99,235,.1); padding: 2px 8px; border-radius: 50px; }
+  .ma-hist-car { font-size: 12.5px; color: #667085; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ma-hist-bottom { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 6px; }
+  .ma-hist-dates { font-size: 12px; color: #8a909a; font-weight: 600; }
+  .ma-hist-ref { font-size: 11px; color: #b0b6c0; font-weight: 700; }
+  .ma-hist-empty { text-align: center; padding: 48px 20px; color: #b0b6c0; }
+  .ma-hist-empty .ma-ic { width: 40px; height: 40px; opacity: .5; }
 
   /* ---- Recherche ---- */
   .ma-search-wrap { position: relative; margin-bottom: 14px; }

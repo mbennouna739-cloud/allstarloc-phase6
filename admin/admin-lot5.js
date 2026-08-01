@@ -727,6 +727,115 @@ function saveMaintRecord() {
   showToast('Entretien enregistré ✓ Rappel de vérification créé.');
 }
 
+/* ==================== HISTORIQUE — logique PARTAGÉE Desktop/Mobile ====================
+   Retrouver rapidement TOUT l'historique des locations d'un véhicule :
+   recherche par contrat / client / véhicule, sélection d'un véhicule pour
+   voir tous ses contrats, filtre par date ou période. Fonctionne sur
+   TOUTES les réservations (peu importe leur statut : actives, terminées,
+   annulées, réservées) — c'est un historique complet, pas une liste des
+   locations en cours.
+   ★ Fonction PURE (ne lit aucun champ du DOM) volontairement : Desktop et
+   Mobile ont chacun leur propre formulaire de recherche (DOM séparé), mais
+   appellent tous les deux CETTE MÊME fonction avec les valeurs saisies —
+   garantissant un comportement de recherche/filtrage strictement
+   identique par construction, jamais par simple copie de code qui
+   pourrait diverger avec le temps.
+   ================================================================ */
+function computeHistoryResults(q, selectedVehicle, from, to) {
+  var all = aslRes();
+  q = (q || '').toLowerCase().trim();
+  selectedVehicle = selectedVehicle || '';
+
+  var list = all;
+  if (selectedVehicle) {
+    list = list.filter(function(r) { return (r.car || '') === selectedVehicle; });
+  } else if (q) {
+    list = list.filter(function(r) {
+      return ((r.contractRef || r.id || '') + ' ' + (r.client || '') + ' ' + (r.car || '') + ' ' + (r.assignedPlate || '')).toLowerCase().indexOf(q) >= 0;
+    });
+  }
+  if (from) list = list.filter(function(r) { return (r.endDate || r.startDate || '') >= from; });
+  if (to) list = list.filter(function(r) { return (r.startDate || r.endDate || '') <= to; });
+
+  list = list.slice().sort(function(a, b) { return String(b.startDate || '').localeCompare(String(a.startDate || '')); });
+  return { list: list, q: q, selectedVehicle: selectedVehicle };
+}
+/* Suggestions de véhicules correspondant à la recherche texte, pour la
+   sélection "voir tout l'historique de ce véhicule" (identique aux 2 versions). */
+function historyVehicleSuggestions(q) {
+  if (!q) return [];
+  q = q.toLowerCase();
+  var names = {};
+  aslFleet().forEach(function(c) { if (c.name.toLowerCase().indexOf(q) >= 0) names[c.name] = true; });
+  return Object.keys(names);
+}
+
+function historyResults() {
+  var q = ((document.getElementById('hist-search') || {}).value || '');
+  var from = (document.getElementById('hist-date-from') || {}).value || '';
+  var to = (document.getElementById('hist-date-to') || {}).value || '';
+  return computeHistoryResults(q, window._histSelectedVehicle || '', from, to);
+}
+
+function resetHistoryFilters() {
+  window._histSelectedVehicle = '';
+  var s = document.getElementById('hist-search'); if (s) s.value = '';
+  var f = document.getElementById('hist-date-from'); if (f) f.value = '';
+  var t = document.getElementById('hist-date-to'); if (t) t.value = '';
+  renderHistory();
+}
+
+function selectHistoryVehicle(name) {
+  window._histSelectedVehicle = name;
+  var s = document.getElementById('hist-search'); if (s) s.value = name;
+  renderHistory();
+}
+
+function renderHistory() {
+  try {
+    var r = historyResults();
+    var chipsEl = document.getElementById('hist-vehicle-chips');
+    var titleEl = document.getElementById('hist-result-title');
+    var tbody = document.getElementById('history-table');
+    if (!tbody) return;
+
+    // ★ Suggestions de véhicules correspondant à la recherche — cliquer
+    //   dessus affiche TOUT l'historique de ce véhicule précis.
+    if (chipsEl) {
+      if (r.q && !r.selectedVehicle) {
+        var chipNames = historyVehicleSuggestions(r.q);
+        chipsEl.innerHTML = chipNames.length ? chipNames.map(function(n) {
+          return '<button class="btn-sm ghost" data-vn="' + n.replace(/"/g,'&quot;') + '" onclick="selectHistoryVehicle(this.dataset.vn)" style="border-color:var(--red);color:var(--red);">🚗 Voir tout l\'historique de « ' + n + ' »</button>';
+        }).join('') : '';
+      } else if (r.selectedVehicle) {
+        chipsEl.innerHTML = '<span class="badge badge-red" style="font-size:12.5px;padding:6px 12px;">🚗 ' + r.selectedVehicle + '<span style="cursor:pointer;margin-left:8px;font-weight:800;" onclick="resetHistoryFilters()">✕</span></span>';
+      } else {
+        chipsEl.innerHTML = '';
+      }
+    }
+    if (titleEl) titleEl.textContent = r.selectedVehicle ? 'Historique — ' + r.selectedVehicle + ' (' + r.list.length + ')' : (r.q ? 'Résultats (' + r.list.length + ')' : 'Tous les contrats (' + r.list.length + ')');
+
+    if (!r.list.length) {
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text3);">Aucun contrat ne correspond à cette recherche.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = r.list.map(function(x) {
+      var total = Number(x.amount) || 0;
+      return '<tr>' +
+        '<td><strong>' + (x.contractRef || x.id || '') + '</strong></td>' +
+        '<td>' + (x.client || '') + '</td>' +
+        '<td style="font-size:12px;color:var(--text2);">' + (x.car || '') + (x.assignedPlate ? ' — ' + x.assignedPlate : '') + '</td>' +
+        '<td style="font-size:12px;">' + (x.startDate || '—') + '</td>' +
+        '<td style="font-size:12px;">' + (x.endDate || '—') + '</td>' +
+        '<td>' + (x.days || '—') + '</td>' +
+        '<td><strong>' + total + ' MAD</strong></td>' +
+        '<td>' + statusBadge(x.status) + '</td>' +
+        '<td><button class="btn-sm ghost" data-rid="' + x.id + '" onclick="viewRes(this.dataset.rid)">&#128065;</button></td>' +
+        '</tr>';
+    }).join('');
+  } catch(e) { console.error('renderHistory:', e); }
+}
+
 /* ==================== LOCATIONS EN COURS ==================== */
 
 function renderRentals() {

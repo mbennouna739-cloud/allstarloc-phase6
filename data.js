@@ -1313,6 +1313,24 @@
      crée aucun doublon, ne supprime rien. */
   async function resyncAll() {
     if (!remoteEnabled) throw new Error('Mode local : aucune base distante à relire.');
+    // ★ CORRECTIF CRITIQUE — CAUSE EXACTE d'un véhicule qui redevient
+    //   disponible tout seul (même sur Desktop) après un clic sur
+    //   "Resynchroniser" depuis un AUTRE appareil : cette fonction se
+    //   prétendait "lecture seule" mais appelait syncNow(), qui envoie
+    //   D'ABORD tout ce qui est en attente localement AVANT de relire. Si
+    //   l'appareil avait la moindre écriture de flotte en attente — même
+    //   ancienne, par exemple une action faite sur cet appareil avant
+    //   d'avoir reçu un changement de statut fait entre-temps sur un autre
+    //   appareil — ce push écrasait la bonne donnée du serveur avec
+    //   l'ancienne donnée locale. La base partagée était alors corrompue,
+    //   et TOUS les autres appareils récupéraient ensuite cette donnée
+    //   périmée à leur tour propre cycle de synchro suivant.
+    //   "Resynchroniser" est désormais VRAIMENT en lecture seule : aucun
+    //   envoi n'est jamais effectué. Toute écriture locale de flotte non
+    //   confirmée est abandonnée — c'est exactement ce que l'utilisateur
+    //   demande en cliquant ce bouton : voir la vérité du serveur, sans
+    //   qu'un état local douteux ne puisse jamais l'écraser.
+    try { localStorage.removeItem(KEY_PEND_F); } catch (e) {}
     // On oublie les révisions connues pour forcer l'adoption de la version
     // serveur, même si elle porte un numéro de révision plus ancien que
     // celui mémorisé localement (cas d'un cache local désynchronisé).
@@ -1321,7 +1339,8 @@
       writeNum(KEY_REV_R, 0);
       Object.keys(MISC_MAP).forEach(function (name) { writeNum(miscRevKey(name), 0); });
     } catch (e) {}
-    await syncNow();          // envoie d'abord ce qui est en attente, puis relit tout
+    await pullState();        // lecture seule : jamais d'envoi vers le serveur
+    try { await syncMisc(); } catch (e) {}
     emit(KEY_FLEET); emit(KEY_RES);
     Object.keys(MISC_MAP).forEach(function (name) { emit(MISC_MAP[name]); });
     return true;

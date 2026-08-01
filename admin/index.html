@@ -270,7 +270,15 @@ tr:hover td{background:rgba(18,22,30,0.025);}
   .stats-grid{grid-template-columns:repeat(2,1fr);}
   .fleet-grid{grid-template-columns:repeat(2,1fr);}
 }
-@media(max-width:768px){
+/* ★ CORRECTIF (cause exacte de la barre latérale Desktop qui réapparaît
+   lors d'une rotation d'écran sur téléphone) — cette règle masquait la
+   sidebar Desktop UNIQUEMENT sous 768px de LARGEUR. En paysage sur
+   téléphone, la largeur dépasse presque toujours 768px : la sidebar
+   redevenait donc visible par-dessus l'application mobile, alors qu'elle
+   doit rester masquée en permanence sur un téléphone, quelle que soit son
+   orientation. Même exception de hauteur que pour le CSS mobile
+   (admin-mobile.css), pour que les deux restent parfaitement synchronisés. */
+@media(max-width:768px), (max-height:768px) and (orientation:landscape){
   .sidebar{transform:translateX(-100%);}
   .main{margin-left:0;}
   .fleet-grid{grid-template-columns:1fr;}
@@ -358,7 +366,11 @@ body.sb-is-collapsed .content, body.sb-is-collapsed .topbar { max-width: 100%; }
 body.sb-is-collapsed .topbar { padding-left: 60px; }
 
 /* === RESPONSIVE ADMIN MOBILE (renforcé) === */
-@media (max-width: 768px) {
+/* ★ CORRECTIF (rotation d'écran) : même exception de hauteur que les
+   autres points de rupture de ce fichier — la sidebar Desktop en overlay
+   doit rester neutralisée en paysage sur téléphone, pas seulement en
+   portrait. */
+@media (max-width: 768px), (max-height: 768px) and (orientation: landscape) {
   /* Sidebar en overlay coulissant */
   .sidebar { position: fixed !important; top:0; left:0; bottom:0; z-index:1100;
     transform: translateX(-100%); transition: transform .25s ease; width: 250px !important; }
@@ -406,7 +418,9 @@ body.sb-is-collapsed .topbar { padding-left: 60px; }
    Visible uniquement sur mobile, n'affecte PAS le desktop
    ============================================ */
 #mobile-dash { display: none; }
-@media (max-width: 768px) {
+/* ★ CORRECTIF (rotation d'écran) : même exception — le contenu Desktop ne
+   doit jamais réapparaître en paysage sur téléphone. */
+@media (max-width: 768px), (max-height: 768px) and (orientation: landscape) {
   /* Masquer le contenu desktop complexe, afficher le dashboard mobile */
   .main > .topbar { display: flex !important; flex-direction: column !important;
     height: auto !important; min-height: 0 !important; align-items: stretch !important; }
@@ -487,7 +501,7 @@ body.sb-is-collapsed .topbar { padding-left: 56px !important; }
 body.sb-is-collapsed .sb-toggle { display: flex !important; }
 /* fleet.html : la sidebar-wrap ne doit pas garder de largeur fantôme */
 body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important; }
-@media (max-width: 768px) {
+@media (max-width: 768px), (max-height: 768px) and (orientation: landscape) {
   /* Sur mobile le collapse desktop est neutralisé (overlay déjà géré) */
   body.sb-is-collapsed .main { margin-left: 0 !important; }
 }
@@ -528,6 +542,7 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
       <div class="sb-section-label">Activité</div>
 <a class="sb-item" onclick="showPage('reservations',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg></span>Réservations<span class="sb-badge" id="badge-res" style="">0</span></a>
 <a class="sb-item" onclick="showPage('rentals',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>Locations en cours<span class="sb-badge" id="badge-rentals" style="background:#22c55e;color:#fff;display:none;">0</span></a>
+<a class="sb-item" onclick="showPage('history',this)" style="cursor:pointer;"><span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg></span>Historique</a>
     </div>
     <div class="sb-section">
       <div class="sb-section-label">Gestion</div>
@@ -1019,6 +1034,34 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
            Dashboard quelle que soit la page active. -->
     </div>
 
+    <!-- ===== HISTORIQUE ===== -->
+    <div id="page-history" class="page">
+      <div class="table-card" style="margin-bottom:18px;">
+        <div class="table-header"><div class="table-title">🕘 Historique des locations</div></div>
+        <div style="padding:18px 22px;display:flex;flex-direction:column;gap:14px;">
+          <div class="search-bar" style="width:100%;">
+            <span style="display:flex;align-items:center;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span>
+            <input id="hist-search" placeholder="N° de contrat, nom du client, ou véhicule (ex : Clio 5)..." oninput="renderHistory()">
+          </div>
+          <div id="hist-vehicle-chips" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+            <div class="form-group" style="margin:0;"><label class="form-label">Du</label><input type="date" class="form-input" id="hist-date-from" onchange="renderHistory()"></div>
+            <div class="form-group" style="margin:0;"><label class="form-label">Au</label><input type="date" class="form-input" id="hist-date-to" onchange="renderHistory()"></div>
+            <button class="btn-sm ghost" onclick="resetHistoryFilters()">✕ Réinitialiser les filtres</button>
+          </div>
+        </div>
+      </div>
+      <div class="table-card">
+        <div class="table-header"><div class="table-title" id="hist-result-title">Tous les contrats</div></div>
+        <div style="overflow-x:auto;">
+        <table>
+          <thead><tr><th>N° Contrat</th><th>Client</th><th>Véhicule</th><th>Date départ</th><th>Date retour</th><th>Jours</th><th>Total</th><th>Statut</th><th></th></tr></thead>
+          <tbody id="history-table"></tbody>
+        </table>
+        </div>
+      </div>
+    </div>
+
     <!-- ===== CAISSE ===== -->
     <div id="page-caisse" class="page">
       <!-- Sous-onglets : Résumé / Charges / Rapports -->
@@ -1476,7 +1519,9 @@ function showPage(id, el) {
   if(el) el.classList.add('active');
 
   // Sur mobile : basculer entre le dashboard mobile et le contenu détaillé
-  if (window.innerWidth <= 768) {
+  // ★ CORRECTIF (rotation d'écran) : utilise la détection fiable (type
+  //   d'appareil + plus petit côté), pas seulement la largeur.
+  if (typeof window.isMobile === 'function' ? window.isMobile() : window.innerWidth <= 768) {
     var md = document.getElementById('mobile-dash');
     var content = document.querySelector('.content');
     if (id === 'dashboard') {
@@ -1502,7 +1547,7 @@ function showPage(id, el) {
   const titles = {
     dashboard:'Tableau de bord', reservations:'Réservations',
     fleet:'Véhicules / Ma flotte', maintenance:'Entretien véhicules',
-    rentals:'Locations en cours', customers:'Clients', sublease:'Sous-location', lld:'Location longue durée',
+    rentals:'Locations en cours', history:'Historique', customers:'Clients', sublease:'Sous-location', lld:'Location longue durée',
     payments:'Paiements', options:'Assurances', bookopt:'Options de réservation', minstay:'Durée minimale de location', caisse:'Caisse', settings:'Paramètres système'
   };
   document.getElementById('topbar-title').textContent = titles[id] || id;
@@ -1513,6 +1558,7 @@ function showPage(id, el) {
   if(id==='fleet'){ renderFleetPage(); var fl=document.getElementById('fleet-label'); if(fl) fl.textContent=FLEET.length+' véhicule(s)'; }
   if(id==='maintenance') renderMaintenance();
   if(id==='rentals') renderRentals();
+  if(id==='history') renderHistory();
   if(id==='customers') renderCustomers();
   if(id==='sublease' && typeof renderSubleases==='function') renderSubleases();
   if(id==='lld' && typeof renderLLD==='function') renderLLD();
@@ -3132,7 +3178,8 @@ function toggleSidebar() {
   var sb = document.querySelector('.sidebar');
   if (!sb) return;
   // Sur mobile : overlay coulissant
-  if (window.innerWidth <= 768) {
+  // ★ CORRECTIF (rotation d'écran) : détection fiable, indépendante de l'orientation.
+  if (typeof window.isMobile === 'function' ? window.isMobile() : window.innerWidth <= 768) {
     sb.classList.toggle('mobile-open');
     var isOpen = sb.classList.contains('mobile-open');
     var bd = document.querySelector('.sb-mobile-backdrop');
@@ -3161,7 +3208,8 @@ function toggleSidebar() {
 // TABLEAU DE BORD MOBILE (supervision rapide)
 // ================================================================
 function renderMobileDash() {
-  if (window.innerWidth > 768) return; // mobile uniquement
+  // ★ CORRECTIF (rotation d'écran) : détection fiable, indépendante de l'orientation.
+  if (typeof window.isMobile === 'function' ? !window.isMobile() : window.innerWidth > 768) return; // mobile uniquement
   var fleet = (typeof ASLDB !== 'undefined' && ASLDB.getFleet) ? ASLDB.getFleet() : [];
   var res = (typeof ASLDB !== 'undefined' && ASLDB.getReservations) ? ASLDB.getReservations() : [];
 
@@ -3314,7 +3362,10 @@ function confirmerReservation(resId) {
   renderMobileDash();
 }
 // Rendu au chargement + au resize
-window.addEventListener('resize', function(){ if (window.innerWidth <= 768) renderMobileDash(); });
+window.addEventListener('resize', function(){ if (typeof window.isMobile === 'function' ? window.isMobile() : window.innerWidth <= 768) renderMobileDash(); });
+// ★ CORRECTIF (rotation d'écran) : orientationchange se déclenche fiablement sur mobile,
+//   même quand certains navigateurs tardent à émettre un 'resize' complet après la rotation.
+window.addEventListener('orientationchange', function(){ setTimeout(function(){ if (typeof window.isMobile === 'function' ? window.isMobile() : window.innerWidth <= 768) renderMobileDash(); }, 250); });
 document.addEventListener('DOMContentLoaded', function(){ setTimeout(renderMobileDash, 300); });
 </script>
 <script src="admin-lot5.js"></script>
