@@ -184,6 +184,20 @@
   };
 
   function renderScreen(screen) {
+    // ★ CORRECTIF (stabilité de toutes les pages Mobile — ex. "Retour
+    //   aujourd'hui", "Véhicules loués") — CAUSE : chaque rafraîchissement
+    //   (notamment le minuteur automatique toutes les 30 s) reconstruit
+    //   entièrement le contenu affiché, ce qui pouvait faire sauter le
+    //   défilement en haut de la page pendant la lecture d'une liste. La
+    //   position de défilement est désormais mémorisée juste avant, puis
+    //   restaurée immédiatement après — sur TOUTES les pages, sans rien
+    //   changer à leur contenu ni à leur fonctionnement.
+    var scrollHost = document.getElementById('asl-mobile-app');
+    var savedScroll = scrollHost ? scrollHost.scrollTop : 0;
+    _renderScreenInner(screen);
+    if (scrollHost && savedScroll > 0) { scrollHost.scrollTop = savedScroll; }
+  }
+  function _renderScreenInner(screen) {
     if (screen === 'dashboard') renderDash();
     else if (screen === 'vehicles') renderVehicles();
     else if (screen === 'available') renderAvailableM();
@@ -690,6 +704,25 @@
   function renderReturns() {
     var host = document.getElementById('ma-returns');
     if (!host) return;
+    var chips = [['today', "Aujourd'hui"], ['tomorrow', 'Demain'], ['date', 'Date choisie']];
+    var head = '<div class="ma-chips">' + chips.map(function (ch) {
+      return '<button class="ma-chip ' + (returnsFilter === ch[0] ? 'active' : '') + '" onclick="maReturnsFilter(\'' + ch[0] + '\')">' + ch[1] + '</button>';
+    }).join('') + '</div>'
+      + (returnsFilter === 'date' ? '<input type="date" id="ma-returns-date" class="ma-date" value="' + esc(returnsDate) + '" onchange="maReturnsDate(this.value)">' : '')
+      // ★ Point 7 : recherche rapide (client / véhicule / immatriculation).
+      // ★ CORRECTIF (stabilité/scroll) : le champ de recherche est
+      //   désormais séparé de la liste — taper n'importe quoi ne
+      //   reconstruit plus jamais tout l'écran, uniquement la liste
+      //   de résultats en dessous.
+      + '<div class="search-bar" style="margin:10px 0;"><span style="display:flex;align-items:center;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span>'
+      + '<input id="ma-returns-search" placeholder="Rechercher…" value="' + esc(window._maReturnsSearch || '') + '" oninput="maReturnsSearch(this.value)"></div>'
+      + '<div id="ma-returns-list"></div>';
+    host.innerHTML = head;
+    renderReturnsList();
+  }
+  function renderReturnsList() {
+    var listHost = document.getElementById('ma-returns-list');
+    if (!listHost) return;
     var target = returnsFilter === 'today' ? todayISO() : returnsFilter === 'tomorrow' ? plusDaysISO(1) : returnsDate;
     var q = (window._maReturnsSearch || '').trim().toLowerCase();
     // ★ SOURCE UNIQUE : même fonction que le compteur et que Desktop.
@@ -704,15 +737,7 @@
                plate.indexOf(q) >= 0;
       });
     }
-    var chips = [['today', "Aujourd'hui"], ['tomorrow', 'Demain'], ['date', 'Date choisie']];
-    var head = '<div class="ma-chips">' + chips.map(function (ch) {
-      return '<button class="ma-chip ' + (returnsFilter === ch[0] ? 'active' : '') + '" onclick="maReturnsFilter(\'' + ch[0] + '\')">' + ch[1] + '</button>';
-    }).join('') + '</div>'
-      + (returnsFilter === 'date' ? '<input type="date" id="ma-returns-date" class="ma-date" value="' + esc(returnsDate) + '" onchange="maReturnsDate(this.value)">' : '')
-      // ★ Point 7 : recherche rapide (client / véhicule / immatriculation).
-      + '<div class="search-bar" style="margin:10px 0;"><span style="display:flex;align-items:center;"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span>'
-      + '<input id="ma-returns-search" placeholder="Rechercher…" value="' + esc(window._maReturnsSearch || '') + '" oninput="maReturnsSearch(this.value)"></div>';
-    var body = list.length ? list.map(function (r) {
+    listHost.innerHTML = list.length ? list.map(function (r) {
       var idStr = "'" + String(r.id || '') + "'";
       var reste = Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
       return '<div class="ma-card ma-return-card" onclick="maViewRental(' + idStr + ',\'returns\')">'
@@ -723,14 +748,13 @@
         + '<div class="ma-return-foot"><span>' + ic('eye') + ' Ouvrir la fiche</span><span class="ma-return-date">' + fmtDateT(r.endDate, r.endTime, '18:00') + '</span></div>'
         + '</div>';
     }).join('') : '<div class="ma-empty">' + (q ? 'Aucun résultat pour cette recherche.' : 'Aucun retour prévu pour cette date.') + '</div>';
-    host.innerHTML = head + body;
   }
 
   /* ★ Point 7 — recherche rapide mobile, avec restauration du focus/curseur
      après le re-rendu complet de la liste (comme sur Desktop). */
   window.maReturnsSearch = function (q) {
     window._maReturnsSearch = q;
-    renderReturns();
+    renderReturnsList();
     var input = document.getElementById('ma-returns-search');
     if (input) {
       input.focus();

@@ -249,12 +249,35 @@
   async function flushPending() {
     // 1) Flotte complète (administration)
     if (localStorage.getItem(KEY_PEND_F)) {
-      const out = await apiFetch('/fleet', {
-        method: 'PUT', headers: headers(true),
-        body: JSON.stringify({ items: read(KEY_FLEET, []) })
-      });
-      writeNum(KEY_REV_F, out.rev || Date.now());
-      try { localStorage.removeItem(KEY_PEND_F); } catch (e) {}
+      try {
+        const out = await apiFetch('/fleet', {
+          method: 'PUT', headers: headers(true),
+          body: JSON.stringify({ items: read(KEY_FLEET, []) })
+        });
+        writeNum(KEY_REV_F, out.rev || Date.now());
+        try { localStorage.removeItem(KEY_PEND_F); } catch (e) {}
+      } catch (eFleet) {
+        // ★ CORRECTIF (véhicule "hors service"/statut qui réapparaît tout
+        //   seul) — CAUSE EXACTE : cette écriture n'avait aucune gestion
+        //   d'erreur. En cas d'échec (réseau, session expirée, clé admin
+        //   invalide...), le changement restait local SANS AUCUN signal —
+        //   puis, passé 2 minutes, un pull suivant récupérait l'ancien état
+        //   du serveur et écrasait silencieusement la modification locale.
+        //   Même filet de sécurité que pour les réservations : une erreur
+        //   définitive (401/403 — session/droits invalides) est désormais
+        //   signalée visiblement au lieu d'être perdue en silence ; une
+        //   erreur réseau temporaire est simplement réessayée au prochain
+        //   cycle, SANS faire échouer le reste de la synchronisation.
+        if (eFleet && (eFleet.status === 401 || eFleet.status === 403)) {
+          console.error('ASLDB: mise à jour de la flotte rejetée (code=' + eFleet.status + ') — session ou clé admin invalide. Le changement reste visible sur cet appareil mais n\'a pas été diffusé.', eFleet);
+          noteAbandonedSync('fleet:' + eFleet.status);
+        } else {
+          console.error('ASLDB: échec temporaire de synchronisation de la flotte, nouvelle tentative au prochain cycle.', eFleet);
+        }
+        // On n'efface PAS KEY_PEND_F : la modification reste protégée
+        // contre un pull qui l'écraserait, jusqu'à expiration du délai de
+        // sécurité (2 min) ou jusqu'à un envoi réussi.
+      }
     }
     // 2) Réservations créées hors-ligne / non confirmées par le serveur
     const adds = readJSON(KEY_PEND_RA, []);
