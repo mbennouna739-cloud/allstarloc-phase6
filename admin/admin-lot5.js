@@ -227,11 +227,29 @@ function renderDashboard() {
     if (tbody) {
       // ★ CORRECTIF (point 2) : une réservation annulée ne doit plus
       //   apparaître dans l'activité récente du Dashboard.
-      var recent = res.filter(function(r) { return r.status !== 'cancelled'; }).sort(function(a,b) {
-        return String(b.createdAt||b.startDate||'').localeCompare(String(a.createdAt||a.startDate||''));
-      }).slice(0,7);
+      // ★ CORRECTIF (« ordre d'affichage ») — le tri se faisait par ordre de
+      //   SAISIE (createdAt), pas par date/heure de l'activité elle-même :
+      //   deux locations saisies dans un ordre différent de leurs dates
+      //   réelles s'affichaient donc mal classées. Trié désormais par
+      //   date+heure de départ RÉELLES, toujours du plus récent au plus
+      //   ancien, quel que soit l'ordre de saisie.
+      var allActivity = res.filter(function(r) { return r.status !== 'cancelled'; }).sort(function(a,b) {
+        var ka = String(a.startDate||'') + 'T' + String(a.startTime||'00:00');
+        var kb = String(b.startDate||'') + 'T' + String(b.startTime||'00:00');
+        if (ka !== kb) return kb.localeCompare(ka);
+        return String(b.createdAt||'').localeCompare(String(a.createdAt||''));
+      });
+      // ★ Recherche (point : notamment par véhicule / plaque).
+      var actQ = ((document.getElementById('dash-activity-search') || {}).value || '').toLowerCase().trim();
+      var recent = actQ ? allActivity.filter(function(r) {
+        return ((r.car||'') + ' ' + (r.assignedPlate||'') + ' ' + (r.client||'') + ' ' + (r.contractRef||'')).toLowerCase().indexOf(actQ) >= 0;
+      }) : allActivity;
+      // ★ CORRECTIF (« historique complet ») — un .slice(0,7) limitait
+      //   l'affichage aux 7 dernières lignes ; retiré, le conteneur est
+      //   désormais défilant (voir le CSS de la carte) pour donner accès à
+      //   tout l'historique par simple scroll.
       if (!recent.length) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text3);">Aucune réservation — les réservations du site client apparaîtront ici automatiquement.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--text3);">' + (actQ ? 'Aucun résultat pour cette recherche.' : 'Aucune réservation — les réservations du site client apparaîtront ici automatiquement.') + '</td></tr>';
       } else {
         // ★ Item 2 : provenance du client (Site Web / Réservation manuelle / ...)
         var ORIGIN_LABELS_DASH = {
@@ -245,6 +263,8 @@ function renderDashboard() {
             '<td><strong>' + (r.contractRef || r.id || '') + '</strong></td>' +
             '<td>' + (r.client || '') + '</td>' +
             '<td style="font-size:12px;color:var(--text2);">' + (r.car || '') + '</td>' +
+            '<td style="font-size:12px;color:var(--text3);">' + (r.assignedPlate || '—') + '</td>' +
+            '<td style="font-size:12px;color:var(--text3);">' + (r.assignedColor || '—') + '</td>' +
             '<td style="font-size:12px;">' + (r.startDate||'') + (r.endDate ? ' → '+r.endDate : '') + '</td>' +
             '<td><span class="badge badge-gray" style="font-size:11px;">' + originLabel + '</span></td>' +
             '<td><strong>' + (r.amount||0) + ' MAD</strong></td>' +
@@ -514,7 +534,7 @@ function migrateLegacyMaint(MAINT, fleet) {
   fleet.forEach(function (c) {
     var legacy = MAINT[String(c.id)];
     if (!legacy) return;
-    var units = normalizeUnits(c);
+    var units = (typeof ASLDB !== 'undefined' && ASLDB.normalizeUnits) ? ASLDB.normalizeUnits(c) : [];
     var firstPlate = units[0] ? units[0].plate : '';
     var newKey = maintKey(c.id, firstPlate);
     if (!MAINT[newKey]) { MAINT[newKey] = legacy; changed = true; }
@@ -537,7 +557,7 @@ function renderMaintenance() {
     //   véhicule en stock (même modèle) a son propre suivi individuel.
     var rowsData = [];
     fleet.forEach(function (c) {
-      normalizeUnits(c).forEach(function (u) {
+      ((typeof ASLDB !== 'undefined' && ASLDB.normalizeUnits) ? ASLDB.normalizeUnits(c) : []).forEach(function (u) {
         rowsData.push({ car: c, plate: u.plate || '', color: u.color || '' });
       });
     });
@@ -629,7 +649,7 @@ function openMaintModal(carId, plate) {
     // ★ Une option PAR IMMATRICULATION, pas par modèle.
     var opts = [];
     fleet.forEach(function(c) {
-      normalizeUnits(c).forEach(function(u) {
+      ((typeof ASLDB !== 'undefined' && ASLDB.normalizeUnits) ? ASLDB.normalizeUnits(c) : []).forEach(function(u) {
         opts.push('<option value="' + c.id + '::' + (u.plate||'') + '">' + c.name + ' (' + (u.plate||'sans plaque') + ')</option>');
       });
     });
@@ -1239,16 +1259,45 @@ function confirmPickup(id) {
   var res = aslRes();
   var r = res.find(function(x) { return String(x.id) === String(id); });
   if (!r) return;
-  if (!confirm('Confirmer la prise en charge de « ' + (r.car||'') + ' » par ' + (r.client||'') + ' ?\nCette réservation deviendra une location active.')) return;
+  // ★ MISSION (point 6) — Une réservation manuelle ne verrouille désormais
+  //   que le MODÈLE (aucune plaque assignée à la création). L'immatriculation
+  //   précise se choisit ICI, au moment réel de la prise en charge — parmi
+  //   les unités actuellement libres de ce modèle. Une réservation venant
+  //   du site web a déjà sa plaque verrouillée depuis la création : on ne
+  //   redemande rien dans ce cas.
+  var chosenPlate = r.assignedPlate || '';
+  var chosenColor = r.assignedColor || '';
+  if (!chosenPlate && r.carId != null && typeof ASLDB !== 'undefined' && ASLDB.normalizeUnits && ASLDB.unitBusyAt) {
+    var carForPickup = aslFleet().find(function(c) { return c.id === r.carId; });
+    if (carForPickup) {
+      var freeUnits = ASLDB.normalizeUnits(carForPickup).filter(function(u) {
+        var s = (u && u.status) || 'available';
+        return s !== 'maintenance' && s !== 'offroad' && s !== 'lld' && !ASLDB.unitBusyAt(r.carId, u.plate, new Date());
+      });
+      if (!freeUnits.length) { alert('Aucune unité disponible de « ' + (r.car||'') + ' » en ce moment pour effectuer la prise en charge.'); return; }
+      if (freeUnits.length === 1) {
+        chosenPlate = freeUnits[0].plate || '';
+        chosenColor = freeUnits[0].color || '';
+      } else {
+        var options = freeUnits.map(function(u, i) { return (i+1) + '. ' + (u.plate || 'sans plaque') + (u.color ? ' — ' + u.color : ''); }).join('\n');
+        var pick = prompt('Plusieurs unités de « ' + (r.car||'') + ' » sont disponibles.\nQuelle immatriculation remettez-vous au client ?\n\n' + options + '\n\nSaisissez le numéro correspondant :', '1');
+        var idx = parseInt(pick, 10) - 1;
+        if (isNaN(idx) || !freeUnits[idx]) return; // annulé ou saisie invalide
+        chosenPlate = freeUnits[idx].plate || '';
+        chosenColor = freeUnits[idx].color || '';
+      }
+    }
+  }
+  if (!confirm('Confirmer la prise en charge de « ' + (r.car||'') + (chosenPlate ? ' (' + chosenPlate + ')' : '') + ' » par ' + (r.client||'') + ' ?\nCette réservation deviendra une location active.')) return;
   if (typeof ASLDB !== 'undefined' && ASLDB.updateReservation) {
-    ASLDB.updateReservation(id, { status: 'active', type: 'location' });
+    ASLDB.updateReservation(id, { status: 'active', type: 'location', assignedPlate: chosenPlate, assignedColor: chosenColor });
   }
   // ★ Le véhicule doit être marqué comme réellement occupé — sans ça, sa
   //   fiche flotte pouvait rester sur un statut de réservation figé même
   //   après la prise en charge (déconnecté du statut réel de la location).
   if (r.carId != null && typeof ASLDB !== 'undefined') {
-    if (r.assignedPlate && typeof ASLDB.setUnitStatusByPlate === 'function') {
-      ASLDB.setUnitStatusByPlate(r.carId, r.assignedPlate, 'active');
+    if (chosenPlate && typeof ASLDB.setUnitStatusByPlate === 'function') {
+      ASLDB.setUnitStatusByPlate(r.carId, chosenPlate, 'active');
     } else if (typeof ASLDB.assignUnit === 'function') {
       ASLDB.assignUnit(r.carId, 'active');
     }

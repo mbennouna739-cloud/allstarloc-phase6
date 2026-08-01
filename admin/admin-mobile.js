@@ -504,7 +504,15 @@
     //   son propre compteur et à Desktop — d'où liste ≠ compteur et
     //   Mobile ≠ Desktop).
     var list = ASLDB.selectRented ? ASLDB.selectRented() : reservations().filter(function (r) { return ASLDB.computePhase(r) === 'active'; });
-    host.innerHTML = list.length ? list.map(function (r) { return resCard(r, 'rental'); }).join('') : '<div class="ma-empty">Aucune location en cours aujourd\'hui.</div>';
+    // ★ Moteur de recherche (véhicule, plaque ou client) — pour retrouver
+    //   rapidement une voiture louée sans faire défiler toute la liste.
+    var q = ((document.getElementById('ma-rentals-search') || {}).value || '').toLowerCase().trim();
+    var filtered = q ? list.filter(function (r) {
+      return ((r.car || '') + ' ' + (r.assignedPlate || '') + ' ' + (r.client || '')).toLowerCase().indexOf(q) >= 0;
+    }) : list;
+    var searchHtml = '<div class="ma-search-wrap">' + ic('search') + '<input type="search" id="ma-rentals-search" class="ma-search" placeholder="Rechercher (véhicule, plaque, client)…" oninput="renderRentals()" value="' + (q ? q.replace(/"/g, '&quot;') : '') + '"></div>';
+    var listHtml = filtered.length ? filtered.map(function (r) { return resCard(r, 'rental'); }).join('') : '<div class="ma-empty">' + (q ? 'Aucun résultat pour cette recherche.' : 'Aucune location en cours aujourd\'hui.') + '</div>';
+    host.innerHTML = searchHtml + listHtml;
   }
 
   function resCard(r, kind) {

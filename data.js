@@ -1327,12 +1327,22 @@
     return r.assignedPlate === plate;
   }
   /* Une unité est occupée MAINTENANT si une réservation non annulée et non
-     clôturée la concerne et qu'elle est en cours (ou en retard). */
+     clôturée la concerne et qu'elle est en cours (ou en retard).
+     ★ EXCEPTION (point 6, réservations du site web) : le véhicule précis
+     choisi par un client sur le site reste PROTÉGÉ dès la réservation —
+     personne ne doit pouvoir le lui prendre — et ce pour toute la durée de
+     vie de la réservation (pas seulement une fois la location commencée),
+     jusqu'à son annulation, sa transformation en location, ou sa fin. Les
+     réservations manuelles (Back Office, sans plaque assignée à la
+     création) restent, elles, sans effet sur la disponibilité tant
+     qu'elles ne sont pas devenues une location active — comportement
+     inchangé. */
   function unitBusyAt(carId, plate, when) {
     when = when || new Date();
     return _activeRes().some(function (r) {
       if (r.status === 'completed') return false;
       if (!_sameUnit(r, carId, plate)) return false;
+      if (r.source === 'online' && r.assignedPlate) return true; // verrouillé pour toute la durée de vie
       var ph = computePhase(r, when);
       return ph === 'active' || ph === 'late';
     });
@@ -1340,7 +1350,22 @@
   /* Unités réellement libres à l'instant présent (base des compteurs). */
   function unitsAvailableNow(car, when) {
     var units = normalizeUnits(car);
-    var free = units.filter(function (u) { return !unitBusyAt(car.id, u.plate, when); });
+    // ★ CORRECTIF (cause exacte de "5 disponibles" affiché pour 2 réels) —
+    //   cette fonction ne vérifiait QUE les réservations actives, en
+    //   ignorant totalement le statut manuel de l'unité (Maintenance / Hors
+    //   service) réglé depuis la fiche Véhicules. Un véhicule mis en
+    //   maintenance restait donc compté comme disponible dans TOUS les
+    //   compteurs (Dashboard, Mobile, badge de stock sur la fiche
+    //   véhicule) tant qu'aucune réservation n'était créée dessus.
+    //   checkAvailability() excluait déjà ces statuts pour le calcul du
+    //   stock réservable — même règle appliquée ici, pour que les deux
+    //   calculs (et donc tous les compteurs qui en dépendent) concordent
+    //   toujours avec l'état réel de la flotte.
+    var free = units.filter(function (u) {
+      var s = (u && u.status) || 'available';
+      if (s === 'maintenance' || s === 'offroad' || s === 'lld') return false;
+      return !unitBusyAt(car.id, u.plate, when);
+    });
     return { total: units.length, available: free.length, isAvailable: free.length > 0, freeUnits: free };
   }
 

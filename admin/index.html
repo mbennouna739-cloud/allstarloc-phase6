@@ -700,12 +700,17 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
       <div class="table-card">
         <div class="table-header">
           <div class="table-title">Activité récente</div>
-          <button class="btn-sm primary" onclick="showPage('reservations',document.querySelector('.sb-item[onclick*=reservations]'))">Voir toutes →</button>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div class="search-bar" style="min-width:200px;"><span style="display:flex;align-items:center;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></span><input id="dash-activity-search" placeholder="Rechercher (véhicule, plaque, client...)" oninput="renderDashboard()"></div>
+            <button class="btn-sm primary" onclick="showPage('reservations',document.querySelector('.sb-item[onclick*=reservations]'))">Voir toutes →</button>
+          </div>
         </div>
+        <div style="max-height:420px;overflow-y:auto;">
         <table>
-          <thead><tr><th>N° Contrat</th><th>Client</th><th>Véhicule</th><th>Dates</th><th>Origine</th><th>Montant</th><th>Statut</th><th></th></tr></thead>
+          <thead><tr><th>N° Contrat</th><th>Client</th><th>Véhicule</th><th>Plaque</th><th>Couleur</th><th>Dates</th><th>Origine</th><th>Montant</th><th>Statut</th><th></th></tr></thead>
           <tbody id="dashboard-reservations"></tbody>
         </table>
+        </div>
       </div>
     </div>
 
@@ -2650,19 +2655,36 @@ function openModal(type) {
       const nrCollectedBy = document.getElementById('nr-collected-by')?.value || '';
       if (paid > 0 && !nrCollectedBy) { alert('Un montant a été saisi comme reçu : merci d\'indiquer qui l\'a encaissé (Mohamed / Younes / Khalil).'); return; }
 
+      // ★ MISSION (point 6) — Une réservation créée MANUELLEMENT depuis le
+      //   Back Office ne réserve désormais que le MODÈLE : l'immatriculation
+      //   précise est choisie plus tard, au moment de la prise en charge
+      //   réelle (confirmPickup). Cause exacte de "plusieurs véhicules
+      //   apparaissent réservés pour une seule réservation" : verrouiller
+      //   une plaque dès la réservation, alors que rien n'empêchait ensuite
+      //   d'en assigner une AUTRE à la prise en charge, laissant les deux
+      //   unités indisponibles pour rien.
+      //   EXCEPTION explicite : une réservation venant du site web
+      //   (Origine = Site Web) reste liée au véhicule précis choisi par le
+      //   client — ce véhicule doit rester protégé (personne d'autre ne
+      //   peut se le voir attribuer) tant que cette réservation existe.
+      const nrSourceVal = document.getElementById('nr-source')?.value || 'manual';
+      const nrIsOnline = (nrSourceVal === 'online');
+      const nrAssignedPlate = nrIsOnline ? chosenPlate : '';
+      const nrAssignedColor = nrIsOnline ? chosenColor : '';
+
       const newRes = ASLDB.addReservation({
         client: `${fn} ${ln||''}`.trim(),
         contractRef: contractRef,
         email: '', phone: document.getElementById('nr-phone')?.value||'',
         profession: document.getElementById('nr-profession')?.value||'',
         car: car?.name||'', carId,
-        pricePerDay: ppu, assignedPlate: chosenPlate, assignedColor: chosenColor,
+        pricePerDay: ppu, assignedPlate: nrAssignedPlate, assignedColor: nrAssignedColor,
         days, amount: total, paid: paid, paymentStatus: payStatus, paymentMode: paymentMode,
         collectedBy: nrCollectedBy,
         startDate: start, endDate: end,
         startTime: startTime, endTime: endTime,
         pickup: document.getElementById('nr-pickup')?.value || '',
-        source: document.getElementById('nr-source')?.value || 'manual',
+        source: nrSourceVal,
         status: 'confirmed', type: 'reservation', payment: 'onsite', nationality: 'N/A',
         subleaseId: nrSubleaseId, finalClient: nrSubleaseId ? nrFinalClient : '',
         notes: document.getElementById('nr-notes')?.value||'',
