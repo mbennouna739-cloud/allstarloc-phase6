@@ -314,12 +314,19 @@ function openDashDrawer(type) {
 
   if (type === 'available') {
     title = '🟢 Véhicules disponibles';
-    fleet.filter(function(c) { return c.status === 'available'; }).forEach(function(c) {
-      var units = [];
-      try { if (typeof ASLDB !== 'undefined' && ASLDB.normalizeUnits) units = ASLDB.normalizeUnits(c); } catch(e) {}
-      if (!units || !units.length) units = [{ plate: c.plate||'', color: c.color||'', status: c.status||'available' }];
-      var availUnits = units.filter(function(u) { return !u.status || u.status === 'available'; });
-      availUnits.forEach(function(u) {
+    // ★ CORRECTIF (compteur ≠ liste, voiture qui vient de rentrer absente
+    //   de cette liste) — CAUSE EXACTE : cette liste filtrait sur
+    //   l'ancien indicateur MANUEL stocké (unit.status === 'available'),
+    //   un système totalement indépendant du compteur — qui, lui, a été
+    //   corrigé pour calculer la disponibilité RÉELLE à partir des
+    //   réservations (voir ASLDB.unitsAvailableNow). Ces deux calculs
+    //   pouvaient donc légitimement afficher des résultats différents.
+    //   La liste utilise désormais EXACTEMENT le même calcul que le
+    //   compteur — une seule source de vérité, plus aucune divergence
+    //   possible entre "combien" et "lesquelles".
+    fleet.forEach(function(c) {
+      var av = (typeof ASLDB !== 'undefined' && ASLDB.unitsAvailableNow) ? ASLDB.unitsAvailableNow(c) : { freeUnits: [] };
+      av.freeUnits.forEach(function(u) {
         var plateLabel = u.plate || '';
         if (u.color) plateLabel += (plateLabel ? ' — ' : '') + u.color;
         var future = nextFutureReservation(c, res, ts);

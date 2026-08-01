@@ -55,6 +55,7 @@
      stroke=currentColor. Aucune image, aucun emoji.
      ============================================================ */
   var ICONS = {
+    refresh: '<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>',
     grid: '<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>',
     car: '<path d="M19 17h2l.64-2.54a6 6 0 0 0-1.4-5.01l-1.07-1.21A2 2 0 0 0 17.66 7H6.34a2 2 0 0 0-1.51.69L3.76 8.9a6 6 0 0 0-1.4 5.01L3 17h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>',
     key: '<path d="M2.59 17.41A2 2 0 0 0 2 18.83V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.17a2 2 0 0 0 1.42-.59l.82-.82a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".75" fill="currentColor" stroke="none"/>',
@@ -496,6 +497,20 @@
   function renderRentals() {
     var host = document.getElementById('ma-rentals');
     if (!host) return;
+    // ★ CORRECTIF (lenteur/lag de la recherche) — CAUSE EXACTE : l'ancienne
+    //   version reconstruisait TOUT le bloc (champ de recherche INCLUS) à
+    //   chaque frappe. Le champ était donc détruit et recréé à chaque
+    //   caractère tapé, perdant le focus et la position du curseur —
+    //   d'où l'impression que "ça prend du temps" pour taper "Kia" en
+    //   entier. Le champ de recherche est désormais construit UNE SEULE
+    //   fois ; seule la liste de résultats en dessous se met à jour à
+    //   chaque frappe, sans jamais toucher au champ lui-même.
+    host.innerHTML = '<div class="ma-search-wrap">' + ic('search') + '<input type="search" id="ma-rentals-search" class="ma-search" placeholder="Rechercher (véhicule, plaque, client)…" oninput="renderRentalsList()"></div><div id="ma-rentals-list"></div>';
+    renderRentalsList();
+  }
+  function renderRentalsList() {
+    var listHost = document.getElementById('ma-rentals-list');
+    if (!listHost) return;
     // ★ CORRECTIF (item 1/6, parité Desktop) : phase réelle (date+heure+
     //   fuseau réels) au lieu de la comparaison de chaînes de date qui
     //   retardait d'un jour le passage "Réservé" → "Loué".
@@ -504,16 +519,13 @@
     //   son propre compteur et à Desktop — d'où liste ≠ compteur et
     //   Mobile ≠ Desktop).
     var list = ASLDB.selectRented ? ASLDB.selectRented() : reservations().filter(function (r) { return ASLDB.computePhase(r) === 'active'; });
-    // ★ Moteur de recherche (véhicule, plaque ou client) — pour retrouver
-    //   rapidement une voiture louée sans faire défiler toute la liste.
     var q = ((document.getElementById('ma-rentals-search') || {}).value || '').toLowerCase().trim();
     var filtered = q ? list.filter(function (r) {
       return ((r.car || '') + ' ' + (r.assignedPlate || '') + ' ' + (r.client || '')).toLowerCase().indexOf(q) >= 0;
     }) : list;
-    var searchHtml = '<div class="ma-search-wrap">' + ic('search') + '<input type="search" id="ma-rentals-search" class="ma-search" placeholder="Rechercher (véhicule, plaque, client)…" oninput="renderRentals()" value="' + (q ? q.replace(/"/g, '&quot;') : '') + '"></div>';
-    var listHtml = filtered.length ? filtered.map(function (r) { return resCard(r, 'rental'); }).join('') : '<div class="ma-empty">' + (q ? 'Aucun résultat pour cette recherche.' : 'Aucune location en cours aujourd\'hui.') + '</div>';
-    host.innerHTML = searchHtml + listHtml;
+    listHost.innerHTML = filtered.length ? filtered.map(function (r) { return resCard(r, 'rental'); }).join('') : '<div class="ma-empty">' + (q ? 'Aucun résultat pour cette recherche.' : 'Aucune location en cours aujourd\'hui.') + '</div>';
   }
+  window.renderRentalsList = renderRentalsList;
 
   function resCard(r, kind) {
     var reste = Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
@@ -736,12 +748,16 @@
     // ★ Une carte par UNITÉ physique disponible (pas par modèle) : un modèle
     //   « Clio 5 » avec 3 unités libres doit produire 3 cartes distinctes,
     //   chacune avec sa propre plaque/couleur — même logique que renderVehicles.
+    // ★ CORRECTIF (cohérence compteur/liste, cf. Desktop) — cette liste
+    //   filtrait sur l'ancien indicateur manuel stocké (unit.status), un
+    //   système indépendant du compteur qui, lui, calcule la disponibilité
+    //   RÉELLE à partir des réservations. Désormais même source unique
+    //   (ASLDB.unitsAvailableNow) que le compteur et que la liste Desktop.
     var rows = [];
     fleet().forEach(function (c) {
       if (c.status === 'lld') return;
-      var units = (typeof ASLDB !== 'undefined' && ASLDB.normalizeUnits) ? ASLDB.normalizeUnits(c) : [{ plate: c.plate || '', color: '', status: c.status || 'available' }];
-      units.forEach(function (u) {
-        if ((u.status || 'available') !== 'available') return;
+      var av = (typeof ASLDB !== 'undefined' && ASLDB.unitsAvailableNow) ? ASLDB.unitsAvailableNow(c) : { freeUnits: [] };
+      av.freeUnits.forEach(function (u) {
         rows.push({ car: c, unit: u });
       });
     });
@@ -1520,6 +1536,12 @@
       + '<button class="ma-head-back" id="ma-head-back" aria-label="Retour" onclick="window.maGo(\'dashboard\')" style="display:none;">' + ic('arrowLeft') + '</button>'
       + '<img class="ma-head-logo" src="data:image/png;base64,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" alt="All Star Loc">'
       + '<div class="ma-head-txt"><h1 id="ma-title">Tableau de bord</h1><div class="ma-greet">Bonjour ' + esc(greet) + '</div><div id="ma-clock" style="font-size:11.5px;color:rgba(255,255,255,.65);font-weight:600;margin-top:2px;">—</div></div>'
+      // ★ Bouton "Resynchroniser" (Mobile) — équivalent exact du bouton
+      //   Desktop : relit toutes les données depuis la base (lecture
+      //   seule, aucune donnée locale n'est écrasée par autre chose que ce
+      //   qui existe réellement côté serveur) pour que Mobile affiche
+      //   strictement la même chose que Desktop en un clic.
+      + '<button class="ma-head-btn" id="ma-resync-btn" aria-label="Resynchroniser" title="Resynchroniser depuis le serveur" onclick="maResyncData()">' + ic('refresh') + '</button>'
       + '<button class="ma-head-btn" aria-label="Notifications" onclick="maToggleNotifications()">' + ic('bell') + '<span class="ma-dot" id="ma-head-dot" style="display:none;"></span></button></div>'
       + screen('dashboard') + screen('vehicles') + screen('available') + screen('reserved') + screen('activites') + screen('reservations') + screen('rentals')
       + screen('returns') + screen('late') + screen('clients') + screen('sublease') + screen('lld') + screen('unpaid') + screen('revenue') + screen('caisse') + screen('notifications');
@@ -1585,6 +1607,29 @@
     b.style.display = 'flex';
   }
   function hideSyncError() { var b = document.getElementById('ma-sync-error'); if (b) b.style.display = 'none'; }
+
+  /* ★ "Resynchroniser" (Mobile) — équivalent exact de resyncData() côté
+     Desktop : relit toutes les données depuis le serveur (lecture seule)
+     et recalcule tout ce qui est affiché, pour repartir sur une base
+     strictement identique à Desktop, en cas de doute sur la synchro. */
+  window.maResyncData = async function () {
+    var btn = document.getElementById('ma-resync-btn');
+    if (btn) { btn.classList.add('ma-spin'); btn.disabled = true; }
+    try {
+      if (typeof ASLDB === 'undefined' || !ASLDB.resyncAll) throw new Error('Module de synchronisation indisponible.');
+      await ASLDB.resyncAll();
+      try { renderScreen(current); } catch (e) {}
+      try { renderNotifications(); } catch (e) {}
+      if (typeof showToast === 'function') showToast('Resynchronisation terminée avec succès.');
+      else alert('Resynchronisation terminée avec succès.');
+    } catch (e) {
+      console.error('maResyncData:', e);
+      if (typeof showToast === 'function') showToast('Erreur lors de la resynchronisation.');
+      else alert('Erreur lors de la resynchronisation.');
+    } finally {
+      if (btn) { btn.classList.remove('ma-spin'); btn.disabled = false; }
+    }
+  };
 
   function start() {
     if (!isMobile()) return;

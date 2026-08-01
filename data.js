@@ -1364,6 +1364,16 @@
     var free = units.filter(function (u) {
       var s = (u && u.status) || 'available';
       if (s === 'maintenance' || s === 'offroad' || s === 'lld') return false;
+      // ★ CORRECTIF (cause n°2 de "compteur ≠ réalité") — le champ "Stock"
+      //   (nombre) sur la fiche véhicule est modifiable librement, sans
+      //   lien automatique avec les immatriculations réellement
+      //   enregistrées. Quand Stock est plus grand que le nombre de
+      //   plaques suivies, normalizeUnits() complète avec une unité
+      //   FANTÔME (sans plaque) pour respecter ce chiffre — un véhicule
+      //   qui n'existe pas physiquement était donc compté comme
+      //   disponible. Une unité sans plaque n'est pas une voiture qu'on
+      //   peut réellement remettre à un client : exclue du compteur.
+      if (!u.plate) return false;
       return !unitBusyAt(car.id, u.plate, when);
     });
     return { total: units.length, available: free.length, isAvailable: free.length > 0, freeUnits: free };
