@@ -323,26 +323,46 @@ function updateRevenueCard() {
 function showCollectorDetail(name) {
   var box = document.getElementById('collector-detail');
   if (!box) return;
-  var rows = asl7Res().filter(function (r) {
-    if (r.status === 'cancelled') return false;
-    var paid = Number(r.paid) || 0;
-    if (paid <= 0) return false;
-    var who = r.collectedBy || '';
-    return (name === 'Non attribué') ? !['Mohamed','Younes','Khalil'].includes(who) : who === name;
+  // ★ CORRECTIF (paiements partiels par plusieurs personnes) — un même
+  //   dossier réglé en plusieurs fois par des personnes différentes doit
+  //   apparaître sous CHAQUE carte concernée, avec uniquement la part que
+  //   cette personne a réellement encaissée — pas le montant total du
+  //   dossier. On construit donc une ligne PAR VERSEMENT quand le détail
+  //   existe (r.payments[]), et on ne retombe sur l'ancien comportement
+  //   (une ligne par dossier) que pour les dossiers sans ce détail.
+  var lines = [];
+  asl7Res().forEach(function (r) {
+    if (r.status === 'cancelled') return;
+    if (Array.isArray(r.payments) && r.payments.length) {
+      r.payments.forEach(function (p) {
+        var amt = Number(p.amount) || 0;
+        if (amt <= 0) return;
+        var who = p.collectedBy || '';
+        var matches = (name === 'Non attribué') ? !['Mohamed','Younes','Khalil'].includes(who) : who === name;
+        if (matches) lines.push({ r: r, amount: amt, date: p.date || '' });
+      });
+    } else {
+      var paid = Number(r.paid) || 0;
+      if (paid <= 0) return;
+      var who2 = r.collectedBy || '';
+      var matches2 = (name === 'Non attribué') ? !['Mohamed','Younes','Khalil'].includes(who2) : who2 === name;
+      if (matches2) lines.push({ r: r, amount: paid, date: '' });
+    }
   });
-  var total = rows.reduce(function (s2, r) { return s2 + (Number(r.paid) || 0); }, 0);
+  var total = lines.reduce(function (s2, l) { return s2 + l.amount; }, 0);
   box.innerHTML =
     '<div style="margin-top:18px;border-top:1px solid var(--border);padding-top:14px;">' +
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
-    '<div style="font-weight:700;font-size:13.5px;">Détail — ' + name + ' (' + rows.length + ' dossier(s))</div>' +
+    '<div style="font-weight:700;font-size:13.5px;">Détail — ' + name + ' (' + lines.length + ' versement(s))</div>' +
     '<button class="btn-sm ghost" onclick="document.getElementById(\'collector-detail\').innerHTML=\'\'">Fermer ✕</button></div>' +
-    (rows.length ? rows.map(function (r) {
+    (lines.length ? lines.map(function (l) {
+      var r = l.r;
       var resteImpaye = Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
       return '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:12.5px;">' +
-        '<div style="min-width:0;"><strong>' + (r.contractRef || r.id) + '</strong>' +
+        '<div style="min-width:0;"><strong>' + (r.contractRef || r.id) + '</strong>' + (l.date ? ' <span style="color:var(--text3);font-weight:400;">— ' + l.date + '</span>' : '') +
         '<div style="color:var(--text3);font-size:11.5px;">' + (r.client || '') + ' · ' + (r.car || '') + (r.assignedPlate ? ' (' + r.assignedPlate + ')' : '') + '</div>' +
-        '<div style="color:var(--text3);font-size:11px;margin-top:2px;">' + (r.days || 0) + ' jour(s)' + (resteImpaye > 0 ? ' · <span style="color:#ef4444;font-weight:600;">reste ' + resteImpaye.toLocaleString('fr-FR') + ' MAD</span>' : ' · <span style="color:#16a34a;">soldé</span>') + '</div></div>' +
-        '<strong style="color:#16a34a;white-space:nowrap;">' + (Number(r.paid) || 0).toLocaleString('fr-FR') + ' MAD</strong></div>';
+        '<div style="color:var(--text3);font-size:11px;margin-top:2px;">' + (r.days || 0) + ' jour(s)' + (resteImpaye > 0 ? ' · <span style="color:#ef4444;font-weight:600;">reste ' + resteImpaye.toLocaleString('fr-FR') + ' MAD (dossier)</span>' : ' · <span style="color:#16a34a;">dossier soldé</span>') + '</div></div>' +
+        '<strong style="color:#16a34a;white-space:nowrap;">' + l.amount.toLocaleString('fr-FR') + ' MAD</strong></div>';
     }).join('') : '<div style="color:var(--text3);font-size:12.5px;padding:10px 0;">Aucun encaissement.</div>') +
     '<div style="display:flex;justify-content:space-between;padding-top:10px;font-weight:800;font-size:13.5px;">' +
     '<span>Total</span><span style="color:#16a34a;">' + total.toLocaleString('fr-FR') + ' MAD</span></div></div>';

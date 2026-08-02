@@ -988,7 +988,7 @@ function viewRental(id, mode) {
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">' +
     '<div class="form-group"><label class="form-label">Date départ</label><input type="date" class="form-input" id="rd-start-date" value="' + (r.startDate||'') + '" onchange="rdDaysToEnd()"></div>' +
     '<div class="form-group"><label class="form-label">Heure départ</label><input type="time" class="form-input" id="rd-start-time" value="' + (r.startTime||'10:00') + '"></div>' +
-    '<div class="form-group"><label class="form-label">Nombre de jours</label><input type="number" min="1" class="form-input" id="rd-days" value="' + (r.days||1) + '" oninput="rdDaysToEnd()"></div>' +
+    '<div class="form-group"><label class="form-label">Nombre de jours</label><input type="number" min="1" class="form-input" id="rd-days" value="' + daysFromDates(r.startDate, r.endDate, r.days||1) + '" oninput="rdDaysToEnd()"></div>' +
     '<div class="form-group"><label class="form-label">Date retour</label><input type="date" class="form-input" id="rd-end-date" value="' + (r.endDate||'') + '" onchange="rdEndToDays()"></div>' +
     '<div class="form-group"><label class="form-label">Heure retour</label><input type="time" class="form-input" id="rd-end-time" value="' + (r.endTime||'10:00') + '"></div>' +
     '</div>' +
@@ -1093,6 +1093,25 @@ function vrRecalcTotal() {
   var ppu = parseFloat(ppuEl.value) || 0;
   totalEl.value = ppu * (days || 1);
   vrPayCalc(parseFloat(totalEl.value) || 0);
+}
+
+/* ★ CORRECTIF (« le nombre de jours doit être calculé automatiquement »)
+   — CAUSE EXACTE : à l'OUVERTURE d'une fiche, le champ "Nombre de jours"
+   affichait la valeur ENREGISTRÉE (r.days), pas une valeur recalculée
+   depuis les dates affichées. Si r.days avait été enregistré de travers à
+   un moment donné (ancien bug, saisie manuelle, etc.), la fiche continuait
+   à afficher ce chiffre faux indéfiniment — même avec des dates de départ
+   et de retour parfaitement correctes affichées juste à côté (ex. loué le
+   24, retour le 27 → doit toujours afficher 3 jours, jamais autre chose).
+   Cette fonction recalcule TOUJOURS depuis les vraies dates dès que les
+   deux sont disponibles ; r.days ne sert plus que de secours si les
+   dates manquent. Utilisée à l'ouverture de chaque fiche. */
+function daysFromDates(startISO, endISO, fallback) {
+  if (startISO && endISO) {
+    var d = Math.round((new Date(endISO + 'T00:00:00') - new Date(startISO + 'T00:00:00')) / 86400000);
+    if (d >= 1) return d;
+  }
+  return fallback || 1;
 }
 
 function rdDaysToEnd() {
@@ -1975,7 +1994,7 @@ function viewRes(id) {
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">' +
     '<div class="form-group"><label class="form-label">Date départ</label><input type="date" class="form-input" id="vr-start-date" value="' + (r.startDate||'') + '" onchange="vrDaysToEnd()"></div>' +
     '<div class="form-group"><label class="form-label">Heure départ</label><input type="time" class="form-input" id="vr-start-time" value="' + (r.startTime||'10:00') + '"></div>' +
-    '<div class="form-group"><label class="form-label">Nombre de jours</label><input type="number" min="1" class="form-input" id="vr-days" value="' + (r.days||1) + '" oninput="vrDaysToEnd()"></div>' +
+    '<div class="form-group"><label class="form-label">Nombre de jours</label><input type="number" min="1" class="form-input" id="vr-days" value="' + daysFromDates(r.startDate, r.endDate, r.days||1) + '" oninput="vrDaysToEnd()"></div>' +
     '<div class="form-group"><label class="form-label">Date retour</label><input type="date" class="form-input" id="vr-end-date" value="' + (r.endDate||'') + '" onchange="vrEndToDays()"></div>' +
     '<div class="form-group"><label class="form-label">Heure retour</label><input type="time" class="form-input" id="vr-end-time" value="' + (r.endTime||'10:00') + '"></div>' +
     '<div class="form-group"><label class="form-label">Lieu de prise en charge</label><input class="form-input" id="vr-pickup" list="dl-pickup-options" value="' + (r.pickup||'').replace(/"/g,'&quot;') + '"></div>' +
@@ -2105,10 +2124,81 @@ function viewRes(id) {
    le reste à payer atteint 0, le dossier disparaît automatiquement de la
    liste des impayés (recalculée à chaque ouverture du tiroir).
    ============================================================ */
+/* ★ MISSION (paiements partiels par plusieurs personnes) — mêmes
+   fonctions que la Location Longue Durée (admin-lld-ui.js), appliquées
+   ici aux locations/réservations classiques. r.paid reste toujours la
+   somme de r.payments[] : caisse, Grand Livre, impayés et statistiques
+   continuent d'être calculés automatiquement depuis ce même total, sans
+   double comptage possible. */
+function unpaidPaidSum(id) {
+  var r = aslRes().find(function(x) { return String(x.id) === String(id); });
+  if (!r) return 0;
+  return (r.payments || []).reduce(function(s, p) { return s + (Number(p.amount) || 0); }, 0);
+}
+function addUnpaidPaymentEntry(id) {
+  var r = aslRes().find(function(x) { return String(x.id) === String(id); });
+  if (!r) return;
+  var rest = Math.max(0, (Number(r.amount) || 0) - unpaidPaidSum(id));
+  var amountStr = prompt('Montant du versement (MAD) — reste dû : ' + fmtMAD(rest) + ' :', rest > 0 ? String(rest) : '');
+  if (amountStr == null) return;
+  var amount = parseFloat(amountStr) || 0;
+  if (amount <= 0) return;
+  var dateStr = prompt('Date du versement (AAAA-MM-JJ) :', (typeof ASLDB !== 'undefined' && ASLDB.localDateISO) ? ASLDB.localDateISO() : new Date().toISOString().slice(0,10));
+  if (dateStr == null) return;
+  var modeStr = prompt('Mode de paiement (Espèces / Carte bancaire / Virement / Chèque / Autre) :', r.paymentMode || 'Espèces') || 'Espèces';
+  var collector = prompt('Encaissé par (Mohamed / Younes / Khalil) :', '') || '';
+  if (!collector) { alert('Merci de préciser qui a encaissé ce versement (Mohamed / Younes / Khalil).'); return; }
+
+  var payments = (r.payments || []).slice();
+  payments.push({ date: dateStr, amount: amount, mode: modeStr, collectedBy: collector, comment: '' });
+  var newPaid = payments.reduce(function(s, p) { return s + (Number(p.amount) || 0); }, 0);
+  var newTotalEl = document.getElementById('vr-total');
+  var totalNow = newTotalEl ? (parseFloat(newTotalEl.value) || Number(r.amount) || 0) : (Number(r.amount) || 0);
+  var payStatus = newPaid<=0 ? 'Non payé' : (newPaid>=totalNow ? 'Paiement complet' : 'Paiement partiel');
+  if (typeof ASLDB !== 'undefined' && ASLDB.updateReservation) {
+    ASLDB.updateReservation(id, { payments: payments, paid: newPaid, paymentStatus: payStatus, paymentMode: modeStr, collectedBy: collector });
+  }
+  if (typeof reloadData === 'function') reloadData();
+  if (typeof renderAllReservations === 'function') renderAllReservations();
+  if (typeof renderPayments === 'function') renderPayments();
+  renderRentals(); renderDashboard(); updateBadges();
+  viewUnpaidFiche(id);
+  if (typeof showToast === 'function') showToast('Versement de ' + fmtMAD(amount) + ' enregistré ✓');
+}
+function deleteUnpaidPaymentEntry(id, idx) {
+  var r = aslRes().find(function(x) { return String(x.id) === String(id); });
+  if (!r) return;
+  if (!confirm('Supprimer ce versement ?')) return;
+  var payments = (r.payments || []).slice();
+  payments.splice(idx, 1);
+  var newPaid = payments.reduce(function(s, p) { return s + (Number(p.amount) || 0); }, 0);
+  var payStatus = newPaid<=0 ? 'Non payé' : (newPaid>=(Number(r.amount)||0) ? 'Paiement complet' : 'Paiement partiel');
+  if (typeof ASLDB !== 'undefined' && ASLDB.updateReservation) {
+    ASLDB.updateReservation(id, { payments: payments, paid: newPaid, paymentStatus: payStatus });
+  }
+  if (typeof reloadData === 'function') reloadData();
+  if (typeof renderAllReservations === 'function') renderAllReservations();
+  if (typeof renderPayments === 'function') renderPayments();
+  renderRentals(); renderDashboard(); updateBadges();
+  viewUnpaidFiche(id);
+  if (typeof showToast === 'function') showToast('Versement supprimé ✓');
+}
+
 function viewUnpaidFiche(id) {
   var res = aslRes();
   var r = res.find(function(x) { return String(x.id) === String(id); });
   if (!r) return;
+  // ★ CORRECTIF (« nombre de jours parfois non modifiable/non automatique »)
+  //   — CAUSE : un contrat de Location Longue Durée ouvert depuis Impayés
+  //   passait par CETTE fiche générique (dates/jours conçus pour des
+  //   locations classiques), au lieu de sa fiche dédiée (qui gère la durée
+  //   différemment). Redirigé vers la bonne fiche pour ce type de contrat.
+  if (r.type === 'lld' && typeof window.viewLLDContract === 'function') {
+    var overlay0 = document.getElementById('modal-overlay');
+    if (overlay0) overlay0.classList.remove('open');
+    window.viewLLDContract(id);
+    return;
+  }
   var overlay = document.getElementById('modal-overlay');
   var titleEl = document.getElementById('modal-title');
   var bodyEl  = document.getElementById('modal-body');
@@ -2119,6 +2209,23 @@ function viewUnpaidFiche(id) {
 
   var total = Number(r.amount)||0, paid = Number(r.paid)||0;
   var mode  = r.paymentMode || 'Espèces';
+  // ★ MISSION (paiements partiels par plusieurs personnes) — une seule
+  //   location peut désormais être réglée en PLUSIEURS FOIS, chaque
+  //   versement ayant sa propre date, son propre montant, et surtout sa
+  //   propre personne encaisseuse (ex. 500 MAD par Mohamed aujourd'hui,
+  //   300 MAD par Younes la semaine prochaine). r.paid reste toujours la
+  //   SOMME de tous les versements — caisse, Grand Livre et statistiques
+  //   continuent donc de fonctionner automatiquement, sans rien dupliquer.
+  var payments = (r.payments || []).slice().sort(function(a,b) { return String(a.date||'').localeCompare(String(b.date||'')); });
+  var payRows = payments.length ? payments.map(function(p, idx) {
+    return '<tr style="border-bottom:1px solid var(--border);">'
+      + '<td style="padding:8px 6px;">' + (p.date || '—') + '</td>'
+      + '<td style="padding:8px 6px;color:#16a34a;font-weight:600;">' + fmtMAD(p.amount) + '</td>'
+      + '<td style="padding:8px 6px;">' + (p.mode || '—') + '</td>'
+      + '<td style="padding:8px 6px;">' + (p.collectedBy || '—') + '</td>'
+      + '<td style="padding:8px 6px;"><button class="btn-sm ghost" style="color:var(--red);" data-rid="' + r.id + '" data-idx="' + idx + '" onclick="deleteUnpaidPaymentEntry(this.dataset.rid,parseInt(this.dataset.idx))">✕</button></td>'
+      + '</tr>';
+  }).join('') : '<tr><td colspan="5" style="padding:14px;text-align:center;color:var(--text3);">Aucun versement enregistré pour l\'instant.</td></tr>';
 
   if (bodyEl) bodyEl.innerHTML =
     // ★ Point 7 : nom de la sous-location affiché en tout premier si applicable.
@@ -2158,46 +2265,41 @@ function viewUnpaidFiche(id) {
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">' +
     '<div class="form-group"><label class="form-label">Date départ</label><input type="date" class="form-input" id="vr-start-date" value="' + (r.startDate||'') + '" onchange="vrDaysToEnd()"></div>' +
     '<div class="form-group"><label class="form-label">Heure départ</label><input type="time" class="form-input" id="vr-start-time" value="' + (r.startTime||'10:00') + '"></div>' +
-    '<div class="form-group"><label class="form-label">Nombre de jours</label><input type="number" min="1" class="form-input" id="vr-days" value="' + (r.days||1) + '" oninput="vrDaysToEnd()"></div>' +
+    '<div class="form-group"><label class="form-label">Nombre de jours</label><input type="number" min="1" class="form-input" id="vr-days" value="' + daysFromDates(r.startDate, r.endDate, r.days||1) + '" oninput="vrDaysToEnd()"></div>' +
     '<div class="form-group"><label class="form-label">Date retour</label><input type="date" class="form-input" id="vr-end-date" value="' + (r.endDate||'') + '" onchange="vrEndToDays()"></div>' +
     '<div class="form-group"><label class="form-label">Heure retour</label><input type="time" class="form-input" id="vr-end-time" value="' + (r.endTime||'10:00') + '"></div>' +
     '</div>' +
     '<div style="font-size:22px;font-weight:800;color:var(--red);margin:12px 0;" id="vr-total-display">' + fmtMAD(total) + '</div>' +
-    '<div style="background:rgba(18,22,30,.04);border-radius:10px;padding:14px;">' +
-    '<div style="font-weight:700;margin-bottom:10px;color:var(--red);">Paiement</div>' +
+    '<div style="background:rgba(18,22,30,.04);border-radius:10px;padding:14px;margin-bottom:14px;">' +
+    '<div style="font-weight:700;margin-bottom:10px;color:var(--red);">Montant du contrat</div>' +
     '<div class="form-row">' +
     '<div class="form-group"><label class="form-label">Total (MAD)</label>' +
-    '<input class="form-input" type="number" id="vr-total" value="' + total + '" oninput="vrPayCalc(parseFloat(this.value)||0)"></div>' +
-    '<div class="form-group"><label class="form-label">Montant reçu (MAD)</label>' +
-    '<input class="form-input" type="number" id="vr-paid" value="' + paid + '" oninput="vrPayCalc(parseFloat(document.getElementById(\'vr-total\').value)||' + total + ')"></div>' +
+    '<input class="form-input" type="number" id="vr-total" value="' + total + '" data-rid="' + r.id + '" oninput="vrPayCalc(parseFloat(this.value)||0, unpaidPaidSum(this.dataset.rid))"></div>' +
     '</div>' +
-    '<div class="form-row">' +
-    '<div class="form-group"><label class="form-label">Mode de paiement</label>' +
-    '<select class="form-select" id="vr-mode">' +
-    ['Espèces','Carte bancaire','Virement','Chèque','Autre'].map(function(m){ return '<option' + (mode===m?' selected':'') + '>' + m + '</option>'; }).join('') +
-    '</select></div>' +
-    '<div class="form-group"><label class="form-label">Encaissé par</label>' +
-    '<select class="form-select" id="vr-collected-by">' +
-    '<option value=""' + (!r.collectedBy?' selected':'') + '>— Non renseigné —</option>' +
-    ['Mohamed','Younes','Khalil'].map(function(m){ return '<option' + (r.collectedBy===m?' selected':'') + '>' + m + '</option>'; }).join('') +
-    '</select></div>' +
+    '<div id="vr-rest" style="font-weight:700;font-size:13px;margin-top:6px;"></div></div>' +
+    // ★ Historique des versements — exactement le même système que la LLD,
+    //   pour que plusieurs personnes puissent régler le même dossier en
+    //   plusieurs fois, chacune avec sa propre part clairement tracée.
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
+    '<div style="font-weight:700;">Historique des versements</div>' +
+    '<button class="btn-sm primary" data-rid="' + r.id + '" onclick="addUnpaidPaymentEntry(this.dataset.rid)">+ Ajouter un versement</button>' +
     '</div>' +
-    '<div id="vr-rest" style="font-weight:700;font-size:13px;margin-top:6px;"></div></div>';
+    '<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:420px;">' +
+    '<thead><tr style="text-align:left;color:var(--text3);font-size:12px;">' +
+    '<th style="padding:6px;">Date</th><th style="padding:6px;">Montant</th><th style="padding:6px;">Mode</th><th style="padding:6px;">Encaissé par</th><th style="padding:6px;"></th></tr></thead>' +
+    '<tbody id="vr-payments-tbody">' + payRows + '</tbody></table></div>';
+
+  // Initialise l'affichage "reste à payer" avec le total des versements déjà enregistrés.
+  setTimeout(function() { if (typeof vrPayCalc === 'function') vrPayCalc(total, unpaidPaidSum(id)); }, 0);
 
   if (footEl) footEl.style.display = 'flex';
   var saveBtn = document.getElementById('modal-save');
   if (saveBtn) {
-    saveBtn.textContent = 'Enregistrer le paiement';
+    saveBtn.textContent = 'Enregistrer';
     saveBtn.onclick = function() {
       // ★ Point 9 : total modifiable même après enregistrement, sans doublon.
       var newTotal = parseFloat(document.getElementById('vr-total') && document.getElementById('vr-total').value);
       if (isNaN(newTotal)) newTotal = total;
-      var newPaid = parseFloat(document.getElementById('vr-paid') && document.getElementById('vr-paid').value || 0);
-      var newMode = (document.getElementById('vr-mode') && document.getElementById('vr-mode').value) || r.paymentMode;
-      var newCollectedBy = (document.getElementById('vr-collected-by') && document.getElementById('vr-collected-by').value) || '';
-      // ★ « Encaissé par » : obligatoire uniquement si un montant est reçu.
-      if (newPaid > 0 && !newCollectedBy) { alert('Un montant reçu est indiqué : merci de préciser qui l\'a encaissé (Mohamed / Younes / Khalil).'); return; }
-      var payStatus = newPaid<=0 ? 'Non payé' : (newPaid>=newTotal ? 'Paiement complet' : 'Paiement partiel');
       var newRefU = (document.getElementById('vr-ref') && document.getElementById('vr-ref').value) || r.contractRef || r.id;
       var newClientU = (document.getElementById('vr-client') && document.getElementById('vr-client').value) || r.client;
       var newPhoneU = (document.getElementById('vr-phone') && document.getElementById('vr-phone').value) || '';
@@ -2207,7 +2309,9 @@ function viewUnpaidFiche(id) {
       var newEndTimeU = (document.getElementById('vr-end-time') && document.getElementById('vr-end-time').value) || r.endTime || '10:00';
       var newDaysElU = document.getElementById('vr-days');
       var newDaysU = newDaysElU ? parseInt(newDaysElU.value, 10) : r.days;
-      var patchU = { paid: newPaid, amount: newTotal, paymentMode: newMode, paymentStatus: payStatus, collectedBy: newCollectedBy, contractRef: newRefU, client: newClientU, phone: newPhoneU,
+      // ★ Le montant reçu n'est plus un champ isolé : il découle toujours
+      //   de la somme des versements enregistrés (aucun double calcul).
+      var patchU = { amount: newTotal, contractRef: newRefU, client: newClientU, phone: newPhoneU,
                      startDate: newStartDateU, startTime: newStartTimeU, endDate: newEndDateU, endTime: newEndTimeU };
       if (newDaysU && newDaysU >= 1) patchU.days = newDaysU;
       var carSelU = document.getElementById('vr-car');
@@ -2357,15 +2461,20 @@ function _rCell(label, val) {
   return '<div class="res-detail-item"><div class="res-detail-label">' + label + '</div><div class="res-detail-val">' + val + '</div></div>';
 }
 
-function vrPayCalc(total) {
+function vrPayCalc(total, explicitPaid) {
   var paidEl = document.getElementById('vr-paid');
   var restEl = document.getElementById('vr-rest');
   var totalDisplay = document.getElementById('vr-total-display');
   var totalDisplayTop = document.getElementById('vr-total-display-top');
   if (totalDisplay) totalDisplay.textContent = fmtMAD(total);
   if (totalDisplayTop) totalDisplayTop.textContent = fmtMAD(total);
-  if (!paidEl || !restEl) return;
-  var paid = parseFloat(paidEl.value)||0, reste = Math.max(0, total-paid);
+  // ★ Fiche Impayés (versements multiples) : pas de champ "vr-paid" isolé —
+  //   le montant reçu est la somme des versements du tableau, transmise
+  //   explicitement par l'appelant.
+  if (!paidEl && typeof explicitPaid !== 'number') return;
+  if (!restEl) return;
+  var paid = paidEl ? (parseFloat(paidEl.value)||0) : explicitPaid;
+  var reste = Math.max(0, total-paid);
   var statut, col;
   if (paid<=0)                        { statut='Non payé';          col='var(--red)'; }
   else if (paid>=total && total>0)    { statut='Paiement complet';  col='#22c55e'; }

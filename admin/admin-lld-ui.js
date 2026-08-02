@@ -183,7 +183,7 @@
       + '<div class="form-group"><label class="form-label">Date début</label><input type="date" class="form-input" id="lld-start" value="' + esc(c.startDate||'') + '" onchange="lldSyncDays()"></div>'
       + '<div class="form-group"><label class="form-label">Date fin</label><input type="date" class="form-input" id="lld-end" value="' + esc(c.endDate||'') + '" onchange="lldSyncDays()"></div>'
       + '</div>'
-      + '<div class="form-group"><label class="form-label">Durée (jours, calculée)</label><input class="form-input" id="lld-days-display" value="' + (c.days||0) + ' jours" disabled></div>'
+      + '<div class="form-group"><label class="form-label">Durée (jours, calculée)</label><input class="form-input" id="lld-days-display" value="' + (typeof daysFromDates === 'function' ? daysFromDates(c.startDate, c.endDate, c.days||0) : (c.days||0)) + ' jours" disabled></div>'
       + '<div style="display:flex;gap:8px 20px;flex-wrap:wrap;margin-bottom:16px;padding:12px;background:rgba(18,22,30,.03);border-radius:10px;font-size:13px;">'
       + '<div class="form-group" style="margin:0;"><label class="form-label">Montant total du contrat (MAD)</label><input class="form-input" type="number" id="lld-amount" value="' + totalDue + '"></div>'
       + '<div><span style="color:var(--text3);">Total reçu</span><br><b style="color:#16a34a;">' + money(totalPaid) + '</b></div>'

@@ -1302,7 +1302,23 @@
       var paid = Number(r.paid) || 0;
       encaisse += paid;
       reste += Math.max(0, amount - paid);
-      if (paid > 0 && byPerson.hasOwnProperty(r.collectedBy)) byPerson[r.collectedBy] += paid;
+      // ★ CORRECTIF (paiements partiels par plusieurs personnes) — CAUSE :
+      //   ce calcul ne lisait QUE r.collectedBy (une seule personne), donc
+      //   si un dossier était réglé en plusieurs fois par des personnes
+      //   différentes (ex. 500 MAD par Mohamed, puis 300 MAD par Younes),
+      //   la totalité du montant encaissé finissait attribuée à une seule
+      //   d'entre elles. Désormais, quand le détail des versements existe
+      //   (r.payments[]), chaque versement est compté sous SON PROPRE
+      //   encaisseur — la répartition par personne redevient exacte, quel
+      //   que soit le nombre de personnes ayant réglé un même dossier.
+      if (Array.isArray(r.payments) && r.payments.length) {
+        r.payments.forEach(function (p) {
+          var amt = Number(p.amount) || 0;
+          if (amt > 0 && byPerson.hasOwnProperty(p.collectedBy)) byPerson[p.collectedBy] += amt;
+        });
+      } else if (paid > 0 && byPerson.hasOwnProperty(r.collectedBy)) {
+        byPerson[r.collectedBy] += paid;
+      }
     });
     return { encaisse: encaisse, reste: reste, byPerson: byPerson };
   }

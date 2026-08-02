@@ -1516,24 +1516,42 @@
     var box = document.getElementById('ma-collector-detail');
     if (!box) return;
     var names = ['Mohamed', 'Younes', 'Khalil'];
-    var rows = reservations().filter(function (r) {
-      if (r.status === 'cancelled') return false;
-      if ((Number(r.paid) || 0) <= 0) return false;
-      var who = r.collectedBy || '';
-      return (name === 'Non attribué') ? names.indexOf(who) < 0 : who === name;
+    // ★ CORRECTIF (paiements partiels par plusieurs personnes) — même
+    //   correctif que Desktop : une ligne PAR VERSEMENT quand le détail
+    //   existe (r.payments[]), pour que chaque personne ne voie que sa
+    //   propre part d'un dossier réglé en plusieurs fois.
+    var lines = [];
+    reservations().forEach(function (r) {
+      if (r.status === 'cancelled') return;
+      if (Array.isArray(r.payments) && r.payments.length) {
+        r.payments.forEach(function (p) {
+          var amt = Number(p.amount) || 0;
+          if (amt <= 0) return;
+          var who = p.collectedBy || '';
+          var matches = (name === 'Non attribué') ? names.indexOf(who) < 0 : who === name;
+          if (matches) lines.push({ r: r, amount: amt, date: p.date || '' });
+        });
+      } else {
+        var paid = Number(r.paid) || 0;
+        if (paid <= 0) return;
+        var who2 = r.collectedBy || '';
+        var matches2 = (name === 'Non attribué') ? names.indexOf(who2) < 0 : who2 === name;
+        if (matches2) lines.push({ r: r, amount: paid, date: '' });
+      }
     });
-    var total = rows.reduce(function (s2, r) { return s2 + (Number(r.paid) || 0); }, 0);
+    var total = lines.reduce(function (s2, l) { return s2 + l.amount; }, 0);
     box.innerHTML = '<div style="margin-top:14px;">'
       + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
-      + '<b style="font-size:14px;">Détail — ' + esc(name) + ' (' + rows.length + ')</b>'
+      + '<b style="font-size:14px;">Détail — ' + esc(name) + ' (' + lines.length + ')</b>'
       + '<button class="ma-act-btn" style="padding:4px 10px;" onclick="document.getElementById(\'ma-collector-detail\').innerHTML=\'\'">Fermer</button></div>'
-      + (rows.length ? rows.map(function (r) {
+      + (lines.length ? lines.map(function (l) {
+          var r = l.r;
           var resteImpaye = Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
           return '<div class="ma-card" style="margin-bottom:8px;"><div class="ma-card-top">'
-            + '<div class="ma-card-info"><div class="ma-card-name" style="font-size:14px;">' + esc(r.contractRef || r.id) + '</div>'
+            + '<div class="ma-card-info"><div class="ma-card-name" style="font-size:14px;">' + esc(r.contractRef || r.id) + (l.date ? ' <span style="font-weight:400;color:#8a909a;">— ' + esc(l.date) + '</span>' : '') + '</div>'
             + '<div class="ma-card-sub">' + esc(r.client || '') + ' · ' + esc(r.car || '') + '</div>'
-            + '<div class="ma-card-sub" style="margin-top:2px;">' + (r.days || 0) + ' jour(s)' + (resteImpaye > 0 ? ' · <span style="color:#C41E3A;font-weight:700;">reste ' + money(resteImpaye) + '</span>' : ' · <span style="color:#16a34a;">soldé</span>') + '</div></div>'
-            + '<span class="ma-badge green">' + money(r.paid) + '</span></div></div>';
+            + '<div class="ma-card-sub" style="margin-top:2px;">' + (r.days || 0) + ' jour(s)' + (resteImpaye > 0 ? ' · <span style="color:#C41E3A;font-weight:700;">reste ' + money(resteImpaye) + ' (dossier)</span>' : ' · <span style="color:#16a34a;">dossier soldé</span>') + '</div></div>'
+            + '<span class="ma-badge green">' + money(l.amount) + '</span></div></div>';
         }).join('') : '<div class="ma-empty">Aucun encaissement.</div>')
       + '<div class="ma-cash-card" style="border-color:#16a34a;"><div class="ma-cash-lbl">Total</div>'
       + '<div class="ma-cash-num" style="color:#16a34a;">' + money(total) + '</div></div></div>';
