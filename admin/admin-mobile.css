@@ -169,6 +169,7 @@
   .ma-badge { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 50px; white-space: nowrap; flex-shrink: 0; }
   .ma-badge.green { background: rgba(22,163,74,.12); color: #15803d; }
   .ma-badge.blue { background: rgba(37,99,235,.12); color: #1d4ed8; }
+  .ma-badge.ma-badge-wrap { white-space: normal; flex-shrink: 1; max-width: 55%; text-align: right; line-height: 1.3; border-radius: 10px; }
   .ma-badge.orange { background: rgba(217,119,6,.12); color: #b45309; }
   .ma-badge.yellow { background: rgba(245,158,11,.14); color: #b45309; }
   .ma-badge.purple { background: rgba(124,58,237,.12); color: #7c3aed; }
@@ -221,6 +222,20 @@
   .ma-hist-chipsrow { display: flex; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 4px; }
   .ma-hist-chipsrow:empty { margin: 0; }
   .ma-hist-chipsrow::-webkit-scrollbar { display: none; }
+  /* Demande 1 : suggestions de véhicules (modèle + plaque + couleur) en liste
+     verticale, pour que l'immatriculation reste toujours lisible. */
+  /* Demande 2 : documents d'identité dans la fiche client mobile */
+  .ma-doc-row { background: #fff; border: 1px solid rgba(18,22,30,.10); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; }
+  .ma-doc-label { font-size: 13px; font-weight: 700; color: #101216; margin-bottom: 8px; }
+  .ma-doc-thumbs { display: flex; gap: 8px; flex-wrap: wrap; }
+  .ma-doc-thumb { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; border: 1px solid rgba(18,22,30,.10); cursor: pointer; background: rgba(18,22,30,.06); }
+  .ma-doc-pdf { display: flex; align-items: center; justify-content: center; background: rgba(196,30,58,.08); color: #C41E3A; font-weight: 800; font-size: 12px; font-family: inherit; }
+  .ma-doc-empty { font-size: 12.5px; color: #8a909a; }
+  .ma-hist-chipsrow.ma-hist-sugg { flex-direction: column; overflow: visible; gap: 6px; }
+  .ma-hist-chipsrow.ma-hist-sugg .ma-chip {
+    display: flex; align-items: center; gap: 8px; width: 100%; text-align: left;
+    white-space: normal; border-radius: 12px; line-height: 1.35;
+  }
   .ma-hist-title { font-size: 12px; font-weight: 700; color: #8a909a; text-transform: uppercase; letter-spacing: .3px; margin: 14px 2px 6px; }
   .ma-hist-month {
     font-size: 12.5px; font-weight: 800; color: #101216; margin: 16px 2px 8px; text-transform: capitalize;

@@ -429,6 +429,9 @@
           label: 'Encaissement ' + (r.contractRef || r.id || ''),
           party: r.client || '',
           vehicle: r.car || '',
+          // ★ Demande 6 : libellé affiché (modèle — plaque · couleur). Le champ
+          //   « vehicle » reste le modèle, utilisé par le filtre par véhicule.
+          vehicleLabel: (typeof aslVehLabel === 'function') ? aslVehLabel(r) : (r.car || ''),
           category: '',
           mode: r.paymentMode || '',
           collectedBy: r.collectedBy || '—',
@@ -553,7 +556,7 @@
         + '<td>' + typeBadge + '</td>'
         + '<td>' + esc(m.label) + '</td>'
         + '<td>' + esc(m.party) + '</td>'
-        + '<td>' + esc(m.vehicle || '—') + '</td>'
+        + '<td>' + esc(m.vehicleLabel || m.vehicle || '—') + '</td>'
         + '<td>' + esc(m.category || '—') + '</td>'
         + '<td>' + esc(m.mode || '—') + '</td>'
         + '<td>' + esc(m.collectedBy || '—') + '</td>'
@@ -633,7 +636,7 @@
       var dd = m.date ? new Date(m.date).toLocaleDateString('fr-FR') : '';
       return '<tr>'
         + '<td>' + dd + '</td><td>' + m.type + '</td><td>' + esc(m.label) + '</td>'
-        + '<td>' + esc(m.party) + '</td><td>' + esc(m.vehicle || '') + '</td>'
+        + '<td>' + esc(m.party) + '</td><td>' + esc(m.vehicleLabel || m.vehicle || '') + '</td>'
         + '<td>' + esc(m.category || '') + '</td><td>' + esc(m.mode || '') + '</td>'
         + '<td style="text-align:right;color:#16a34a;">' + (m.entree ? money(m.entree) : '') + '</td>'
         + '<td style="text-align:right;color:#dc2626;">' + (m.sortie ? money(m.sortie) : '') + '</td>'

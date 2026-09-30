@@ -156,10 +156,15 @@
     var todayMs = new Date(ts).getTime();
     // Visites techniques proches (≤ 7 j) + vidanges dues (rappel atteint)
     var vt = 0, vid = 0;
+    // ★ CORRECTIF (LOT 44) : entretien lu PAR IMMATRICULATION (même clé que
+    //   l'onglet Entretien) — le compteur restait à 0 avec l'ancienne clé.
     f.forEach(function (c) {
-      var m = MAINT[String(c.id)] || {};
-      if (m.vt_next) { var dv = Math.round((new Date(m.vt_next) - todayMs) / 86400000); if (dv <= 7) vt++; }
-      if (m.reminder_next && new Date(m.reminder_next).getTime() <= todayMs + 86400000) vid++;
+      var units = (typeof ASLDB !== 'undefined' && ASLDB.normalizeUnits) ? ASLDB.normalizeUnits(c) : [{ plate: c.plate || '' }];
+      units.forEach(function (u) {
+        var m = MAINT[String(c.id) + '::' + (u.plate || '_')] || MAINT[String(c.id)] || {};
+        if (m.vt_next) { var dv = Math.round((new Date(m.vt_next) - todayMs) / 86400000); if (dv <= 7) vt++; }
+        if (m.reminder_next && new Date(m.reminder_next).getTime() <= todayMs + 86400000) vid++;
+      });
     });
     // ★ CORRECTIF (item 1/3/6, parité Mobile/Desktop) : phase réelle
     //   calculée sur date+heure+fuseau réels via ASLDB.computePhase, au lieu
@@ -319,7 +324,7 @@
   function alertRow(icon, title, sub, act, tone) {
     return '<div class="ma-notif" onclick="' + act + '"><div class="ma-notif-ico ' + (tone || 'red') + '">' + ic(icon) + '</div>'
       + '<div class="ma-notif-body"><div class="ma-notif-title">' + title + '</div><div class="ma-notif-sub">' + sub + '</div></div>'
-      + '<span class="ma-notif-chev">' + ic('returns') + '</span></div>';
+      + '<span class="ma-notif-chev">' + ic('arrowLeft') + '</span></div>'; // flèche « ouvrir » (retournée en CSS)
   }
 
   /* ============ VÉHICULES ============
@@ -546,7 +551,7 @@
     if (!host) return;
     host.innerHTML =
       '<div class="ma-hist-searchrow">'
-      + '<div class="ma-search-wrap ma-hist-search-bar">' + ic('search') + '<input id="ma-hist-search" class="ma-search" placeholder="Contrat, client, véhicule…" value="' + esc(window._histSelectedVehicle || '') + '" oninput="renderHistoryListM()"></div>'
+      + '<div class="ma-search-wrap ma-hist-search-bar">' + ic('search') + '<input id="ma-hist-search" class="ma-search" placeholder="Contrat, client, véhicule…" value="' + esc((typeof historyVehicleLabel === 'function') ? historyVehicleLabel(window._histSelectedVehicle || '') : (window._histSelectedVehicle || '')) + '" oninput="renderHistoryListM()"></div>'
       + '<button class="ma-hist-filter-btn' + ((_histDateFrom || _histDateTo) ? ' active' : '') + '" aria-label="Filtrer par date" onclick="maOpenHistDateSheet()">' + ic('calendar') + '</button>'
       + '</div>'
       + '<div id="ma-hist-chips" class="ma-hist-chipsrow"></div>'
@@ -560,13 +565,15 @@
 
     var chipsEl = document.getElementById('ma-hist-chips');
     if (chipsEl) {
+      chipsEl.classList.toggle('ma-hist-sugg', !!(r.q && !r.selectedVehicle));
       if (r.q && !r.selectedVehicle) {
         var names = (typeof historyVehicleSuggestions === 'function') ? historyVehicleSuggestions(r.q) : [];
+        // ★ Demande 1 : une suggestion par voiture, avec sa plaque (et sa couleur).
         chipsEl.innerHTML = names.length ? names.map(function (n) {
-          return '<button class="ma-chip" onclick="maSelectHistoryVehicle(\'' + n.replace(/'/g, "\\'") + '\')">' + ic('car') + ' ' + esc(n) + '</button>';
+          return '<button class="ma-chip" data-vk="' + esc(n.key) + '" onclick="maSelectHistoryVehicle(this.dataset.vk)">' + ic('car') + ' ' + esc(n.label) + '</button>';
         }).join('') : '';
       } else if (r.selectedVehicle) {
-        chipsEl.innerHTML = '<button class="ma-chip active" onclick="maResetHistoryFilters()">' + ic('car') + ' ' + esc(r.selectedVehicle) + '  ✕</button>';
+        chipsEl.innerHTML = '<button class="ma-chip active" onclick="maResetHistoryFilters()">' + ic('car') + ' ' + esc(historyVehicleLabel(r.selectedVehicle)) + '  ✕</button>';
       } else {
         chipsEl.innerHTML = '';
       }
@@ -574,7 +581,7 @@
     var titleEl = document.getElementById('ma-hist-title');
     if (titleEl) {
       var dateLabel = (_histDateFrom || _histDateTo) ? ' · ' + (_histDateFrom ? fmtD(_histDateFrom) : '…') + ' → ' + (_histDateTo ? fmtD(_histDateTo) : '…') : '';
-      titleEl.textContent = (r.selectedVehicle ? r.selectedVehicle : (r.q ? 'Résultats' : 'Tous les contrats')) + ' (' + r.list.length + ')' + dateLabel;
+      titleEl.textContent = (r.selectedVehicle ? historyVehicleLabel(r.selectedVehicle) : (r.q ? 'Résultats' : 'Tous les contrats')) + ' (' + r.list.length + ')' + dateLabel;
     }
 
     var listEl = document.getElementById('ma-hist-list');
@@ -609,7 +616,7 @@
               + '<div class="ma-hist-card-ico">' + ic('key') + '</div>'
               + '<div class="ma-hist-card-body">'
               + '<div class="ma-hist-card-top"><span class="ma-hist-client">' + esc(x.client || '') + '</span>' + (days ? '<span class="ma-hist-days">' + days + '</span>' : '') + '</div>'
-              + '<div class="ma-hist-car">' + esc(x.car || '') + (x.assignedPlate ? ' · ' + esc(x.assignedPlate) : '') + '</div>'
+              + '<div class="ma-hist-car">' + esc(aslVehLabel(x)) + '</div>'
               + '<div class="ma-hist-bottom"><span class="ma-hist-dates">' + fmtD(x.startDate) + ' → ' + fmtD(x.endDate) + '</span><span class="ma-hist-ref">' + esc(x.contractRef || x.id || '') + '</span></div>'
               + '</div></div>';
           }).join('');
@@ -626,9 +633,9 @@
     _histDateFrom = ''; _histDateTo = '';
     renderHistoryM();
   };
-  window.maSelectHistoryVehicle = function (name) {
-    window._histSelectedVehicle = name;
-    var s = document.getElementById('ma-hist-search'); if (s) s.value = name;
+  window.maSelectHistoryVehicle = function (key) {
+    window._histSelectedVehicle = key;
+    var s = document.getElementById('ma-hist-search'); if (s) s.value = historyVehicleLabel(key);
     renderHistoryListM();
   };
   /* Feuille inférieure de filtre par date — raccourcis + période
@@ -724,12 +731,12 @@
     if (kind === 'rental') {
       // LOUÉS : on met en valeur le nom de la voiture, le client en dessous.
       // Pas de badge de statut. Fiche (popup) + Prolonger + Retour.
-      var plate = r.assignedPlate || (function () { try { var c = fleet().filter(function (z) { return z.name === r.car || z.id === r.carId; })[0]; return c ? (c.plate || '') : ''; } catch (e) { return ''; } })();
+      var plate = aslVehPlateColor(r); // ★ Demande 6 : plaque · couleur
       return '<div class="ma-card">'
         + '<div class="ma-card-top"><div class="ma-card-ico-box blue">' + ic('key') + '</div>'
         // ★ Badge LLD (cohérent avec Desktop)
         + '<div class="ma-card-info"><div class="ma-card-name">' + esc(r.car || 'Véhicule') + (r.type === 'lld' ? ' <span style="font-size:9.5px;font-weight:700;color:#8b5cf6;background:rgba(139,92,246,.12);border-radius:6px;padding:2px 6px;">📅 LLD</span>' : '') + '</div>'
-        + '<div class="ma-card-sub">' + esc(r.client || 'Client') + (plate ? ' · ' + esc(plate) + (r.assignedColor ? ' — ' + esc(r.assignedColor) : '') : '') + '</div></div>'
+        + '<div class="ma-card-sub">' + esc(r.client || 'Client') + (plate ? ' · ' + esc(plate) : '') + '</div></div>'
         + payBadge + '</div>'
         + '<div class="ma-card-meta">'
         + '<div class="ma-meta">Départ<b>' + fmtDateT(r.startDate, r.startTime, '10:00') + '</b></div>'
@@ -757,7 +764,7 @@
     return '<div class="ma-card">'
       + '<div class="ma-card-top"><div class="ma-card-ava">' + esc((r.client || '?').charAt(0).toUpperCase()) + '</div>'
       + '<div class="ma-card-info"><div class="ma-card-name">' + esc(r.client || 'Client') + '</div>'
-      + '<div class="ma-card-sub">' + esc(r.car || '') + ' · ' + esc(r.contractRef || r.id || '') + '</div></div>'
+      + '<div class="ma-card-sub">' + esc(aslVehLabel(r)) + ' · ' + esc(r.contractRef || r.id || '') + '</div></div>'
       + '<span class="ma-badge ' + st[0] + '">' + st[1] + '</span></div>'
       + '<div class="ma-card-meta">'
       + '<div class="ma-meta">Départ<b>' + fmtDateT(r.startDate, r.startTime, '10:00') + '</b></div>'
@@ -773,7 +780,7 @@
     var r = (ASLDB.getReservations() || []).filter(function (x) { return x.id === id; })[0];
     if (!r) return;
     var reste = Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
-    var plate = r.assignedPlate || (function () { try { var c = fleet().filter(function (z) { return z.name === r.car || z.id === r.carId; })[0]; return c ? (c.plate || '') : ''; } catch (e) { return ''; } })();
+    var plate = aslVehPlateColor(r); // ★ Demande 6 : plaque · couleur
     function row(label, val, color) {
       return '<div class="ma-fiche-row"><span class="ma-fiche-lbl">' + label + '</span><span class="ma-fiche-val"' + (color ? ' style="color:' + color + ';"' : '') + '>' + val + '</span></div>';
     }
@@ -918,7 +925,7 @@
       return '<div class="ma-card ma-return-card" onclick="maViewRental(' + idStr + ',\'returns\')">'
         + '<div class="ma-card-top"><div class="ma-card-ico-box red">' + ic('returns') + '</div>'
         + '<div class="ma-card-info"><div class="ma-card-name">' + esc(r.car || 'Véhicule') + '</div>'
-        + '<div class="ma-card-sub">' + esc(r.client || '') + (r.endTime ? ' · retour ' + esc(r.endTime) : '') + '</div></div>'
+        + '<div class="ma-card-sub">' + (aslVehPlateColor(r) ? esc(aslVehPlateColor(r)) + ' · ' : '') + esc(r.client || '') + (r.endTime ? ' · retour ' + esc(r.endTime) : '') + '</div></div>'
         + (reste > 0 ? '<span class="ma-badge red">Reste ' + money(reste) + '</span>' : '<span class="ma-badge green">Payé</span>') + '</div>'
         + '<div class="ma-return-foot"><span>' + ic('eye') + ' Ouvrir la fiche</span><span class="ma-return-date">' + fmtDateT(r.endDate, r.endTime, '18:00') + '</span></div>'
         + '</div>';
@@ -992,7 +999,7 @@
     var list = (ASLDB.selectReserved ? ASLDB.selectReserved() : []).sort(function (a, b) { return String(a.startDate || '').localeCompare(String(b.startDate || '')); });
     host.innerHTML = list.length ? list.map(function (r) {
       // Immatriculation depuis la flotte
-      var plate = r.assignedPlate || (function () { try { var c = fleet().filter(function (x) { return x.name === r.car || x.id === r.carId; })[0]; return c ? (c.plate || '') : ''; } catch (e) { return ''; } })();
+      var plate = aslVehPlateColor(r); // ★ Demande 6 : plaque · couleur
       var idStr = "'" + String(r.id || '') + "'";
       return '<div class="ma-card">'
         + '<div class="ma-card-top"><div class="ma-card-ico-box purple">' + ic('calendar') + '</div>'
@@ -1033,10 +1040,19 @@
     // Visites techniques proches + vidanges dues
     var f = fleet();
     var vts = [], vids = [];
+    // ★ CORRECTIF (LOT 44) — l'entretien est enregistré PAR IMMATRICULATION
+    //   (clé « idModèle::plaque ») depuis la mise à jour de l'onglet
+    //   Entretien ; cet écran lisait encore l'ancienne clé (id seul), qui
+    //   n'existe plus : les deux blocs restaient toujours vides. Lecture
+    //   par voiture, avec repli sur l'ancienne clé (même logique que les
+    //   notifications).
     f.forEach(function (c) {
-      var m = MAINT[String(c.id)] || {};
-      if (m.vt_next) { var dv = Math.round((new Date(m.vt_next) - todayMs) / 86400000); if (dv <= 7) vts.push({ car: c, m: m, dv: dv }); }
-      if (m.reminder_next && new Date(m.reminder_next).getTime() <= todayMs + 86400000) vids.push({ car: c, m: m });
+      var units = (typeof ASLDB !== 'undefined' && ASLDB.normalizeUnits) ? ASLDB.normalizeUnits(c) : [{ plate: c.plate || '', color: '' }];
+      units.forEach(function (u) {
+        var m = MAINT[String(c.id) + '::' + (u.plate || '_')] || MAINT[String(c.id)] || {};
+        if (m.vt_next) { var dv = Math.round((new Date(m.vt_next) - todayMs) / 86400000); if (dv <= 7) vts.push({ car: c, plate: u.plate || '', color: u.color || '', m: m, dv: dv }); }
+        if (m.reminder_next && new Date(m.reminder_next).getTime() <= todayMs + 86400000) vids.push({ car: c, plate: u.plate || '', color: u.color || '', m: m });
+      });
     });
 
     function block(title, icon, tone, items, render) {
@@ -1054,7 +1070,7 @@
       + block('Visites techniques', 'shield', 'purple', vts, function (v) {
         return '<div class="ma-card"><div class="ma-card-top"><div class="ma-card-ico-box purple">' + ic('shield') + '</div>'
           + '<div class="ma-card-info"><div class="ma-card-name">' + esc(v.car.name) + '</div>'
-          + '<div class="ma-card-sub">' + esc(v.car.plate || '') + '</div></div>'
+          + '<div class="ma-card-sub">' + esc(v.plate) + (v.color ? ' · ' + esc(v.color) : '') + '</div></div>'
           + '<span class="ma-badge ' + (v.dv < 0 ? 'red' : 'orange') + '">' + (v.dv < 0 ? 'En retard' : 'Dans ' + v.dv + 'j') + '</span></div>'
           + '<div class="ma-card-note">' + ic('calendar') + ' Visite technique : ' + esc(v.m.vt_next) + '</div></div>';
       })
@@ -1062,17 +1078,17 @@
         var kmTxt = v.m.km_vidange_next ? Number(v.m.km_vidange_next).toLocaleString('fr-FR') + ' km' : '—';
         return '<div class="ma-card"><div class="ma-card-top"><div class="ma-card-ico-box orange">' + ic('wrench') + '</div>'
           + '<div class="ma-card-info"><div class="ma-card-name">' + esc(v.car.name) + '</div>'
-          + '<div class="ma-card-sub">' + esc(v.car.plate || '') + '</div></div>'
+          + '<div class="ma-card-sub">' + esc(v.plate) + (v.color ? ' · ' + esc(v.color) : '') + '</div></div>'
           + '<span class="ma-badge orange">À vérifier</span></div>'
           + '<div class="ma-card-note">' + ic('wrench') + ' Prochaine vidange : ' + kmTxt + '</div></div>';
       });
   }
   function resMiniCard(x, kind) {
-    var plate = x.assignedPlate || (function () { try { var c = fleet().filter(function (z) { return z.name === x.car || z.id === x.carId; })[0]; return c ? (c.plate || '') : ''; } catch (e) { return ''; } })();
+    var plate = aslVehPlateColor(x); // ★ Demande 6 : plaque · couleur
     var idStr = "'" + String(x.id || '') + "'";
     return '<div class="ma-card"><div class="ma-card-top"><div class="ma-card-ico-box ' + (kind === 'sortant' ? 'blue' : 'orange') + '">' + ic(kind === 'sortant' ? 'key' : 'returns') + '</div>'
       + '<div class="ma-card-info"><div class="ma-card-name">' + esc(x.car || 'Véhicule') + '</div>'
-      + '<div class="ma-card-sub">' + esc(x.client || '') + (plate ? ' · ' + esc(plate) + (x.assignedColor ? ' — ' + esc(x.assignedColor) : '') : '') + '</div></div>'
+      + '<div class="ma-card-sub">' + esc(x.client || '') + (plate ? ' · ' + esc(plate) : '') + '</div></div>'
       + '<span class="ma-badge ' + (kind === 'sortant' ? 'blue' : 'orange') + '">' + (kind === 'sortant' ? 'Départ' : 'Retour') + '</span></div>'
       + '<div class="ma-actions"><button class="ma-act-btn" onclick="maViewRental(' + idStr + ')">' + ic('eye') + 'Fiche</button></div></div>';
   }
@@ -1094,7 +1110,7 @@
       return '<div class="ma-card">'
         + '<div class="ma-card-top"><div class="ma-card-ico-box red">' + ic('alert') + '</div>'
         + '<div class="ma-card-info"><div class="ma-card-name">' + esc(r.car || 'Véhicule') + '</div>'
-        + '<div class="ma-card-sub">' + esc(r.client || '') + ' · retour prévu ' + fmtDateT(r.endDate, r.endTime, '18:00') + '</div></div>'
+        + '<div class="ma-card-sub">' + (aslVehPlateColor(r) ? esc(aslVehPlateColor(r)) + ' · ' : '') + esc(r.client || '') + ' · retour prévu ' + fmtDateT(r.endDate, r.endTime, '18:00') + '</div></div>'
         + '<span class="ma-badge red">' + days + ' j</span></div>'
         + '<div class="ma-actions">'
         + '<button class="ma-act-btn" onclick="maViewRental(' + idStr + ')">' + ic('eye') + 'Fiche</button>'
@@ -1203,7 +1219,7 @@
       map[key].rest += Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
       map[key].items.push(r);
       var active = (r.status === 'active' || r.status === 'confirmed') && (r.startDate || '') <= ts && (r.endDate || '') >= ts;
-      if (active) map[key].current = r.car || '';
+      if (active) map[key].current = aslVehLabel(r);
     });
     return Object.keys(map).map(function (k) { return map[k]; }).filter(function (c) { return c.name; });
   }
@@ -1227,7 +1243,7 @@
       + '<div class="ma-card-top"><div class="ma-card-ava">' + esc(c.name.charAt(0).toUpperCase()) + '</div>'
       + '<div class="ma-card-info"><div class="ma-card-name">' + esc(c.name) + '</div>'
       + '<div class="ma-card-sub">' + esc(c.phone || 'Pas de téléphone') + '</div></div>'
-      + (c.current ? '<span class="ma-badge blue">' + esc(c.current) + '</span>' : '') + '</div>'
+      + (c.current ? '<span class="ma-badge blue ma-badge-wrap">' + esc(c.current) + '</span>' : '') + '</div>'
       + '<div class="ma-card-meta"><div class="ma-meta">Payé<b>' + money(c.paid) + '</b></div>'
       + '<div class="ma-meta">Reste à payer<b style="color:' + (c.rest > 0 ? '#C41E3A' : '#16a34a') + ';">' + money(c.rest) + '</b></div></div>'
       + '<div class="ma-actions">'
@@ -1244,15 +1260,38 @@
     var rows = c.items.sort(function (a, b) { return (b.startDate || '').localeCompare(a.startDate || ''); }).map(function (r) {
       var reste = Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
       return '<button class="ma-hist-row" onclick="closeSheet();maViewRes(\'' + String(r.id || '') + '\')">'
-        + '<div><div class="ma-hist-car">' + esc(r.car || '—') + '</div>'
+        + '<div><div class="ma-hist-car">' + esc(aslVehLabel(r)) + '</div>'
         + '<div class="ma-hist-dates">' + fmtDMT(r.startDate, r.startTime, '10:00') + ' → ' + fmtDMT(r.endDate, r.endTime, '18:00') + '</div></div>'
         + (reste > 0 ? '<span class="ma-badge red">Reste ' + money(reste) + '</span>' : '<span class="ma-badge green">Payé</span>')
         + '</button>';
     }).join('');
+    // ★ Demande 2 : documents d'identité du client (mêmes données que la
+    //   fiche desktop). Toucher une image l'ouvre en grand.
+    var docsHtml = '';
+    try {
+      if (typeof aslGatherCustomerDocs === 'function' && typeof _custId === 'function' && c.items.length) {
+        var k0 = _custId(c.items[0].email, c.items[0].client);
+        var gd = aslGatherCustomerDocs(k0, c.items, { names: [name], phone: phone });
+        var docRow = function (label, list) {
+          var thumbs = list.map(function (en) {
+            var encRef = encodeURIComponent(en.ref);
+            return en.url.indexOf('application/pdf') >= 0
+              ? '<button class="ma-doc-thumb ma-doc-pdf" onclick="previewCustDocRef(\'' + encRef + '\')">PDF</button>'
+              : '<img class="ma-doc-thumb"' + (typeof aslDocImgAttrs === 'function' ? aslDocImgAttrs(en.url) : ' src="' + en.url + '"') + ' alt="' + esc(label) + '" onclick="previewCustDocRef(\'' + encRef + '\')">';
+          }).join('');
+          return '<div class="ma-doc-row"><div class="ma-doc-label">' + esc(label) + '</div>'
+            + (thumbs ? '<div class="ma-doc-thumbs">' + thumbs + '</div>' : '<div class="ma-doc-empty">Aucun document</div>') + '</div>';
+        };
+        docsHtml = '<div class="ma-sheet-section">Documents d\'identité</div>'
+          + docRow('Permis de conduire', gd.permis)
+          + docRow(gd.identiteType || 'CIN / Passeport', gd.identite);
+      }
+    } catch (eDocs) { docsHtml = ''; }
     openSheet(
       '<div class="ma-sheet-title">' + esc(name) + '</div>'
       + '<div class="ma-sheet-sub">' + esc(phone || 'Pas de téléphone') + ' · Payé ' + money(c.paid) + ' · Reste ' + money(c.rest) + '</div>'
       + (c.phone ? '<a class="ma-action" style="text-decoration:none;" href="tel:' + esc(c.phone) + '">' + ic('phone') + ' Appeler le client</a>' : '')
+      + docsHtml
       + '<div class="ma-sheet-section">Historique des dossiers</div>'
       + (rows || '<div class="ma-empty" style="padding:18px;">Aucun dossier.</div>')
     );
@@ -1275,7 +1314,7 @@
         return '<div class="ma-card">'
           + '<div class="ma-card-top"><div class="ma-card-ava">' + esc((r.client || '?').charAt(0).toUpperCase()) + '</div>'
           + '<div class="ma-card-info"><div class="ma-card-name">' + esc(r.client || 'Client') + '</div>'
-          + '<div class="ma-card-sub">' + esc(r.car || '') + ' · ' + esc(r.contractRef || r.id || '') + '</div></div>'
+          + '<div class="ma-card-sub">' + esc(aslVehLabel(r)) + ' · ' + esc(r.contractRef || r.id || '') + '</div></div>'
           + '<span class="ma-badge red">' + money(reste) + '</span></div>'
           + '<div class="ma-card-meta"><div class="ma-meta">Total<b>' + money(r.amount || 0) + '</b></div>'
           + '<div class="ma-meta">Payé<b style="color:#16a34a;">' + money(r.paid || 0) + '</b></div>'
@@ -1283,6 +1322,7 @@
           + '<div style="display:flex;gap:8px;margin-top:10px;">'
           + '<button class="ma-act-btn" onclick="maViewRes(\'' + r.id + '\')">Voir la fiche</button>'
           + '<button class="ma-act-btn ok" onclick="maPayUnpaid(\'' + r.id + '\')">Encaisser</button>'
+          + '<button class="ma-act-btn" onclick="maDiscountUnpaid(\'' + r.id + '\')">Remise</button>'
           + '</div></div>';
       }).join('');
   }
@@ -1299,6 +1339,30 @@
     try { ASLDB.updateReservation(resId, { paid: newPaid, paymentStatus: newPaid >= (Number(r.amount) || 0) ? 'paid' : 'partial' }); } catch (e) {}
     if (typeof showToast === 'function') showToast('Paiement de ' + money(amount) + ' enregistré ✓');
     renderUnpaidM();
+  };
+
+  /* ★ Demande 5 — Remise sur un impayé (même logique que le desktop :
+     aslApplyDiscount, déduite du reste dû et tracée dans le dossier). */
+  window.maDiscountUnpaid = function (resId) {
+    var r = (ASLDB.getReservations() || []).filter(function (x) { return x.id === resId; })[0];
+    if (!r) return;
+    var reste = Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
+    var ds = (typeof aslDiscountSum === 'function') ? aslDiscountSum(r) : 0;
+    openSheet(
+      '<div class="ma-sheet-title">Remise</div>'
+      + '<div class="ma-sheet-sub">' + esc(r.client || 'Client') + ' · ' + esc(aslVehLabel(r)) + '</div>'
+      + '<div class="ma-card-meta" style="margin-bottom:12px;"><div class="ma-meta">Reste dû<b style="color:#C41E3A;">' + money(reste) + '</b></div>'
+      + (ds > 0 ? '<div class="ma-meta">Remises déjà accordées<b style="color:#16a34a;">−' + money(ds) + '</b></div>' : '') + '</div>'
+      + '<div class="form-group"><label class="form-label">Montant de la remise (MAD)</label><input class="form-input" type="number" inputmode="decimal" min="0" step="any" id="ma-disc-amount" placeholder="Max ' + Math.round(reste) + '"></div>'
+      + '<div class="form-group"><label class="form-label">Motif (facultatif)</label><input class="form-input" id="ma-disc-note" placeholder="Ex : arrangement avec le client"></div>'
+      + '<button class="ma-act-btn ok" style="margin-top:6px;width:100%;" onclick="maApplyDiscount(\'' + r.id + '\')">Appliquer la remise</button>'
+      + '<div style="font-size:12px;color:#8a909a;margin-top:10px;">La remise est déduite du reste dû. Si le reste tombe à 0, le dossier est soldé.</div>'
+    );
+  };
+  window.maApplyDiscount = function (resId) {
+    if (typeof aslApplyDiscount !== 'function') return;
+    var a = document.getElementById('ma-disc-amount'), n = document.getElementById('ma-disc-note');
+    if (aslApplyDiscount(resId, a ? a.value : 0, n ? n.value : '')) { closeSheet(); renderUnpaidM(); }
   };
 
   /* ============ SOUS-LOCATION (mobile) ============ */
@@ -1345,10 +1409,10 @@
     var rows = ASLSublease.linkedRes(id);
     var rowsHtml = rows.length ? rows.map(function (r) {
       var reste = Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
-      var plate = r.assignedPlate || (function () { try { var f = ASLDB.getFleet().filter(function (c) { return c.name === r.car || c.id === r.carId; })[0]; return f ? (f.plate || '') : ''; } catch (e) { return ''; } })();
+      var plate = aslVehPlateColor(r); // ★ Demande 6 : plaque · couleur
       return '<div class="ma-card">'
         + '<div class="ma-card-top"><div class="ma-card-info"><div class="ma-card-name">' + esc(r.finalClient || r.client || 'Client') + '</div>'
-        + '<div class="ma-card-sub">' + esc(r.car || '') + (plate ? ' · ' + esc(plate) + (r.assignedColor ? ' — ' + esc(r.assignedColor) : '') : '') + '</div></div>'
+        + '<div class="ma-card-sub">' + esc(r.car || '') + (plate ? ' · ' + esc(plate) : '') + '</div></div>'
         + '<span class="ma-badge ' + (reste > 0 ? 'red' : 'green') + '">' + (reste > 0 ? money(reste) : 'Soldé') + '</span></div>'
         + '<div class="ma-card-meta"><div class="ma-meta">Dates<b>' + fmtDMT(r.startDate, r.startTime, '10:00') + ' → ' + fmtDMT(r.endDate, r.endTime, '18:00') + '</b></div>'
         + '<div class="ma-meta">Total<b>' + money(r.amount || 0) + '</b></div>'
@@ -1386,7 +1450,7 @@
       var reste = (Number(r.amount) || 0) - (Number(r.paid) || 0);
       return '<div class="ma-card">'
         + '<div class="ma-card-top"><div class="ma-card-info"><div class="ma-card-name">' + esc(r.finalClient || r.client || 'Client') + '</div>'
-        + '<div class="ma-card-sub">' + esc(r.car || '') + ' · ' + fmtDMT(r.startDate, r.startTime, '10:00') + ' → ' + fmtDMT(r.endDate, r.endTime, '18:00') + '</div></div>'
+        + '<div class="ma-card-sub">' + esc(aslVehLabel(r)) + ' · ' + fmtDMT(r.startDate, r.startTime, '10:00') + ' → ' + fmtDMT(r.endDate, r.endTime, '18:00') + '</div></div>'
         + '<span class="ma-badge red">' + money(reste) + '</span></div>'
         + '<div class="ma-card-meta"><div class="ma-meta">Total<b>' + money(r.amount || 0) + '</b></div>'
         + '<div class="ma-meta">Payé<b style="color:#16a34a;">' + money(r.paid || 0) + '</b></div></div>'
@@ -1455,7 +1519,7 @@
       return '<div class="ma-card" onclick="maLLDFiche(\'' + c.id + '\')">'
         + '<div class="ma-card-top"><div class="ma-card-ico-box purple">' + ic('calendar') + '</div>'
         + '<div class="ma-card-info"><div class="ma-card-name">' + esc(c.client || 'Client') + '</div>'
-        + '<div class="ma-card-sub">' + esc(c.car || '—') + (c.assignedPlate ? ' · ' + esc(c.assignedPlate) : '') + '</div></div>'
+        + '<div class="ma-card-sub">' + esc(aslVehLabel(c)) + '</div></div>'
         + '<span class="ma-badge ' + (t.rest > 0 ? 'red' : 'green') + '">' + (t.rest > 0 ? money(t.rest) : 'Soldé') + '</span></div>'
         + '<div class="ma-card-meta">'
         + '<div class="ma-meta">Début<b>' + esc(c.startDate || '—') + '</b></div>'
@@ -1488,7 +1552,7 @@
     }).join('') : '<div class="ma-empty" style="padding:14px;">Aucun versement enregistré.</div>';
     openSheet(
       '<div class="ma-sheet-title">' + esc(c.client || 'Contrat LLD') + '</div>'
-      + '<div style="font-size:13px;color:#6b7280;margin:-6px 0 14px;">' + esc(c.car || '—') + (c.assignedPlate ? ' · ' + esc(c.assignedPlate) : '') + '</div>'
+      + '<div style="font-size:13px;color:#6b7280;margin:-6px 0 14px;">' + esc(aslVehLabel(c)) + '</div>'
       + row('Période', esc(c.startDate || '—') + ' → ' + esc(c.endDate || '—'))
       + row('Durée', (c.days || 0) + ' jours')
       + row('Montant total', money(t.due))
@@ -1549,7 +1613,7 @@
           var resteImpaye = Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
           return '<div class="ma-card" style="margin-bottom:8px;"><div class="ma-card-top">'
             + '<div class="ma-card-info"><div class="ma-card-name" style="font-size:14px;">' + esc(r.contractRef || r.id) + (l.date ? ' <span style="font-weight:400;color:#8a909a;">— ' + esc(l.date) + '</span>' : '') + '</div>'
-            + '<div class="ma-card-sub">' + esc(r.client || '') + ' · ' + esc(r.car || '') + '</div>'
+            + '<div class="ma-card-sub">' + esc(r.client || '') + ' · ' + esc(aslVehLabel(r)) + '</div>'
             + '<div class="ma-card-sub" style="margin-top:2px;">' + (r.days || 0) + ' jour(s)' + (resteImpaye > 0 ? ' · <span style="color:#C41E3A;font-weight:700;">reste ' + money(resteImpaye) + ' (dossier)</span>' : ' · <span style="color:#16a34a;">dossier soldé</span>') + '</div></div>'
             + '<span class="ma-badge green">' + money(l.amount) + '</span></div></div>';
         }).join('') : '<div class="ma-empty">Aucun encaissement.</div>')
@@ -1623,19 +1687,19 @@
     // ★ Point 2 : mêmes fonctions PARTAGÉES que Desktop (ASLDB.select*) —
     //   plus aucune divergence possible entre les deux versions.
     (ASLDB.selectReturnsOn ? ASLDB.selectReturnsOn(ts) : r.filter(function (x) { return (x.endDate || '').slice(0, 10) === ts && x.status !== 'cancelled' && x.status !== 'completed'; }))
-      .forEach(function (x) { add('returns', 'orange', 'Retour aujourd\'hui', (x.car || '') + ' — ' + (x.client || ''), x.id); });
+      .forEach(function (x) { add('returns', 'orange', 'Retour aujourd\'hui', aslVehLabel(x) + ' — ' + (x.client || ''), x.id); });
     var tmStr = plusDaysISO(1);
     (ASLDB.selectReturnsOn ? ASLDB.selectReturnsOn(tmStr) : r.filter(function (x) { return (x.endDate || '').slice(0, 10) === tmStr && x.status !== 'cancelled' && x.status !== 'completed'; }))
-      .forEach(function (x) { add('calendarClock', 'blue', 'Retour demain', (x.car || '') + ' — ' + (x.client || ''), x.id); });
+      .forEach(function (x) { add('calendarClock', 'blue', 'Retour demain', aslVehLabel(x) + ' — ' + (x.client || ''), x.id); });
     (ASLDB.selectLate ? ASLDB.selectLate() : r.filter(function (x) { return (x.endDate || '') < ts && (x.status === 'active' || x.status === 'confirmed'); }))
-      .forEach(function (x) { add('alert', 'red', 'Véhicule en retard', (x.car || '') + ' — ' + (x.client || '') + ' (prévu le ' + (x.endDate || '') + ')', x.id); });
+      .forEach(function (x) { add('alert', 'red', 'Véhicule en retard', aslVehLabel(x) + ' — ' + (x.client || '') + ' (prévu le ' + (x.endDate || '') + ')', x.id); });
     (ASLDB.selectUnpaid ? ASLDB.selectUnpaid() : r.filter(function (x) { return x.status !== 'cancelled' && (Number(x.amount) || 0) > (Number(x.paid) || 0); }))
-      .forEach(function (x) { var reste = (Number(x.amount) || 0) - (Number(x.paid) || 0); add('card', 'red', 'Impayé : ' + money(reste), (x.client || '') + ' — ' + (x.car || ''), x.id); });
+      .forEach(function (x) { var reste = (Number(x.amount) || 0) - (Number(x.paid) || 0); add('card', 'red', 'Impayé : ' + money(reste), (x.client || '') + ' — ' + aslVehLabel(x), x.id); });
     var cutoff = Date.now() - 48 * 3600 * 1000;
     r.filter(function (x) { return x.createdAt && new Date(x.createdAt).getTime() > cutoff && x.status === 'pending'; })
-      .forEach(function (x) { add('sparkle', 'green', 'Nouvelle réservation', (x.client || '') + ' — ' + (x.car || '') + (x.source === 'online' ? ' (site web)' : ''), x.id); });
+      .forEach(function (x) { add('sparkle', 'green', 'Nouvelle réservation', (x.client || '') + ' — ' + aslVehLabel(x) + (x.source === 'online' ? ' (site web)' : ''), x.id); });
     r.filter(function (x) { return x.createdAt && new Date(x.createdAt).getTime() > cutoff && (x.status === 'active' || x.status === 'confirmed'); })
-      .forEach(function (x) { add('key', 'teal', 'Nouvelle location', (x.client || '') + ' — ' + (x.car || ''), x.id); });
+      .forEach(function (x) { add('key', 'teal', 'Nouvelle location', (x.client || '') + ' — ' + aslVehLabel(x), x.id); });
     r.filter(function (x) { return x.createdAt && new Date(x.createdAt).getTime() > cutoff && (Number(x.paid) || 0) > 0 && (Number(x.paid) || 0) >= (Number(x.amount) || 0); })
       .forEach(function (x) { add('checkCircle', 'green', 'Paiement reçu', (x.client || '') + ' — ' + money(x.paid), x.id); });
 
@@ -1655,7 +1719,7 @@
         if (new Date(m.reminder_next).getTime() <= todayMs + 86400000) {
           seenReminder[key] = true;
           var kmTxt = m.km_vidange_next ? Number(m.km_vidange_next).toLocaleString('fr-FR') + ' km' : '—';
-          var lbl = (c.name || '') + (u.plate ? ' (' + u.plate + ')' : '');
+          var lbl = (c.name || '') + (u.plate ? ' (' + u.plate + (u.color ? ' · ' + u.color : '') + ')' : '');
           notifs.push({ icon: 'wrench', tone: 'orange', title: 'Vérifier le km de ' + lbl, sub: 'Prochaine vidange prévue à ' + kmTxt, id: '', maint: true });
         }
       });
@@ -1666,7 +1730,7 @@
         var clk = n.maint ? 'maExitToPage(\'maintenance\')' : 'maViewRes(\'' + String(n.id || '') + '\')';
         return '<div class="ma-notif" onclick="' + clk + '"><div class="ma-notif-ico ' + n.tone + '">' + ic(n.icon) + '</div>'
           + '<div class="ma-notif-body"><div class="ma-notif-title">' + esc(n.title) + '</div><div class="ma-notif-sub">' + esc(n.sub) + '</div></div>'
-          + '<span class="ma-notif-chev">' + ic('returns') + '</span></div>';
+          + '<span class="ma-notif-chev">' + ic('arrowLeft') + '</span></div>'; // flèche « ouvrir » (retournée en CSS)
       }).join('') : '<div class="ma-empty">' + ic('checkCircle') + '<div style="margin-top:8px;">Aucune notification. Tout est à jour.</div></div>';
     }
     var dot = document.querySelector('.ma-tab[data-screen="notifications"] .ma-tab-dot');

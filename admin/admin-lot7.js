@@ -74,28 +74,35 @@ function buildTodayAlerts() {
 
   if (a.return) {
     res.filter(function(r){ return (r.endDate||'').slice(0,10) === ts && r.status !== 'cancelled'; })
-       .forEach(function(r){ out.push('🔄 Retour aujourd\'hui : ' + (r.car||'') + ' — ' + (r.client||'')); });
+       .forEach(function(r){ out.push('🔄 Retour aujourd\'hui : ' + (typeof aslVehLabel === 'function' ? aslVehLabel(r) : (r.car||'')) + ' — ' + (r.client||'')); });
   }
   if (a.late) {
     res.filter(function(r){ return (r.endDate||'') < ts && (r.status==='active'||r.status==='confirmed'); })
        .forEach(function(r){
          var diff = Math.round((today - new Date(r.endDate)) / 86400000);
-         out.push('⚠ Retard ' + diff + 'j : ' + (r.car||'') + ' — ' + (r.client||'') + (r.phone?' ('+r.phone+')':''));
+         out.push('⚠ Retard ' + diff + 'j : ' + (typeof aslVehLabel === 'function' ? aslVehLabel(r) : (r.car||'')) + ' — ' + (r.client||'') + (r.phone?' ('+r.phone+')':''));
        });
   }
   if (a.vidange || a.vt || a.assur) {
     var MAINT = {};
     try { MAINT = JSON.parse(localStorage.getItem('asl_maint_v1') || '{}'); } catch(e) {}
+    // ★ CORRECTIF (LOT 44) : entretien lu PAR IMMATRICULATION (clé
+    //   « idModèle::plaque »), avec repli sur l'ancienne clé — l'ancienne
+    //   lecture ne trouvait plus rien (alertes VT jamais affichées).
     fleet.forEach(function(c) {
-      var m = MAINT[String(c.id)] || {};
-      function chk(date, label, on) {
-        if (!on || !date) return;
-        var diff = Math.round((new Date(date) - today) / 86400000);
-        if (diff <= 7) out.push((diff<0?'⛔':'🔧') + ' ' + label + ' : ' + c.name + (diff<0?' (en retard '+Math.abs(diff)+'j)':' (dans '+diff+'j)'));
-      }
-      chk(m.vidange_next, 'Vidange', a.vidange);
-      chk(m.vt_next, 'Visite technique', a.vt);
-      chk(m.assur, 'Assurance', a.assur);
+      var units = (typeof ASLDB !== 'undefined' && ASLDB.normalizeUnits) ? ASLDB.normalizeUnits(c) : [{ plate: c.plate || '' }];
+      units.forEach(function(u) {
+        var m = MAINT[String(c.id) + '::' + (u.plate || '_')] || MAINT[String(c.id)] || {};
+        var name = c.name + (u.plate ? ' (' + u.plate + (u.color ? ' · ' + u.color : '') + ')' : '');
+        function chk(date, label, on) {
+          if (!on || !date) return;
+          var diff = Math.round((new Date(date) - today) / 86400000);
+          if (diff <= 7) out.push((diff<0?'⛔':'🔧') + ' ' + label + ' : ' + name + (diff<0?' (en retard '+Math.abs(diff)+'j)':' (dans '+diff+'j)'));
+        }
+        chk(m.vidange_next, 'Vidange', a.vidange);
+        chk(m.vt_next, 'Visite technique', a.vt);
+        chk(m.assur, 'Assurance', a.assur);
+      });
     });
   }
   if (a.unpaid) {
@@ -360,7 +367,7 @@ function showCollectorDetail(name) {
       var resteImpaye = Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
       return '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:12.5px;">' +
         '<div style="min-width:0;"><strong>' + (r.contractRef || r.id) + '</strong>' + (l.date ? ' <span style="color:var(--text3);font-weight:400;">— ' + l.date + '</span>' : '') +
-        '<div style="color:var(--text3);font-size:11.5px;">' + (r.client || '') + ' · ' + (r.car || '') + (r.assignedPlate ? ' (' + r.assignedPlate + ')' : '') + '</div>' +
+        '<div style="color:var(--text3);font-size:11.5px;">' + (r.client || '') + ' · ' + (typeof aslVehLabel === 'function' ? aslVehLabel(r) : (r.car||'')) + '</div>' +
         '<div style="color:var(--text3);font-size:11px;margin-top:2px;">' + (r.days || 0) + ' jour(s)' + (resteImpaye > 0 ? ' · <span style="color:#ef4444;font-weight:600;">reste ' + resteImpaye.toLocaleString('fr-FR') + ' MAD (dossier)</span>' : ' · <span style="color:#16a34a;">dossier soldé</span>') + '</div></div>' +
         '<strong style="color:#16a34a;white-space:nowrap;">' + l.amount.toLocaleString('fr-FR') + ' MAD</strong></div>';
     }).join('') : '<div style="color:var(--text3);font-size:12.5px;padding:10px 0;">Aucun encaissement.</div>') +

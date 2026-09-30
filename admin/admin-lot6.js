@@ -283,6 +283,8 @@ function _saveCustDocs(obj) {
   }
   try { if (typeof ASLDB !== 'undefined' && ASLDB.noteLocalChange) ASLDB.noteLocalChange(_custDocsKey()); } catch(e) {}
   try { if (typeof ASLDB !== 'undefined' && ASLDB.syncNow) ASLDB.syncNow(); } catch(e) {}
+  // ★ LOT 44 : toute nouvelle image part vers le stockage privé.
+  try { if (typeof aslMigrateDocsSoon === 'function') aslMigrateDocsSoon(); } catch(e) {}
 }
 function _custId(email, name) {
   return (email && email.trim()) ? email.trim().toLowerCase() : ('name:' + (name||'').trim().toLowerCase());
@@ -472,8 +474,11 @@ function openCustomerDrawer(encKey) {
 
   /* Documents d'identité */
   html += '<div style="font-weight:800;font-size:14px;margin-bottom:10px;border-top:1px solid var(--border);padding-top:16px;">Documents d\'identité</div>';
-  html += _docBlock(key, 'permis', 'Permis de conduire', d.permis);
-  html += _docBlock(key, 'identite', 'Carte d\'identité (CIN) ou Passeport', d.identite, d.identiteType);
+  // ★ Demande 2 : tous les documents de ce client, quelle que soit la façon
+  //   dont ils ont été enregistrés (voir aslGatherCustomerDocs).
+  var gd = aslGatherCustomerDocs(key, custRes, { names: [cust.name, (firstName + ' ' + lastName).trim()], phone: phone, email: email });
+  html += _docBlock(key, 'permis', 'Permis de conduire', gd.permis);
+  html += _docBlock(key, 'identite', 'Carte d\'identité (CIN) ou Passeport', gd.identite, gd.identiteType || d.identiteType);
   html += '<div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5;">Les documents restent associés au client pour toutes ses futures réservations.</div>';
 
   /* Historique réservations */
@@ -487,7 +492,7 @@ function openCustomerDrawer(encKey) {
       return '<div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">' +
         '<strong>' + (r.contractRef||r.id) + '</strong>' + st + '</div>' +
-        '<div style="font-size:12.5px;color:var(--text2);">' + (r.car||'') + ' · ' + (r.startDate||'') + ' → ' + (r.endDate||'') + '</div>' +
+        '<div style="font-size:12.5px;color:var(--text2);">' + (typeof aslVehLabel === 'function' ? aslVehLabel(r) : (r.car||'')) + ' · ' + (r.startDate||'') + ' → ' + (r.endDate||'') + '</div>' +
         '<div style="font-size:12.5px;margin-top:4px;">Total : <strong>' + total.toLocaleString('fr-FR') + ' MAD</strong>' +
         (reste>0 ? ' · <span style="color:#ef4444;">Reste ' + reste.toLocaleString('fr-FR') + ' MAD</span>' : ' · <span style="color:#16a34a;">Soldé</span>') + '</div>' +
         '</div>';
@@ -530,30 +535,176 @@ function _c6cell(label, val) {
     '<div style="font-size:13px;font-weight:600;">' + val + '</div></div>';
 }
 
+/* ============================================================
+   ★ Demande 2 — Afficher TOUS les documents d'identité déjà enregistrés.
+   CAUSE : la fiche ne lisait qu'UN seul emplacement (documents classés sous
+   l'email du client, ou à défaut sous son nom). Or des documents ont aussi
+   été enregistrés, selon les versions de l'application :
+     • sous le numéro de téléphone du client (ancien module, champ
+       « identity » au lieu de « identite ») ;
+     • sous le nom du client alors que sa fiche est classée par email
+       (ou l'inverse) ;
+     • directement dans ses dossiers de réservation (r.docs).
+   aslGatherCustomerDocs() rassemble ces sources en LECTURE SEULE : rien
+   n'est déplacé, copié ni effacé. Les doublons (même image à plusieurs
+   endroits) ne sont affichés qu'une fois. Les ajouts se font toujours au
+   même endroit qu'avant (fiche client).
+   ============================================================ */
+var _cdDocReg = {};
+function _cdSig(url) { return url.length + ':' + url.slice(0, 96) + url.slice(-96); }
+function _cdLower(s) { return String(s || '').trim().toLowerCase(); }
+function _cdDigits(s) { return String(s || '').replace(/\D/g, ''); }
+function aslGatherCustomerDocs(key, custRes, extra) {
+  var docs = _loadCustDocs() || {};
+  var out = { permis: [], identite: [], identiteType: '' };
+  var seen = {};
+  function add(type, url, src) {
+    if (!url || typeof url !== 'string' || url.indexOf('data:') !== 0 && url.indexOf('/api/') !== 0 && url.indexOf('http') !== 0 && url.indexOf('asldoc:') !== 0) return;
+    var sig = _cdSig(url);
+    if (seen[sig]) return;
+    seen[sig] = 1;
+    var ref = [src.kind, src.key || src.resId || '', src.field, src.idx].join('|');
+    _cdDocReg[ref] = { url: url, kind: src.kind, key: src.key, resId: src.resId, field: src.field, idx: src.idx };
+    out[type].push({ url: url, ref: ref, readonly: src.kind !== 'store' });
+  }
+  function fromStoreKey(k) {
+    var d = docs[k];
+    if (!d || typeof d !== 'object') return;
+    _docAsArray(d.permis).forEach(function (u, i) { add('permis', u, { kind: 'store', key: k, field: 'permis', idx: i }); });
+    _docAsArray(d.identite).forEach(function (u, i) { add('identite', u, { kind: 'store', key: k, field: 'identite', idx: i }); });
+    _docAsArray(d.identity).forEach(function (u, i) { add('identite', u, { kind: 'store', key: k, field: 'identity', idx: i }); });
+    if (!out.identiteType && d.identiteType) out.identiteType = d.identiteType;
+  }
+  custRes = custRes || [];
+  extra = extra || {};
+  // 1) Emplacement principal (celui où la fiche enregistre les ajouts).
+  fromStoreKey(key);
+  // 2) Autres clés possibles pour ce même client : email(s), nom(s), téléphone(s).
+  var cand = {}, phones = {};
+  custRes.forEach(function (r) {
+    if (r.email) cand[_cdLower(r.email)] = 1;
+    if (r.client) cand['name:' + _cdLower(r.client)] = 1;
+    var pd = _cdDigits(r.phone); if (pd.length >= 6) phones[pd] = 1;
+  });
+  (extra.names || []).forEach(function (n) { if (_cdLower(n)) cand['name:' + _cdLower(n)] = 1; });
+  if (extra.email) cand[_cdLower(extra.email)] = 1;
+  if (_cdDigits(extra.phone).length >= 6) phones[_cdDigits(extra.phone)] = 1;
+  Object.keys(cand).forEach(function (k) { if (k !== key && docs[k]) fromStoreKey(k); });
+  Object.keys(docs).forEach(function (k) {
+    if (k === key || cand[k] || k.indexOf('name:') === 0 || k.indexOf('@') >= 0) return;
+    var kd = _cdDigits(k);
+    if (kd.length >= 6 && phones[kd]) fromStoreKey(k);
+  });
+  // 3) Documents enregistrés directement dans les dossiers (lecture seule).
+  custRes.forEach(function (r) {
+    var d = r && r.docs;
+    if (!d || typeof d !== 'object') return;
+    _docAsArray(d.permis).forEach(function (u, i) { add('permis', u, { kind: 'res', resId: r.id, field: 'permis', idx: i }); });
+    _docAsArray(d.identite).forEach(function (u, i) { add('identite', u, { kind: 'res', resId: r.id, field: 'identite', idx: i }); });
+    _docAsArray(d.identity).forEach(function (u, i) { add('identite', u, { kind: 'res', resId: r.id, field: 'identity', idx: i }); });
+  });
+  return out;
+}
+window.aslGatherCustomerDocs = aslGatherCustomerDocs;
+
+function _aslDocOpenPreview(u) {
+  // La fenêtre s'ouvre immédiatement (sinon le navigateur la bloquerait),
+  // puis le document privé y est affiché dès qu'il est chargé.
+  var w = window.open('');
+  if (!w) { alert('Autorisez les pop-ups pour l\'aperçu.'); return; }
+  try { w.document.write('<body style="margin:0;background:#111;color:#aaa;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;">Chargement…</body>'); } catch (e0) {}
+  aslDocResolve(u).then(function (url) {
+    var isPdf = (aslDocIsRef(u) ? aslDocParse(u).type : url).indexOf('application/pdf') >= 0;
+    w.document.open();
+    if (isPdf) w.document.write('<iframe src="' + url + '" style="width:100%;height:100%;border:none;"></iframe>');
+    else w.document.write('<body style="margin:0;background:#111;display:flex;align-items:center;justify-content:center;height:100vh;"><img src="' + url + '" style="max-width:100%;max-height:100%;"></body>');
+    w.document.close();
+  }).catch(function () {
+    try { w.document.body.textContent = 'Document indisponible pour le moment (vérifiez la connexion).'; } catch (e1) {}
+  });
+}
+function previewCustDocRef(encRef) {
+  var e = _cdDocReg[decodeURIComponent(encRef)];
+  if (!e || !e.url) return;
+  _aslDocOpenPreview(e.url);
+}
+function downloadCustDocRefs(encRefs, baseName) {
+  var refs = decodeURIComponent(encRefs).split('\n').filter(Boolean);
+  refs.forEach(function (ref, i) {
+    var e = _cdDocReg[ref];
+    if (!e || !e.url) return;
+    var src = e.url;
+    var t = aslDocIsRef(src) ? aslDocParse(src).type : src;
+    var ext = t.indexOf('application/pdf') >= 0 ? 'pdf' : (t.indexOf('image/png') >= 0 ? 'png' : (t.indexOf('image/webp') >= 0 ? 'webp' : 'jpg'));
+    aslDocResolve(src).then(function (url) {
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = (baseName || 'document') + (refs.length > 1 ? '_' + (i + 1) : '') + '.' + ext;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }).catch(function () { alert('Document indisponible pour le moment (vérifiez la connexion).'); });
+  });
+}
+/* Suppression : uniquement pour les documents de la fiche client (même
+   stockage qu'avant). L'image est retrouvée par son contenu, jamais par une
+   position qui aurait pu changer entre-temps. */
+function deleteCustDocRef(encRef, encKey) {
+  var e = _cdDocReg[decodeURIComponent(encRef)];
+  if (!e || e.kind !== 'store') return;
+  if (!confirm('Supprimer cette image ?')) return;
+  var docs = _loadCustDocs();
+  var d = docs[e.key];
+  if (d) {
+    var val = d[e.field];
+    if (Array.isArray(val)) {
+      var pos = val.indexOf(e.url);
+      if (pos >= 0) val.splice(pos, 1);
+      if (!val.length) delete d[e.field];
+    } else if (val === e.url) {
+      delete d[e.field];
+    }
+    if (!d.identite && !d.identity) delete d.identiteType;
+    _saveCustDocs(docs);
+  }
+  if (encKey && document.getElementById('cust-drawer') && document.getElementById('cust-drawer').style.display !== 'none') openCustomerDrawer(encKey);
+  renderCustomers();
+  asl6Toast('Document supprimé ✓');
+}
+
 function _docBlock(key, type, label, dataUrl, subType) {
   var enc = encodeURIComponent(key);
-  // ★ CORRECTIF (point 5) : plusieurs images par document (recto/verso,
-  //   pages multiples). Rétrocompatible avec l'ancien format (chaîne unique).
-  var images = _docAsArray(dataUrl);
+  // ★ Demande 2 : accepte soit une liste d'images brutes (ancien appel),
+  //   soit la liste rassemblée par aslGatherCustomerDocs() (toutes sources).
+  var raw = _docAsArray(dataUrl);
+  var entries = raw.map(function (u, i) {
+    if (u && typeof u === 'object' && u.url) return u;
+    var ref = ['store', key, type, i].join('|');
+    _cdDocReg[ref] = { url: u, kind: 'store', key: key, field: type, idx: i };
+    return { url: u, ref: ref, readonly: false };
+  }).filter(function (x) { return x && typeof x.url === 'string'; });
   var inner;
-  if (images.length) {
-    var thumbs = images.map(function (url, idx) {
+  if (entries.length) {
+    var thumbs = entries.map(function (en) {
+      var url = en.url;
+      var encRef = encodeURIComponent(en.ref);
       var isPdf = url.indexOf('application/pdf') >= 0;
       var thumb = isPdf
-        ? '<div style="width:54px;height:54px;border-radius:8px;background:rgba(196,30,58,.1);display:flex;align-items:center;justify-content:center;color:var(--red);font-weight:700;font-size:11px;flex-shrink:0;">PDF</div>'
-        : '<img src="' + url + '" style="width:54px;height:54px;border-radius:8px;object-fit:cover;flex-shrink:0;cursor:pointer;" onclick="previewCustDoc(\'' + enc + '\',\'' + type + '\',' + idx + ')">';
-      return '<div style="position:relative;">' + thumb +
-        '<button class="btn-sm ghost" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;padding:0;border-radius:50%;background:#fff;color:var(--red);line-height:1;font-size:12px;box-shadow:0 1px 4px rgba(0,0,0,.2);" title="Supprimer cette image" onclick="event.stopPropagation();deleteCustDoc(\'' + enc + '\',\'' + type + '\',' + idx + ')">✕</button>' +
-        '</div>';
+        ? '<div style="width:54px;height:54px;border-radius:8px;background:rgba(196,30,58,.1);display:flex;align-items:center;justify-content:center;color:var(--red);font-weight:700;font-size:11px;flex-shrink:0;cursor:pointer;" onclick="previewCustDocRef(\'' + encRef + '\')">PDF</div>'
+        : '<img' + aslDocImgAttrs(url) + ' style=""width:54px;height:54px;border-radius:8px;object-fit:cover;flex-shrink:0;cursor:pointer;background:rgba(18,22,30,.06);" title="Cliquer pour agrandir" onclick="previewCustDocRef(\'' + encRef + '\')">';
+      var del = en.readonly
+        ? ''
+        : '<button class="btn-sm ghost" style="position:absolute;top:-6px;right:-6px;width:20px;height:20px;padding:0;border-radius:50%;background:#fff;color:var(--red);line-height:1;font-size:12px;box-shadow:0 1px 4px rgba(0,0,0,.2);" title="Supprimer cette image" onclick="event.stopPropagation();deleteCustDocRef(\'' + encRef + '\',\'' + enc + '\')">✕</button>';
+      return '<div style="position:relative;"' + (en.readonly ? ' title="Document enregistré dans un dossier de réservation"' : '') + '>' + thumb + del + '</div>';
     }).join('');
+    var allRefs = encodeURIComponent(entries.map(function (x) { return x.ref; }).join('\n'));
+    var base = type + '_' + key.replace(/[^a-z0-9]/gi, '_');
     inner =
       '<div style="display:flex;align-items:flex-start;gap:12px;">' +
       '<div style="display:flex;gap:8px;flex-wrap:wrap;">' + thumbs + '</div>' +
-      '<div style="flex:1;min-width:120px;"><div style="font-weight:600;font-size:13px;">' + label + ' <span style="font-weight:400;color:var(--text3);font-size:11px;">(' + images.length + ' image' + (images.length>1?'s':'') + ')</span></div>' +
+      '<div style="flex:1;min-width:120px;"><div style="font-weight:600;font-size:13px;">' + label + ' <span style="font-weight:400;color:var(--text3);font-size:11px;">(' + entries.length + ' image' + (entries.length>1?'s':'') + ')</span></div>' +
       (subType ? '<div style="font-size:11px;color:var(--text3);">' + subType + '</div>' : '') +
       '<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;">' +
       '<button class="btn-sm ghost" onclick="document.getElementById(\'docin-' + type + '\').click()">+ Ajouter une image (recto/verso)</button>' +
-      '<button class="btn-sm ghost" onclick="downloadCustDoc(\'' + enc + '\',\'' + type + '\')">Télécharger tout</button>' +
+      '<button class="btn-sm ghost" onclick="downloadCustDocRefs(\'' + allRefs + '\',\'' + base + '\')">Télécharger tout</button>' +
       '</div></div></div>';
   } else {
     inner =
@@ -563,12 +714,7 @@ function _docBlock(key, type, label, dataUrl, subType) {
       '</div>';
   }
   var accept = 'image/*,application/pdf';
-  var onchange = type === 'identite'
-    ? 'uploadCustDoc(\'' + enc + '\',\'identite\',this)'
-    : 'uploadCustDoc(\'' + enc + '\',\'' + type + '\',this)';
-  // ★ CORRECTIF (point 5) : zone entière collable (Ctrl+V) et glissable-déposable
-  //   (drag & drop), en plus de la sélection de fichier classique — pour les 3
-  //   documents (permis, CIN, passeport), sans changer le reste du fonctionnement.
+  var onchange = 'uploadCustDoc(\'' + enc + '\',\'' + type + '\',this)';
   return '<div tabindex="0" class="doc-drop-zone" style="border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;outline:none;cursor:text;" ' +
     'title="Cliquez puis Ctrl+V pour coller une image, ou glissez-déposez un fichier" ' +
     'onpaste="pasteCustDoc(\'' + enc + '\',\'' + type + '\',event)" ' +
@@ -655,13 +801,7 @@ function previewCustDoc(encKey, type, idx) {
   var arr = _docAsArray(docs[key] && docs[key][type]);
   var url = arr[idx || 0];
   if (!url) return;
-  var w = window.open('');
-  if (!w) { alert('Autorisez les pop-ups pour l\'aperçu.'); return; }
-  if (url.indexOf('application/pdf') >= 0) {
-    w.document.write('<iframe src="' + url + '" style="width:100%;height:100%;border:none;"></iframe>');
-  } else {
-    w.document.write('<body style="margin:0;background:#111;display:flex;align-items:center;justify-content:center;height:100vh;"><img src="' + url + '" style="max-width:100%;max-height:100%;"></body>');
-  }
+  _aslDocOpenPreview(url); // ★ LOT 44 : image directe ou document privé
 }
 
 function downloadCustDoc(encKey, type, idx) {
@@ -672,13 +812,16 @@ function downloadCustDoc(encKey, type, idx) {
   // ★ Point 5 : idx omis (undefined) = "Télécharger tout" (une image = un
   //   téléchargement par image, suffixé _1, _2...) ; idx fourni = une seule image.
   var toDownload = (idx == null) ? arr : [arr[idx]];
-  toDownload.forEach(function (url, i) {
-    if (!url) return;
-    var ext = url.indexOf('application/pdf') >= 0 ? 'pdf' : (url.indexOf('image/png') >= 0 ? 'png' : 'jpg');
-    var a = document.createElement('a');
-    a.href = url;
-    a.download = type + '_' + key.replace(/[^a-z0-9]/gi,'_') + (arr.length>1 ? '_' + ((idx==null?i:idx)+1) : '') + '.' + ext;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  toDownload.forEach(function (src, i) {
+    if (!src) return;
+    var t = aslDocIsRef(src) ? aslDocParse(src).type : src; // ★ LOT 44
+    var ext = t.indexOf('application/pdf') >= 0 ? 'pdf' : (t.indexOf('image/png') >= 0 ? 'png' : 'jpg');
+    aslDocResolve(src).then(function (url) {
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = type + '_' + key.replace(/[^a-z0-9]/gi,'_') + (arr.length>1 ? '_' + ((idx==null?i:idx)+1) : '') + '.' + ext;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }).catch(function () {});
   });
 }
 
@@ -729,3 +872,405 @@ try {
     });
   }
 } catch (e) {}
+
+/* ============================================================
+   ★ Demande 3 — Choisir un CLIENT EXISTANT dans les pop-ups
+   « Nouvelle location » et « Nouvelle réservation » (desktop + mobile,
+   qui partagent ces mêmes pop-ups).
+   - La liste = exactement les clients de l'onglet Clients (même
+     regroupement), avec les corrections faites dans leur fiche.
+   - Choisir un client remplit : prénom, nom, téléphone, profession,
+     nationalité. Tout reste modifiable.
+   - L'email du client est repris en arrière-plan : le nouveau dossier est
+     ainsi rattaché à la MÊME fiche client (historique, documents,
+     impayés), au lieu de créer un doublon.
+   - Sans sélection, le pop-up fonctionne exactement comme avant.
+   Lecture seule : ce module n'écrit rien dans la base ; l'enregistrement
+   reste celui du pop-up, inchangé.
+   ============================================================ */
+var ASL_CP_FIELDS = {
+  nr: { first: 'nr-firstname', last: 'nr-lastname', phone: 'nr-phone', profession: 'nr-profession', nat: null },
+  nl: { first: 'nl-fn', last: 'nl-ln', phone: 'nl-phone', profession: 'nl-profession', nat: 'nl-nat' }
+};
+function _cpEsc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function _cpSplitName(full) {
+  var parts = String(full || '').trim().split(/\s+/).filter(Boolean);
+  if (parts.length <= 1) return { first: parts[0] || '', last: '' };
+  return { first: parts.slice(0, -1).join(' '), last: parts[parts.length - 1] };
+}
+function aslCustomerDirectory() {
+  var map = {};
+  asl6Res().forEach(function (r) {
+    if (!r || !r.client) return;
+    var key = _custId(r.email, r.client);
+    var c = map[key];
+    if (!c) c = map[key] = { key: key, name: '', email: '', phone: '', profession: '', nationality: '', count: 0, last: '' };
+    c.count++;
+    var d = r.startDate || '';
+    // Valeurs du dossier le plus récent en priorité, sinon premières trouvées.
+    var newer = d >= c.last;
+    if (newer) c.last = d;
+    if (newer || !c.name) c.name = r.client;
+    if (r.email && (newer || !c.email)) c.email = r.email;
+    if (r.phone && (newer || !c.phone)) c.phone = r.phone;
+    if (r.profession && (newer || !c.profession)) c.profession = r.profession;
+    if (r.nationality && r.nationality !== 'N/A' && (newer || !c.nationality)) c.nationality = r.nationality;
+  });
+  var profiles = {};
+  try { profiles = _loadCustProfiles() || {}; } catch (e) {}
+  return Object.keys(map).map(function (k) {
+    var c = map[k], p = profiles[k] || {};
+    var split = _cpSplitName(c.name);
+    var first = split.first, last = split.last;
+    // Clients classés par NOM : on garde le nom des dossiers (c'est lui qui
+    // les relie entre eux). Clients classés par EMAIL : le nom corrigé dans
+    // la fiche peut être utilisé sans risque de doublon.
+    if (k.indexOf('name:') !== 0 && (p.firstName != null || p.lastName != null)) {
+      first = p.firstName || ''; last = p.lastName || '';
+    }
+    return {
+      key: k,
+      first: first, last: last,
+      display: (first + ' ' + last).trim() || c.name,
+      email: c.email,
+      phone: p.phone != null && p.phone !== '' ? p.phone : c.phone,
+      profession: p.profession != null && p.profession !== '' ? p.profession : c.profession,
+      nationality: p.nationality != null && p.nationality !== '' ? p.nationality : c.nationality,
+      count: c.count, lastDate: c.last
+    };
+  }).sort(function (a, b) { return String(b.lastDate).localeCompare(String(a.lastDate)); });
+}
+window.aslCustomerDirectory = aslCustomerDirectory;
+
+function aslClientPickerHTML(prefix) {
+  return '<div class="form-group asl-cp" id="' + prefix + '-cp">' +
+    '<label class="form-label">Client existant <span style="font-weight:400;color:var(--text3);">— facultatif</span></label>' +
+    '<div id="' + prefix + '-cust-sel" class="asl-cp-sel" style="display:none;"></div>' +
+    '<div id="' + prefix + '-cust-searchwrap" class="asl-cp-searchwrap">' +
+    '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>' +
+    '<input class="form-input" id="' + prefix + '-cust-q" autocomplete="off" placeholder="Rechercher par nom ou téléphone…" oninput="aslClientPickerSearch(\'' + prefix + '\')" onfocus="aslClientPickerSearch(\'' + prefix + '\')">' +
+    '</div>' +
+    '<div id="' + prefix + '-cust-res" class="asl-cp-res" style="display:none;"></div>' +
+    '<input type="hidden" id="' + prefix + '-cust-key"><input type="hidden" id="' + prefix + '-cust-email"><input type="hidden" id="' + prefix + '-cust-nat">' +
+    '<div style="font-size:11px;color:var(--text3);margin-top:4px;">Remplit automatiquement les informations du client. Laissez vide pour un nouveau client.</div>' +
+    '</div>';
+}
+window.aslClientPickerHTML = aslClientPickerHTML;
+
+function aslClientPickerSearch(prefix) {
+  var qEl = document.getElementById(prefix + '-cust-q');
+  var box = document.getElementById(prefix + '-cust-res');
+  if (!qEl || !box) return;
+  var q = qEl.value.trim().toLowerCase();
+  if (!q) { box.style.display = 'none'; box.innerHTML = ''; return; }
+  var qDigits = q.replace(/\D/g, '');
+  var list = aslCustomerDirectory().filter(function (c) {
+    if ((c.display + ' ' + (c.email || '')).toLowerCase().indexOf(q) >= 0) return true;
+    return qDigits.length >= 3 && String(c.phone || '').replace(/\D/g, '').indexOf(qDigits) >= 0;
+  }).slice(0, 8);
+  if (!list.length) {
+    box.innerHTML = '<div class="asl-cp-empty">Aucun client trouvé — saisissez ses informations ci-dessous.</div>';
+    box.style.display = 'block';
+    return;
+  }
+  box.innerHTML = list.map(function (c) {
+    var sub = [c.phone || 'Pas de téléphone', c.count + ' dossier' + (c.count > 1 ? 's' : '')];
+    if (c.lastDate) sub.push('dernier le ' + c.lastDate.split('-').reverse().join('/'));
+    return '<button type="button" class="asl-cp-item" data-k="' + _cpEsc(encodeURIComponent(c.key)) + '" onclick="aslClientPickerPick(\'' + prefix + '\', this.dataset.k)">' +
+      '<span class="asl-cp-ava">' + _cpEsc((c.display || '?').charAt(0).toUpperCase()) + '</span>' +
+      '<span class="asl-cp-txt"><span class="asl-cp-name">' + _cpEsc(c.display) + '</span>' +
+      '<span class="asl-cp-sub">' + _cpEsc(sub.join(' · ')) + '</span></span></button>';
+  }).join('');
+  box.style.display = 'block';
+}
+window.aslClientPickerSearch = aslClientPickerSearch;
+
+function _cpSet(id, val) {
+  if (!id) return;
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.value = val || '';
+  try { el.dispatchEvent(new Event('input', { bubbles: true })); } catch (e) {}
+}
+function aslClientPickerPick(prefix, encKey) {
+  var key = decodeURIComponent(encKey);
+  var c = aslCustomerDirectory().filter(function (x) { return x.key === key; })[0];
+  var f = ASL_CP_FIELDS[prefix];
+  if (!c || !f) return;
+  _cpSet(f.first, c.first);
+  _cpSet(f.last, c.last);
+  _cpSet(f.phone, c.phone);
+  _cpSet(f.profession, c.profession);
+  if (f.nat) _cpSet(f.nat, c.nationality);
+  _cpSet(prefix + '-cust-key', c.key);
+  _cpSet(prefix + '-cust-email', c.email || '');
+  _cpSet(prefix + '-cust-nat', c.nationality || '');
+  _cpShowSelected(prefix, c);
+}
+window.aslClientPickerPick = aslClientPickerPick;
+
+function _cpShowSelected(prefix, c) {
+  var sel = document.getElementById(prefix + '-cust-sel');
+  if (sel) {
+    sel.innerHTML = '<span class="asl-cp-ava">' + _cpEsc((c.display || '?').charAt(0).toUpperCase()) + '</span>' +
+      '<span class="asl-cp-txt"><span class="asl-cp-name">' + _cpEsc(c.display) + '</span><span class="asl-cp-sub">' + _cpEsc(c.phone || 'Pas de téléphone') + ' · client existant</span></span>' +
+      '<button type="button" class="btn-sm ghost" onclick="aslClientPickerClear(\'' + prefix + '\')">Changer</button>';
+    sel.style.display = 'flex';
+  }
+  var wrap = document.getElementById(prefix + '-cust-searchwrap'); if (wrap) wrap.style.display = 'none';
+  var box = document.getElementById(prefix + '-cust-res'); if (box) { box.style.display = 'none'; box.innerHTML = ''; }
+  var q = document.getElementById(prefix + '-cust-q'); if (q) q.value = '';
+}
+
+/* « Changer » : retire le client choisi et vide les champs qu'il avait
+   remplis, pour revenir à un formulaire « nouveau client ». */
+function aslClientPickerClear(prefix) {
+  var f = ASL_CP_FIELDS[prefix];
+  if (f) { _cpSet(f.first, ''); _cpSet(f.last, ''); _cpSet(f.phone, ''); _cpSet(f.profession, ''); if (f.nat) _cpSet(f.nat, ''); }
+  _cpSet(prefix + '-cust-key', ''); _cpSet(prefix + '-cust-email', ''); _cpSet(prefix + '-cust-nat', '');
+  var sel = document.getElementById(prefix + '-cust-sel'); if (sel) { sel.style.display = 'none'; sel.innerHTML = ''; }
+  var wrap = document.getElementById(prefix + '-cust-searchwrap'); if (wrap) wrap.style.display = '';
+  var q = document.getElementById(prefix + '-cust-q'); if (q) { q.value = ''; try { q.focus(); } catch (e) {} }
+}
+window.aslClientPickerClear = aslClientPickerClear;
+
+/* Rétablit l'encart « client existant » si un brouillon restauré contenait
+   un client choisi (le brouillon mémorise ses champs cachés). */
+function aslClientPickerRestore(prefix) {
+  var k = document.getElementById(prefix + '-cust-key');
+  if (!k || !k.value) return;
+  var c = aslCustomerDirectory().filter(function (x) { return x.key === k.value; })[0];
+  if (c) _cpShowSelected(prefix, c); // affiche seulement : les champs du brouillon sont conservés
+}
+window.aslClientPickerRestore = aslClientPickerRestore;
+
+(function () {
+  if (document.getElementById('asl-cp-style')) return;
+  var st = document.createElement('style');
+  st.id = 'asl-cp-style';
+  st.textContent = [
+    '.asl-cp-searchwrap{position:relative;}',
+    '.asl-cp-searchwrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none;}',
+    '.asl-cp-searchwrap .form-input{padding-left:36px;}',
+    '.asl-cp-res{margin-top:6px;border:1px solid var(--border);border-radius:10px;background:var(--dark2,#fff);max-height:260px;overflow-y:auto;box-shadow:0 6px 20px rgba(0,0,0,.08);}',
+    '.asl-cp-item{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:none;border-bottom:1px solid var(--border);background:transparent;cursor:pointer;text-align:left;font-family:inherit;color:var(--text);}',
+    '.asl-cp-item:last-child{border-bottom:none;}',
+    '.asl-cp-item:hover,.asl-cp-item:focus{background:rgba(196,30,58,.06);outline:none;}',
+    '.asl-cp-ava{width:32px;height:32px;border-radius:50%;background:rgba(196,30,58,.1);color:var(--red);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0;}',
+    '.asl-cp-txt{display:flex;flex-direction:column;min-width:0;flex:1;}',
+    '.asl-cp-name{font-weight:700;font-size:13.5px;}',
+    '.asl-cp-sub{font-size:12px;color:var(--text3);}',
+    '.asl-cp-empty{padding:12px;font-size:12.5px;color:var(--text3);}',
+    '.asl-cp-sel{align-items:center;gap:10px;padding:10px 12px;border:1px solid rgba(22,163,74,.35);background:rgba(22,163,74,.06);border-radius:10px;}'
+  ].join('\n');
+  (document.head || document.documentElement).appendChild(st);
+})();
+
+/* ============================================================
+   ★ LOT 44 — DOCUMENTS CLIENTS : STOCKAGE PRIVÉ, SANS LIMITE DE TAILLE
+   PROBLÈME : toutes les images (CIN, permis) de tous les clients étaient
+   embarquées dans UN SEUL bloc synchronisé (« docs »), limité à 4 Mo par
+   le serveur (~15 photos) et lisible sans authentification. Au-delà de la
+   limite, les nouveaux documents ne partaient plus vers le serveur et
+   restaient sur l'appareil qui les avait ajoutés.
+   CORRECTION : chaque image est déposée séparément dans un stockage
+   PRIVÉ (/api/doc, clé requise). Le bloc « docs » ne contient plus que de
+   courtes références « asldoc:<id>|<type> » : il reste minuscule, et la
+   synchronisation (inchangée) fonctionne à nouveau.
+   CONVERSION AUTOMATIQUE des documents existants, en arrière-plan : une
+   image n'est remplacée par sa référence QU'APRÈS confirmation du
+   serveur. En cas d'échec (hors connexion, mode local…), rien ne change
+   et une nouvelle tentative a lieu plus tard. Rien n'est jamais supprimé.
+   ============================================================ */
+var ASL_DOC_PREFIX = 'asldoc:';
+var ASL_DOC_TYPES = { 'image/jpeg': 1, 'image/png': 1, 'image/webp': 1, 'application/pdf': 1 };
+var ASL_DOC_BLANK = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+var _aslDocUrlCache = {};
+var _aslDocBlocked = false; // clé refusée par le serveur : on arrête de réessayer pour cette session
+
+function aslDocIsRef(u) { return typeof u === 'string' && u.indexOf(ASL_DOC_PREFIX) === 0; }
+function aslDocParse(u) {
+  var rest = String(u).slice(ASL_DOC_PREFIX.length);
+  var bar = rest.indexOf('|');
+  return { id: bar < 0 ? rest : rest.slice(0, bar), type: bar < 0 ? 'image/jpeg' : rest.slice(bar + 1) };
+}
+function _aslDocRemote() {
+  return typeof fetch === 'function' && typeof location !== 'undefined' && location.protocol !== 'file:';
+}
+function _aslDocHeaders(json) {
+  var h = json ? { 'Content-Type': 'application/json' } : {};
+  try { var k = localStorage.getItem('asl_admin_key') || ''; if (k) h['X-ASL-Key'] = k; } catch (e) {}
+  return h;
+}
+/* Référence → adresse affichable (blob privé, mis en cache pour la session). */
+function aslDocResolve(u) {
+  if (!aslDocIsRef(u)) return Promise.resolve(u);
+  if (_aslDocUrlCache[u]) return _aslDocUrlCache[u];
+  var p = aslDocParse(u);
+  var pr = fetch('/api/doc/' + encodeURIComponent(p.id), { headers: _aslDocHeaders(false), cache: 'no-store' })
+    .then(function (res) {
+      if (!res.ok) { var e = new Error('HTTP ' + res.status); e.status = res.status; throw e; }
+      return res.blob();
+    })
+    .then(function (blob) { return URL.createObjectURL(new Blob([blob], { type: p.type })); });
+  pr.catch(function () { delete _aslDocUrlCache[u]; }); // réessai possible plus tard
+  _aslDocUrlCache[u] = pr;
+  return pr;
+}
+window.aslDocResolve = aslDocResolve;
+/* Attributs <img> : image directe, ou emplacement chargé automatiquement. */
+function aslDocImgAttrs(u) {
+  if (!aslDocIsRef(u)) return ' src="' + u + '"';
+  return ' src="' + ASL_DOC_BLANK + '" data-asldoc="' + String(u).replace(/"/g, '&quot;') + '"';
+}
+window.aslDocImgAttrs = aslDocImgAttrs;
+function aslDocHydrate(root) {
+  var list = (root || document).querySelectorAll ? (root || document).querySelectorAll('img[data-asldoc]:not([data-asldoc-done])') : [];
+  Array.prototype.forEach.call(list, function (img) {
+    img.setAttribute('data-asldoc-done', '1');
+    aslDocResolve(img.getAttribute('data-asldoc')).then(function (url) {
+      img.src = url;
+      img.style.background = '';
+    }).catch(function () {
+      img.removeAttribute('data-asldoc-done');
+      img.title = 'Document momentanément indisponible (connexion)';
+    });
+  });
+}
+window.aslDocHydrate = aslDocHydrate;
+(function () {
+  try {
+    if (typeof MutationObserver === 'undefined' || !document.documentElement) return;
+    var pending = false;
+    new MutationObserver(function () {
+      if (pending) return;
+      pending = true;
+      setTimeout(function () { pending = false; aslDocHydrate(document); }, 30);
+    }).observe(document.documentElement, { childList: true, subtree: true });
+  } catch (e) {}
+})();
+
+/* Dépôt d'une image « data: » → référence privée. Rejette si impossible. */
+function aslDocUpload(dataUrl) {
+  var m = /^data:([^;,]+);base64,(.*)$/.exec(String(dataUrl || ''));
+  if (!m || !ASL_DOC_TYPES[m[1]]) return Promise.reject(new Error('format'));
+  return fetch('/api/doc', {
+    method: 'POST', headers: _aslDocHeaders(true), cache: 'no-store',
+    body: JSON.stringify({ type: m[1], data: m[2] })
+  }).then(function (res) {
+    if (!res.ok) { var e = new Error('HTTP ' + res.status); e.status = res.status; throw e; }
+    return res.json();
+  }).then(function (j) {
+    if (!j || !j.ok || !j.id) throw new Error('réponse invalide');
+    var ref = ASL_DOC_PREFIX + j.id + '|' + m[1];
+    _aslDocUrlCache[ref] = Promise.resolve(dataUrl); // affichage immédiat, sans re-télécharger
+    return ref;
+  });
+}
+
+function _aslDocDataUrlsIn(v, out) {
+  (Array.isArray(v) ? v : (v ? [v] : [])).forEach(function (u) {
+    if (typeof u === 'string' && u.indexOf('data:') === 0 && out.indexOf(u) < 0) out.push(u);
+  });
+}
+function _aslDocSwap(v, map) {
+  if (Array.isArray(v)) return v.map(function (u) { return map[u] || u; });
+  return (typeof v === 'string' && map[v]) ? map[v] : v;
+}
+var DOC_FIELDS_ALL = ['permis', 'identite', 'identity'];
+var _aslDocMigrating = false, _aslDocAgain = false, _aslDocTimer = null;
+var _aslDocSkip = {}; // images impossibles à déposer (format/taille) : ignorées, laissées telles quelles
+function _aslDocUploadable(u) {
+  if (_aslDocSkip[u]) return false;
+  var m = /^data:([^;,]+);base64,/.exec(u);
+  return !!(m && ASL_DOC_TYPES[m[1]]);
+}
+/* Dépôt d'une image de la file : un refus DÉFINITIF (format, taille) met
+   seulement cette image de côté ; une erreur réseau interrompt le lot
+   sans rien modifier (nouvelle tentative plus tard). */
+function _aslDocUploadInto(u, map) {
+  return aslDocUpload(u).then(function (ref) { map[u] = ref; }).catch(function (e) {
+    if (e && (e.status === 413 || e.status === 415 || e.message === 'format')) { _aslDocSkip[u] = 1; return; }
+    throw e;
+  });
+}
+
+/* Convertit par lots de 5 : chaque lot n'est enregistré qu'après que TOUS
+   ses dépôts ont été confirmés par le serveur. L'écriture passe par la
+   même file d'attente que les ajouts manuels (aucune course possible). */
+function aslMigrateDocs() {
+  if (!_aslDocRemote() || _aslDocBlocked) return Promise.resolve(0);
+  if (_aslDocMigrating) { _aslDocAgain = true; return Promise.resolve(0); }
+  _aslDocMigrating = true;
+  var converted = 0;
+  function nextBatch() {
+    var docs = _loadCustDocs() || {};
+    var todo = [];
+    Object.keys(docs).forEach(function (k) {
+      var d = docs[k]; if (!d || typeof d !== 'object') return;
+      DOC_FIELDS_ALL.forEach(function (f) { _aslDocDataUrlsIn(d[f], todo); });
+    });
+    todo = todo.filter(_aslDocUploadable);
+    if (!todo.length) return Promise.resolve();
+    var batch = todo.slice(0, 5), map = {};
+    return batch.reduce(function (chain, u) {
+      return chain.then(function () { return _aslDocUploadInto(u, map); });
+    }, Promise.resolve()).then(function () {
+      if (!Object.keys(map).length) return;
+      _docSaveQueue = _docSaveQueue.then(function () {
+        var cur = _loadCustDocs() || {};
+        Object.keys(cur).forEach(function (k) {
+          var d = cur[k]; if (!d || typeof d !== 'object') return;
+          DOC_FIELDS_ALL.forEach(function (f) { if (d[f]) d[f] = _aslDocSwap(d[f], map); });
+        });
+        _saveCustDocs(cur);
+        converted += Object.keys(map).length;
+      });
+      return _docSaveQueue;
+    }).then(nextBatch);
+  }
+  /* Documents enregistrés directement dans d'anciens dossiers : même
+     conversion, puis petite modification du dossier (quelques octets). */
+  function migrateRes() {
+    var list = (typeof asl6Res === 'function' ? asl6Res() : []).filter(function (r) {
+      if (!r || !r.docs || typeof r.docs !== 'object') return false;
+      var t = []; DOC_FIELDS_ALL.forEach(function (f) { _aslDocDataUrlsIn(r.docs[f], t); }); return t.filter(_aslDocUploadable).length > 0;
+    });
+    return list.reduce(function (chain, r) {
+      return chain.then(function () {
+        var t = [], map = {};
+        DOC_FIELDS_ALL.forEach(function (f) { _aslDocDataUrlsIn(r.docs[f], t); });
+        t = t.filter(_aslDocUploadable);
+        return t.reduce(function (c2, u) {
+          return c2.then(function () { return _aslDocUploadInto(u, map); });
+        }, Promise.resolve()).then(function () {
+          if (!Object.keys(map).length) return;
+          var nd = Object.assign({}, r.docs);
+          DOC_FIELDS_ALL.forEach(function (f) { if (nd[f]) nd[f] = _aslDocSwap(nd[f], map); });
+          if (typeof ASLDB !== 'undefined' && ASLDB.updateReservation) ASLDB.updateReservation(r.id, { docs: nd });
+          converted += Object.keys(map).length;
+        });
+      });
+    }, Promise.resolve());
+  }
+  return nextBatch().then(migrateRes).catch(function (e) {
+    if (e && (e.status === 401 || e.status === 403)) _aslDocBlocked = true;
+    // Hors connexion / serveur indisponible : rien n'a été modifié, on réessaiera.
+  }).then(function () {
+    _aslDocMigrating = false;
+    if (_aslDocAgain) { _aslDocAgain = false; aslMigrateDocsSoon(2000); }
+    return converted;
+  });
+}
+window.aslMigrateDocs = aslMigrateDocs;
+function aslMigrateDocsSoon(ms) {
+  if (!_aslDocRemote()) return;
+  clearTimeout(_aslDocTimer);
+  _aslDocTimer = setTimeout(aslMigrateDocs, ms == null ? 1500 : ms);
+}
+window.aslMigrateDocsSoon = aslMigrateDocsSoon;
+(function () {
+  if (!_aslDocRemote()) return;
+  setTimeout(aslMigrateDocs, 6000);        // au démarrage, après la 1re synchro
+  setInterval(aslMigrateDocs, 90000);      // puis régulièrement (ajouts depuis la création d'un dossier…)
+})();

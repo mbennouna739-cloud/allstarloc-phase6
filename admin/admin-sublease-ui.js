@@ -101,7 +101,7 @@
       var payState = reste <= 0 ? '<span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:50px;background:rgba(22,163,74,.12);color:#16a34a;">Soldé</span>' : '<span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:50px;background:rgba(196,30,58,.12);color:#C41E3A;">Reste ' + money(reste) + '</span>';
       var plate = r.assignedPlate || (function () { try { var f = ASLDB.getFleet().filter(function (c) { return c.name === r.car || c.id === r.carId; })[0]; return f ? (f.plate || '') : ''; } catch (e) { return ''; } })();
       return '<tr>'
-        + '<td>' + esc(r.car || '') + (plate ? '<br><span style="font-size:11px;color:#888;">' + esc(plate) + '</span>' : '') + '</td>'
+        + '<td>' + esc(r.car || '') + (((typeof aslVehPlateColor === 'function' ? aslVehPlateColor(r) : '') || plate) ? '<br><span style="font-size:11px;color:#888;">' + esc((typeof aslVehPlateColor === 'function' ? aslVehPlateColor(r) : '') || plate) + '</span>' : '') + '</td>'
         + '<td>' + esc(r.finalClient || r.client || '—') + '</td>'
         + '<td style="font-size:11.5px;">' + esc(r.startDate || '') + '<br>→ ' + esc(r.endDate || '') + '</td>'
         + '<td style="text-align:right;">' + money(r.amount || 0) + '</td>'
@@ -165,7 +165,7 @@
       return '<div class="table-card" style="padding:13px 15px;margin-bottom:10px;">'
         + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;">'
         + '<div><div style="font-weight:700;">' + esc(r.finalClient || r.client || 'Client') + '</div>'
-        + '<div style="font-size:12px;color:#778;">' + esc(r.car || '') + ' · ' + esc(r.startDate || '') + ' → ' + esc(r.endDate || '') + '</div></div>'
+        + '<div style="font-size:12px;color:#778;">' + esc((typeof aslVehLabel === 'function' ? aslVehLabel(r) : (r.car||''))) + ' · ' + esc(r.startDate || '') + ' → ' + esc(r.endDate || '') + '</div></div>'
         + '<div style="text-align:right;"><div style="font-size:11px;color:#667;">Reste</div><div style="font-weight:800;color:#C41E3A;">' + money(reste) + '</div></div></div>'
         + '<div style="display:flex;gap:14px;margin-top:9px;padding-top:9px;border-top:1px solid var(--border);font-size:12px;">'
         + '<div>Total : <strong>' + money(r.amount || 0) + '</strong></div><div>Payé : <strong style="color:#16a34a;">' + money(r.paid || 0) + '</strong></div></div>'

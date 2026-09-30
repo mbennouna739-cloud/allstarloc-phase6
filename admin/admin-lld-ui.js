@@ -45,7 +45,7 @@
         + '<div style="padding:16px;">'
         + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">'
         + '<div><div style="font-weight:800;font-size:15px;">' + esc(c.client || 'Client') + '</div>'
-        + '<div style="font-size:12.5px;color:var(--text2);margin-top:2px;">' + esc(c.car || '') + (c.assignedPlate ? ' · ' + esc(c.assignedPlate) : '') + '</div></div>'
+        + '<div style="font-size:12.5px;color:var(--text2);margin-top:2px;">' + esc(typeof aslVehLabel === 'function' ? aslVehLabel(c) : ((c.car || '') + (c.assignedPlate ? ' · ' + c.assignedPlate : ''))) + '</div></div>'
         + '<span class="badge" style="background:' + statusColor + '22;color:' + statusColor + ';white-space:nowrap;">● ' + statusLabel + '</span></div>'
         + '<div style="display:flex;gap:8px 18px;flex-wrap:wrap;margin-top:12px;font-size:12.5px;">'
         + '<div><span style="color:var(--text3);">Début</span><br><b>' + esc(c.startDate || '—') + '</b></div>'
@@ -166,7 +166,9 @@
         + '</tr>';
     }).join('') : '<tr><td colspan="6" style="padding:14px;text-align:center;color:var(--text3);">Aucun versement enregistré.</td></tr>';
 
-    var carOptsLLD = fleet().map(function(fc){
+    // ★ Demande 6 : une ligne par voiture (modèle — plaque · couleur), le
+    //   véhicule actuel du contrat toujours présélectionné.
+    var carOptsLLD = (typeof aslEditVehicleOptions === 'function') ? aslEditVehicleOptions(c) : fleet().map(function(fc){
       var sel = (String(fc.id)===String(c.carId)) ? ' selected' : '';
       return '<option value="'+fc.id+'"'+sel+'>'+esc(fc.name)+(fc.plate?' — '+esc(fc.plate):'')+'</option>';
     }).join('');
@@ -267,13 +269,19 @@
 
     var carSel = document.getElementById('lld-car');
     var newCarId = carSel ? parseInt(carSel.value, 10) : null;
-    if (newCarId && String(newCarId) !== String(c.carId) && typeof ASLDB !== 'undefined') {
+    // ★ Demande 6 : la plaque/couleur viennent de la ligne choisie (une ligne
+    //   par voiture) ; changer de voiture d'un même modèle est aussi pris en compte.
+    var selOpt = carSel && carSel.options[carSel.selectedIndex];
+    var optPlate = selOpt ? selOpt.getAttribute('data-plate') : null;
+    var optColor = selOpt ? (selOpt.getAttribute('data-color') || '') : '';
+    var plateChanged = optPlate != null && optPlate !== (c.assignedPlate || '');
+    if (newCarId && (String(newCarId) !== String(c.carId) || plateChanged) && typeof ASLDB !== 'undefined') {
       var newCar = fleet().filter(function (x) { return String(x.id) === String(newCarId); })[0];
       if (c.carId && c.assignedPlate && typeof ASLDB.releaseUnit === 'function') { try { ASLDB.releaseUnit(c.carId, c.assignedPlate); } catch(e) {} }
-      var newPlate = newCar ? (newCar.plate || '') : '';
+      var newPlate = optPlate != null ? optPlate : (newCar ? (newCar.plate || '') : '');
       if (typeof ASLDB.setUnitStatusByPlate === 'function' && newPlate) { try { ASLDB.setUnitStatusByPlate(newCarId, newPlate, 'active'); } catch(e) {} }
       else if (typeof ASLDB.assignUnit === 'function') { try { ASLDB.assignUnit(newCarId, 'active'); } catch(e) {} }
-      patch.carId = newCarId; patch.car = newCar ? newCar.name : (c.car||''); patch.assignedPlate = newPlate; patch.assignedColor = newCar ? (newCar.color||'') : '';
+      patch.carId = newCarId; patch.car = newCar ? newCar.name : (c.car||''); patch.assignedPlate = newPlate; patch.assignedColor = optPlate != null ? optColor : (newCar ? (newCar.color||'') : '');
     }
     if (typeof ASLDB !== 'undefined' && ASLDB.updateReservation) ASLDB.updateReservation(id, patch);
     if (typeof reloadData === 'function') reloadData();

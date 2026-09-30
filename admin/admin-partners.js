@@ -152,7 +152,7 @@
       var reste = Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
       var stl = statusLabel(r.status);
       return '<tr>'
-        + '<td><strong>' + esc(r.car || '—') + '</strong><div style="font-size:11px;color:var(--text3);">' + esc(r.assignedPlate || r.plate || '') + '</div></td>'
+        + '<td><strong>' + esc(r.car || '—') + '</strong><div style="font-size:11px;color:var(--text3);">' + esc((typeof aslVehPlateColor === 'function' ? aslVehPlateColor(r) : '') || r.assignedPlate || r.plate || '') + '</div></td>'
         + '<td style="font-size:12px;">' + esc(r.clientFinal || '—') + '</td>'
         + '<td style="font-size:12px;">' + esc(r.startDate || '') + '<br>→ ' + esc(r.endDate || '') + '</td>'
         + '<td>' + money(r.amount || 0) + '</td>'
@@ -251,7 +251,7 @@
   window.aslPartnerLink = function (partnerId) {
     var avail = reservations().filter(function (r) { return !r.partnerId && r.status !== 'cancelled' && r.status !== 'completed'; });
     if (!avail.length) { alert('Aucune location disponible à lier (toutes sont déjà rattachées ou terminées).'); return; }
-    var opts = avail.map(function (r) { return '<option value="' + r.id + '">' + esc((r.car || '') + ' · ' + (r.client || '') + ' · ' + (r.startDate || '') + ' → ' + (r.endDate || '')) + '</option>'; }).join('');
+    var opts = avail.map(function (r) { return '<option value="' + r.id + '">' + esc((typeof aslVehLabel === 'function' ? aslVehLabel(r) : (r.car||'')) + ' · ' + (r.client || '') + ' · ' + (r.startDate || '') + ' → ' + (r.endDate || '')) + '</option>'; }).join('');
     openOverlay(
       '<div style="font-size:17px;font-weight:700;margin-bottom:12px;">Lier une location</div>'
       + '<div class="form-group"><label class="form-label">Location à rattacher</label><select class="form-select" id="lk-res">' + opts + '</select></div>'

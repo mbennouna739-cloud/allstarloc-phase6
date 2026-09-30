@@ -150,7 +150,7 @@
     var closed = a.closedAt ? new Date(a.closedAt).toLocaleString('fr-FR') : '';
     var rows = (a.reservations || []).map(function (r) {
       var reste = Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
-      return '<tr><td>' + esc(r.contractRef || r.id || '') + '</td><td>' + esc(r.client || '') + '</td><td>' + esc(r.car || '') + '</td>'
+      return '<tr><td>' + esc(r.contractRef || r.id || '') + '</td><td>' + esc(r.client || '') + '</td><td>' + esc((typeof aslVehLabel === 'function' ? aslVehLabel(r) : (r.car||''))) + '</td>'
         + '<td style="font-size:11px;">' + esc((r.startDate || '') + (r.endDate ? ' → ' + r.endDate : '')) + '</td>'
         + '<td style="text-align:right;">' + money(r.amount || 0) + '</td><td style="text-align:right;color:#16a34a;">' + money(r.paid || 0) + '</td>'
         + '<td style="text-align:right;color:#d97706;">' + money(reste) + '</td></tr>';

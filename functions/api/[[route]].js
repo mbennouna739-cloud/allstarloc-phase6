@@ -16,6 +16,8 @@
    POST /api/reservations        → {action:'add'|'update'|'replace'} (add: public, update/replace: clé admin)
    POST /api/upload              → téléverse une image          (clé admin si définie)
    GET  /api/img/<id>            → sert une image (cache CDN 1 an)
+   POST /api/doc                 → dépose un document client PRIVÉ (clé admin)
+   GET  /api/doc/<id>            → lit un document client PRIVÉ (clé admin)
    GET  /api/health              → diagnostic de configuration
    ============================================================ */
 
@@ -83,6 +85,17 @@ function slugify(name) {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 48) || 'photo';
+}
+/* ★ LOT 44 — Documents clients privés : formats acceptés + identifiant
+   aléatoire cryptographique (32 caractères). */
+const DOC_TYPES = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'application/pdf': 'pdf' };
+function docId() {
+  const c = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  let s = 'd';
+  for (let i = 0; i < bytes.length; i++) s += c[bytes[i] % c.length];
+  return s;
 }
 function randId(n) {
   const c = 'abcdefghijklmnopqrstuvwxyz0123456789';
@@ -467,6 +480,45 @@ export async function onRequest(context) {
     const id = slugify(body.name) + '-' + randId(6) + '.' + ext;
     await env.ASL_DB.put('img:' + id, bytes.buffer, { metadata: { type: type } });
     return json({ ok: true, url: '/api/img/' + id, id: id });
+  }
+
+  /* ---- ★ LOT 44 — Documents clients PRIVÉS (CIN, permis, passeport) ----
+     Chaque image est stockée SÉPARÉMENT (clé KV « doc:<id> »), au lieu
+     d'être embarquée dans le bloc « docs » (limité à 4 Mo au total, et
+     lisible sans authentification). Lecture ET écriture exigent la clé
+     admin, transmise à tout utilisateur connecté (admin et employés).
+     Endpoints ajoutés uniquement : aucun endpoint existant n'est modifié. */
+  if (path === 'doc' && request.method === 'POST') {
+    if (!authorized(request, env)) return err(403, 'Clé admin invalide ou absente (X-ASL-Key)');
+    let body;
+    try { body = await request.json(); } catch (e) { return err(400, 'JSON invalide'); }
+    const type = String(body.type || '');
+    if (!DOC_TYPES[type]) return err(415, 'Format non supporté (JPEG, PNG, WebP ou PDF)');
+    if (typeof body.data !== 'string' || !body.data.length || body.data.length > 8_000_000) {
+      return err(413, 'Document trop volumineux (max ~6 Mo)');
+    }
+    let bytes;
+    try { bytes = b64ToBytes(body.data); } catch (e) { return err(400, 'Encodage base64 invalide'); }
+    const id = docId();
+    await env.ASL_DB.put('doc:' + id, bytes.buffer, { metadata: { type: type } });
+    return json({ ok: true, id: id, type: type });
+  }
+  if (path.startsWith('doc/') && request.method === 'GET') {
+    if (!authorized(request, env)) return err(403, 'Clé admin invalide ou absente (X-ASL-Key)');
+    const id = path.slice(4);
+    if (!/^[a-z0-9]{8,64}$/.test(id)) return err(400, 'Identifiant document invalide');
+    const got = await env.ASL_DB.getWithMetadata('doc:' + id, 'arrayBuffer');
+    if (!got || !got.value) return err(404, 'Document introuvable');
+    const type = (got.metadata && got.metadata.type) || 'image/jpeg';
+    return new Response(got.value, {
+      status: 200,
+      headers: {
+        'Content-Type': type,
+        'Cache-Control': 'private, no-store',
+        'X-Content-Type-Options': 'nosniff',
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
   }
 
   return err(404, 'Endpoint inconnu: ' + path);

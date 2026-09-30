@@ -29,7 +29,7 @@ function buildNotifList() {
     items.push({
       type: 'pending', icon: '🆕', color: '#f59e0b',
       title: 'Nouvelle réservation reçue' + src,
-      desc: (r.car || '') + ' · ' + (r.client || 'Client') + '\n'
+      desc: (typeof aslVehLabel === 'function' ? aslVehLabel(r) : (r.car||'')) + ' · ' + (r.client || 'Client') + '\n'
           + 'Du ' + (r.startDate || '') + heure + ' au ' + (r.endDate || '') + endH,
       action: 'notifGoReservation', arg: r.id
     });
@@ -46,7 +46,7 @@ function buildNotifList() {
             items.push({
               type: 'tight', icon: '⚠', color: '#d97706',
               title: 'Retour à vérifier avant cette réservation',
-              desc: (r.car || '') + ' doit revenir le ' + rt.toLocaleDateString('fr-FR',{day:'numeric',month:'long'}) + ' à ' + rt.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) + '. Vérifiez le retour ou contactez le client actuel.',
+              desc: (typeof aslVehLabel === 'function' ? aslVehLabel(r) : (r.car||'')) + ' doit revenir le ' + rt.toLocaleDateString('fr-FR',{day:'numeric',month:'long'}) + ' à ' + rt.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}) + '. Vérifiez le retour ou contactez le client actuel.',
               action: 'notifGoReservation', arg: r.id
             });
           }
@@ -61,7 +61,7 @@ function buildNotifList() {
     items.push({
       type: 'return', icon: '🔄', color: '#3b82f6',
       title: 'Retour prévu aujourd\'hui',
-      desc: (r.car || '') + ' · ' + (r.client || '') + ' — à restituer' + (r.endTime ? ' à ' + r.endTime : ''),
+      desc: (typeof aslVehLabel === 'function' ? aslVehLabel(r) : (r.car||'')) + ' · ' + (r.client || '') + ' — à restituer' + (r.endTime ? ' à ' + r.endTime : ''),
       action: 'notifGoRental', arg: r.id
     });
   });
@@ -72,7 +72,7 @@ function buildNotifList() {
     items.push({
       type: 'late', icon: '⚠', color: '#ef4444',
       title: 'Véhicule en retard (' + diff + 'j)',
-      desc: (r.car || '') + ' · ' + (r.client || '') + ' — retour le ' + (r.endDate || '') + (r.endTime ? ' à ' + r.endTime : ''),
+      desc: (typeof aslVehLabel === 'function' ? aslVehLabel(r) : (r.car||'')) + ' · ' + (r.client || '') + ' — retour le ' + (r.endDate || '') + (r.endTime ? ' à ' + r.endTime : ''),
       action: 'notifGoRental', arg: r.id
     });
   });
@@ -88,7 +88,7 @@ function buildNotifList() {
     units.forEach(function(u) {
       var key = (typeof maintKey === 'function') ? maintKey(c.id, u.plate) : (String(c.id) + '::' + (u.plate||'_'));
       var m = MAINT[key] || MAINT[String(c.id)] || {}; // compat pendant la migration
-      var label = c.name + (u.plate ? ' (' + u.plate + ')' : '');
+      var label = c.name + (u.plate ? ' (' + u.plate + (u.color ? ' · ' + u.color : '') + ')' : '');
       function check(date, lbl, type) {
         if (!date) return;
         var diff = Math.round((new Date(date) - today) / 86400000);
@@ -125,7 +125,7 @@ function buildNotifList() {
       items.push({
         type: 'unpaid', icon: '💳', color: '#ef4444',
         title: 'Impayé : ' + reste.toLocaleString('fr-FR') + ' MAD',
-        desc: (r.client || '') + ' · ' + (r.car || '') + ' · ' + (r.contractRef || r.id),
+        desc: (r.client || '') + ' · ' + (typeof aslVehLabel === 'function' ? aslVehLabel(r) : (r.car||'')) + ' · ' + (r.contractRef || r.id),
         action: 'notifGoReservation', arg: r.id
       });
     }
