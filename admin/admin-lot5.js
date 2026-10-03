@@ -202,6 +202,41 @@ function nextFutureReservation(car, res, ts) {
   }).sort(function(a, b) { return String(a.startDate||'').localeCompare(String(b.startDate||'')); });
   return future[0] || null;
 }
+/* ★ LOT 46 (point 1) — Réservations FUTURES d'un modèle, réparties en :
+   - pool   : sans voiture attribuée (réservation manuelle : l'exemplaire
+              sera choisi à la prise en charge) → affichées UNE SEULE FOIS,
+              au-dessus des exemplaires du modèle ;
+   - byPlate: déjà liées à une immatriculation précise → affichées sous
+              CETTE voiture uniquement.
+   Lecture seule : aucune voiture n'est bloquée par cette répartition. */
+function aslUpcomingByModel(car, res, ts) {
+  var units = aslUnitsOf(car);
+  var plates = {};
+  units.forEach(function(u) { if (u.plate) plates[u.plate] = 1; });
+  var out = { pool: [], byPlate: {} };
+  (res || []).filter(function(r) {
+    if (!r || r.status === 'cancelled' || r.status === 'completed') return false;
+    var sameModel = (r.carId != null && r.carId !== '') ? String(r.carId) === String(car.id) : (r.car === car.name);
+    if (!sameModel) return false;
+    return (r.startDate || '') > ts;
+  }).sort(function(a, b) { return String(a.startDate || '').localeCompare(String(b.startDate || '')); })
+    .forEach(function(r) {
+      if (r.assignedPlate && plates[r.assignedPlate]) (out.byPlate[r.assignedPlate] = out.byPlate[r.assignedPlate] || []).push(r);
+      else out.pool.push(r);
+    });
+  return out;
+}
+window.aslUpcomingByModel = aslUpcomingByModel;
+/* Texte de l'encart modèle : « 1 réservation du 17/10 au 01/11 — véhicule à
+   attribuer à la prise en charge » (format de dates fourni par l'appelant). */
+function aslPoolText(pool, fmt) {
+  if (!pool || !pool.length) return '';
+  var periods = pool.map(function(r) { return 'du ' + fmt(r, 'start') + ' au ' + fmt(r, 'end'); });
+  if (pool.length === 1) return '1 réservation ' + periods[0] + ' — véhicule à attribuer à la prise en charge';
+  return pool.length + ' réservations (' + periods.join(' · ') + ') — véhicules à attribuer à la prise en charge';
+}
+window.aslPoolText = aslPoolText;
+
 function fmtD(d) {
   if (!d) return '';
   var p = String(d).slice(0,10).split('-');
@@ -380,6 +415,125 @@ function setReturnsFilter(mode) {
   window._returnsFilter = { mode: mode, date: (window._returnsFilter && window._returnsFilter.date) || ts };
   openDashDrawer('returns');
 }
+/* ============================================================
+   ★ LOT 47 — CALENDRIER DES RETOURS (ordinateur uniquement).
+   Vue globale du mois : chaque case-jour liste les voitures qui
+   rentrent ce jour-là (modèle, plaque, couleur, client, heure).
+   Ouvert par le bouton « Calendrier » du pop-up « Retours prévus ».
+   Chaque jour utilise EXACTEMENT ASLDB.selectReturnsOn (même règle que
+   les onglets Aujourd'hui / Demain / Date choisie). Lecture seule.
+   ============================================================ */
+var ASL_RCAL_MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+function _rcalEsc(x) { return String(x == null ? '' : x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
+function openReturnsCalendar(ym) {
+  var ts = todayStr();
+  ym = (ym && /^\d{4}-\d{2}$/.test(ym)) ? ym : ts.slice(0, 7);
+  window._returnsCalMonth = ym;
+  if (typeof closeDashDrawer === 'function') { try { closeDashDrawer(); } catch (e) {} }
+  var ov = document.getElementById('asl-rcal');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'asl-rcal';
+    ov.addEventListener('click', function(e) { if (e.target === ov) closeReturnsCalendar(); });
+    document.body.appendChild(ov);
+    document.addEventListener('keydown', function(e) {
+      var o = document.getElementById('asl-rcal');
+      if (e.key === 'Escape' && o && o.classList.contains('open') && !document.querySelector('.asl-dlg-ov')) closeReturnsCalendar();
+    });
+  }
+  var y = parseInt(ym.slice(0, 4), 10), mo = parseInt(ym.slice(5, 7), 10);
+  var daysIn = new Date(y, mo, 0).getDate();
+  var lead = (new Date(y, mo - 1, 1).getDay() + 6) % 7;
+  var total = 0;
+  var cells = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(function(d) { return '<div class="rcal-dow">' + d + '</div>'; }).join('');
+  for (var i = 0; i < lead; i++) cells += '<div class="rcal-cell rcal-out"></div>';
+  for (var day = 1; day <= daysIn; day++) {
+    var iso = ym + '-' + (day < 10 ? '0' : '') + day;
+    var list = (typeof ASLDB !== 'undefined' && ASLDB.selectReturnsOn) ? ASLDB.selectReturnsOn(iso) : [];
+    list = list.slice().sort(function(a, b) { return String(a.endTime || '').localeCompare(String(b.endTime || '')); });
+    total += list.length;
+    cells += '<div class="rcal-cell' + (iso === ts ? ' rcal-today' : '') + (iso < ts ? ' rcal-past' : '') + '">'
+      + '<div class="rcal-num"><span>' + day + '</span>' + (list.length ? '<em>' + list.length + ' retour' + (list.length > 1 ? 's' : '') + '</em>' : '') + '</div>'
+      + list.map(function(r) {
+          var pc = aslVehPlateColor(r);
+          return '<button type="button" class="rcal-ev" data-rid="' + _rcalEsc(r.id) + '" onclick="openReturnFromCalendar(this.dataset.rid)" title="Ouvrir la fiche">'
+            + '<span class="rcal-ev-top"><b>' + _rcalEsc(r.car || 'Véhicule') + '</b>' + (r.endTime ? '<i>' + _rcalEsc(r.endTime) + '</i>' : '') + '</span>'
+            + (pc ? '<span class="rcal-ev-sub">' + _rcalEsc(pc) + '</span>' : '')
+            + '<span class="rcal-ev-sub">' + _rcalEsc(r.client || '') + '</span></button>';
+        }).join('')
+      + '</div>';
+  }
+  var trail = (7 - ((lead + daysIn) % 7)) % 7;
+  for (var j = 0; j < trail; j++) cells += '<div class="rcal-cell rcal-out"></div>';
+  ov.innerHTML = '<div class="rcal-box" role="dialog" aria-modal="true" aria-label="Calendrier des retours">'
+    + '<div class="rcal-head">'
+    + '<div class="rcal-title"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>'
+    + 'Calendrier des retours <span>· ' + total + ' retour' + (total > 1 ? 's' : '') + ' prévu' + (total > 1 ? 's' : '') + '</span></div>'
+    + '<div class="rcal-ctrls">'
+    + '<button type="button" class="maint-nav" onclick="shiftReturnsCalendar(-1)" aria-label="Mois précédent">‹</button>'
+    + '<div class="rcal-month">' + ASL_RCAL_MONTHS[mo - 1] + ' ' + y + '</div>'
+    + '<button type="button" class="maint-nav" onclick="shiftReturnsCalendar(1)" aria-label="Mois suivant">›</button>'
+    + (ym !== ts.slice(0, 7) ? '<button type="button" class="btn-sm ghost" onclick="openReturnsCalendar()">Ce mois-ci</button>' : '')
+    + '<button type="button" class="btn-sm ghost" onclick="closeReturnsCalendar();openDashDrawer(\'returns\')">Retour à la liste</button>'
+    + '<button type="button" class="rcal-close" onclick="closeReturnsCalendar()" aria-label="Fermer">×</button>'
+    + '</div></div>'
+    + '<div class="rcal-grid">' + cells + '</div>'
+    + '</div>';
+  ov.classList.add('open');
+}
+function shiftReturnsCalendar(delta) {
+  var ym = window._returnsCalMonth || todayStr().slice(0, 7);
+  var y = parseInt(ym.slice(0, 4), 10), m = parseInt(ym.slice(5, 7), 10) + delta;
+  if (m < 1) { m = 12; y--; } if (m > 12) { m = 1; y++; }
+  openReturnsCalendar(y + '-' + (m < 10 ? '0' : '') + m);
+}
+function closeReturnsCalendar() {
+  var ov = document.getElementById('asl-rcal');
+  if (ov) ov.classList.remove('open');
+}
+/* Ouvre la fiche ; en la fermant, on revient au calendrier, même mois. */
+function openReturnFromCalendar(id) {
+  closeReturnsCalendar();
+  setDashReturnContext('returnsCalendar', { month: window._returnsCalMonth });
+  viewRental(id, 'returns');
+}
+(function() {
+  if (document.getElementById('asl-rcal-style')) return;
+  var st = document.createElement('style');
+  st.id = 'asl-rcal-style';
+  st.textContent = [
+    '#asl-rcal{position:fixed;inset:0;z-index:1200;background:rgba(10,12,18,.45);display:none;align-items:flex-start;justify-content:center;padding:28px 24px;overflow-y:auto;}',
+    '#asl-rcal.open{display:flex;}',
+    '.rcal-box{background:var(--dark2,#fff);color:var(--text);border-radius:16px;width:100%;max-width:1280px;padding:18px 20px 20px;box-shadow:0 24px 64px rgba(0,0,0,.25);}',
+    '.rcal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px;}',
+    '.rcal-title{display:flex;align-items:center;gap:8px;font-weight:800;font-size:16px;}',
+    '.rcal-title svg{color:var(--red);}',
+    '.rcal-title span{font-weight:600;font-size:13px;color:var(--text3);}',
+    '.rcal-ctrls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}',
+    '.rcal-month{min-width:140px;text-align:center;font-weight:800;font-size:15px;}',
+    '.rcal-close{width:34px;height:34px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--text);font-size:20px;cursor:pointer;line-height:1;margin-left:4px;}',
+    '.rcal-close:hover{border-color:var(--red);color:var(--red);}',
+    '.rcal-box{overflow-x:auto;}',
+    '.rcal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;min-width:760px;}',
+    '.rcal-dow{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;padding:2px 6px;}',
+    '.rcal-cell{min-height:96px;border:1px solid var(--border);border-radius:9px;padding:6px;display:flex;flex-direction:column;gap:5px;min-width:0;}',
+    '.rcal-out{border-style:dashed;opacity:.35;}',
+    '.rcal-past{background:rgba(18,22,30,.025);}',
+    '.rcal-today{border-color:var(--red);box-shadow:inset 0 0 0 1px var(--red);}',
+    '.rcal-num{display:flex;justify-content:space-between;align-items:baseline;gap:4px;font-size:12.5px;font-weight:700;color:var(--text2);}',
+    '.rcal-today .rcal-num span{color:var(--red);}',
+    '.rcal-num em{font-style:normal;font-size:10.5px;font-weight:700;color:#b45309;}',
+    '.rcal-ev{display:flex;flex-direction:column;align-items:stretch;text-align:left;border:none;border-radius:7px;padding:5px 7px;cursor:pointer;font-family:inherit;background:rgba(217,119,6,.10);width:100%;min-width:0;}',
+    '.rcal-ev:hover{background:rgba(217,119,6,.18);}',
+    '.rcal-ev span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}',
+    '.rcal-ev-top{display:flex !important;justify-content:space-between;gap:6px;font-size:12px;color:var(--text);}',
+    '.rcal-ev-top b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;}',
+    '.rcal-ev-top i{font-style:normal;font-weight:700;color:#92400e;flex-shrink:0;}',
+    '.rcal-ev-sub{font-size:11px;color:var(--text2);}'
+  ].join('\n');
+  (document.head || document.documentElement).appendChild(st);
+})();
+
 function setReturnsDate(d) {
   window._returnsFilter = { mode: 'date', date: d };
   openDashDrawer('returns');
@@ -420,10 +574,22 @@ function openDashDrawer(type) {
     //   possible entre "combien" et "lesquelles".
     fleet.forEach(function(c) {
       var av = (typeof ASLDB !== 'undefined' && ASLDB.unitsAvailableNow) ? ASLDB.unitsAvailableNow(c) : { freeUnits: [] };
+      // ★ LOT 46 (point 1) : une réservation sans voiture attribuée n'est plus
+      //   répétée sous chaque exemplaire : elle s'affiche UNE fois, au-dessus
+      //   des voitures du modèle. Chaque voiture reste « Disponible ».
+      var up = aslUpcomingByModel(c, res, ts);
+      if (av.freeUnits.length && up.pool.length) {
+        rows.push(
+          '<div style="margin-top:12px;padding:10px 12px;border-radius:10px;background:rgba(217,119,6,.08);border:1px solid rgba(217,119,6,.25);">'
+          + '<div style="font-weight:800;">' + c.name + '</div>'
+          + '<div style="font-size:12.5px;color:#b45309;font-weight:600;margin-top:2px;">' + aslPoolText(up.pool, function(r, k) { return fmtD(k === 'start' ? r.startDate : r.endDate); }) + '</div>'
+          + '</div>'
+        );
+      }
       av.freeUnits.forEach(function(u) {
         var plateLabel = u.plate || '';
         if (u.color) plateLabel += (plateLabel ? ' — ' : '') + u.color;
-        var future = nextFutureReservation(c, res, ts);
+        var future = (up.byPlate[u.plate] || [])[0] || null; // réservation liée à CETTE voiture
         rows.push(
           '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);gap:10px;">'
           + '<div style="min-width:0;">'
@@ -501,6 +667,7 @@ function openDashDrawer(type) {
       '<button class="btn-sm ' + (rf.mode==='today'?'primary':'ghost') + '" onclick="setReturnsFilter(\'today\')">Aujourd\'hui</button>' +
       '<button class="btn-sm ' + (rf.mode==='tomorrow'?'primary':'ghost') + '" onclick="setReturnsFilter(\'tomorrow\')">Demain</button>' +
       '<button class="btn-sm ' + (rf.mode==='date'?'primary':'ghost') + '" onclick="setReturnsFilter(\'date\')">Date choisie</button>' +
+      '<button class="btn-sm ghost" onclick="openReturnsCalendar()" title="Calendrier du mois : les retours de chaque jour" style="display:inline-flex;align-items:center;gap:5px;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Calendrier</button>' +
       (rf.mode==='date' ? '<input type="date" value="' + (rf.date||ts) + '" onchange="setReturnsDate(this.value)" style="padding:6px 8px;border:1px solid var(--border);border-radius:7px;font-size:13px;">' : '') +
       '</div>'
     );
@@ -511,16 +678,15 @@ function openDashDrawer(type) {
       '<input id="returns-search" placeholder="Rechercher : client, véhicule, immatriculation…" value="' + ((window._returnsSearchQuery||'').replace(/"/g,'&quot;')) + '" oninput="setReturnsSearch(this.value)"></div>'
     );
     var searchQ = (window._returnsSearchQuery || '').trim().toLowerCase();
+    var retMatch = function(r) {
+      var fc2 = fleet.filter(function(c){ return c.name===r.car || c.id===r.carId; })[0];
+      var plateSearch = ((r.assignedPlate || (fc2 && fc2.plate) || '') + ' ' + aslVehPlateColor(r)).toLowerCase();
+      return (r.client||'').toLowerCase().indexOf(searchQ) >= 0 ||
+             (r.car||'').toLowerCase().indexOf(searchQ) >= 0 ||
+             plateSearch.indexOf(searchQ) >= 0;
+    };
     var matches = (ASLDB.selectReturnsOn ? ASLDB.selectReturnsOn(targetDate) : []);
-    if (searchQ) {
-      matches = matches.filter(function(r) {
-        var fc2 = fleet.filter(function(c){ return c.name===r.car || c.id===r.carId; })[0];
-        var plateSearch = ((r.assignedPlate || (fc2 && fc2.plate) || '') + ' ' + aslVehPlateColor(r)).toLowerCase();
-        return (r.client||'').toLowerCase().indexOf(searchQ) >= 0 ||
-               (r.car||'').toLowerCase().indexOf(searchQ) >= 0 ||
-               plateSearch.indexOf(searchQ) >= 0;
-      });
-    }
+    if (searchQ) matches = matches.filter(retMatch);
     matches.forEach(function(r) {
       // Récupérer l'immatriculation depuis la flotte
       var plateWithColor = aslVehPlateColor(r);
@@ -629,6 +795,145 @@ function migrateLegacyMaint(MAINT, fleet) {
   return changed;
 }
 
+/* ============================================================
+   ★ LOT 46 (point 6) — Entretien : navigation par mois + CALENDRIER.
+   Lecture seule : le calendrier lit les mêmes données que le tableau ;
+   cliquer sur une échéance ouvre la fenêtre « Modifier » existante.
+   ============================================================ */
+function maintShiftMonth(delta) {
+  var mSel = document.getElementById('maint-month'), ySel = document.getElementById('maint-year');
+  if (!mSel || !ySel) return;
+  var now = new Date();
+  var m = mSel.value ? parseInt(mSel.value, 10) : now.getMonth() + 1;
+  var y = parseInt(ySel.value, 10) || now.getFullYear();
+  if (mSel.value) { m += delta; if (m < 1) { m = 12; y--; } if (m > 12) { m = 1; y++; } }
+  var ys = String(y);
+  if (![].some.call(ySel.options, function(o) { return o.value === ys; })) {
+    var o = document.createElement('option'); o.value = ys; o.textContent = ys;
+    if (y < parseInt(ySel.options[0].value, 10)) ySel.insertBefore(o, ySel.options[0]); else ySel.appendChild(o);
+  }
+  mSel.value = (m < 10 ? '0' : '') + m; ySel.value = ys;
+  renderMaintenance();
+}
+function maintThisMonth() {
+  var mSel = document.getElementById('maint-month'), ySel = document.getElementById('maint-year');
+  if (!mSel || !ySel) return;
+  var now = new Date();
+  mSel.value = (now.getMonth() < 9 ? '0' : '') + (now.getMonth() + 1);
+  ySel.value = String(now.getFullYear());
+  renderMaintenance();
+}
+function maintShowAll() {
+  var mSel = document.getElementById('maint-month');
+  if (mSel) mSel.value = '';
+  renderMaintenance();
+}
+function renderMaintCalendar(fYM, fLabel, rowsData, getM) {
+  var host = document.getElementById('maint-calendar');
+  if (!host) return;
+  if (!fYM) { host.innerHTML = ''; host.style.display = 'none'; return; }
+  host.style.display = '';
+  var esc = function(x) { return String(x == null ? '' : x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); };
+  var y = parseInt(fYM.slice(0, 4), 10), mo = parseInt(fYM.slice(5, 7), 10);
+  var daysIn = new Date(y, mo, 0).getDate();
+  var events = {};
+  var nVt = 0, nVid = 0;
+  rowsData.forEach(function(rd) {
+    var m = getM(rd);
+    var label = rd.car.name, sub = (rd.plate || '') + (rd.color ? ' · ' + rd.color : '');
+    function add(dateStr, kind) {
+      var d = String(dateStr || '').slice(0, 10);
+      if (d.slice(0, 7) !== fYM) return;
+      var day = parseInt(d.slice(8, 10), 10);
+      (events[day] = events[day] || []).push({ kind: kind, label: label, sub: sub, cid: rd.car.id, plate: rd.plate || '', date: d });
+      if (kind === 'vt') nVt++; else nVid++;
+    }
+    add(m.vt_next, 'vt');
+    add(m.reminder_next, 'vid');
+  });
+  var todayIso = (typeof todayStr === 'function') ? todayStr() : new Date().toISOString().slice(0, 10);
+  function chip(ev) {
+    return '<button type="button" class="maint-ev maint-ev-' + ev.kind + '" data-cid="' + ev.cid + '" data-plate="' + esc(ev.plate) + '" onclick="openMaintModal(parseInt(this.dataset.cid), this.dataset.plate)" title="Modifier l\'entretien de ce véhicule">'
+      + '<span class="maint-ev-kind">' + (ev.kind === 'vt' ? 'Visite technique' : 'Vérification vidange') + '</span>'
+      + '<span class="maint-ev-car">' + esc(ev.label) + '</span>'
+      + (ev.sub ? '<span class="maint-ev-sub">' + esc(ev.sub) + '</span>' : '') + '</button>';
+  }
+  // Grille (ordinateur) : semaines du lundi au dimanche.
+  var first = new Date(y, mo - 1, 1).getDay(); // 0 = dimanche
+  var lead = (first + 6) % 7;
+  var cells = '';
+  ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].forEach(function(d) { cells += '<div class="maint-cal-dow">' + d + '</div>'; });
+  for (var i = 0; i < lead; i++) cells += '<div class="maint-cal-cell maint-cal-out"></div>';
+  for (var day = 1; day <= daysIn; day++) {
+    var iso = fYM + '-' + (day < 10 ? '0' : '') + day;
+    var evs = events[day] || [];
+    cells += '<div class="maint-cal-cell' + (iso === todayIso ? ' maint-cal-today' : '') + (evs.length ? ' maint-cal-has' : '') + '">'
+      + '<div class="maint-cal-num">' + day + '</div>' + evs.map(chip).join('') + '</div>';
+  }
+  var trail = (7 - ((lead + daysIn) % 7)) % 7;
+  for (var j = 0; j < trail; j++) cells += '<div class="maint-cal-cell maint-cal-out"></div>';
+  // Liste par date (téléphone) : uniquement les jours avec une échéance.
+  var MONTHS = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+  var DOW = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+  var agenda = Object.keys(events).map(Number).sort(function(a, b) { return a - b; }).map(function(dd) {
+    var dt = new Date(y, mo - 1, dd);
+    return '<div class="maint-ag-day"><div class="maint-ag-date">' + DOW[dt.getDay()] + ' ' + dd + ' ' + MONTHS[mo - 1] + '</div>' + events[dd].map(chip).join('') + '</div>';
+  }).join('');
+  var cap = fLabel ? fLabel.charAt(0).toUpperCase() + fLabel.slice(1) : fYM;
+  var summary = (nVt || nVid)
+    ? nVt + ' visite' + (nVt > 1 ? 's' : '') + ' technique' + (nVt > 1 ? 's' : '') + ' · ' + nVid + ' vérification' + (nVid > 1 ? 's' : '') + ' vidange'
+    : 'Aucune échéance ce mois-ci';
+  host.innerHTML = '<div class="maint-cal-card">'
+    + '<div class="maint-cal-head"><div class="maint-cal-title">' + esc(cap) + '</div><div class="maint-cal-sum">' + summary + '</div></div>'
+    + '<div class="maint-cal-grid">' + cells + '</div>'
+    + '<div class="maint-agenda">' + (agenda || '<div class="maint-ag-empty">Aucune visite technique ni vidange prévue ce mois-ci.</div>') + '</div>'
+    + '</div>';
+}
+(function() {
+  if (document.getElementById('asl-maint-cal-style')) return;
+  var st = document.createElement('style');
+  st.id = 'asl-maint-cal-style';
+  st.textContent = [
+    '.maint-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:var(--dark2,#fff);border:1px solid var(--border);border-radius:14px;padding:12px 16px;margin-bottom:14px;}',
+    '.maint-toolbar-title{display:flex;align-items:center;gap:8px;font-weight:800;font-size:14.5px;color:var(--text);}',
+    '.maint-toolbar-title svg{color:var(--red);}',
+    '.maint-toolbar-ctrls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}',
+    '.maint-toolbar-ctrls .form-select{width:auto;min-width:120px;padding:7px 10px;font-size:13px;}',
+    '.maint-nav{width:34px;height:34px;border-radius:9px;border:1px solid var(--border);background:var(--dark2,#fff);color:var(--text);font-size:18px;font-weight:700;cursor:pointer;line-height:1;}',
+    '.maint-nav:hover{border-color:var(--red);color:var(--red);}',
+    '#maint-all-btn.maint-active{border-color:var(--red);color:var(--red);font-weight:700;}',
+    '.maint-cal-card{background:var(--dark2,#fff);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:14px;}',
+    '.maint-cal-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;}',
+    '.maint-cal-title{font-weight:800;font-size:15px;}',
+    '.maint-cal-sum{font-size:12.5px;color:var(--text3);font-weight:600;}',
+    '.maint-cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;}',
+    '.maint-cal-dow{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;padding:2px 6px;}',
+    '.maint-cal-cell{min-height:84px;border:1px solid var(--border);border-radius:8px;padding:5px;display:flex;flex-direction:column;gap:4px;min-width:0;}',
+    '.maint-cal-out{background:transparent;border-style:dashed;opacity:.35;}',
+    '.maint-cal-today{border-color:var(--red);box-shadow:inset 0 0 0 1px var(--red);}',
+    '.maint-cal-num{font-size:12px;font-weight:700;color:var(--text2);}',
+    '.maint-cal-today .maint-cal-num{color:var(--red);}',
+    '.maint-ev{display:flex;flex-direction:column;align-items:flex-start;text-align:left;border:none;border-radius:6px;padding:4px 6px;cursor:pointer;font-family:inherit;width:100%;min-width:0;}',
+    '.maint-ev span{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}',
+    '.maint-ev-vt{background:rgba(196,30,58,.10);color:#9B1830;}',
+    '.maint-ev-vid{background:rgba(37,99,235,.10);color:#1D4ED8;}',
+    '.maint-ev:hover{filter:brightness(.95);}',
+    '.maint-ev-kind{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.3px;opacity:.85;}',
+    '.maint-ev-car{font-size:11.5px;font-weight:700;color:var(--text);}',
+    '.maint-ev-sub{font-size:10.5px;color:var(--text2);}',
+    '.maint-agenda{display:none;}',
+    '.maint-ag-day{margin-bottom:10px;}',
+    '.maint-ag-date{font-size:12px;font-weight:800;color:var(--text2);text-transform:capitalize;margin-bottom:5px;}',
+    '.maint-agenda .maint-ev{padding:8px 10px;margin-bottom:5px;border-radius:9px;}',
+    '.maint-agenda .maint-ev span{white-space:normal;}',
+    '.maint-agenda .maint-ev-car{font-size:13.5px;}',
+    '.maint-agenda .maint-ev-sub{font-size:12px;}',
+    '.maint-ag-empty{font-size:13px;color:var(--text3);padding:8px 0;}',
+    '@media (max-width:760px){.maint-cal-grid{display:none;}.maint-agenda{display:block;}.maint-toolbar{padding:12px;}.maint-toolbar-ctrls{width:100%;}.maint-toolbar-ctrls #maint-month{flex:1 1 0;min-width:0;}.maint-toolbar-ctrls #maint-year{flex:0 0 92px;min-width:0;}.maint-toolbar-ctrls .btn-sm{flex:1 1 40%;min-height:38px;}}'
+  ].join('\n');
+  (document.head || document.documentElement).appendChild(st);
+})();
+
 function renderMaintenance() {
   try {
     var fleet = aslFleet();
@@ -701,7 +1006,8 @@ function renderMaintenance() {
       }
     }
     var fMonth = monthSel ? monthSel.value : '';
-    if (yearSel) yearSel.style.display = fMonth ? '' : 'none';
+    var allBtn = document.getElementById('maint-all-btn');
+    if (allBtn) allBtn.classList.toggle('maint-active', !fMonth);
     var fYM = fMonth ? ((yearSel && yearSel.value) || String(new Date().getFullYear())) + '-' + fMonth : '';
     var MONTH_NAMES = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
     var fLabel = fMonth ? MONTH_NAMES[parseInt(fMonth, 10) - 1] + ' ' + fYM.slice(0, 4) : '';
@@ -714,6 +1020,7 @@ function renderMaintenance() {
       return t;
     }
     var shownRows = fYM ? rowsData.filter(function(rd) { return tasksInMonth(MAINT[maintKey(rd.car.id, rd.plate)] || {}).length > 0; }) : rowsData;
+    renderMaintCalendar(fYM, fLabel, rowsData, function(rd) { return MAINT[maintKey(rd.car.id, rd.plate)] || {}; });
     var mTitle = document.getElementById('maint-table-title');
     if (mTitle) {
       var capLabel = fLabel ? fLabel.charAt(0).toUpperCase() + fLabel.slice(1) : '';
@@ -1244,8 +1551,12 @@ function vrRecalcTotal() {
   var days = daysEl ? parseInt(daysEl.value, 10) : 1;
   var ppu = parseFloat(ppuEl.value) || 0;
   var discEl = document.getElementById('vr-disc-sum'); // ★ Demande 5 : remise déjà accordée
-  totalEl.value = Math.max(0, ppu * (days || 1) - (discEl ? (parseFloat(discEl.value) || 0) : 0));
-  vrPayCalc(parseFloat(totalEl.value) || 0);
+  totalEl.value = aslRound2(Math.max(0, ppu * (days || 1) - (discEl ? (parseFloat(discEl.value) || 0) : 0)));
+  // ★ LOT 46 : dans la fiche impayé, le reste se met aussi à jour (montant
+  //   reçu = somme du journal complet).
+  var ridT = totalEl.getAttribute('data-rid');
+  if (ridT) vrPayCalc(parseFloat(totalEl.value) || 0, unpaidPaidSum(ridT));
+  else vrPayCalc(parseFloat(totalEl.value) || 0);
 }
 
 /* ★ CORRECTIF (« le nombre de jours doit être calculé automatiquement »)
@@ -1452,6 +1763,8 @@ function restoreDashReturnContext() {
   var ctx = window._dashReturnContext;
   if (!ctx) return;
   window._dashReturnContext = null;
+  // ★ LOT 47 : fiche ouverte depuis le calendrier des retours → on y revient.
+  if (ctx.type === 'returnsCalendar') { openReturnsCalendar(ctx.filter && ctx.filter.month); return; }
   if (ctx.filter) window._returnsFilter = ctx.filter;
   if (typeof openDashDrawer === 'function') openDashDrawer(ctx.type);
 }
@@ -2025,7 +2338,9 @@ function _saveNewLocation() {
   //   (pas de calendrier fixe imposé — voir addLLDPaymentEntry pour les suivants).
   var isLLD = (document.getElementById('nl-is-lld') && document.getElementById('nl-is-lld').value === '1');
   var initialPayments = [];
-  if (isLLD && paid > 0) {
+  // ★ LOT 46 (point 4) : le montant reçu à la création est inscrit au
+  //   journal pour TOUTE location (plus seulement la longue durée).
+  if (paid > 0) {
     initialPayments.push({ date: (typeof ASLDB!=='undefined' && ASLDB.localDateISO) ? ASLDB.localDateISO() : new Date().toISOString().slice(0,10), amount: paid, mode: mode, collectedBy: nlCollectedBy, comment: '' });
   }
 
@@ -2047,7 +2362,7 @@ function _saveNewLocation() {
       pickup: (document.getElementById('nl-pickup')&&document.getElementById('nl-pickup').value)||'',
       source: (document.getElementById('nl-source')&&document.getElementById('nl-source').value)||'manual',
       type: isLLD ? 'lld' : 'location', status: 'active',
-      payments: isLLD ? initialPayments : undefined,
+      payments: initialPayments.length ? initialPayments : undefined,
       subleaseId: subleaseId, finalClient: subleaseId ? finalClientName : '',
       notes: (document.getElementById('nl-notes')&&document.getElementById('nl-notes').value)||''
       // ★ CORRECTIF CRITIQUE (régression Mission 2) : les documents ne sont
@@ -2274,10 +2589,53 @@ function viewRes(id) {
    somme de r.payments[] : caisse, Grand Livre, impayés et statistiques
    continuent d'être calculés automatiquement depuis ce même total, sans
    double comptage possible. */
+/* ============================================================
+   ★ LOT 46 — JOURNAL DES VERSEMENTS : un versement s'AJOUTE toujours.
+   CAUSE DU BUG (reproduit : contrat 910, 100 reçus à la création, puis un
+   versement de 700 → « 700 reçus, 210 restants » au lieu de 800 / 110) :
+   le montant reçu à la création était enregistré comme un TOTAL (r.paid)
+   sans être inscrit dans le journal (r.payments). Ajouter un versement
+   recalculait ensuite le total à partir du journal SEUL : le montant
+   initial disparaissait. Même effet pour tout montant enregistré hors
+   journal (encaissement mobile, saisie directe dans une fiche…).
+   CORRECTION : aslPaymentJournal(r) = le journal, plus — si le total reçu
+   dépasse la somme du journal — une ligne « Versement antérieur » pour la
+   différence (datée de la création du dossier, même encaisseur). Toute
+   opération sur le journal part de cette liste complète : rien n'est
+   jamais perdu. Chaque ligne garde sa position d'origine (_i), pour que
+   la suppression vise toujours la bonne ligne, même affichée triée.
+   ============================================================ */
+function aslRound2(n) { return Math.round((Number(n) || 0) * 100) / 100; }
+function aslPaymentJournal(r) {
+  var list = (r && Array.isArray(r.payments)) ? r.payments.map(function(p) { return Object.assign({}, p); }) : [];
+  var sum = aslRound2(list.reduce(function(s, p) { return s + (Number(p.amount) || 0); }, 0));
+  var paid = aslRound2(r && r.paid);
+  if (paid - sum >= 0.01) {
+    list.unshift({
+      date: String((r.createdAt || r.startDate || '')).slice(0, 10),
+      amount: aslRound2(paid - sum),
+      mode: r.paymentMode || '',
+      collectedBy: r.collectedBy || '',
+      comment: list.length ? 'Versement antérieur' : 'Paiement initial'
+    });
+  }
+  list.forEach(function(p, i) { p._i = i; });
+  return list;
+}
+function aslJournalClean(list) {
+  return list.map(function(p) { var q = Object.assign({}, p); delete q._i; q.amount = aslRound2(q.amount); return q; });
+}
+function aslJournalSum(list) {
+  return aslRound2((list || []).reduce(function(s, p) { return s + (Number(p.amount) || 0); }, 0));
+}
+window.aslPaymentJournal = aslPaymentJournal;
+window.aslJournalClean = aslJournalClean;
+window.aslJournalSum = aslJournalSum;
+
 function unpaidPaidSum(id) {
   var r = aslRes().find(function(x) { return String(x.id) === String(id); });
   if (!r) return 0;
-  return (r.payments || []).reduce(function(s, p) { return s + (Number(p.amount) || 0); }, 0);
+  return aslJournalSum(aslPaymentJournal(r));
 }
 function addUnpaidPaymentEntry(id) {
   var r = aslRes().find(function(x) { return String(x.id) === String(id); });
@@ -2293,9 +2651,11 @@ function addUnpaidPaymentEntry(id) {
   var collector = prompt('Encaissé par (Mohamed / Younes / Khalil) :', '') || '';
   if (!collector) { alert('Merci de préciser qui a encaissé ce versement (Mohamed / Younes / Khalil).'); return; }
 
-  var payments = (r.payments || []).slice();
-  payments.push({ date: dateStr, amount: amount, mode: modeStr, collectedBy: collector, comment: '' });
-  var newPaid = payments.reduce(function(s, p) { return s + (Number(p.amount) || 0); }, 0);
+  // ★ LOT 46 : on part du journal COMPLET (y compris le montant déjà reçu
+  //   hors journal) : le nouveau versement s'ajoute, rien n'est remplacé.
+  var payments = aslJournalClean(aslPaymentJournal(r));
+  payments.push({ date: dateStr, amount: aslRound2(amount), mode: modeStr, collectedBy: collector, comment: '' });
+  var newPaid = aslJournalSum(payments);
   var newTotalEl = document.getElementById('vr-total');
   var totalNow = newTotalEl ? (parseFloat(newTotalEl.value) || Number(r.amount) || 0) : (Number(r.amount) || 0);
   var payStatus = newPaid<=0 ? 'Non payé' : (newPaid>=totalNow ? 'Paiement complet' : 'Paiement partiel');
@@ -2312,10 +2672,15 @@ function addUnpaidPaymentEntry(id) {
 function deleteUnpaidPaymentEntry(id, idx) {
   var r = aslRes().find(function(x) { return String(x.id) === String(id); });
   if (!r) return;
-  if (!confirm('Supprimer ce versement ?')) return;
-  var payments = (r.payments || []).slice();
-  payments.splice(idx, 1);
-  var newPaid = payments.reduce(function(s, p) { return s + (Number(p.amount) || 0); }, 0);
+  // ★ LOT 46 : idx = position d'origine dans le journal complet (et non
+  //   dans la liste affichée triée par date) : la bonne ligne est supprimée.
+  var journal = aslPaymentJournal(r);
+  var line = journal[idx];
+  if (!line) return;
+  if (!confirm('Supprimer ce versement de ' + fmtMAD(line.amount) + (line.date ? ' du ' + line.date : '') + ' ?')) return;
+  journal.splice(idx, 1);
+  var payments = aslJournalClean(journal);
+  var newPaid = aslJournalSum(payments);
   var payStatus = newPaid<=0 ? 'Non payé' : (newPaid>=(Number(r.amount)||0) ? 'Paiement complet' : 'Paiement partiel');
   if (typeof ASLDB !== 'undefined' && ASLDB.updateReservation) {
     ASLDB.updateReservation(id, { payments: payments, paid: newPaid, paymentStatus: payStatus });
@@ -2428,6 +2793,9 @@ function viewUnpaidFiche(id) {
 
   var total = Number(r.amount)||0, paid = Number(r.paid)||0;
   var mode  = r.paymentMode || 'Espèces';
+  // Prix/jour : celui du dossier, sinon déduit du total (remises incluses) et des jours.
+  var unpaidDays = daysFromDates(r.startDate, r.endDate, r.days||1) || 1;
+  var unpaidPpu = Number(r.pricePerDay) > 0 ? Number(r.pricePerDay) : aslRound2((total + aslDiscountSum(r)) / unpaidDays);
   // ★ MISSION (paiements partiels par plusieurs personnes) — une seule
   //   location peut désormais être réglée en PLUSIEURS FOIS, chaque
   //   versement ayant sa propre date, son propre montant, et surtout sa
@@ -2435,14 +2803,16 @@ function viewUnpaidFiche(id) {
   //   300 MAD par Younes la semaine prochaine). r.paid reste toujours la
   //   SOMME de tous les versements — caisse, Grand Livre et statistiques
   //   continuent donc de fonctionner automatiquement, sans rien dupliquer.
-  var payments = (r.payments || []).slice().sort(function(a,b) { return String(a.date||'').localeCompare(String(b.date||'')); });
-  var payRows = payments.length ? payments.map(function(p, idx) {
+  // ★ LOT 46 : journal COMPLET (montant reçu hors journal inclus), trié par
+  //   date pour l'affichage ; chaque ✕ porte la position d'origine (_i).
+  var payments = aslPaymentJournal(r).sort(function(a,b) { return String(a.date||'').localeCompare(String(b.date||'')); });
+  var payRows = payments.length ? payments.map(function(p) {
     return '<tr style="border-bottom:1px solid var(--border);">'
-      + '<td style="padding:8px 6px;">' + (p.date || '—') + '</td>'
+      + '<td style="padding:8px 6px;">' + (p.date || '—') + (p.comment ? '<div style="font-size:11px;color:var(--text3);">' + String(p.comment).replace(/</g,'&lt;') + '</div>' : '') + '</td>'
       + '<td style="padding:8px 6px;color:#16a34a;font-weight:600;">' + fmtMAD(p.amount) + '</td>'
       + '<td style="padding:8px 6px;">' + (p.mode || '—') + '</td>'
       + '<td style="padding:8px 6px;">' + (p.collectedBy || '—') + '</td>'
-      + '<td style="padding:8px 6px;"><button class="btn-sm ghost" style="color:var(--red);" data-rid="' + r.id + '" data-idx="' + idx + '" onclick="deleteUnpaidPaymentEntry(this.dataset.rid,parseInt(this.dataset.idx))">✕</button></td>'
+      + '<td style="padding:8px 6px;"><button class="btn-sm ghost" style="color:var(--red);" data-rid="' + r.id + '" data-idx="' + p._i + '" onclick="deleteUnpaidPaymentEntry(this.dataset.rid,parseInt(this.dataset.idx))">✕</button></td>'
       + '</tr>';
   }).join('') : '<tr><td colspan="5" style="padding:14px;text-align:center;color:var(--text3);">Aucun versement enregistré pour l\'instant.</td></tr>';
 
@@ -2472,7 +2842,11 @@ function viewUnpaidFiche(id) {
     '<div class="form-group"><label class="form-label">Nombre de jours</label><input type="number" min="1" class="form-input" id="vr-days" value="' + daysFromDates(r.startDate, r.endDate, r.days||1) + '" oninput="vrDaysToEnd()"></div>' +
     '<div class="form-group"><label class="form-label">Date retour</label><input type="date" class="form-input" id="vr-end-date" value="' + (r.endDate||'') + '" onchange="vrEndToDays()"></div>' +
     '<div class="form-group"><label class="form-label">Heure retour</label><input type="time" class="form-input" id="vr-end-time" value="' + (r.endTime||'10:00') + '"></div>' +
+    // ★ LOT 46 (point 2) : prix par jour modifiable ; dates, jours ou prix
+    //   recalculent automatiquement le total (prix × jours − remises).
+    '<div class="form-group"><label class="form-label">Prix / jour (MAD)</label><input type="number" min="0" step="any" class="form-input" id="vr-ppu" value="' + unpaidPpu + '" oninput="vrRecalcTotal()"></div>' +
     '</div>' +
+    '<input type="hidden" id="vr-disc-sum" value="' + aslDiscountSum(r) + '">' +
     '<div style="font-size:22px;font-weight:800;color:var(--red);margin:12px 0;" id="vr-total-display">' + fmtMAD(total) + '</div>' +
     '<div style="background:rgba(18,22,30,.04);border-radius:10px;padding:14px;margin-bottom:14px;">' +
     '<div style="font-weight:700;margin-bottom:10px;color:var(--red);">Montant du contrat</div>' +
@@ -2543,6 +2917,9 @@ function viewUnpaidFiche(id) {
       var patchU = { amount: newTotal, contractRef: newRefU, client: newClientU, phone: newPhoneU,
                      startDate: newStartDateU, startTime: newStartTimeU, endDate: newEndDateU, endTime: newEndTimeU };
       if (newDaysU && newDaysU >= 1) patchU.days = newDaysU;
+      var newPpuElU = document.getElementById('vr-ppu');
+      var newPpuU = newPpuElU ? parseFloat(newPpuElU.value) : NaN;
+      if (!isNaN(newPpuU) && newPpuU >= 0) patchU.pricePerDay = newPpuU;
       var carSelU = document.getElementById('vr-car');
       var newCarIdU = carSelU ? parseInt(carSelU.value, 10) : null;
       if (newCarIdU && (String(newCarIdU) !== String(r.carId)) && typeof ASLDB !== 'undefined') {
@@ -2564,10 +2941,10 @@ function viewUnpaidFiche(id) {
       // ★ Correctif : « newPaid » n'existait pas dans cette fiche (le message
       //   de confirmation plantait après l'enregistrement).
       var paidNowU = Number(r.paid) || 0;
-      showToast(paidNowU>=newTotal ? 'Paiement enregistré — dossier soldé ✓' : 'Paiement enregistré ✓');
+      showToast(paidNowU>=newTotal ? 'Modifications enregistrées — dossier soldé ✓' : 'Modifications enregistrées ✓');
     };
   }
-  setTimeout(function(){ vrPayCalc(total); }, 50);
+  setTimeout(function(){ vrPayCalc(total, unpaidPaidSum(id)); }, 50); // ★ LOT 46 : « Reste » visible dès l'ouverture
 }
 
 /* ============================================================

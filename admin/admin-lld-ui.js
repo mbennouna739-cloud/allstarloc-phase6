@@ -145,7 +145,9 @@
   window.viewLLDContract = function (id) {
     var c = lldRes().filter(function (x) { return x.id === id; })[0];
     if (!c) return;
-    var payments = (c.payments || []).slice().sort(function (a, b) { return String(a.date||'').localeCompare(String(b.date||'')); });
+    // ★ LOT 46 : journal COMPLET (montant reçu hors journal inclus) ; chaque
+    //   ligne garde sa position d'origine (_i) pour une suppression exacte.
+    var payments = (typeof aslPaymentJournal === 'function' ? aslPaymentJournal(c) : (c.payments || []).map(function (p, i) { var q = Object.assign({}, p); q._i = i; return q; })).sort(function (a, b) { return String(a.date||'').localeCompare(String(b.date||'')); });
     var totalPaid = payments.reduce(function (s, p) { return s + (Number(p.amount) || 0); }, 0);
     var totalDue = Number(c.amount) || 0;
     var rest = Math.max(0, totalDue - totalPaid);
@@ -162,7 +164,7 @@
         + '<td style="padding:8px 6px;">' + esc(p.mode || '—') + '</td>'
         + '<td style="padding:8px 6px;">' + esc(p.collectedBy || '—') + '</td>'
         + '<td style="padding:8px 6px;color:var(--text3);">' + esc(p.comment || '') + '</td>'
-        + '<td style="padding:8px 6px;"><button class="btn-sm ghost" style="color:var(--red);" onclick="deleteLLDPaymentEntry(\'' + c.id + '\',' + idx + ')">✕</button></td>'
+        + '<td style="padding:8px 6px;"><button class="btn-sm ghost" style="color:var(--red);" onclick="deleteLLDPaymentEntry(\'' + c.id + '\',' + p._i + ')">✕</button></td>'
         + '</tr>';
     }).join('') : '<tr><td colspan="6" style="padding:14px;text-align:center;color:var(--text3);">Aucun versement enregistré.</td></tr>';
 
@@ -217,7 +219,7 @@
   window.addLLDPaymentEntry = function (id) {
     var c = lldRes().filter(function (x) { return x.id === id; })[0];
     if (!c) return;
-    var rest = Math.max(0, (Number(c.amount) || 0) - (c.payments || []).reduce(function (s, p) { return s + (Number(p.amount) || 0); }, 0));
+    var rest = Math.max(0, (Number(c.amount) || 0) - (typeof aslPaymentJournal === 'function' ? aslPaymentJournal(c) : (c.payments || []).map(function (p, i) { var q = Object.assign({}, p); q._i = i; return q; })).reduce(function (s, p) { return s + (Number(p.amount) || 0); }, 0));
     var amountStr = prompt('Montant du versement (MAD) — reste dû : ' + money(rest) + ' :', rest > 0 ? String(rest) : '');
     if (amountStr == null) return;
     var amount = parseFloat(amountStr) || 0;
@@ -228,7 +230,8 @@
     var collector = prompt('Encaissé par (Mohamed / Younes / Khalil) :', c.collectedBy || '') || '';
     var comment = prompt('Commentaire (facultatif) :', '') || '';
 
-    var payments = (c.payments || []).slice();
+    // ★ LOT 46 : le versement s'AJOUTE au journal complet — rien n'est remplacé.
+    var payments = (typeof aslJournalClean === 'function') ? aslJournalClean((typeof aslPaymentJournal === 'function' ? aslPaymentJournal(c) : (c.payments || []).map(function (p, i) { var q = Object.assign({}, p); q._i = i; return q; }))) : (c.payments || []).slice();
     payments.push({ date: dateStr, amount: amount, mode: modeStr, collectedBy: collector, comment: comment });
     var newPaid = payments.reduce(function (s, p) { return s + (Number(p.amount) || 0); }, 0);
     var payStatus = newPaid <= 0 ? 'Non payé' : (newPaid >= (Number(c.amount)||0) ? 'Paiement complet' : 'Paiement partiel');
@@ -294,8 +297,11 @@
     var c = lldRes().filter(function (x) { return x.id === id; })[0];
     if (!c) return;
     if (!confirm('Supprimer ce versement ?')) return;
-    var payments = (c.payments || []).slice();
-    payments.splice(idx, 1);
+    // ★ LOT 46 : idx = position d'origine dans le journal complet.
+    var journalL = (typeof aslPaymentJournal === 'function' ? aslPaymentJournal(c) : (c.payments || []).map(function (p, i) { var q = Object.assign({}, p); q._i = i; return q; }));
+    if (!journalL[idx]) return;
+    journalL.splice(idx, 1);
+    var payments = (typeof aslJournalClean === 'function') ? aslJournalClean(journalL) : journalL;
     var newPaid = payments.reduce(function (s, p) { return s + (Number(p.amount) || 0); }, 0);
     var payStatus = newPaid <= 0 ? 'Non payé' : (newPaid >= (Number(c.amount)||0) ? 'Paiement complet' : 'Paiement partiel');
     if (typeof ASLDB !== 'undefined' && ASLDB.updateReservation) {

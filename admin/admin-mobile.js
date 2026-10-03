@@ -963,18 +963,24 @@
     fleet().forEach(function (c) {
       if (c.status === 'lld') return;
       var av = (typeof ASLDB !== 'undefined' && ASLDB.unitsAvailableNow) ? ASLDB.unitsAvailableNow(c) : { freeUnits: [] };
+      // ★ LOT 46 (point 1) : réservations sans voiture attribuée affichées UNE
+      //   fois au-dessus du modèle ; celles liées à une plaque, sous cette
+      //   voiture seulement (même règle que le desktop).
+      var up = (typeof aslUpcomingByModel === 'function') ? aslUpcomingByModel(c, res, ts) : { pool: [], byPlate: {} };
+      if (av.freeUnits.length && up.pool.length) rows.push({ header: true, car: c, pool: up.pool });
       av.freeUnits.forEach(function (u) {
-        rows.push({ car: c, unit: u });
+        rows.push({ car: c, unit: u, fut: (up.byPlate[u.plate] || [])[0] || null });
       });
     });
     host.innerHTML = rows.length ? rows.map(function (row) {
       var c = row.car, u = row.unit;
-      // Réservation future éventuelle (libre aujourd'hui mais réservé plus tard)
-      var fut = res.filter(function (r) {
-        if (r.status === 'cancelled' || r.status === 'completed') return false;
-        if (!(r.car === c.name || r.carId === c.id || r.assignedPlate === u.plate)) return false;
-        return (r.startDate || '') > ts;
-      }).sort(function (a, b) { return String(a.startDate || '').localeCompare(String(b.startDate || '')); })[0];
+      if (row.header) {
+        return '<div class="ma-card-note orange" style="margin:14px 0 8px;border-radius:12px;padding:10px 12px;display:block;">'
+          + '<div style="font-weight:800;color:#101216;margin-bottom:2px;">' + esc(c.name || 'Véhicule') + '</div>'
+          + ic('calendar') + ' ' + esc(aslPoolText(row.pool, function (r, k) { return k === 'start' ? fmtDMT(r.startDate, r.startTime, '10:00') : fmtDMT(r.endDate, r.endTime, '18:00'); }))
+          + '</div>';
+      }
+      var fut = row.fut;
       var subLine = esc(u.plate || '—') + (u.color ? ' · ' + esc(u.color) : '');
       return '<div class="ma-card">'
         + '<div class="ma-card-top"><div class="ma-card-ico-box green">' + ic('car') + '</div>'
@@ -1335,8 +1341,21 @@
     var amount = parseFloat(amountStr) || 0;
     if (amount <= 0) { alert('Montant invalide.'); return; }
     if (amount > reste) amount = reste;
-    var newPaid = (Number(r.paid) || 0) + amount;
-    try { ASLDB.updateReservation(resId, { paid: newPaid, paymentStatus: newPaid >= (Number(r.amount) || 0) ? 'paid' : 'partial' }); } catch (e) {}
+    // ★ LOT 46 : le versement est INSCRIT AU JOURNAL (comme sur desktop), à
+    //   la suite des versements existants — y compris un montant déjà reçu
+    //   hors journal, conservé en « Versement antérieur ». Encaisseur : celui
+    //   du dossier (même attribution qu'avant dans la Caisse).
+    var patch;
+    if (typeof aslPaymentJournal === 'function') {
+      var journal = aslJournalClean(aslPaymentJournal(r));
+      journal.push({ date: todayISO(), amount: Math.round(amount * 100) / 100, mode: r.paymentMode || 'Espèces', collectedBy: r.collectedBy || '', comment: 'Encaissé depuis le mobile' });
+      var newPaidJ = aslJournalSum(journal);
+      patch = { payments: journal, paid: newPaidJ, paymentStatus: newPaidJ >= (Number(r.amount) || 0) ? 'Paiement complet' : 'Paiement partiel' };
+    } else {
+      var newPaid = (Number(r.paid) || 0) + amount;
+      patch = { paid: newPaid, paymentStatus: newPaid >= (Number(r.amount) || 0) ? 'paid' : 'partial' };
+    }
+    try { ASLDB.updateReservation(resId, patch); } catch (e) {}
     if (typeof showToast === 'function') showToast('Paiement de ' + money(amount) + ' enregistré ✓');
     renderUnpaidM();
   };
