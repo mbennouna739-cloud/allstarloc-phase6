@@ -410,6 +410,14 @@ function renderDashboard() {
 /* ==================== DASHBOARD DRAWER ==================== */
 
 /* Filtres du panneau "Retours prévus" : aujourd'hui / demain / date choisie. */
+/* ★ LOT 48 — Lieu du retour : lieu de retour (dropoff) s'il existe, sinon
+   le lieu enregistré à la création (pickup). Lecture seule. */
+function aslReturnPlace(r) {
+  if (!r) return '';
+  return String(r.dropoff || r.returnLocation || r.pickup || '').trim();
+}
+window.aslReturnPlace = aslReturnPlace;
+
 function setReturnsFilter(mode) {
   var ts = todayStr();
   window._returnsFilter = { mode: mode, date: (window._returnsFilter && window._returnsFilter.date) || ts };
@@ -475,12 +483,90 @@ function openReturnsCalendar(ym) {
     + '<button type="button" class="maint-nav" onclick="shiftReturnsCalendar(1)" aria-label="Mois suivant">›</button>'
     + (ym !== ts.slice(0, 7) ? '<button type="button" class="btn-sm ghost" onclick="openReturnsCalendar()">Ce mois-ci</button>' : '')
     + '<button type="button" class="btn-sm ghost" onclick="closeReturnsCalendar();openDashDrawer(\'returns\')">Retour à la liste</button>'
+    + '<button type="button" class="btn-sm primary" onclick="openPlanningShare()" title="Lien privé : ce calendrier, toujours à jour, en lecture seule">Partager</button>'
     + '<button type="button" class="rcal-close" onclick="closeReturnsCalendar()" aria-label="Fermer">×</button>'
     + '</div></div>'
     + '<div class="rcal-grid">' + cells + '</div>'
     + '</div>';
   ov.classList.add('open');
 }
+/* ============================================================
+   ★ LOT 48 — PARTAGE DU CALENDRIER DES RETOURS (lien privé)
+   Un lien unique, en LECTURE SEULE, toujours à jour (la page se
+   rafraîchit seule). Aucun accès au logiciel. Le lien reste le même tant
+   qu'on ne le remplace pas ; « Nouveau lien » rend l'ancien inutilisable ;
+   « Désactiver » coupe l'accès.
+   ============================================================ */
+function _planShareApi(action) {
+  var h = { 'Content-Type': 'application/json' };
+  try { var k = localStorage.getItem('asl_admin_key') || ''; if (k) h['X-ASL-Key'] = k; } catch (e) {}
+  return fetch('/api/share/planning', { method: 'POST', headers: h, cache: 'no-store', body: JSON.stringify({ action: action }) })
+    .then(function(res) { return res.json().then(function(j) { if (!res.ok || !j.ok) throw new Error(j.error || ('HTTP ' + res.status)); return j; }); });
+}
+function _planShareUrl(code) { return location.origin + '/planning?code=' + encodeURIComponent(code); }
+function _planShareRender(st, busyMsg) {
+  var box = document.getElementById('asl-pshare');
+  if (!box) return;
+  var inner;
+  if (busyMsg) {
+    inner = '<div style="color:var(--text3);font-size:13.5px;padding:8px 0;">' + busyMsg + '</div>';
+  } else if (!st || !st.enabled) {
+    inner = '<p style="font-size:13.5px;color:var(--text2);line-height:1.55;margin-bottom:14px;">Créez un lien privé vers vos deux calendriers : <b>retours</b> et <b>entretien</b> (visites techniques, vidanges). La personne qui l\'ouvre les voit <b>toujours à jour</b> (prolongations, nouvelles locations, entretien…), <b>sans pouvoir rien modifier</b> et sans accès au logiciel. Ni montants, ni téléphones, ni documents ne sont visibles.</p>'
+      + '<button type="button" class="btn-sm primary" onclick="planShareDo(\'enable\')">Activer le lien</button>';
+  } else {
+    var url = _planShareUrl(st.code);
+    var wa = 'https://wa.me/?text=' + encodeURIComponent('Calendriers All Star Loc — retours et entretien (toujours à jour) : ' + url);
+    inner = '<div style="font-size:12.5px;font-weight:700;color:#16a34a;margin-bottom:8px;">● Lien actif</div>'
+      + '<div style="display:flex;gap:6px;margin-bottom:10px;"><input id="asl-pshare-url" class="form-input" readonly value="' + _rcalEsc(url) + '" style="flex:1;min-width:0;font-size:12.5px;" onclick="this.select()">'
+      + '<button type="button" class="btn-sm primary" onclick="planShareCopy()">Copier</button></div>'
+      + '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">'
+      + '<a class="btn-sm ghost" href="' + _rcalEsc(wa) + '" target="_blank" rel="noopener" style="text-decoration:none;">Envoyer par WhatsApp</a>'
+      + '<a class="btn-sm ghost" href="' + _rcalEsc(url) + '" target="_blank" rel="noopener" style="text-decoration:none;">Ouvrir l\'aperçu</a></div>'
+      + '<p style="font-size:12px;color:var(--text3);line-height:1.5;margin-bottom:12px;">Ce lien ne change pas : envoyez-le une seule fois. Il contient les deux calendriers (onglets « Retours » et « Entretien »). Sur téléphone, il peut être ajouté à l\'écran d\'accueil comme une application.</p>'
+      + '<div style="display:flex;gap:6px;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:12px;">'
+      + '<button type="button" class="btn-sm ghost" onclick="if(confirm(\'Créer un nouveau lien ? L\\\'ancien ne fonctionnera plus.\'))planShareDo(\'regenerate\')">Nouveau lien</button>'
+      + '<button type="button" class="btn-sm ghost" style="color:var(--red);" onclick="if(confirm(\'Désactiver le lien ? Plus personne ne pourra voir le calendrier.\'))planShareDo(\'disable\')">Désactiver</button></div>';
+  }
+  box.querySelector('.pshare-body').innerHTML = inner;
+}
+function openPlanningShare() {
+  var box = document.getElementById('asl-pshare');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'asl-pshare';
+    box.addEventListener('click', function(e) { if (e.target === box) closePlanningShare(); });
+    box.innerHTML = '<div class="pshare-card" role="dialog" aria-modal="true" aria-label="Partager le calendrier">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;"><div style="font-weight:800;font-size:16px;">Partager les calendriers (retours + entretien)</div>'
+      + '<button type="button" class="rcal-close" onclick="closePlanningShare()" aria-label="Fermer">×</button></div>'
+      + '<div class="pshare-body"></div></div>';
+    document.body.appendChild(box);
+    var st = document.createElement('style');
+    st.textContent = '#asl-pshare{position:fixed;inset:0;z-index:1300;background:rgba(10,12,18,.45);display:flex;align-items:center;justify-content:center;padding:20px;}'
+      + '#asl-pshare .pshare-card{background:var(--dark2,#fff);color:var(--text);border-radius:16px;width:100%;max-width:520px;padding:18px 20px;box-shadow:0 24px 64px rgba(0,0,0,.25);}';
+    document.head.appendChild(st);
+  }
+  box.style.display = 'flex';
+  if (location.protocol === 'file:') { _planShareRender(null, 'Le partage nécessite la version en ligne du back-office.'); return; }
+  _planShareRender(null, 'Chargement…');
+  _planShareApi('status').then(function(j) { _planShareRender(j); })
+    .catch(function(e) { _planShareRender(null, 'Impossible de joindre le serveur (' + _rcalEsc(e.message) + '). Réessayez.'); });
+}
+function closePlanningShare() { var b = document.getElementById('asl-pshare'); if (b) b.style.display = 'none'; }
+function planShareDo(action) {
+  _planShareRender(null, 'Enregistrement…');
+  _planShareApi(action).then(function(j) {
+    _planShareRender(j);
+    if (typeof showToast === 'function') showToast(action === 'disable' ? 'Lien désactivé ✓' : action === 'regenerate' ? 'Nouveau lien créé ✓' : 'Lien activé ✓');
+  }).catch(function(e) { _planShareRender(null, 'Échec : ' + _rcalEsc(e.message)); });
+}
+function planShareCopy() {
+  var el = document.getElementById('asl-pshare-url');
+  if (!el) return;
+  var done = function() { if (typeof showToast === 'function') showToast('Lien copié ✓'); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(el.value).then(done, function() { el.select(); document.execCommand('copy'); done(); });
+  else { el.select(); document.execCommand('copy'); done(); }
+}
+
 function shiftReturnsCalendar(delta) {
   var ym = window._returnsCalMonth || todayStr().slice(0, 7);
   var y = parseInt(ym.slice(0, 4), 10), m = parseInt(ym.slice(5, 7), 10) + delta;
@@ -694,7 +780,12 @@ function openDashDrawer(type) {
         '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);gap:10px;">' +
         '<div style="min-width:0;"><div style="font-weight:700;">' + (r.car||'') + '</div>' +
         '<div style="font-size:12px;color:var(--text3);">' + (plateWithColor ? '🚗 ' + plateWithColor + ' · ' : '') + (r.client||'') + '</div>' +
-        '<div style="font-size:12px;">Retour prévu : <strong>' + (r.endDate||'') + '</strong>' + (r.endTime ? ' à <strong>' + r.endTime + '</strong>' : '') + '</div></div>' +
+        '<div style="font-size:12px;">Retour prévu : <strong>' + (r.endDate||'') + '</strong>' + (r.endTime ? ' à <strong>' + r.endTime + '</strong>' : '') + '</div>' +
+        // ★ LOT 48 : lieu du retour — lieu de retour du dossier s'il existe
+        //   (réservations du site), sinon le lieu enregistré à la création
+        //   (« Lieu de prise en charge » des locations/réservations manuelles).
+        (aslReturnPlace(r) ? '<div style="font-size:12px;">Lieu : <strong>' + String(aslReturnPlace(r)).replace(/&/g,'&amp;').replace(/</g,'&lt;') + '</strong></div>' : '') +
+        '</div>' +
         '<div style="flex-shrink:0;"><button class="btn-sm primary" data-rid="' + r.id + '" onclick="setDashReturnContext(\'returns\', window._returnsFilter);closeDashDrawer();viewRental(this.dataset.rid,\'returns\')">Fiche →</button></div>' +
         '</div>'
       );
@@ -806,7 +897,8 @@ function maintShiftMonth(delta) {
   var now = new Date();
   var m = mSel.value ? parseInt(mSel.value, 10) : now.getMonth() + 1;
   var y = parseInt(ySel.value, 10) || now.getFullYear();
-  if (mSel.value) { m += delta; if (m < 1) { m = 12; y--; } if (m > 12) { m = 1; y++; } }
+  if (!mSel.value) y = now.getFullYear(); // depuis « Tous » : on part du mois affiché (mois en cours)
+  m += delta; if (m < 1) { m = 12; y--; } if (m > 12) { m = 1; y++; }
   var ys = String(y);
   if (![].some.call(ySel.options, function(o) { return o.value === ys; })) {
     var o = document.createElement('option'); o.value = ys; o.textContent = ys;
@@ -828,6 +920,30 @@ function maintShowAll() {
   if (mSel) mSel.value = '';
   renderMaintenance();
 }
+/* ★ Robustesse cache — si le navigateur sert encore une ANCIENNE page
+   admin/index.html (sans la barre « Échéances par mois » ni l'emplacement
+   du calendrier) avec les NOUVEAUX scripts, on crée ces éléments ici, juste
+   au-dessus du tableau d'entretien. Si une ancienne version du filtre
+   (dans l'en-tête du tableau) est présente, elle est retirée pour éviter
+   tout doublon. Sans effet quand la page est à jour. */
+var ASL_MAINT_TOOLBAR_HTML = '<div class="maint-toolbar"> <div class="maint-toolbar-title"> <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg> Échéances par mois </div> <div class="maint-toolbar-ctrls"> <button type="button" class="maint-nav" onclick="maintShiftMonth(-1)" aria-label="Mois précédent">‹</button> <select class="form-select" id="maint-month" onchange="renderMaintenance()" aria-label="Mois"> <option value="">Tous les véhicules</option> <option value="01">Janvier</option><option value="02">Février</option><option value="03">Mars</option> <option value="04">Avril</option><option value="05">Mai</option><option value="06">Juin</option> <option value="07">Juillet</option><option value="08">Août</option><option value="09">Septembre</option> <option value="10">Octobre</option><option value="11">Novembre</option><option value="12">Décembre</option> </select> <select class="form-select" id="maint-year" onchange="renderMaintenance()" aria-label="Année"></select> <button type="button" class="maint-nav" onclick="maintShiftMonth(1)" aria-label="Mois suivant">›</button> <button type="button" class="btn-sm ghost" onclick="maintThisMonth()">Ce mois-ci</button> <button type="button" class="btn-sm ghost" id="maint-all-btn" onclick="maintShowAll()">Tous les véhicules</button> <button type="button" class="btn-sm primary" onclick="openPlanningShare()" title="Lien privé : calendriers toujours à jour, en lecture seule">Partager</button> </div> </div>';
+function ensureMaintCalendarDom() {
+  if (document.getElementById('maint-calendar') && document.querySelector('.maint-toolbar')) return;
+  var tbody = document.getElementById('maintenance-table');
+  var card = tbody && tbody.closest('.table-card');
+  if (!card || !card.parentNode) return;
+  var oldSel = document.getElementById('maint-month');
+  if (oldSel && !oldSel.closest('.maint-toolbar')) {
+    var oldBox = oldSel.parentNode;
+    if (oldBox && oldBox !== card && card.contains(oldBox)) oldBox.parentNode.removeChild(oldBox);
+  }
+  var wrap = document.createElement('div');
+  wrap.innerHTML = ASL_MAINT_TOOLBAR_HTML + '<div id="maint-calendar"></div>';
+  while (wrap.firstChild) card.parentNode.insertBefore(wrap.firstChild, card);
+  var titleEl = card.querySelector('.table-title');
+  if (titleEl && !titleEl.id) titleEl.id = 'maint-table-title';
+}
+
 function renderMaintCalendar(fYM, fLabel, rowsData, getM) {
   var host = document.getElementById('maint-calendar');
   if (!host) return;
@@ -990,6 +1106,7 @@ function renderMaintenance() {
 
     var tbody = document.getElementById('maintenance-table');
     if (!tbody) return;
+    ensureMaintCalendarDom();
 
     /* ★ Demande 4 — Filtre par mois : seuls les véhicules ayant une échéance
        dans le mois choisi (visite technique et/ou vérification vidange).
@@ -1020,7 +1137,12 @@ function renderMaintenance() {
       return t;
     }
     var shownRows = fYM ? rowsData.filter(function(rd) { return tasksInMonth(MAINT[maintKey(rd.car.id, rd.plate)] || {}).length > 0; }) : rowsData;
-    renderMaintCalendar(fYM, fLabel, rowsData, function(rd) { return MAINT[maintKey(rd.car.id, rd.plate)] || {}; });
+    // ★ Le calendrier est TOUJOURS visible : mois choisi, sinon mois en cours.
+    //   (Le tableau, lui, reste complet tant qu'aucun mois n'est choisi.)
+    var nowCal = new Date();
+    var calYM = fYM || (nowCal.getFullYear() + '-' + (nowCal.getMonth() < 9 ? '0' : '') + (nowCal.getMonth() + 1));
+    var calLabel = MONTH_NAMES[parseInt(calYM.slice(5, 7), 10) - 1] + ' ' + calYM.slice(0, 4);
+    renderMaintCalendar(calYM, calLabel, rowsData, function(rd) { return MAINT[maintKey(rd.car.id, rd.plate)] || {}; });
     var mTitle = document.getElementById('maint-table-title');
     if (mTitle) {
       var capLabel = fLabel ? fLabel.charAt(0).toUpperCase() + fLabel.slice(1) : '';

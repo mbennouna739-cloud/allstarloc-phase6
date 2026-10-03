@@ -16,6 +16,8 @@
    POST /api/reservations        → {action:'add'|'update'|'replace'} (add: public, update/replace: clé admin)
    POST /api/upload              → téléverse une image          (clé admin si définie)
    GET  /api/img/<id>            → sert une image (cache CDN 1 an)
+   GET  /api/share/planning?code= → calendriers retours + entretien (lien privé, lecture seule)
+   POST /api/share/planning      → gérer ce lien (clé admin)
    POST /api/doc                 → dépose un document client PRIVÉ (clé admin)
    GET  /api/doc/<id>            → lit un document client PRIVÉ (clé admin)
    GET  /api/health              → diagnostic de configuration
@@ -519,6 +521,85 @@ export async function onRequest(context) {
         'Access-Control-Allow-Origin': '*',
       },
     });
+  }
+
+  /* ---- ★ LOT 48 — LIEN PRIVÉ « Calendrier des retours » (lecture seule) ----
+     GET  /api/share/planning?code=…  → données MINIMALES du calendrier des
+          retours (voiture, plaque, couleur, client, date, heure, lieu). Ni
+          téléphone, ni montant, ni document. Le code (32 caractères aléatoires)
+          est la seule clé : un mauvais code, ou un lien désactivé → 404.
+     POST /api/share/planning (clé admin) → { action: 'status' | 'enable' |
+          'regenerate' | 'disable' } pour gérer le lien depuis le back-office.
+     Endpoints AJOUTÉS uniquement ; clé KV dédiée « share_planning ». */
+  if (path === 'share/planning' && request.method === 'GET') {
+    const cfg = await readDoc(env, 'share_planning');
+    const code = String(url.searchParams.get('code') || '');
+    if (!cfg || !cfg.enabled || !cfg.code || code.length < 20 || code !== cfg.code) {
+      return new Response(JSON.stringify({ ok: false, error: 'Lien invalide ou désactivé' }), { status: 404, headers: Object.assign({}, JSON_HEADERS, { 'Cache-Control': 'no-store' }) });
+    }
+    const fleetDoc = await readDoc(env, 'fleet');
+    const resDoc = await readDoc(env, 'reservations');
+    const fleet = ((fleetDoc && fleetDoc.items) || []).map(function (c) {
+      const units = Array.isArray(c.units) && c.units.length ? c.units : (c.plate ? [{ plate: c.plate, color: c.color || '' }] : []);
+      return { id: c.id, name: c.name || '', units: units.map(function (u) { return { plate: u.plate || '', color: u.color || '' }; }) };
+    });
+    // Même règle que le logiciel (ASLDB.selectReturnsOn) : dossier non annulé,
+    // non terminé ; la date de retour décide du jour.
+    const today = new Date();
+    const from = new Date(today.getTime() - 62 * 86400000).toISOString().slice(0, 10);
+    const to = new Date(today.getTime() + 400 * 86400000).toISOString().slice(0, 10);
+    const returns = ((resDoc && resDoc.items) || []).filter(function (r) {
+      if (!r || r.status === 'cancelled' || r.status === 'completed') return false;
+      const d = String(r.endDate || '').slice(0, 10);
+      return d && d >= from && d <= to;
+    }).map(function (r) {
+      return {
+        car: r.car || '', carId: r.carId == null ? '' : r.carId,
+        plate: r.assignedPlate || '', color: r.assignedColor || '',
+        client: r.client || '', status: r.status || '',
+        endDate: String(r.endDate || '').slice(0, 10), endTime: r.endTime || '',
+        place: String(r.dropoff || r.returnLocation || r.pickup || '').trim()
+      };
+    });
+    // ★ LOT 49 — Échéances d'entretien (même lecture que le logiciel : clé
+    //   « idModèle::plaque », repli sur l'ancienne clé « idModèle »). Seulement
+    //   les dates et le km de prochaine vidange — pas les notes.
+    let maintMap = {};
+    try { const mraw = await env.ASL_DB.get('misc_maint'); if (mraw) maintMap = (JSON.parse(mraw) || {}).value || {}; } catch (e) { maintMap = {}; }
+    const maint = [];
+    fleet.forEach(function (c) {
+      const units = c.units.length ? c.units : [{ plate: '', color: '' }];
+      units.forEach(function (u) {
+        const m = maintMap[String(c.id) + '::' + (u.plate || '_')] || maintMap[String(c.id)] || null;
+        if (!m) return;
+        const vt = String(m.vt_next || '').slice(0, 10);
+        const rem = String(m.reminder_next || '').slice(0, 10);
+        if (!vt && !rem) return;
+        maint.push({ car: c.name, plate: u.plate || '', color: u.color || '', vt: vt, vidange: rem, kmVidange: m.km_vidange_next || '' });
+      });
+    });
+    return new Response(JSON.stringify({ ok: true, fleet: fleet, returns: returns, maint: maint, rev: (resDoc && resDoc.rev) || 0 }), {
+      status: 200, headers: Object.assign({}, JSON_HEADERS, { 'Cache-Control': 'no-store', 'X-Robots-Tag': 'noindex' })
+    });
+  }
+  if (path === 'share/planning' && request.method === 'POST') {
+    if (!authorized(request, env)) return err(403, 'Clé admin invalide ou absente (X-ASL-Key)');
+    let body = {};
+    try { body = await request.json(); } catch (e) {}
+    const action = String(body.action || 'status');
+    let cfg = (await readDoc(env, 'share_planning')) || { enabled: false, code: '' };
+    if (action === 'enable') {
+      if (!cfg.code) cfg.code = docId().slice(1);
+      cfg.enabled = true;
+    } else if (action === 'regenerate') {
+      cfg.code = docId().slice(1); cfg.enabled = true;
+    } else if (action === 'disable') {
+      cfg.enabled = false;
+    } else if (action !== 'status') {
+      return err(400, 'Action inconnue');
+    }
+    if (action !== 'status') { cfg.updated = new Date().toISOString(); await env.ASL_DB.put('share_planning', JSON.stringify(cfg)); }
+    return json({ ok: true, enabled: !!cfg.enabled, code: cfg.enabled ? cfg.code : '' });
   }
 
   return err(404, 'Endpoint inconnu: ' + path);

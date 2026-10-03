@@ -32,8 +32,22 @@
 /admin/*.html
   Cache-Control: no-cache, must-revalidate
 
+# ★ LOT 47 — adresse courte du back-office (« /admin/ », sans index.html) :
+# non couverte par la règle ci-dessus, la page pouvait rester en cache
+# (ancienne page + nouveaux scripts → éléments manquants).
+/admin/
+  Cache-Control: no-cache, must-revalidate
+
+/admin
+  Cache-Control: no-cache, must-revalidate
+
 /*.html
   Cache-Control: no-cache, must-revalidate
+
+# ★ LOT 48 — page « Calendrier des retours » partagée (adresse courte).
+/planning
+  Cache-Control: no-cache, must-revalidate
+  X-Robots-Tag: noindex, nofollow
 
 /pages/*.html
   Cache-Control: no-cache, must-revalidate
