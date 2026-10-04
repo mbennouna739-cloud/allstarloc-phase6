@@ -1760,38 +1760,359 @@
 
   /* ============ "PLUS" : modules mobiles autorisés ============ */
   window.maOpenMore = function () {
-    var items = [
-      { ico: 'key', label: 'Locations en cours', act: "maMore('rentals')", perm: null },
+    // ★ LOT 52 : menu réorganisé — Créer / Gestion (permissions inchangées).
+    var create = [
+      { ico: 'key', label: 'Nouvelle location', sub: 'Client, voiture, paiement en 3 étapes', act: 'maNewLocation()', perm: 'rentals|reservations', cls: ' dark' },
+      { ico: 'calendar', label: 'Nouvelle réservation', act: 'maNewReservation()', perm: 'reservations' },
+      { ico: 'receipt', label: 'Ajouter une charge', sub: 'Carburant, AdBlue, vidange…', act: 'maAddCharge()', perm: 'caisse' },
+      { ico: 'handshake', label: 'Nouvelle sous-location', sub: 'Accord avec un partenaire', act: 'closeSheet();maNewSublease()', perm: 'sublease' }
+    ];
+    var manage = [
       { ico: 'history', label: 'Historique', act: "maMore('history')", perm: null },
+      { ico: 'users', label: 'Clients', act: "maMore('clients')", perm: null },
       { ico: 'handshake', label: 'Sous-location', act: "maMore('sublease')", perm: 'sublease' },
       { ico: 'calendar', label: 'Location longue durée', act: "maMore('lld')", perm: 'sublease' },
-      { ico: 'users', label: 'Clients', act: "maMore('clients')", perm: null }
+      { ico: 'wrench', label: 'Entretien', sub: 'Visites techniques et vidanges', act: "maExitToPage('maintenance')", perm: 'maintenance' },
+      { ico: 'scale', label: 'Rendement', sub: 'Jours loués et bénéfice par voiture', act: "maExitToPage('rendement')", perm: 'caisse' }
     ];
-    var visible = items.filter(function (it) { return !it.perm || can(it.perm); });
-    var canCreate = can('reservations') || can('rentals');
+    function allowed(it) { return !it.perm || it.perm.split('|').some(function (p) { return can(p); }); }
+    function row(it) { return '<button class="ma-sheet-item" onclick="' + it.act + '"><span class="ma-sheet-ico">' + ic(it.ico) + '</span><span style="flex:1;text-align:left;"><span style="display:block;">' + it.label + '</span>' + (it.sub ? '<span style="display:block;font-size:12.5px;font-weight:500;color:#646B78;">' + it.sub + '</span>' : '') + '</span></button>'; }
+    var c = create.filter(allowed), m = manage.filter(allowed);
     openSheet(
       '<div class="ma-sheet-title">Plus</div>'
-      + (canCreate
-          ? '<div class="ma-sheet-section">Créer</div>'
-            + (can('reservations') ? '<button class="ma-action" onclick="maNewReservation()">' + ic('calendar') + ' Nouvelle réservation</button>' : '')
-            + (can('rentals') || can('reservations') ? '<button class="ma-action dark" onclick="maNewLocation()">' + ic('key') + ' Nouvelle location</button>' : '')
-          : '')
-      + '<div class="ma-sheet-section">Accès</div>'
-      + visible.map(function (it) { return '<button class="ma-sheet-item" onclick="' + it.act + '"><span class="ma-sheet-ico">' + ic(it.ico) + '</span>' + it.label + '</button>'; }).join('')
+      + (c.length ? '<div class="ma-sheet-section">Créer</div>' + c.map(row).join('') : '')
+      + '<div class="ma-sheet-section">Gestion</div>' + m.map(row).join('')
       + '<button class="ma-sheet-item danger" onclick="maLogout()"><span class="ma-sheet-ico">' + ic('logout') + '</span>Se déconnecter</button>'
     );
   };
-  /* Réservation / location manuelles : réutilisent EXACTEMENT la logique
-     desktop (openModal). Le formulaire s'affiche au-dessus de l'app mobile,
-     adapté tactile par le CSS (champs empilés, 16px, gros boutons). */
-  window.maNewReservation = function () {
+  /* Ajouter une charge depuis le mobile : même fenêtre que l'ordinateur
+     (adaptée au téléphone par son style). */
+  window.maAddCharge = function () { closeSheet(); if (typeof window.openChargeModal === 'function') window.openChargeModal(); };
+  /* ======================================================================
+     ★ LOT 52 — NOUVELLE LOCATION / RÉSERVATION EN 3 ÉTAPES (mobile)
+     Étape 1 : client (recherche dans la base, ou nouveau client)
+     Étape 2 : dates + voitures libres (même règle de disponibilité)
+     Étape 3 : prix, acompte, mode, encaissé par, lieu → Enregistrer
+     SÉCURITÉ DES DONNÉES : l'assistant ne sauvegarde RIEN lui-même. Il
+     remplit le formulaire existant (pop-up ordinateur, masqué) et lance SON
+     enregistrement : validations, contrôle de conflit, journal des
+     versements, documents, synchronisation = strictement identiques.
+     Repli : en cas de souci, le formulaire classique reste utilisable.
+     ====================================================================== */
+  var WZ = null;
+  function wzNew(kind, doc) {
+    var t = todayISO();
+    return { kind: kind || 'location', doc: doc || 'direct', subleaseId: '', step: 1, q: '', client: null, isNew: false,
+      nf: { first: '', last: '', phone: '' },
+      start: t, startTime: '10:00', end: '', endTime: '10:00', unit: null,
+      ppu: '', total: '', totalEdited: false, paid: '', mode: 'Espèces', by: '', pickup: '', notes: '' };
+  }
+  function wzDays() {
+    if (!WZ.start || !WZ.end) return 0;
+    var a = new Date(WZ.start + 'T' + (WZ.startTime || '10:00')), b = new Date(WZ.end + 'T' + (WZ.endTime || '10:00'));
+    var h = (b - a) / 3600000;
+    return h > 0 ? Math.max(1, Math.ceil(h / 24 - 0.0001)) : 0;
+  }
+  function wzClientsList() {
+    var dir = (typeof aslCustomerDirectory === 'function') ? aslCustomerDirectory() : [];
+    var q = (WZ.q || '').trim().toLowerCase(), qd = q.replace(/\D/g, '');
+    if (!q) return dir.slice(0, 5);
+    return dir.filter(function (c) {
+      return (c.display + ' ' + (c.email || '')).toLowerCase().indexOf(q) >= 0 || (qd.length >= 3 && String(c.phone || '').replace(/\D/g, '').indexOf(qd) >= 0);
+    }).slice(0, 8);
+  }
+  /* Voitures : un modèle est « complet » si checkAvailability le refuse ;
+     une voiture précise est « occupée » si un dossier qui lui est attribué
+     chevauche les dates. */
+  function wzUnits() {
+    var out = [];
+    var s = WZ.start, e = WZ.end, st = WZ.startTime, et = WZ.endTime;
+    var a = new Date(s + 'T' + (st || '10:00')), b = new Date((e || s) + 'T' + (et || '10:00'));
+    var res = (ASLDB.getReservations && ASLDB.getReservations()) || [];
+    fleet().forEach(function (c) {
+      if (c.status === 'lld') return;
+      var units = (ASLDB.normalizeUnits ? ASLDB.normalizeUnits(c) : []) || [];
+      if (!units.length) units = [{ plate: c.plate || '', color: c.color || '' }];
+      var model = (e && ASLDB.checkAvailability) ? ASLDB.checkAvailability(c, s, e, st, et) : { available: true };
+      units.forEach(function (u) {
+        var us = (u && u.status) || 'available';
+        var out1 = { carId: c.id, model: c.name || '', plate: u.plate || '', color: u.color || '', ref: c.priceMAD || Math.round((c.priceEUR || 0) * 10.8) || '' };
+        if (us === 'maintenance' || us === 'offroad' || us === 'lld') { out1.state = 'off'; out1.why = 'Indisponible'; }
+        else if (!model.available) { out1.state = 'off'; out1.why = 'Modèle complet'; }
+        else {
+          var busy = res.filter(function (r) {
+            if (!r || r.status === 'cancelled' || r.status === 'completed' || String(r.carId) !== String(c.id) || !u.plate || r.assignedPlate !== u.plate) return false;
+            var rs = new Date(String(r.startDate).slice(0, 10) + 'T' + (r.startTime || '10:00')), re = new Date(String(r.endDate || r.startDate).slice(0, 10) + 'T' + (r.endTime || '10:00'));
+            return rs < b && re > a;
+          })[0];
+          if (busy) { out1.state = 'off'; out1.why = 'Occupée → ' + String(busy.endDate || '').slice(8, 10) + '/' + String(busy.endDate || '').slice(5, 7); }
+          else out1.state = 'free';
+        }
+        out.push(out1);
+      });
+    });
+    out.sort(function (x, y) { return (x.state === y.state ? 0 : (x.state === 'free' ? -1 : 1)) || (x.model + x.plate).localeCompare(y.model + y.plate, 'fr'); });
+    return out;
+  }
+  function wzSeg(field, a, b, va, vb) {
+    return '<div class="wz-seg"><button type="button" class="' + (WZ[field] === va ? 'on' : '') + '" onclick="maWz(\'' + field + '\',\'' + va + '\')">' + a + '</button><button type="button" class="' + (WZ[field] === vb ? 'on' : '') + '" onclick="maWz(\'' + field + '\',\'' + vb + '\')">' + b + '</button></div>';
+  }
+  function wzChips(field, list) {
+    return '<div class="wz-chips">' + list.map(function (v) { return '<button type="button" class="' + (WZ[field] === v ? 'on' : '') + '" onclick="maWz(\'' + field + '\',\'' + esc(v) + '\')">' + esc(v) + '</button>'; }).join('') + '</div>';
+  }
+  function wzInput(field, label, type, ph, extra) {
+    return '<label class="wz-field"><span>' + label + '</span><input type="' + (type || 'text') + '" value="' + esc(WZ[field] == null ? '' : WZ[field]) + '" placeholder="' + esc(ph || '') + '" ' + (extra || '') + ' oninput="maWzIn(\'' + field + '\',this.value)"></label>';
+  }
+  function wzRender(keepFocus) {
+    var host = document.getElementById('ma-wiz'); if (!host) return;
+    var kindLbl = WZ.kind === 'location' ? 'Nouvelle location' : 'Nouvelle réservation';
+    var labels = ['Client', 'Voiture et dates', 'Paiement'];
+    var clientName = WZ.client ? WZ.client.display : ((WZ.nf.first + ' ' + WZ.nf.last).trim());
+    var head = '<div class="wz-top">'
+      + '<button type="button" class="wz-icon" aria-label="' + (WZ.step === 1 ? 'Fermer' : 'Étape précédente') + '" onclick="' + (WZ.step === 1 ? 'maWzClose()' : 'maWzStep(-1)') + '">' + ic(WZ.step === 1 ? 'x' : 'arrowLeft') + '</button>'
+      + '<div class="wz-ttl"><b>' + kindLbl + '</b>' + (WZ.step > 1 && clientName ? '<small>' + esc(clientName) + (WZ.step > 2 && WZ.unit ? ' · ' + esc(WZ.unit.model) : '') + '</small>' : '') + '</div></div>'
+      + '<div class="wz-steps"><div>' + [1, 2, 3].map(function (i) { return '<i class="' + (i <= WZ.step ? 'on' : '') + '"></i>'; }).join('') + '</div><span>Étape ' + WZ.step + ' sur 3 · ' + labels[WZ.step - 1] + '</span></div>';
+    var body = '', btn = '', ok = true;
+    if (WZ.step === 1) {
+      var subOpts = (WZ.doc === 'sublease' && window.ASLSublease && ASLSublease.options) ? ASLSublease.options(WZ.subleaseId) : '';
+      body = wzSeg('kind', 'Location', 'Réservation', 'location', 'reservation')
+        + wzSeg('doc', 'Client direct', 'Sous-location', 'direct', 'sublease')
+        + (WZ.doc === 'sublease' ? '<label class="wz-field"><span>Sous-location</span><select onchange="maWzIn(\'subleaseId\',this.value)">' + subOpts + '</select></label><div class="wz-note">Le client ci-dessous est le client final de cette sous-location.</div>' : '');
+      if (!WZ.isNew) {
+        var list = wzClientsList();
+        body += '<label class="wz-search">' + ic('search') + '<input id="wz-q" type="search" value="' + esc(WZ.q) + '" placeholder="Nom ou téléphone du client" autocomplete="off" oninput="maWzQ(this.value)"></label>'
+          + '<div class="wz-sec">' + (WZ.q ? 'Clients trouvés' : 'Clients récents') + '</div>'
+          + (list.length ? list.map(function (c) {
+              var on = WZ.client && WZ.client.key === c.key;
+              return '<button type="button" class="wz-row' + (on ? ' on' : '') + '" data-k="' + esc(encodeURIComponent(c.key)) + '" onclick="maWzPick(this.dataset.k)"><span class="wz-ava">' + esc((c.display || '?').charAt(0).toUpperCase()) + '</span><span class="wz-rt"><b>' + esc(c.display) + '</b><small>' + esc((c.phone || 'Pas de téléphone') + ' · ' + c.count + ' dossier' + (c.count > 1 ? 's' : '')) + '</small></span>' + (on ? '<span class="wz-check">' + ic('check') + '</span>' : '') + '</button>';
+            }).join('') : '<div class="wz-note">Aucun client trouvé.</div>')
+          + '<button type="button" class="wz-dashed" onclick="maWz(\'isNew\',\'1\')">' + ic('plus') + ' Nouveau client</button>';
+        if (WZ.client) {
+          var c0 = WZ.client;
+          var docs = '';
+          try { if (typeof aslGatherCustomerDocs === 'function') { var gd = aslGatherCustomerDocs(c0.key, (ASLDB.getReservations() || []).filter(function (r) { return typeof _custId === 'function' && _custId(r.email, r.client) === c0.key; }), { names: [c0.display], phone: c0.phone }); docs = (gd.permis.length ? 'Permis ✓' : 'Permis manquant') + ' · ' + (gd.identite.length ? 'CIN ✓' : 'CIN manquante'); } } catch (e0) {}
+          body += '<div class="wz-card"><div class="wz-sec" style="margin:0 0 6px;">Rempli automatiquement</div>'
+            + '<div class="wz-kv"><span>Téléphone</span><b>' + esc(c0.phone || '—') + '</b></div>'
+            + (c0.profession ? '<div class="wz-kv"><span>Profession</span><b>' + esc(c0.profession) + '</b></div>' : '')
+            + (c0.nationality ? '<div class="wz-kv"><span>Nationalité</span><b>' + esc(c0.nationality) + '</b></div>' : '')
+            + (docs ? '<div class="wz-kv"><span>Documents</span><b>' + esc(docs) + '</b></div>' : '') + '</div>';
+        }
+        ok = !!WZ.client;
+      } else {
+        body += '<div class="wz-sec">Nouveau client</div>' + wzInput('nf.first', 'Prénom', 'text', 'Prénom') + wzInput('nf.last', 'Nom', 'text', 'Nom') + wzInput('nf.phone', 'Téléphone / WhatsApp', 'tel', '+212 6…', 'inputmode="tel"')
+          + '<button type="button" class="wz-dashed" onclick="maWz(\'isNew\',\'\')">' + ic('search') + ' Choisir un client existant</button>';
+        ok = !!WZ.nf.first.trim();
+      }
+      if (WZ.doc === 'sublease' && !WZ.subleaseId) ok = false;
+      btn = 'Continuer';
+    } else if (WZ.step === 2) {
+      var days = wzDays();
+      body = '<div class="wz-two">'
+        + '<label class="wz-field"><span>Départ</span><input type="date" value="' + esc(WZ.start) + '" onchange="maWz(\'start\',this.value)"><input type="time" value="' + esc(WZ.startTime) + '" onchange="maWz(\'startTime\',this.value)"></label>'
+        + '<label class="wz-field"><span>Retour</span><input type="date" value="' + esc(WZ.end) + '" min="' + esc(WZ.start) + '" onchange="maWz(\'end\',this.value)"><input type="time" value="' + esc(WZ.endTime) + '" onchange="maWz(\'endTime\',this.value)"></label></div>'
+        + '<div class="wz-days">' + (days ? days + ' jour' + (days > 1 ? 's' : '') : 'Choisissez la date de retour') + '</div>';
+      if (WZ.end && days) {
+        var us = wzUnits();
+        var free = us.filter(function (u) { return u.state === 'free'; }), off = us.filter(function (u) { return u.state !== 'free'; });
+        var row = function (u) {
+          var on = WZ.unit && String(WZ.unit.carId) === String(u.carId) && WZ.unit.plate === u.plate;
+          var dis = u.state !== 'free';
+          return '<button type="button" class="wz-row' + (on ? ' on' : '') + (dis ? ' off' : '') + '" ' + (dis ? 'disabled' : '') + ' data-c="' + esc(u.carId) + '" data-p="' + esc(u.plate) + '" onclick="maWzUnit(this.dataset.c,this.dataset.p)">'
+            + '<span class="wz-ava car">' + ic('car') + '</span><span class="wz-rt"><b>' + esc(u.model) + '</b><small>' + esc((u.plate || 'sans plaque') + (u.color ? ' · ' + u.color : '') + (u.ref ? ' · réf. ' + u.ref + ' MAD/j' : '')) + '</small></span>'
+            + (on ? '<span class="wz-check">' + ic('check') + '</span>' : (dis ? '<span class="wz-pill off">' + esc(u.why) + '</span>' : '<span class="wz-pill ok">Libre</span>')) + '</button>';
+        };
+        if (WZ.kind === 'reservation') {
+          // ★ Réservation : aucune plaque n'est bloquée (règle du logiciel) —
+          //   on choisit un MODÈLE ; la voiture est attribuée à la prise en charge.
+          var models = {}, mOrder = [];
+          us.forEach(function (u) { var k = String(u.carId); if (!models[k]) { models[k] = { carId: u.carId, model: u.model, ref: u.ref, free: [], n: 0 }; mOrder.push(k); } models[k].n++; if (u.state === 'free') models[k].free.push(u); });
+          var mrow = function (k) {
+            var m = models[k], on = WZ.unit && String(WZ.unit.carId) === String(m.carId), dis = !m.free.length;
+            return '<button type="button" class="wz-row' + (on ? ' on' : '') + (dis ? ' off' : '') + '" ' + (dis ? 'disabled' : '') + ' data-c="' + esc(m.carId) + '" data-p="' + esc(dis ? '' : m.free[0].plate) + '" onclick="maWzUnit(this.dataset.c,this.dataset.p)">'
+              + '<span class="wz-ava car">' + ic('car') + '</span><span class="wz-rt"><b>' + esc(m.model) + '</b><small>' + (m.ref ? 'réf. ' + m.ref + ' MAD/j · ' : '') + 'voiture attribuée à la prise en charge</small></span>'
+              + (on ? '<span class="wz-check">' + ic('check') + '</span>' : (dis ? '<span class="wz-pill off">Complet</span>' : '<span class="wz-pill ok">' + m.free.length + ' libre' + (m.free.length > 1 ? 's' : '') + '</span>')) + '</button>';
+          };
+          var okM = mOrder.filter(function (k) { return models[k].free.length; }), koM = mOrder.filter(function (k) { return !models[k].free.length; });
+          body += '<div class="wz-sec">Modèles disponibles · ' + okM.length + '</div>' + (okM.length ? okM.map(mrow).join('') : '<div class="wz-note">Aucun modèle libre sur ces dates.</div>')
+            + (koM.length ? '<div class="wz-sec">Complets</div>' + koM.map(mrow).join('') : '');
+        } else {
+        body += '<div class="wz-sec">Voitures libres sur ces dates · ' + free.length + '</div>' + (free.length ? free.map(row).join('') : '<div class="wz-note">Aucune voiture libre sur ces dates.</div>')
+          + (off.length ? '<div class="wz-sec">Indisponibles</div>' + off.map(row).join('') : '');
+        }
+      }
+      ok = !!(WZ.end && days && WZ.unit);
+      btn = WZ.unit ? 'Continuer · ' + esc(WZ.unit.model) : 'Continuer';
+    } else {
+      var d3 = wzDays(), ppu = parseFloat(WZ.ppu) || 0;
+      if (!WZ.totalEdited) WZ.total = ppu ? String(Math.round(ppu * d3 * 100) / 100) : '';
+      var total = parseFloat(WZ.total) || 0, paid = parseFloat(WZ.paid) || 0;
+      body = '<div class="wz-card"><div class="wz-kv"><span>Client</span><b>' + esc(clientName) + '</b></div><div class="wz-kv"><span>Voiture</span><b>' + esc(WZ.kind === 'reservation' ? WZ.unit.model + ' · attribuée à la prise en charge' : WZ.unit.model + ' · ' + (WZ.unit.plate || '') + (WZ.unit.color ? ' · ' + WZ.unit.color : '')) + '</b></div><div class="wz-kv"><span>Dates</span><b>' + esc(WZ.start.split('-').reverse().slice(0, 2).join('/') + ' ' + WZ.startTime + ' → ' + WZ.end.split('-').reverse().slice(0, 2).join('/') + ' ' + WZ.endTime) + '</b></div><div class="wz-kv"><span>Durée</span><b>' + d3 + ' jour' + (d3 > 1 ? 's' : '') + '</b></div></div>'
+        + '<div class="wz-two">' + wzInput('ppu', 'Prix / jour (MAD)', 'number', WZ.unit.ref ? 'Réf. ' + WZ.unit.ref : '0', 'inputmode="decimal" id="wz-ppu"') + wzInput('paid', 'Acompte reçu (MAD)', 'number', '0', 'inputmode="decimal" id="wz-paid"') + '</div>'
+        + '<div class="wz-card"><div class="wz-kv big"><span>Total</span><b id="wz-total">' + money(total) + '</b></div><div class="wz-kv"><span>Reste à payer</span><b id="wz-rest" style="color:#C41E3A;">' + money(Math.max(0, total - paid)) + '</b></div>'
+        + '<button type="button" class="wz-link" onclick="maWzTotal()">Modifier le total</button></div>'
+        + '<div class="wz-sec">Mode de paiement</div>' + wzChips('mode', ['Espèces', 'Carte bancaire', 'Virement', 'Chèque'])
+        + '<div class="wz-sec">Encaissé par</div>' + wzChips('by', ['Mohamed', 'Younes', 'Khalil'])
+        + wzInput('pickup', 'Lieu de prise en charge', 'text', 'Ex : Aéroport Marrakech (RAK)')
+        + wzInput('notes', 'Notes (facultatif)', 'text', '');
+      ok = ppu > 0 && (paid <= 0 || !!WZ.by);
+      btn = WZ.kind === 'location' ? 'Enregistrer la location' : 'Enregistrer la réservation';
+    }
+    var hint = '';
+    if (!ok) hint = WZ.step === 1 ? (WZ.doc === 'sublease' && !WZ.subleaseId ? 'Choisissez la sous-location' : (WZ.isNew ? 'Saisissez au moins le prénom' : 'Choisissez un client')) : WZ.step === 2 ? (!WZ.end ? 'Choisissez la date de retour' : (WZ.kind === 'reservation' ? 'Choisissez un modèle' : 'Choisissez une voiture')) : ((parseFloat(WZ.ppu) || 0) <= 0 ? 'Saisissez le prix par jour' : 'Indiquez qui a encaissé l\'acompte');
+    host.innerHTML = '<div class="wz-box" role="dialog" aria-modal="true" aria-label="' + kindLbl + '">' + head + '<div class="wz-body" id="wz-body">' + body + '</div>'
+      + '<div class="wz-foot">' + (hint ? '<div class="wz-hint">' + esc(hint) + '</div>' : '') + '<button type="button" class="wz-main" ' + (ok ? '' : 'disabled') + ' onclick="' + (WZ.step < 3 ? 'maWzStep(1)' : 'maWzSave()') + '">' + btn + '</button></div></div>';
+    if (keepFocus) { var el = document.getElementById(keepFocus); if (el) { el.focus(); try { var l = el.value.length; el.setSelectionRange(l, l); } catch (e1) {} } }
+  }
+  function wzOpen(kind, doc) {
     closeSheet();
-    if (typeof window.openModal === 'function') window.openModal('new-reservation');
+    WZ = wzNew(kind, doc);
+    var host = document.getElementById('ma-wiz');
+    if (!host) { host = document.createElement('div'); host.id = 'ma-wiz'; document.body.appendChild(host); }
+    host.style.display = 'block';
+    document.body.classList.add('ma-locked');
+    wzRender();
+  }
+  window.maWzClose = function () {
+    var h = document.getElementById('ma-wiz'); if (h) { h.style.display = 'none'; h.innerHTML = ''; }
+    document.body.classList.remove('ma-locked'); WZ = null;
   };
-  window.maNewLocation = function () {
-    closeSheet();
-    if (typeof window.openModal === 'function') window.openModal('new-location');
+  window.maWz = function (field, val) {
+    if (!WZ) return;
+    if (field === 'isNew') { WZ.isNew = !!val; if (WZ.isNew) WZ.client = null; }
+    else { WZ[field] = val; }
+    if (field === 'start' && WZ.end && WZ.end < val) WZ.end = '';
+    if (field === 'start' || field === 'end' || field === 'startTime' || field === 'endTime') { WZ.unit = null; WZ.totalEdited = false; }
+    if (field === 'doc' && val === 'direct') WZ.subleaseId = '';
+    wzRender();
   };
+  window.maWzIn = function (field, val) {
+    if (!WZ) return;
+    if (field.indexOf('nf.') === 0) WZ.nf[field.slice(3)] = val; else WZ[field] = val;
+    if (field === 'subleaseId') { wzRender(); return; }
+    if (WZ.step === 3 && (field === 'ppu' || field === 'paid' || field === 'total')) {
+      // mise à jour des montants sans reconstruire l'écran (le clavier reste ouvert)
+      var d3 = wzDays(), ppu = parseFloat(WZ.ppu) || 0;
+      if (!WZ.totalEdited) WZ.total = ppu ? String(Math.round(ppu * d3 * 100) / 100) : '';
+      var total = parseFloat(WZ.total) || 0, paid = parseFloat(WZ.paid) || 0;
+      var t = document.getElementById('wz-total'), r = document.getElementById('wz-rest');
+      if (t) t.textContent = money(total); if (r) r.textContent = money(Math.max(0, total - paid));
+      var okNow = ppu > 0 && (paid <= 0 || !!WZ.by);
+      var b = document.querySelector('#ma-wiz .wz-main'); if (b) b.disabled = !okNow;
+      var hEl = document.querySelector('#ma-wiz .wz-hint');
+      if (okNow && hEl) hEl.remove();
+      return;
+    }
+    if (WZ.step === 1) {
+      var okNew = WZ.isNew && !!WZ.nf.first.trim() && !(WZ.doc === 'sublease' && !WZ.subleaseId);
+      var b1 = document.querySelector('#ma-wiz .wz-main'); if (b1 && WZ.isNew) b1.disabled = !okNew;
+      var h1 = document.querySelector('#ma-wiz .wz-hint'); if (h1 && okNew) h1.remove();
+    }
+  };
+  window.maWzQ = function (v) { if (!WZ) return; WZ.q = v; wzRender('wz-q'); };
+  window.maWzPick = function (encKey) {
+    var key = decodeURIComponent(encKey);
+    var c = ((typeof aslCustomerDirectory === 'function') ? aslCustomerDirectory() : []).filter(function (x) { return x.key === key; })[0];
+    if (!c) return; WZ.client = c; wzRender();
+  };
+  window.maWzUnit = function (carId, plate) {
+    var u = wzUnits().filter(function (x) { return String(x.carId) === String(carId) && x.plate === plate && x.state === 'free'; })[0];
+    if (!u) return; WZ.unit = u; WZ.totalEdited = false; wzRender();
+  };
+  window.maWzTotal = function () {
+    var v = prompt('Total du contrat (MAD) :', WZ.total || '');
+    if (v === null) return;
+    var n = parseFloat(String(v).replace(',', '.'));
+    if (!(n >= 0)) return;
+    WZ.total = String(n); WZ.totalEdited = true; wzRender();
+  };
+  window.maWzStep = function (d) {
+    if (!WZ) return;
+    WZ.step = Math.min(3, Math.max(1, WZ.step + d));
+    var b = document.getElementById('wz-body'); if (b) b.scrollTop = 0;
+    wzRender();
+  };
+
+  /* ---------- Enregistrement : formulaire existant + SON enregistrement ---------- */
+  function wzSet(id, v, fire) {
+    var el = document.getElementById(id); if (!el) return false;
+    el.value = v == null ? '' : v;
+    if (fire !== false) { try { el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {} }
+    return true;
+  }
+  function wzSelectUnit(selId, unit) {
+    var sel = document.getElementById(selId); if (!sel) return false;
+    for (var i = 0; i < sel.options.length; i++) {
+      var o = sel.options[i];
+      if (String(o.value) === String(unit.carId) && (o.getAttribute('data-plate') || '') === (unit.plate || '')) { sel.selectedIndex = i; try { sel.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {} return true; }
+    }
+    return false;
+  }
+  window.maWzSave = function () {
+    if (!WZ || !WZ.unit) return;
+    var P = WZ.kind === 'location' ? 'nl' : 'nr';
+    var c = WZ.client;
+    var first = c ? c.first : WZ.nf.first.trim(), last = c ? c.last : WZ.nf.last.trim(), phone = c ? (c.phone || '') : WZ.nf.phone.trim();
+    var before = ((ASLDB.getReservations && ASLDB.getReservations()) || []).length;
+    try { if (typeof draftClear === 'function') draftClear(P); } catch (e0) {}
+    document.body.classList.add('ma-bridging');
+    window.openModal(WZ.kind === 'location' ? 'new-location' : 'new-reservation');
+    var S = WZ;
+    setTimeout(function () {
+      var ok = true;
+      wzSet(P + '-doctype', S.doc);
+      try { if (P === 'nl' && typeof nlToggleSublease === 'function') nlToggleSublease(); if (P === 'nr' && typeof nrToggleSublease === 'function') nrToggleSublease(); } catch (e1) {}
+      if (S.doc === 'sublease') wzSet(P + '-sublease', S.subleaseId);
+      wzSet(P === 'nl' ? 'nl-fn' : 'nr-firstname', first);
+      wzSet(P === 'nl' ? 'nl-ln' : 'nr-lastname', last);
+      wzSet(P + '-phone', phone);
+      wzSet(P + '-profession', c ? (c.profession || '') : '');
+      if (P === 'nl') wzSet('nl-nat', c ? (c.nationality || '') : '');
+      // client existant : rattachement à la même fiche (même mécanisme que le pop-up)
+      wzSet(P + '-cust-key', c ? c.key : '', false); wzSet(P + '-cust-email', c ? (c.email || '') : '', false); wzSet(P + '-cust-nat', c ? (c.nationality || '') : '', false);
+      ok = wzSelectUnit(P + '-car', S.unit) && ok;
+      wzSet(P + '-start', S.start); wzSet(P + '-start-time', S.startTime);
+      wzSet(P + '-end', S.end); wzSet(P + '-end-time', S.endTime);
+      wzSet(P + '-days', String(wzDays()));
+      wzSet(P + '-ppu', S.ppu);
+      wzSet(P + '-total', S.total, false);
+      wzSet(P + '-paid', S.paid || '');
+      wzSet(P + '-mode', S.mode);
+      wzSet(P + '-collected-by', S.by);
+      wzSet(P + '-pickup', S.pickup);
+      wzSet(P + '-notes', S.notes);
+      wzSet(P + '-total', S.total, false); // le total voulu, après les recalculs automatiques
+      if (!ok) {
+        document.body.classList.remove('ma-bridging');
+        alert('La voiture choisie n\'a pas été trouvée dans le formulaire. Réessayez.');
+        try { window.closeModal(); } catch (e2) {}
+        return;
+      }
+      try {
+        if (P === 'nl') { if (typeof _saveNewLocation === 'function') _saveNewLocation(); }
+        else { var btnS = document.getElementById('modal-save'); if (btnS && btnS.onclick) btnS.onclick(); }
+      } catch (e3) { console.error(e3); }
+      setTimeout(function () {
+        document.body.classList.remove('ma-bridging');
+        var after = ((ASLDB.getReservations && ASLDB.getReservations()) || []).length;
+        if (after > before) {
+          try { var ov = document.getElementById('modal-overlay'); if (ov && ov.classList.contains('open')) window.closeModal(); } catch (e4) {}
+          try { if (typeof draftClear === 'function') draftClear(P); } catch (e5) {}
+          maWzClose();
+          if (typeof showToast === 'function') showToast((P === 'nl' ? 'Location' : 'Réservation') + ' enregistrée ✓');
+          try { maGo(P === 'nl' ? 'rentals' : 'reservations'); } catch (e6) {}
+        } else {
+          // non enregistré (champ refusé, conflit non confirmé…) : on referme le
+          // formulaire masqué, l'assistant reste ouvert pour corriger.
+          try { window.closeModal(); } catch (e7) {}
+          try { if (typeof draftClear === 'function') draftClear(P); } catch (e8) {}
+        }
+      }, 250);
+    }, 160);
+  };
+
+  window.maNewReservation = function () { wzOpen('reservation', 'direct'); };
+  window.maNewLocation = function () { wzOpen('location', 'direct'); };
+
   window.maMore = function (screen) { closeSheet(); maGo(screen); };
   window.maLogout = function () {
     closeSheet();

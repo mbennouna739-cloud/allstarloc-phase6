@@ -550,3 +550,67 @@
   /* Toute fenêtre/overlay fixe (z-index élevé) : bornée à la largeur écran */
   .modal-overlay, .ma-sheet, #charge-modal-host, [style*="position:fixed"][style*="inset:0"] { max-width: 100vw; overflow-x: hidden; }
 }
+
+/* ======================================================================
+   LOT 52 — Assistant mobile « Nouvelle location / réservation » (3 étapes)
+   ====================================================================== */
+#ma-wiz { display: none; position: fixed; inset: 0; z-index: 9000; background: #F4F5F7; font-family: 'Outfit', system-ui, -apple-system, sans-serif; color: #101216; }
+#ma-wiz .wz-box { display: flex; flex-direction: column; height: 100%; }
+#ma-wiz .wz-top { display: flex; align-items: center; gap: 12px; padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 10px; background: #fff; border-bottom: 1px solid rgba(18,22,30,.10); }
+#ma-wiz .wz-icon { width: 44px; height: 44px; border-radius: 13px; border: 1px solid rgba(18,22,30,.12); background: #fff; color: #101216; display: flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0; }
+#ma-wiz .wz-icon .ma-ic { width: 22px; height: 22px; }
+#ma-wiz .wz-ttl { flex: 1; min-width: 0; }
+#ma-wiz .wz-ttl b { display: block; font-size: 18px; font-weight: 800; }
+#ma-wiz .wz-ttl small { display: block; font-size: 13px; color: #646B78; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#ma-wiz .wz-steps { padding: 10px 16px 12px; background: #fff; border-bottom: 1px solid rgba(18,22,30,.10); }
+#ma-wiz .wz-steps div { display: flex; gap: 6px; }
+#ma-wiz .wz-steps i { flex: 1; height: 4px; border-radius: 3px; background: rgba(18,22,30,.12); }
+#ma-wiz .wz-steps i.on { background: #C41E3A; }
+#ma-wiz .wz-steps span { display: block; margin-top: 7px; font-size: 12.5px; font-weight: 700; color: #646B78; }
+#ma-wiz .wz-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px 16px 18px; display: flex; flex-direction: column; gap: 11px; }
+#ma-wiz .wz-foot { padding: 10px 16px calc(env(safe-area-inset-bottom, 0px) + 14px); background: #fff; border-top: 1px solid rgba(18,22,30,.10); }
+#ma-wiz .wz-hint { font-size: 12.5px; color: #646B78; text-align: center; margin-bottom: 8px; font-weight: 600; }
+#ma-wiz .wz-main { width: 100%; height: 54px; border: none; border-radius: 15px; background: #C41E3A; color: #fff; font-family: inherit; font-size: 16px; font-weight: 800; }
+#ma-wiz .wz-main:disabled { background: #D9DBE0; color: #646B78; }
+#ma-wiz .wz-seg { display: flex; gap: 4px; padding: 4px; background: #E7E8EC; border-radius: 13px; }
+#ma-wiz .wz-seg button { flex: 1; height: 44px; border: none; border-radius: 10px; background: transparent; color: #646B78; font-family: inherit; font-size: 15px; font-weight: 700; }
+#ma-wiz .wz-seg button.on { background: #fff; color: #101216; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+#ma-wiz .wz-search { display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 14px; background: #fff; border: 1px solid rgba(18,22,30,.12); border-radius: 14px; color: #646B78; }
+#ma-wiz .wz-search .ma-ic { width: 20px; height: 20px; }
+#ma-wiz .wz-search input { flex: 1; border: none; outline: none; background: transparent; font-family: inherit; font-size: 16px; color: #101216; min-width: 0; }
+#ma-wiz .wz-sec { font-size: 12.5px; font-weight: 800; color: #646B78; letter-spacing: .4px; text-transform: uppercase; margin: 4px 2px 0; }
+#ma-wiz .wz-row { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: #fff; border: 1px solid rgba(18,22,30,.10); border-radius: 16px; padding: 12px 13px; font-family: inherit; color: #101216; min-height: 64px; }
+#ma-wiz .wz-row.on { border: 2px solid #C41E3A; padding: 11px 12px; }
+#ma-wiz .wz-row.off { opacity: .55; }
+#ma-wiz .wz-ava { width: 42px; height: 42px; border-radius: 50%; background: rgba(196,30,58,.10); color: #C41E3A; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; flex-shrink: 0; }
+#ma-wiz .wz-ava.car { border-radius: 12px; background: #F1F2F5; color: #4B5260; }
+#ma-wiz .wz-ava .ma-ic { width: 22px; height: 22px; }
+#ma-wiz .wz-rt { flex: 1; min-width: 0; }
+#ma-wiz .wz-rt b { display: block; font-size: 15.5px; font-weight: 700; }
+#ma-wiz .wz-rt small { display: block; font-size: 12.5px; color: #646B78; margin-top: 1px; }
+#ma-wiz .wz-check { width: 26px; height: 26px; border-radius: 50%; background: #C41E3A; color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+#ma-wiz .wz-check .ma-ic { width: 16px; height: 16px; stroke-width: 2.6; }
+#ma-wiz .wz-pill { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+#ma-wiz .wz-pill.ok { background: rgba(22,163,74,.12); color: #15803D; }
+#ma-wiz .wz-pill.off { background: rgba(217,119,6,.14); color: #9A4A07; }
+#ma-wiz .wz-dashed { height: 50px; border-radius: 14px; border: 1px dashed #646B78; background: transparent; color: #101216; font-family: inherit; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; }
+#ma-wiz .wz-dashed .ma-ic { width: 18px; height: 18px; }
+#ma-wiz .wz-card { background: #fff; border: 1px solid rgba(18,22,30,.10); border-radius: 16px; padding: 12px 14px; }
+#ma-wiz .wz-kv { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; padding: 3px 0; }
+#ma-wiz .wz-kv span { color: #646B78; }
+#ma-wiz .wz-kv b { text-align: right; }
+#ma-wiz .wz-kv.big b { font-size: 24px; font-weight: 800; }
+#ma-wiz .wz-kv.big span { align-self: center; font-weight: 700; color: #4B5260; }
+#ma-wiz .wz-link { border: none; background: none; color: #C41E3A; font-family: inherit; font-size: 13.5px; font-weight: 700; padding: 6px 0 0; }
+#ma-wiz .wz-note { font-size: 13px; color: #646B78; }
+#ma-wiz .wz-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+#ma-wiz .wz-field { display: flex; flex-direction: column; gap: 6px; }
+#ma-wiz .wz-field span { font-size: 12.5px; font-weight: 700; color: #4B5260; }
+#ma-wiz .wz-field input, #ma-wiz .wz-field select { height: 50px; border-radius: 13px; border: 1px solid rgba(18,22,30,.14); background: #fff; padding: 0 12px; font-family: inherit; font-size: 16px; color: #101216; width: 100%; box-sizing: border-box; min-width: 0; }
+#ma-wiz .wz-days { text-align: center; font-size: 14px; font-weight: 800; color: #4B5260; }
+#ma-wiz .wz-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+#ma-wiz .wz-chips button { height: 42px; padding: 0 15px; border-radius: 999px; border: 1px solid rgba(18,22,30,.14); background: #fff; color: #4B5260; font-family: inherit; font-size: 14.5px; font-weight: 700; }
+#ma-wiz .wz-chips button.on { background: #C41E3A; border-color: #C41E3A; color: #fff; }
+/* Pendant l'enregistrement : le formulaire d'ordinateur rempli par
+   l'assistant reste invisible (seuls les messages s'affichent). */
+body.ma-bridging #modal-overlay { opacity: 0 !important; pointer-events: none !important; }

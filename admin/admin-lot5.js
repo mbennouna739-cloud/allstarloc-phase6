@@ -503,7 +503,8 @@ function _planShareApi(action) {
   return fetch('/api/share/planning', { method: 'POST', headers: h, cache: 'no-store', body: JSON.stringify({ action: action }) })
     .then(function(res) { return res.json().then(function(j) { if (!res.ok || !j.ok) throw new Error(j.error || ('HTTP ' + res.status)); return j; }); });
 }
-function _planShareUrl(code) { return location.origin + '/planning?code=' + encodeURIComponent(code); }
+// ★ LOT 50 : page servie par le serveur (ne dépend plus du fichier planning.html).
+function _planShareUrl(code) { return location.origin + '/api/share/view?code=' + encodeURIComponent(code); }
 function _planShareRender(st, busyMsg) {
   var box = document.getElementById('asl-pshare');
   if (!box) return;

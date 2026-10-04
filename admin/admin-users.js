@@ -42,6 +42,7 @@
     reservations: 'reservations', rentals: 'rentals', customers: 'customers',
     sublease: 'sublease',
     payments: 'payments', caisse: 'caisse', settings: 'settings',
+    rendement: 'caisse', // ★ LOT 51
     options: 'fleet', bookopt: 'fleet'   // assurances/options rattachées aux véhicules
   };
 
