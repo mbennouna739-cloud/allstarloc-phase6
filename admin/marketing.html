@@ -897,8 +897,9 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
     <div class="card" style="padding:18px;margin-bottom:16px;">
       <strong style="font-size:14px;display:block;margin-bottom:4px;">Outils de suivi (chargés seulement après consentement)</strong>
       <p style="font-size:12px;color:var(--t3);margin-bottom:12px;">Renseignez vos identifiants. Les scripts ne se chargent que si le visiteur accepte la catégorie correspondante.</p>
-      <div class="fg"><label>Google Analytics 4 — ID de mesure <span class="opt">(catégorie Analytics)</span></label>
-        <input class="fi" id="ck-ga4" placeholder="G-XXXXXXXXXX"></div>
+      <div class="fg"><label>Google Analytics 4 — ID de mesure <span class="opt">(catégorie Analytics — se règle dans « Suivi &amp; tracking »)</span></label>
+        <input class="fi" id="ck-ga4" placeholder="Non configuré" readonly style="background:var(--bg);cursor:default;">
+        <div style="font-size:12px;color:var(--t3);margin-top:4px;">Pour modifier l'ID GA4 : <a href="#" style="color:var(--red);font-weight:600;" onclick="nav('analytics',document.querySelector('.sb-item[onclick*=analytics]'));return false;">ouvrir « Suivi &amp; tracking »</a>.</div></div>
       <div class="fg"><label>Google Ads — ID de conversion <span class="opt">(catégorie Marketing)</span></label>
         <input class="fi" id="ck-gads" placeholder="AW-XXXXXXXXX"></div>
       <div class="fg"><label>Meta Pixel — ID <span class="opt">(catégorie Marketing)</span></label>
@@ -1050,12 +1051,12 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
         <button class="btn btn-red btn-sm" onclick="saveAnalytics()">Enregistrer</button>
       </div>
       <div class="fg" style="margin-bottom:12px;"><label>ID de mesure GA4</label>
-        <input class="fi" id="ga4-id" placeholder="G-XXXXXXXXXX"></div>
-      <div class="fg"><label>Snippet gtag.js</label>
-        <textarea class="ft" id="ga4-code" rows="5"></textarea></div>
+        <input class="fi" id="ga4-id" placeholder="G-XXXXXXXXXX">
+        <div style="font-size:12px;color:var(--t3);margin-top:4px;">Seul endroit où se règle Google Analytics. Collez l'ID « G-… » (Google Analytics → Administration → Flux de données) ; si vous collez le code complet de la balise, l'ID en est extrait automatiquement. La balise de l'ID G-4QM8FHKV82 est aussi intégrée directement dans les pages du site (mode Consentement Google), pour que Google la détecte.</div></div>
+      <div id="ga4-status" style="margin-top:14px;padding:12px 14px;border-radius:10px;font-size:12.5px;line-height:1.5;background:var(--bg);color:var(--t2);"></div>
       <div style="margin-top:20px;padding:20px;background:var(--bg);border-radius:10px;text-align:center;color:var(--t3);">
-        <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Connectez GA4 pour voir les statistiques</div>
-        <div style="font-size:12px;">Visiteurs · Sessions · Pages vues · Conversions</div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Les statistiques se consultent dans Google Analytics</div>
+        <div style="font-size:12px;">Visiteurs · Sessions · Pages vues · Conversions — rapport « Temps réel » pour vérifier l'installation</div>
       </div>
     </div>
   </div>
@@ -3383,12 +3384,18 @@ async function saveCookieSettings() {
       functional: document.getElementById('ck-cat-functional')?.checked !== false
     },
     trackers: {
-      ga4: (document.getElementById('ck-ga4')?.value || '').trim(),
+      // Accepte l'ID seul ou le code complet de la balise : on n'en garde que « G-… ».
+      ga4: extractGa4Id(document.getElementById('ck-ga4')?.value),
       googleAds: (document.getElementById('ck-gads')?.value || '').trim(),
       metaPixel: (document.getElementById('ck-meta')?.value || '').trim()
     }
   };
   save(K.cookies, cfg);
+  // Garder l'onglet « Suivi & tracking » aligné sur la même valeur.
+  const ga = load(K.analytics) || {};
+  ga.ga4_id = cfg.trackers.ga4;
+  save(K.analytics, ga);
+  const ckGa = document.getElementById('ck-ga4'); if (ckGa) ckGa.value = cfg.trackers.ga4;
   await syncToKV('Cookies');
   toast('✅ Bannière cookies enregistrée et publiée', 'g');
 }
@@ -3476,9 +3483,53 @@ function loadAds() { const d=load(K.ads)||{}; ['id','gtag','conv-res','conv-wa',
 
 async function saveAds() { const d={}; ['id','gtag','conv-res','conv-wa','conv-call'].forEach(k=>{const el=document.getElementById('ads-'+k);if(el)d[k.replace('-','_')]=el.value;}); save(K.ads,d); toast('Google Ads enregistré','g'); }
 
-function loadAnalytics() { const d=load(K.analytics)||{}; ['ga4-id','ga4-code'].forEach(k=>{const el=document.getElementById(k);if(el)el.value=d[k.replace('-','_')]||'';}); }
+/* ★ GA4 — source unique de vérité : K.cookies.trackers.ga4.
+   C'est le SEUL identifiant lu par le site public (cookie-consent.js, chargé
+   après consentement). L'onglet « Suivi & tracking » et l'onglet
+   « Cookies & Confidentialité » lisent/écrivent désormais la même valeur. */
+function extractGa4Id(raw) {
+  const m = String(raw || '').match(/\bG-[A-Z0-9]{4,}\b/i);
+  return m ? m[0].toUpperCase() : '';
+}
+function renderGa4Status() {
+  const box = document.getElementById('ga4-status'); if (!box) return;
+  const c = _loadCookieCfg();
+  // Balise intégrée en dur dans les pages publiques (voir <head> de index.html).
+  const id = c.trackers.ga4 || 'G-4QM8FHKV82';
+  let html, ok = false;
+  const pending = extractGa4Id((load(K.analytics) || {}).ga4_id);
+  if (!c.trackers.ga4 && pending && pending !== id) html = '⚠ ID <b>' + pending + '</b> saisi mais pas encore publié sur le site : cliquez sur « Enregistrer ».';
+  else if (!c.enabled) html = '⚠ Balise <b>' + id + '</b> présente sur le site, mais la bannière cookies est désactivée : les visiteurs ne peuvent pas accepter, Google ne reçoit donc que des signaux anonymes (rien dans « Temps réel »). Activez la bannière dans « Cookies &amp; Confidentialité ».';
+  else if (c.categories.analytics === false) html = '⚠ Balise <b>' + id + '</b> présente, mais la catégorie « Analytics » est désactivée dans « Cookies &amp; Confidentialité » : les visiteurs ne peuvent pas l\'accepter.';
+  else { ok = true; html = '✓ GA4 actif sur le site avec l\'ID <b>' + id + '</b>. La balise est présente sur toutes les pages ; la mesure complète démarre dès qu\'un visiteur accepte les cookies « Analytics ». Vérifiez dans Google Analytics → Rapports → Temps réel.'; }
+  box.innerHTML = html;
+  box.style.color = ok ? 'var(--green)' : ((id || pending) ? 'var(--yellow)' : 'var(--t2)');
+}
+function loadAnalytics() {
+  const d = load(K.analytics) || {};
+  const c = _loadCookieCfg();
+  const el = document.getElementById('ga4-id');
+  if (el) el.value = c.trackers.ga4 || extractGa4Id(d.ga4_id) || '';
+  renderGa4Status();
+}
 
-async function saveAnalytics() { const d={}; ['ga4-id','ga4-code'].forEach(k=>{const el=document.getElementById(k);if(el)d[k.replace('-','_')]=el.value;}); save(K.analytics,d); toast('Analytics enregistré','g'); }
+async function saveAnalytics() {
+  const rawId   = (document.getElementById('ga4-id')?.value || '').trim();
+  const id = extractGa4Id(rawId);
+  if (rawId && !id) {
+    toast('ID GA4 introuvable : il doit commencer par « G- » (ex : G-AB12CD34EF)', 'r');
+    return;
+  }
+  const idEl = document.getElementById('ga4-id'); if (idEl) idEl.value = id;
+  save(K.analytics, Object.assign({}, load(K.analytics) || {}, { ga4_id: id }));
+  // Écrire l'ID là où le site public le lit réellement.
+  const c = _loadCookieCfg();
+  c.trackers.ga4 = id;
+  save(K.cookies, c);
+  await syncToKV('Cookies');
+  renderGa4Status();
+  toast(id ? '✅ ID GA4 enregistré et publié sur le site' : 'GA4 retiré du site', 'g');
+}
 
 // ===== Mailchimp — config & automatisation =====
 const K_MAILCHIMP = 'asl_mkt_mailchimp_v1';

@@ -24,11 +24,13 @@
   };
 
   function getCfg() {
+    /* ★ La configuration fraîche reçue du serveur prime sur le cache local
+       (sinon un cache ancien, sans ID GA4, pouvait masquer la version publiée). */
+    if (window._ASL_COOKIES) return mergeCfg(window._ASL_COOKIES);
     try {
       var all = JSON.parse(localStorage.getItem('asl_mkt_all_v1') || '{}');
       if (all && all.cookies) return mergeCfg(all.cookies);
     } catch(e) {}
-    if (window._ASL_COOKIES) return mergeCfg(window._ASL_COOKIES);
     return DEFAULT_CFG;
   }
   function mergeCfg(c) {
@@ -58,13 +60,34 @@
   /* Active les scripts de suivi UNIQUEMENT selon le consentement. */
   function applyTrackers(consent) {
     var cfg = getCfg();
+    updateConsentMode(consent);
     if (consent.analytics && cfg.trackers.ga4) loadGA4(cfg.trackers.ga4);
     if (consent.marketing && cfg.trackers.googleAds) loadGoogleAds(cfg.trackers.googleAds);
     if (consent.marketing && cfg.trackers.metaPixel) loadMetaPixel(cfg.trackers.metaPixel);
   }
+  /* ★ Mode Consentement Google : la balise GA4 intégrée dans le <head> des pages
+     démarre en « denied » ; on transmet ici le choix réel du visiteur. */
+  function updateConsentMode(consent) {
+    if (typeof window.gtag !== 'function') return;
+    var m = consent.marketing ? 'granted' : 'denied';
+    window.gtag('consent', 'update', {
+      analytics_storage: consent.analytics ? 'granted' : 'denied',
+      ad_storage: m, ad_user_data: m, ad_personalization: m
+    });
+  }
   var _loaded = {};
-  function loadGA4(id) {
+  function loadGA4(raw) {
+    /* Tolère un ID collé avec le code complet de la balise : on ne garde que « G-… ». */
+    var m = String(raw || '').match(/\bG-[A-Z0-9]{4,}\b/i);
+    if (!m) return;
+    var id = m[0].toUpperCase();
     if (_loaded.ga4) return; _loaded.ga4 = true;
+    /* Balise déjà intégrée dans la page : ne pas la charger une 2e fois
+       (évite les pages vues en double). Un ID différent est simplement ajouté. */
+    if (window.ASL_GA4_STATIC && typeof window.gtag === 'function') {
+      if (id !== window.ASL_GA4_STATIC) window.gtag('config', id);
+      return;
+    }
     var s = document.createElement('script'); s.async = true;
     s.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(id);
     document.head.appendChild(s);
@@ -75,6 +98,7 @@
   }
   function loadGoogleAds(id) {
     if (_loaded.ads) return; _loaded.ads = true;
+    if (window.ASL_GA4_STATIC && typeof window.gtag === 'function') { window.gtag('config', id); return; }
     var s = document.createElement('script'); s.async = true;
     s.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(id);
     document.head.appendChild(s);
@@ -229,10 +253,14 @@
   var _shown = false;
 
   function tryShow() {
-    if (_shown) return;
     var cfg = getCfg();
     if (!cfg.enabled) return;       // désactivé → on reste en veille
+    /* ★ Consentement déjà donné : on (ré)applique les traceurs à CHAQUE essai.
+       Les chargeurs sont idempotents ; cela permet de charger GA4 quand la
+       configuration serveur (avec l'ID) arrive après un premier essai fait
+       sur un cache local incomplet. */
     if (getConsent()) { applyTrackers(getConsent()); _shown = true; return; }
+    if (_shown) return;
     _shown = true;
     show();
   }
@@ -265,7 +293,26 @@
      rafraîchissement via ASLCookies.refresh() (appelé par content-bridge dès
      réception des données) reste le déclencheur principal ; ces essais sont
      un filet de sécurité supplémentaire, identique sur toutes les plateformes. */
+  /* ★ Pages sans content-bridge.js (À propos, Contact, Nos véhicules, Aéroport) :
+     personne ne leur transmettait la configuration du back-office, donc un
+     visiteur arrivant directement sur l'une d'elles n'avait ni bannière ni
+     GA4. On lit alors la configuration publique nous-mêmes, une seule fois. */
+  function fetchCfgIfNoBridge() {
+    if (document.querySelector('script[src*="content-bridge.js"]')) return;
+    if (typeof fetch === 'undefined') return;
+    fetch('/api/marketing', { headers: { 'Cache-Control': 'no-cache' } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (resp) {
+        if (resp && resp.ok && resp.data && resp.data.cookies) {
+          window._ASL_COOKIES = resp.data.cookies;
+          tryShow();
+        }
+      })
+      .catch(function () {});
+  }
+
   function init() {
+    fetchCfgIfNoBridge();
     [300, 1500, 3000, 6000, 10000].forEach(function (ms) { setTimeout(tryShow, ms); });
   }
   if (document.readyState !== 'loading') init();
