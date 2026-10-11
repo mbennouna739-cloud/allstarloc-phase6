@@ -227,6 +227,7 @@ function sendContactForm() {
     (email ? '\u2022 Email : ' + email + '\n' : '') +
     (subject ? '\u2022 Sujet : ' + subject + '\n' : '') +
     '\u2022 Message : ' + msg;
+  try { window.ASLConv && window.ASLConv.track('whatsapp', { method: 'formulaire_contact' }); } catch (e) {}
   window.open('https://wa.me/212675312453?text=' + encodeURIComponent(body), '_blank', 'noopener');
   ok.style.display = 'block';
   ok.scrollIntoView({ behavior: 'smooth', block: 'nearest' });

@@ -2517,7 +2517,9 @@ function nextStep() {
     if (state.step === 5) {
       // Garde-fou (le bouton est déjà désactivé tant que la case n'est pas cochée)
       if (!state.termsAccepted) { alert(t('pay.acceptAlert')); return; }
-      confirmBooking();
+      /* ★ Si le véhicule vient d'être réservé (conflit), on reste sur l'étape :
+         auparavant l'écran « Réservation confirmée » s'affichait quand même. */
+      if (confirmBooking() === false) return;
     }
     state.step++;
     renderStep();
@@ -2984,6 +2986,9 @@ function confirmBooking() {
     flight: c.flight || '',
     createdAt: new Date().toISOString(),
   });
+  /* ★ Conversion « réservation » → GA4 (generate_lead), Google Ads, Meta (Lead). */
+  try { window.ASLConv && window.ASLConv.track('reservation', { value: Math.round(totalMAD), currency: 'MAD', transaction_id: ref, item: state.car ? state.car.name : '', method: 'formulaire_reservation' }); } catch (e) {}
+  return true;
 }
 
 function renderConfirmation() {

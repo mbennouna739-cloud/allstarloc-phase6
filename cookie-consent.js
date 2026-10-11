@@ -62,7 +62,7 @@
     var cfg = getCfg();
     updateConsentMode(consent);
     if (consent.analytics && cfg.trackers.ga4) loadGA4(cfg.trackers.ga4);
-    if (consent.marketing && cfg.trackers.googleAds) loadGoogleAds(cfg.trackers.googleAds);
+    if ((consent.marketing || window.ASL_GA4_STATIC) && cfg.trackers.googleAds) loadGoogleAds(cfg.trackers.googleAds);
     if (consent.marketing && cfg.trackers.metaPixel) loadMetaPixel(cfg.trackers.metaPixel);
   }
   /* ★ Mode Consentement Google : la balise GA4 intégrée dans le <head> des pages
@@ -96,7 +96,10 @@
     window.gtag('js', new Date());
     window.gtag('config', id);
   }
-  function loadGoogleAds(id) {
+  function loadGoogleAds(raw) {
+    var m = String(raw || '').match(/\bAW-\d{6,}\b/i);
+    if (!m) return;
+    var id = m[0].toUpperCase();
     if (_loaded.ads) return; _loaded.ads = true;
     if (window.ASL_GA4_STATIC && typeof window.gtag === 'function') { window.gtag('config', id); return; }
     var s = document.createElement('script'); s.async = true;
@@ -107,7 +110,10 @@
     window.gtag('js', new Date());
     window.gtag('config', id);
   }
-  function loadMetaPixel(id) {
+  function loadMetaPixel(raw) {
+    var mm = String(raw || '').match(/\d{10,20}/);
+    if (!mm) return;
+    var id = mm[0];
     if (_loaded.meta) return; _loaded.meta = true;
     !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
       n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
@@ -254,6 +260,9 @@
 
   function tryShow() {
     var cfg = getCfg();
+    /* Google Ads respecte le mode Consentement (ad_storage = denied tant que le
+       visiteur n'a pas accepté) : on peut le configurer dès le chargement. */
+    if (window.ASL_GA4_STATIC && cfg.trackers.googleAds) loadGoogleAds(cfg.trackers.googleAds);
     if (!cfg.enabled) return;       // désactivé → on reste en veille
     /* ★ Consentement déjà donné : on (ré)applique les traceurs à CHAQUE essai.
        Les chargeurs sont idempotents ; cela permet de charger GA4 quand la
@@ -293,6 +302,65 @@
      rafraîchissement via ASLCookies.refresh() (appelé par content-bridge dès
      réception des données) reste le déclencheur principal ; ces essais sont
      un filet de sécurité supplémentaire, identique sur toutes les plateformes. */
+  /* ================================================================
+     ★ SUIVI DES CONVERSIONS — GA4 + Google Ads + Meta Pixel
+     window.ASLConv.track(type, infos)  type = 'reservation' | 'whatsapp' | 'call'
+     - GA4 : generate_lead / whatsapp_click / phone_click (mode Consentement
+       respecté par la balise Google elle-même).
+     - Google Ads : conversion directe si une étiquette « AW-…/… » est
+       configurée dans le back-office (onglet Google Ads).
+     - Meta : Lead / Contact, uniquement si le Pixel est chargé (consentement
+       « Marketing » donné).
+     ================================================================ */
+  var GA_EVENT = { reservation: 'generate_lead', whatsapp: 'whatsapp_click', call: 'phone_click' };
+  var META_EVENT = { reservation: 'Lead', whatsapp: 'Contact', call: 'Contact' };
+  var _lastConv = {};
+  function trackConversion(type, info) {
+    try {
+      if (!GA_EVENT[type]) return;
+      info = info || {};
+      var now = Date.now();                       // anti double-clic (1,5 s)
+      if (_lastConv[type] && now - _lastConv[type] < 1500) return;
+      _lastConv[type] = now;
+      var cfg = getCfg();
+      var params = { method: info.method || type };
+      if (info.value) { params.value = info.value; params.currency = info.currency || 'MAD'; }
+      if (info.transaction_id) params.transaction_id = info.transaction_id;
+      if (info.item) params.item_name = info.item;
+      if (info.link_url) params.link_url = info.link_url;
+      if (typeof window.gtag === 'function') {
+        window.gtag('event', GA_EVENT[type], params);
+        var conv = (cfg.trackers.adsConversions || {})[type];
+        if (conv && /^AW-\d+\/[\w-]+$/.test(conv)) {
+          if (cfg.trackers.googleAds) loadGoogleAds(cfg.trackers.googleAds);
+          var ap = { send_to: conv };
+          if (params.value) { ap.value = params.value; ap.currency = params.currency; }
+          if (params.transaction_id) ap.transaction_id = params.transaction_id;
+          window.gtag('event', 'conversion', ap);
+        }
+      }
+      if (typeof window.fbq === 'function' && _loaded.meta) {
+        var mp = {};
+        if (params.value) { mp.value = params.value; mp.currency = params.currency; }
+        window.fbq('track', META_EVENT[type], mp);
+      }
+    } catch (e) {}
+  }
+  window.ASLConv = { track: trackConversion };
+
+  /* Tous les liens WhatsApp et téléphone du site (y compris ceux créés après
+     coup) sont suivis par un seul écouteur : aucune page à modifier. */
+  document.addEventListener('click', function (e) {
+    var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+    if (!a) return;
+    var href = a.getAttribute('href') || '';
+    if (/^(https?:)?\/\/(wa\.me|api\.whatsapp\.com|web\.whatsapp\.com|chat\.whatsapp\.com)\b|^whatsapp:/i.test(href)) {
+      trackConversion('whatsapp', { method: 'lien_whatsapp', link_url: href.split('?')[0] });
+    } else if (/^tel:/i.test(href)) {
+      trackConversion('call', { method: 'lien_telephone' });
+    }
+  }, true);
+
   /* ★ Pages sans content-bridge.js (À propos, Contact, Nos véhicules, Aéroport) :
      personne ne leur transmettait la configuration du back-office, donc un
      visiteur arrivant directement sur l'une d'elles n'avait ni bannière ni
