@@ -823,21 +823,11 @@ function openDashDrawer(type) {
 
   } else if (type === 'unpaid') {
     title = '💳 Dossiers avec impayés';
-    var _unp = (ASLDB.selectUnpaid ? ASLDB.selectUnpaid() : []);
-    // ★ Recherche (client, téléphone, contrat, véhicule, plaque) — filtre instantané
-    if (_unp.length) rows.push(
-      '<div style="position:sticky;top:0;background:var(--bg2,#fff);padding:4px 0 10px;z-index:1;">' +
-      '<input type="search" id="dd-unp-q" class="form-input" placeholder="🔍 Rechercher un client, un téléphone, un contrat, une plaque…" autocomplete="off" oninput="ddUnpaidFilter(this.value)" style="width:100%;">' +
-      '<div id="dd-unp-count" style="font-size:12px;color:var(--text3);margin-top:6px;">' + _unp.length + ' dossier' + (_unp.length > 1 ? 's' : '') + '</div></div>'
-    );
-    _unp.forEach(function(r) {
+    (ASLDB.selectUnpaid ? ASLDB.selectUnpaid() : []).forEach(function(r) {
       var reste = (Number(r.amount)||0) - (Number(r.paid)||0);
       var slName = subLeaseNameFor(r);
-      var _q = [r.client, r.phone, r.email, r.contractRef, r.id, aslVehLabel(r), r.car, r.assignedPlate, String(slName||'').replace(/<[^>]*>/g,'')].join(' ').toLowerCase().replace(/"/g, '');
-      var _qd = String(r.phone || '').replace(/\D/g, ''); if (_qd.indexOf('00') === 0) _qd = _qd.slice(2);
-      if (_qd.indexOf('212') === 0) _qd += ' 0' + _qd.slice(3); // formats international + local (06…)
       rows.push(
-        '<div class="dd-unp-row" data-q="' + _q + '" data-qd="' + _qd + '" style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);">' +
         '<div>' + (slName ? '<div style="font-size:10.5px;color:#8b5cf6;font-weight:700;text-transform:uppercase;letter-spacing:.3px;">' + slName + '</div>' : '') +
         '<div style="font-weight:700;">' + (r.client||'') + '</div>' +
         '<div style="font-size:12px;color:var(--text3);">' + aslVehLabel(r) + ' · ' + (r.contractRef||r.id) + '</div></div>' +
@@ -847,7 +837,6 @@ function openDashDrawer(type) {
       );
     });
     if (!rows.length) rows.push('<div style="color:#22c55e;text-align:center;padding:30px;">✓ Aucun impayé — tous les dossiers sont soldés</div>');
-    else rows.push('<div id="dd-unp-none" style="display:none;color:var(--text3);text-align:center;padding:24px;">Aucun dossier ne correspond à cette recherche.</div>');
   }
 
   var bg = document.getElementById('dash-drawer-bg');
@@ -861,20 +850,6 @@ function openDashDrawer(type) {
   dr.style.display = 'flex';
   dr.style.transform = 'translateX(0)';
 }
-
-/* Recherche dans la liste des impayés (ordinateur) : filtre sans recharger. */
-function ddUnpaidFilter(v) {
-  var q = String(v || '').trim().toLowerCase(), qd = q.replace(/\D/g, ''), n = 0;
-  var rowsEl = document.querySelectorAll('#dash-drawer-body .dd-unp-row');
-  Array.prototype.forEach.call(rowsEl, function (el) {
-    var ok = !q || (el.getAttribute('data-q') || '').indexOf(q) >= 0 || (qd.length >= 3 && (el.getAttribute('data-qd') || '').indexOf(qd) >= 0);
-    el.style.display = ok ? 'flex' : 'none';
-    if (ok) n++;
-  });
-  var c = document.getElementById('dd-unp-count'); if (c) c.textContent = q ? n + ' résultat' + (n > 1 ? 's' : '') : rowsEl.length + ' dossier' + (rowsEl.length > 1 ? 's' : '');
-  var none = document.getElementById('dd-unp-none'); if (none) none.style.display = n ? 'none' : 'block';
-}
-window.ddUnpaidFilter = ddUnpaidFilter;
 
 function closeDashDrawer() {
   var bg = document.getElementById('dash-drawer-bg');

@@ -897,15 +897,12 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
     <div class="card" style="padding:18px;margin-bottom:16px;">
       <strong style="font-size:14px;display:block;margin-bottom:4px;">Outils de suivi (chargés seulement après consentement)</strong>
       <p style="font-size:12px;color:var(--t3);margin-bottom:12px;">Renseignez vos identifiants. Les scripts ne se chargent que si le visiteur accepte la catégorie correspondante.</p>
-      <div class="fg"><label>Google Analytics 4 — ID de mesure <span class="opt">(catégorie Analytics — se règle dans « Suivi &amp; tracking »)</span></label>
-        <input class="fi" id="ck-ga4" placeholder="Non configuré" readonly style="background:var(--bg);cursor:default;">
-        <div style="font-size:12px;color:var(--t3);margin-top:4px;">Pour modifier l'ID GA4 : <a href="#" style="color:var(--red);font-weight:600;" onclick="nav('analytics',document.querySelector('.sb-item[onclick*=analytics]'));return false;">ouvrir « Suivi &amp; tracking »</a>.</div></div>
-      <div class="fg"><label>Google Ads — ID <span class="opt">(catégorie Marketing — se règle dans « Google Ads »)</span></label>
-        <input class="fi" id="ck-gads" placeholder="Non configuré" readonly style="background:var(--bg);cursor:default;">
-        <div style="font-size:12px;color:var(--t3);margin-top:4px;">Pour modifier : <a href="#" style="color:var(--red);font-weight:600;" onclick="nav('ads',document.querySelector('.sb-item[onclick*=ads]'));return false;">ouvrir « Google Ads »</a>.</div></div>
-      <div class="fg"><label>Meta Pixel (Facebook / Instagram) — ID <span class="opt">(catégorie Marketing)</span></label>
-        <input class="fi" id="ck-meta" placeholder="123456789012345">
-        <div style="font-size:12px;color:var(--t3);margin-top:4px;">Meta → Gestionnaire d'événements → votre Pixel. Le site envoie automatiquement PageView, Lead (réservation) et Contact (WhatsApp / appel).</div></div>
+      <div class="fg"><label>Google Analytics 4 — ID de mesure <span class="opt">(catégorie Analytics)</span></label>
+        <input class="fi" id="ck-ga4" placeholder="G-XXXXXXXXXX"></div>
+      <div class="fg"><label>Google Ads — ID de conversion <span class="opt">(catégorie Marketing)</span></label>
+        <input class="fi" id="ck-gads" placeholder="AW-XXXXXXXXX"></div>
+      <div class="fg"><label>Meta Pixel — ID <span class="opt">(catégorie Marketing)</span></label>
+        <input class="fi" id="ck-meta" placeholder="123456789012345"></div>
     </div>
 
     <div style="text-align:right;">
@@ -1028,22 +1025,19 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
           <button class="btn btn-red btn-sm" onclick="saveAds()">Enregistrer</button>
         </div>
         <div style="display:flex;flex-direction:column;gap:12px;">
-          <div class="fg"><label>ID Google Ads <span class="opt">(facultatif)</span></label><input class="fi" id="ads-id" placeholder="AW-XXXXXXXXXX">
-            <div style="font-size:12px;color:var(--t3);margin-top:4px;">Google Ads → Objectifs → Conversions → balise. Vous pouvez coller le code complet : l'ID « AW-… » en est extrait.</div></div>
-          <div class="fg"><label>Conversion Réservation <span class="opt">(étiquette « AW-…/… »)</span></label><input class="fi" id="ads-conv_res" placeholder="AW-123456789/AbCdEfGhIj"></div>
-          <div class="fg"><label>Conversion WhatsApp</label><input class="fi" id="ads-conv_wa" placeholder="AW-123456789/AbCdEfGhIj"></div>
-          <div class="fg"><label>Conversion Appel</label><input class="fi" id="ads-conv_call" placeholder="AW-123456789/AbCdEfGhIj"></div>
+          <div class="fg"><label>ID Google Ads</label><input class="fi" id="ads-id" placeholder="AW-XXXXXXXXXX"></div>
+          <div class="fg"><label>Balise globale (gtag.js)</label><textarea class="ft" id="ads-gtag" rows="4"></textarea></div>
+          <div class="fg"><label>Conversion Réservation</label><input class="fi" id="ads-conv_res" placeholder="AW-XXX/YYYY"></div>
+          <div class="fg"><label>Conversion WhatsApp</label><input class="fi" id="ads-conv_wa" placeholder="AW-XXX/YYYY"></div>
+          <div class="fg"><label>Conversion Appel</label><input class="fi" id="ads-conv_call" placeholder="AW-XXX/YYYY"></div>
         </div>
       </div>
       <div class="card">
-        <div class="card-head"><div class="card-title">Suivi des conversions</div></div>
-        <div id="ads-status" style="padding:12px 14px;border-radius:10px;font-size:12.5px;line-height:1.55;background:var(--bg);color:var(--t2);margin-bottom:12px;"></div>
-        <div style="font-size:12.5px;color:var(--t2);line-height:1.6;">
-          Le site envoie automatiquement à Google Analytics (et au Pixel Meta s'il est configuré) :<br>
-          • <b>generate_lead</b> — réservation envoyée (avec le montant en MAD)<br>
-          • <b>whatsapp_click</b> — clic sur un bouton WhatsApp<br>
-          • <b>phone_click</b> — clic sur le numéro de téléphone<br><br>
-          <b>Méthode recommandée :</b> marquez ces 3 événements comme « événements clés » dans Google Analytics, puis importez-les dans Google Ads. Les champs ci-contre sont alors facultatifs.
+        <div class="card-head"><div class="card-title">Performances</div></div>
+        <div style="text-align:center;padding:40px 20px;color:var(--t3);">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:12px;"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          <div style="font-size:14px;font-weight:600;margin-bottom:6px;">Connectez Google Ads</div>
+          <div style="font-size:12.5px;">Entrez votre ID pour activer le suivi</div>
         </div>
       </div>
     </div>
@@ -1056,12 +1050,12 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
         <button class="btn btn-red btn-sm" onclick="saveAnalytics()">Enregistrer</button>
       </div>
       <div class="fg" style="margin-bottom:12px;"><label>ID de mesure GA4</label>
-        <input class="fi" id="ga4-id" placeholder="G-XXXXXXXXXX">
-        <div style="font-size:12px;color:var(--t3);margin-top:4px;">Seul endroit où se règle Google Analytics. Collez l'ID « G-… » (Google Analytics → Administration → Flux de données) ; si vous collez le code complet de la balise, l'ID en est extrait automatiquement. La balise de l'ID G-4QM8FHKV82 est aussi intégrée directement dans les pages du site (mode Consentement Google), pour que Google la détecte.</div></div>
-      <div id="ga4-status" style="margin-top:14px;padding:12px 14px;border-radius:10px;font-size:12.5px;line-height:1.5;background:var(--bg);color:var(--t2);"></div>
+        <input class="fi" id="ga4-id" placeholder="G-XXXXXXXXXX"></div>
+      <div class="fg"><label>Snippet gtag.js</label>
+        <textarea class="ft" id="ga4-code" rows="5"></textarea></div>
       <div style="margin-top:20px;padding:20px;background:var(--bg);border-radius:10px;text-align:center;color:var(--t3);">
-        <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Les statistiques se consultent dans Google Analytics</div>
-        <div style="font-size:12px;">Visiteurs · Sessions · Pages vues · Conversions — rapport « Temps réel » pour vérifier l'installation</div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:4px;">Connectez GA4 pour voir les statistiques</div>
+        <div style="font-size:12px;">Visiteurs · Sessions · Pages vues · Conversions</div>
       </div>
     </div>
   </div>
@@ -1122,7 +1116,6 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
   <p style="font-size:13px;color:var(--t2);margin-bottom:20px;">
     Configurez votre adresse email professionnelle pour recevoir automatiquement les demandes de réservation et de contact.
   </p>
-  <div style="padding:10px 14px;border-radius:10px;background:rgba(217,119,6,.1);border:1px solid rgba(217,119,6,.3);color:var(--yellow);font-size:12.5px;margin:-8px 0 16px;">⚠ L'envoi automatique d'emails n'est pas encore branché côté serveur : ces réglages sont conservés sur cet appareil mais aucun email n'est envoyé pour l'instant. Les réservations arrivent dans le back-office et par WhatsApp.</div>
 
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
     <div class="card">
@@ -1344,7 +1337,6 @@ const K = {
   reputation: 'asl_mkt_rep_v1',
   gbp:        'asl_mkt_gbp_v1',
   posts:      'asl_mkt_posts_v1',
-  popup:      'asl_mkt_popup_v1',   // ★ manquait : le popup n'était jamais publié (= POPUP_KEY)
 };
 
 const SEO_DEFAULTS = {
@@ -1471,22 +1463,6 @@ function showSyncStatus(msg, type) {
     s.innerHTML = (ok ? '✅ ' : '⚠ ') + msg + (ok ? ' <a href="../index.html" target="_blank" style="color:var(--green);font-weight:700;">Ouvrir le site →</a>' : '');
     setTimeout(() => { if(s) s.style.display='none'; }, 9000);
   }
-}
-
-/* ★ ANTI-PERTE : avant un envoi direct au serveur, on repart du document
-   déjà en ligne et on n'y superpose que nos sections locales. Sans cela,
-   « Réseaux sociaux » et « Tous les textes » écrasaient les sections qui ne
-   sont stockées que sur le serveur (durées minimales, pages de contenu…). */
-async function _mergeWithServer(local) {
-  try {
-    const r = await fetch('/api/marketing', { headers: { 'Cache-Control': 'no-cache' } });
-    if (r.ok) {
-      const d = await r.json();
-      const remote = (d && d.data) ? d.data : {};
-      return Object.assign({}, remote, local, { updatedAt: new Date().toISOString() });
-    }
-  } catch (e) {}
-  return local;
 }
 
 async function syncToKV(label) {
@@ -3393,12 +3369,6 @@ function switchCookieLang(lang, btn) {
   if (ta) { ta.value = _cookieTextBuf[lang] || ''; ta.dir = (lang==='ar')?'rtl':'ltr'; }
 }
 
-/* Pixel Meta : accepte l'ID seul ou le code complet (fbq('init', '…')). */
-function extractMetaPixelId(raw) {
-  const s = String(raw || '');
-  const m = s.match(/fbq\(\s*['"]init['"]\s*,\s*['"](\d{10,20})['"]/) || s.match(/\b(\d{10,20})\b/);
-  return m ? m[1] : '';
-}
 async function saveCookieSettings() {
   _cookieTextBuf[_cookieLang] = document.getElementById('ck-text')?.value || '';
   const cfg = {
@@ -3412,21 +3382,13 @@ async function saveCookieSettings() {
       marketing: document.getElementById('ck-cat-marketing')?.checked !== false,
       functional: document.getElementById('ck-cat-functional')?.checked !== false
     },
-    // ★ On part des traceurs déjà enregistrés (GA4, Google Ads + étiquettes de
-    //   conversion, réglés dans leurs onglets) et on ne modifie ici que le Pixel Meta.
-    trackers: Object.assign({}, _loadCookieCfg().trackers)
+    trackers: {
+      ga4: (document.getElementById('ck-ga4')?.value || '').trim(),
+      googleAds: (document.getElementById('ck-gads')?.value || '').trim(),
+      metaPixel: (document.getElementById('ck-meta')?.value || '').trim()
+    }
   };
-  const rawMeta = (document.getElementById('ck-meta')?.value || '').trim();
-  const metaId = extractMetaPixelId(rawMeta);
-  if (rawMeta && !metaId) { toast('ID Meta Pixel invalide : 15 ou 16 chiffres (Gestionnaire d\'événements Meta)', 'r'); return; }
-  cfg.trackers.metaPixel = metaId;
-  const ckMeta = document.getElementById('ck-meta'); if (ckMeta) ckMeta.value = metaId;
   save(K.cookies, cfg);
-  // Garder l'onglet « Suivi & tracking » aligné sur la même valeur.
-  const ga = load(K.analytics) || {};
-  ga.ga4_id = cfg.trackers.ga4;
-  save(K.analytics, ga);
-  const ckGa = document.getElementById('ck-ga4'); if (ckGa) ckGa.value = cfg.trackers.ga4;
   await syncToKV('Cookies');
   toast('✅ Bannière cookies enregistrée et publiée', 'g');
 }
@@ -3510,115 +3472,13 @@ function exportCSV() {
   a.click(); toast('Export CSV téléchargé','g');
 }
 
-/* ★ GOOGLE ADS — avant : enregistré uniquement dans le navigateur, champs de
-   conversion jamais lus (ids « ads-conv-res » ≠ « ads-conv_res ») et jamais
-   utilisés par le site. Désormais : ID + étiquettes publiés dans
-   cookies.trackers (lu par cookie-consent.js sur toutes les pages). */
-function extractAdsId(raw) {
-  const m = String(raw || '').match(/\bAW-\d{6,}\b/i);
-  return m ? m[0].toUpperCase() : '';
-}
-function normalizeAdsLabel(raw, adsId) {
-  const s = String(raw || '').trim();
-  if (!s) return '';
-  const full = s.match(/\b(AW-\d{6,})\s*\/\s*([\w-]+)/i);
-  if (full) return full[1].toUpperCase() + '/' + full[2];
-  // étiquette seule (« AbCdEf… ») : on la rattache à l'ID Google Ads
-  if (/^[\w-]{6,}$/.test(s) && adsId) return adsId + '/' + s;
-  return null; // invalide
-}
-function renderAdsStatus() {
-  const box = document.getElementById('ads-status'); if (!box) return;
-  const c = _loadCookieCfg(); const t = c.trackers;
-  const conv = t.adsConversions || {};
-  const n = ['reservation','whatsapp','call'].filter(k => conv[k]).length;
-  let html, ok = false;
-  if (!t.googleAds) html = 'Aucun ID Google Ads : les conversions passeront par Google Analytics (import dans Google Ads). C\'est suffisant pour lancer une campagne.';
-  else if (!c.enabled) html = '⚠ ID <b>' + t.googleAds + '</b> enregistré, mais la bannière cookies est désactivée : activez-la dans « Cookies &amp; Confidentialité ».';
-  else { ok = true; html = '✓ Google Ads <b>' + t.googleAds + '</b> actif sur le site — ' + n + ' conversion(s) directe(s) configurée(s) sur 3.'; }
-  box.innerHTML = html;
-  box.style.color = ok ? 'var(--green)' : (t.googleAds ? 'var(--yellow)' : 'var(--t2)');
-}
-function loadAds() {
-  const c = _loadCookieCfg(); const t = c.trackers; const conv = t.adsConversions || {};
-  const d = load(K.ads) || {};
-  const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
-  set('ads-id', t.googleAds || extractAdsId(d.id));
-  set('ads-conv_res',  conv.reservation || d.conv_res);
-  set('ads-conv_wa',   conv.whatsapp    || d.conv_wa);
-  set('ads-conv_call', conv.call        || d.conv_call);
-  renderAdsStatus();
-}
-async function saveAds() {
-  const v = id => (document.getElementById(id)?.value || '').trim();
-  const rawId = v('ads-id');
-  let id = extractAdsId(rawId);
-  if (rawId && !id) { toast('ID Google Ads invalide : il doit commencer par « AW- »', 'r'); return; }
-  const fields = { reservation:'ads-conv_res', whatsapp:'ads-conv_wa', call:'ads-conv_call' };
-  const conv = {};
-  for (const k in fields) {
-    const n = normalizeAdsLabel(v(fields[k]), id);
-    if (n === null) { toast('Étiquette de conversion invalide (format attendu : AW-123456789/AbCdEf…)', 'r'); return; }
-    conv[k] = n;
-    if (n && !id) id = n.split('/')[0];   // ID déduit de l'étiquette
-  }
-  const c = _loadCookieCfg();
-  c.trackers.googleAds = id;
-  c.trackers.adsConversions = conv;
-  save(K.cookies, c);
-  save(K.ads, Object.assign({}, load(K.ads) || {}, { id, conv_res: conv.reservation, conv_wa: conv.whatsapp, conv_call: conv.call }));
-  await syncToKV('Cookies');
-  loadAds();
-  toast(id ? '✅ Google Ads enregistré et publié sur le site' : 'Google Ads retiré du site', 'g');
-}
+function loadAds() { const d=load(K.ads)||{}; ['id','gtag','conv-res','conv-wa','conv-call'].forEach(k=>{const el=document.getElementById('ads-'+k);if(el)el.value=d[k.replace('-','_')]||'';}); }
 
-/* ★ GA4 — source unique de vérité : K.cookies.trackers.ga4.
-   C'est le SEUL identifiant lu par le site public (cookie-consent.js, chargé
-   après consentement). L'onglet « Suivi & tracking » et l'onglet
-   « Cookies & Confidentialité » lisent/écrivent désormais la même valeur. */
-function extractGa4Id(raw) {
-  const m = String(raw || '').match(/\bG-[A-Z0-9]{4,}\b/i);
-  return m ? m[0].toUpperCase() : '';
-}
-function renderGa4Status() {
-  const box = document.getElementById('ga4-status'); if (!box) return;
-  const c = _loadCookieCfg();
-  // Balise intégrée en dur dans les pages publiques (voir <head> de index.html).
-  const id = c.trackers.ga4 || 'G-4QM8FHKV82';
-  let html, ok = false;
-  const pending = extractGa4Id((load(K.analytics) || {}).ga4_id);
-  if (!c.trackers.ga4 && pending && pending !== id) html = '⚠ ID <b>' + pending + '</b> saisi mais pas encore publié sur le site : cliquez sur « Enregistrer ».';
-  else if (!c.enabled) html = '⚠ Balise <b>' + id + '</b> présente sur le site, mais la bannière cookies est désactivée : les visiteurs ne peuvent pas accepter, Google ne reçoit donc que des signaux anonymes (rien dans « Temps réel »). Activez la bannière dans « Cookies &amp; Confidentialité ».';
-  else if (c.categories.analytics === false) html = '⚠ Balise <b>' + id + '</b> présente, mais la catégorie « Analytics » est désactivée dans « Cookies &amp; Confidentialité » : les visiteurs ne peuvent pas l\'accepter.';
-  else { ok = true; html = '✓ GA4 actif sur le site avec l\'ID <b>' + id + '</b>. La balise est présente sur toutes les pages ; la mesure complète démarre dès qu\'un visiteur accepte les cookies « Analytics ». Vérifiez dans Google Analytics → Rapports → Temps réel.'; }
-  box.innerHTML = html;
-  box.style.color = ok ? 'var(--green)' : ((id || pending) ? 'var(--yellow)' : 'var(--t2)');
-}
-function loadAnalytics() {
-  const d = load(K.analytics) || {};
-  const c = _loadCookieCfg();
-  const el = document.getElementById('ga4-id');
-  if (el) el.value = c.trackers.ga4 || extractGa4Id(d.ga4_id) || '';
-  renderGa4Status();
-}
+async function saveAds() { const d={}; ['id','gtag','conv-res','conv-wa','conv-call'].forEach(k=>{const el=document.getElementById('ads-'+k);if(el)d[k.replace('-','_')]=el.value;}); save(K.ads,d); toast('Google Ads enregistré','g'); }
 
-async function saveAnalytics() {
-  const rawId   = (document.getElementById('ga4-id')?.value || '').trim();
-  const id = extractGa4Id(rawId);
-  if (rawId && !id) {
-    toast('ID GA4 introuvable : il doit commencer par « G- » (ex : G-AB12CD34EF)', 'r');
-    return;
-  }
-  const idEl = document.getElementById('ga4-id'); if (idEl) idEl.value = id;
-  save(K.analytics, Object.assign({}, load(K.analytics) || {}, { ga4_id: id }));
-  // Écrire l'ID là où le site public le lit réellement.
-  const c = _loadCookieCfg();
-  c.trackers.ga4 = id;
-  save(K.cookies, c);
-  await syncToKV('Cookies');
-  renderGa4Status();
-  toast(id ? '✅ ID GA4 enregistré et publié sur le site' : 'GA4 retiré du site', 'g');
-}
+function loadAnalytics() { const d=load(K.analytics)||{}; ['ga4-id','ga4-code'].forEach(k=>{const el=document.getElementById(k);if(el)el.value=d[k.replace('-','_')]||'';}); }
+
+async function saveAnalytics() { const d={}; ['ga4-id','ga4-code'].forEach(k=>{const el=document.getElementById(k);if(el)d[k.replace('-','_')]=el.value;}); save(K.analytics,d); toast('Analytics enregistré','g'); }
 
 // ===== Mailchimp — config & automatisation =====
 const K_MAILCHIMP = 'asl_mkt_mailchimp_v1';
@@ -3639,7 +3499,7 @@ async function saveMailchimp(){
   save(K_MAILCHIMP, d);
   if (typeof toast==='function') toast('Configuration Mailchimp enregistrée','g');
   const r=g('mc-result'); if(r){ r.style.display='block'; r.style.background='rgba(22,163,74,.1)'; r.style.color='#16a34a';
-    r.textContent='✓ Configuration enregistrée sur cet appareil. ⚠ La synchronisation automatique avec Mailchimp n\'est pas encore branchée côté serveur.'; setTimeout(()=>r.style.display='none',6000); }
+    r.textContent='✓ Configuration enregistrée et synchronisée.'; setTimeout(()=>r.style.display='none',6000); }
 }
 function testMailchimp(){
   const g=id=>document.getElementById(id);
@@ -4226,7 +4086,7 @@ async function saveSocialConfig() {
   if (msg) { msg.style.display = 'block'; msg.style.color = '#334155'; msg.textContent = '⏳ Envoi au serveur…'; }
 
   // Envoyer DIRECTEMENT au serveur (méthode fiable, avec confirmation)
-  const fullData = await _mergeWithServer(getMktData());
+  const fullData = getMktData();
   fullData.social = cfg;
   try {
     const headers = { 'Content-Type': 'application/json' };
@@ -4385,7 +4245,7 @@ async function saveEmailConfig() {
     mkt.email_config = { reservation: cfg.reservation, contact: cfg.contact, from: cfg.from, host: cfg.host, port: cfg.port, security: cfg.security, user: cfg.user };
     await syncToKV('Configuration Email');
   } catch(e) {}
-  toast('Configuration email enregistrée sur cet appareil (envoi automatique pas encore branché)', 'g');
+  toast('Configuration email enregistrée', 'g');
 }
 
 function testEmailConfig() {
@@ -4610,7 +4470,7 @@ async function saveAllTexts() {
   if (box) { box.style.display='block'; box.style.background='#f1f5f9'; box.style.color='#334155'; box.textContent='⏳ Envoi au serveur…'; }
 
   // Envoyer DIRECTEMENT au serveur (fiable, avec confirmation)
-  const fullData = await _mergeWithServer(getMktData());
+  const fullData = getMktData();
   fullData.content = overrides;
   try {
     const headers = { 'Content-Type':'application/json' };

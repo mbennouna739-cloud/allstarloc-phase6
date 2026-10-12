@@ -138,8 +138,7 @@
       var content = artField(a, 'content', lang);
       var excerpt = desc || (content ? String(content).replace(/<[^>]*>/g,'').slice(0,140) + '…' : '');
       var artSlug = a.slug ? a.slug : slugify(artField(a,'title','fr'));
-      /* ★ La page article est dans /pages/ : depuis /blog.html (racine) le lien était cassé. */
-      var href = (location.pathname.indexOf('/pages/') > -1 ? '' : 'pages/') + 'article.html?slug=' + encodeURIComponent(artSlug);
+      var href = 'article.html?slug=' + encodeURIComponent(artSlug);
       var alt = a.imgAlt || title;  /* Texte ALT SEO, repli sur le titre */
       return '<div class="card asl-dyn-article">'
         + '<div class="card-img"><img src="' + esc(img) + '" alt="' + esc(alt) + '" loading="lazy"></div>'
@@ -380,19 +379,12 @@
       }
     }
 
-    /* 5. Popup
-       ★ Avant : programmé uniquement à « DOMContentLoaded ». Les réglages du
-       serveur arrivant APRÈS ce moment, le popup ne s'affichait jamais lors
-       d'une première visite. Désormais : programmé une seule fois, dès que la
-       page est prête, avec la configuration la plus récente. */
-    window._ASL_POPUP_CFG = (data.popup && data.popup.active) ? data.popup : (data.popup ? null : window._ASL_POPUP_CFG);
-    var pc = window._ASL_POPUP_CFG;
-    if (pc && pc.active && !window._ASL_POPUP_SCHEDULED) {
-      window._ASL_POPUP_SCHEDULED = true;
-      var _runPopup = function () {
+    /* 5. Popup */
+    var pc = data.popup;
+    if (pc && pc.active) {
+      window._ASL_POPUP_CFG = pc;
+      document.addEventListener('DOMContentLoaded', function () {
         setTimeout(function () {
-          pc = window._ASL_POPUP_CFG;              // configuration la plus récente
-          if (!pc || !pc.active) return;
           var pageSlug = window.location.pathname.replace(/.*\//, '').replace('.html','') || 'index';
           var show = pc.pages === 'all' ||
             (pc.pages === 'home'      && (page === 'index')) ||
@@ -406,23 +398,14 @@
             + '<button onclick="this.closest(\'div\').parentElement.remove()" style="position:absolute;top:12px;right:14px;background:none;border:none;font-size:20px;cursor:pointer;color:#999;">✕</button>'
             + '<div style="font-size:20px;font-weight:900;color:#C41E3A;margin-bottom:10px;">' + (pc.title||'') + '</div>'
             + '<div style="font-size:14px;color:#666;margin-bottom:20px;line-height:1.6;">' + (pc.text||'') + '</div>'
-            + '<button onclick="this.closest(\'div\').parentElement.remove();window._ASL_track&&window._ASL_track(\'wa\');window._ASL_popupGo&&window._ASL_popupGo()" '
+            + '<button onclick="this.closest(\'div\').parentElement.remove();window._ASL_track&&window._ASL_track(\'wa\')" '
             + 'style="background:#C41E3A;color:#fff;border:none;border-radius:10px;padding:13px 28px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;">'
             + (pc.cta||'Réserver maintenant') + '</button></div>';
           document.body.appendChild(overlay);
           localStorage.setItem('asl_popup_seen', Date.now().toString());
         }, (pc.delay||5) * 1000);
-      };
-      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _runPopup);
-      else _runPopup();
+      });
     }
-
-    /* Bouton du popup → section de réservation (page d'accueil). */
-    window._ASL_popupGo = function () {
-      var sec = document.getElementById('booking-section');
-      if (sec) sec.scrollIntoView({ behavior: 'smooth' });
-      else location.href = (location.pathname.indexOf('/pages/') > -1 ? '../' : '') + 'index.html#booking-section';
-    };
 
     window._ASL_MARKETING = data;
 

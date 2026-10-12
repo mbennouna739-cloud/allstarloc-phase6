@@ -823,6 +823,16 @@
       '#rd-cm .car .amt{width:96px;text-align:right;padding:4px 8px;font-size:12.5px;}',
       '#rd-cm .note{font-size:12px;color:var(--text3);margin-top:6px;}',
       '#rd-cm .sum{font-size:12.5px;font-weight:600;flex:1;}',
+      /* ★ LOT 53 — finition : cartes voitures, sélection visible, boutons nets */
+      '#rd-cm .cars{border:none;display:flex;flex-direction:column;gap:8px;max-height:260px;padding:2px;}',
+      '#rd-cm .car{border:1px solid var(--border);border-radius:12px;padding:9px 12px;background:var(--dark2,#fff);transition:border-color .15s,background .15s;}',
+      '#rd-cm .car:last-child{border-bottom:1px solid var(--border);}',
+      '#rd-cm .car:has(input:checked){border-color:var(--red);background:rgba(196,30,58,.05);box-shadow:inset 0 0 0 1px var(--red);}',
+      '#rd-cm .chip{border-radius:999px;transition:background .15s,border-color .15s;}',
+      '#rd-cm .chip:not(.on):hover{border-color:var(--red);color:var(--red);}',
+      '#rd-cm .form-input{border-radius:12px;}',
+      '#rd-cm .ft .btn-sm.primary{padding-left:22px;padding-right:22px;}',
+      '#rd-cm .box{overflow:hidden;}',
       /* ★ LOT 52 — Sur téléphone : plein écran, grandes zones tactiles. */
       '@media (max-width:600px){#rd-cm{padding:0;align-items:stretch;}#rd-cm .box{max-width:none;max-height:none;height:100%;border-radius:0;}'
       + '#rd-cm .hd{padding-top:calc(env(safe-area-inset-top,0px) + 14px);}#rd-cm .ft{flex-wrap:wrap;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 14px);}'
@@ -1083,6 +1093,9 @@
     return out;
   }
   window.aslRendementCompute = function (st) { return compute(periodOf(st)); }; // (tests)
+  // ★ LOT 55 : mêmes calculs, lus par l'onglet Rendement du mobile (lecture seule).
+  window.aslRendementPeriod = function (st) { return periodOf(st); };
+  window.aslRendementMonthly = function (key, year) { return monthly(key, year); };
 
   /* ======================= ONGLET RENDEMENT ======================= */
   var ST = null;
@@ -1095,7 +1108,7 @@
     if (field === 'mode' && val !== 'custom') { st.from = st.from || today(); }
     renderRendement();
   };
-  window.rdOpenUnit = function (key) { state().unit = key; renderRendement(); window.scrollTo && window.scrollTo(0, 0); };
+  window.rdOpenUnit = function (key) { state().unit = key; renderRendement(); };
   window.rdBack = function () { state().unit = null; renderRendement(); };
   window.rdMonthClick = function (y, m) { var st = state(); st.mode = 'month'; st.ym = y + '-' + String(m + 1).padStart(2, '0'); renderRendement(); };
   window.rdAddCharge = function (key) { openChargeModal(null, key ? { keys: [key] } : null); };
@@ -1160,36 +1173,102 @@
 
   window.renderRendement = function () {
     var root = document.getElementById('rendement-root'); if (!root) return;
-    rdStyle();
+    rdStyle(); rdStyle55();
     var st = state(), per = periodOf(st), R = compute(per);
-    var head = '<div class="rd-bar"><div><div style="font-size:18px;font-weight:800;">Rendement des véhicules</div><div class="rd-sub">' + esc(per.label) + ' · jours et montants réalisés (locations en cours ou terminées)</div></div>'
+    var head = '<div class="rd-bar"><div><div style="font-size:20px;font-weight:800;">Rendement des véhicules</div><div class="rd-sub">' + esc(per.label) + ' · ce que chaque voiture rapporte, après ses charges</div></div>'
       + '<div class="rd-ctrl">' + periodControls(st) + '<button class="btn-sm primary" onclick="rdAddCharge()">+ Charge</button></div></div>';
-    if (st.unit) { root.innerHTML = head + renderUnit(st, per, R); return; }
     var T = R.tot;
+    // ★ LOT 55 : occupation moyenne (voitures de la flotte uniquement)
+    var occL = R.list.filter(function (o) { return o.occ != null; });
+    var occAvg = occL.length ? occL.reduce(function (s2, o) { return s2 + o.occ; }, 0) / occL.length : null;
     var kp = '<div class="rd-kpis">'
-      + kpi('Jours loués', num(T.days), T.planned > 0.5 ? '+ ' + num(T.planned) + ' j réservés à venir' : '')
+      + '<div class="rd-kpi rd-kpi-dark"><div class="l">Bénéfice</div><div class="v">' + mad(T.profit) + '</div><div class="s">CA − toutes les charges</div></div>'
       + kpi('Chiffre d\'affaires', mad(T.ca), 'Encaissé : ' + mad(T.paid))
-      + kpi('Charges véhicules', mad(T.charges), T.general > 0 ? '+ charges générales : ' + mad(T.general) : '')
-      + kpi('Bénéfice', mad(T.profit), 'CA − toutes les charges', T.profit >= 0 ? 'rd-pos' : 'rd-neg')
+      + kpi('Charges', mad(T.charges + T.general), T.general > 0 ? 'dont générales : ' + mad(T.general) : '')
+      + kpi('Jours loués', num(T.days) + ' j', T.planned > 0.5 ? '+ ' + num(T.planned) + ' j réservés à venir' : '')
+      + kpi('Occupation moyenne', occAvg == null ? '—' : Math.round(occAvg) + ' %', occL.length ? 'sur ' + occL.length + ' voiture' + (occL.length > 1 ? 's' : '') : '')
       + '</div>';
-    var rows = R.list.map(function (o) {
-      var occ = o.occ == null ? '—' : Math.round(o.occ) + ' %<div class="rd-occ"><i style="width:' + Math.round(o.occ) + '%"></i></div>';
-      return '<tr class="rd-row" onclick="rdOpenUnit(\'' + esc(o.key) + '\')">'
+    // Voiture affichée à droite : celle choisie, sinon la première du classement
+    if (!st.unit || !R.list.some(function (o) { return o.key === st.unit; })) st.unit = R.list.length ? R.list[0].key : null;
+    var rows = R.list.map(function (o, i) {
+      var sel = o.key === st.unit;
+      var occ = o.occ == null ? '—' : '<div style="font-weight:700;font-size:12.5px;">' + Math.round(o.occ) + ' %</div><div class="rd-occ"><i style="width:' + Math.round(o.occ) + '%"></i></div>';
+      return '<tr class="rd-row' + (sel ? ' rd-sel' : '') + '" onclick="rdOpenUnit(\'' + esc(o.key) + '\')">'
+        + '<td class="rd-rank' + (i < 3 ? ' top' : '') + '">' + (i + 1) + '</td>'
         + '<td><strong>' + esc(o.label) + '</strong><div class="rd-sub">' + esc(o.sub) + '</div></td>'
         + '<td style="white-space:nowrap;"><strong>' + num(o.days) + ' j</strong>' + (o.planned > 0.5 ? '<div class="rd-sub">+ ' + num(o.planned) + ' j à venir</div>' : '') + '</td>'
         + '<td>' + occ + '</td>'
-        + '<td style="white-space:nowrap;">' + mad(o.ca) + '</td>'
-        + '<td style="white-space:nowrap;">' + mad(o.paid) + '</td>'
-        + '<td style="white-space:nowrap;">' + mad(o.charges) + '</td>'
-        + '<td style="white-space:nowrap;" class="' + (o.profit >= 0 ? 'rd-pos' : 'rd-neg') + '">' + mad(o.profit) + '</td>'
-        + '<td style="white-space:nowrap;">' + (o.unit ? '<button class="btn-sm ghost" onclick="event.stopPropagation();rdAddCharge(\'' + esc(o.key) + '\')">+ Charge</button>' : '') + '</td>'
+        + '<td style="white-space:nowrap;text-align:right;">' + mad(o.ca) + '</td>'
+        + '<td style="white-space:nowrap;text-align:right;color:var(--text2);">' + mad(o.charges) + '</td>'
+        + '<td style="white-space:nowrap;text-align:right;" class="' + (o.profit >= 0 ? 'rd-pos' : 'rd-neg') + '">' + mad(o.profit) + '</td>'
         + '</tr>';
     }).join('');
-    root.innerHTML = head + kp
-      + '<div class="table-card"><div class="table-header"><div class="table-title">Par véhicule</div><div class="rd-sub">Cliquez sur une voiture pour voir son détail</div></div>'
-      + '<div style="overflow-x:auto;"><table><thead><tr><th>Véhicule</th><th>Jours loués</th><th>Occupation</th><th>Chiffre d\'affaires</th><th>Encaissé</th><th>Charges</th><th>Bénéfice</th><th></th></tr></thead>'
-      + '<tbody>' + (rows || '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text3);">Aucun véhicule.</td></tr>') + '</tbody></table></div></div>';
+    var table = '<div class="table-card rd-main" style="margin-bottom:0;"><div class="table-header"><div class="table-title">Classement par bénéfice</div><div class="rd-sub">Cliquez sur une voiture pour voir son détail à droite</div></div>'
+      + '<div style="overflow-x:auto;"><table><thead><tr><th>#</th><th>Véhicule</th><th>Jours</th><th>Occupation</th><th style="text-align:right;">CA</th><th style="text-align:right;">Charges</th><th style="text-align:right;">Bénéfice</th></tr></thead>'
+      + '<tbody>' + (rows || '<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--text3);">Aucun véhicule.</td></tr>') + '</tbody></table></div></div>';
+    root.innerHTML = head + kp + '<div class="rd-split">' + table + (st.unit ? rdUnitPanel(st, per, R) : '') + '</div>';
   };
+
+  /* ★ LOT 55 — Détail d'une voiture, affiché à DROITE du classement (ordinateur). */
+  function rdUnitPanel(st, per, R) {
+    var o = R.list.filter(function (x) { return x.key === st.unit; })[0];
+    if (!o) return '';
+    var year = st.mode === 'month' ? +st.ym.slice(0, 4) : (st.mode === 'year' ? st.year : +String(st.from).slice(0, 4));
+    var series = monthly(o.key, year);
+    var vals = series.map(function (m) { return st.chart === 'days' ? m.days : m.ca; });
+    var mx = Math.max.apply(null, vals.concat([1]));
+    var curM = st.mode === 'month' && +st.ym.slice(0, 4) === year ? +st.ym.slice(5, 7) - 1 : -1;
+    var chart = '<div class="rd-chart">' + vals.map(function (v, i) {
+      return '<div class="c' + (i === curM ? ' cur' : '') + '" onclick="rdMonthClick(' + year + ',' + i + ')" title="Voir ' + RD_MONTHS[i] + ' ' + year + '"><span>' + (v > 0 ? (st.chart === 'days' ? num(v) : (v >= 1000 ? (Math.round(v / 100) / 10) + 'k' : Math.round(v))) : '') + '</span><b style="height:' + Math.max(2, Math.round(v / mx * 100)) + '%"></b></div>';
+    }).join('') + '</div><div class="rd-mlab">' + RD_MSHORT.map(function (m) { return '<div>' + m + '</div>'; }).join('') + '</div>';
+    var fd = function (d) { return String(d || '').slice(0, 10).split('-').reverse().join('/').slice(0, 5); };
+    var resRows = Object.keys(o.res).map(function (k) { return o.res[k]; }).sort(function (a, b) { return String(b.r.startDate).localeCompare(String(a.r.startDate)); }).map(function (x) {
+      var r = x.r;
+      return '<div class="rd-line rd-row" onclick="rdOpenRes(\'' + esc(r.id) + '\')"><span><b>' + esc(r.client || '') + ' · ' + esc(r.contractRef || r.id) + '</b><small>' + fd(r.startDate) + ' → ' + fd(r.endDate) + ' · ' + num(x.days) + ' j</small></span><b>' + mad(x.ca) + '</b></div>';
+    }).join('');
+    var chRows = R.chargeLines.filter(function (l) { return l.key === o.key; }).sort(function (a, b) { return String(b.c.date).localeCompare(String(a.c.date)); }).map(function (l) {
+      var c = l.c;
+      return '<div class="rd-line rd-row" onclick="openChargeModal(\'' + esc(c.id) + '\')"><span><b>' + esc(c.category || 'Charge') + (l.n > 1 ? ' (partagée sur ' + l.n + ')' : '') + '</b><small>' + fd(c.date) + ' · ' + (c.status === 'pending' ? 'à payer' : 'payée') + (c.paidBy ? ' · ' + esc(c.paidBy) : '') + '</small></span><b class="rd-neg">' + mad(l.part) + '</b></div>';
+    }).join('');
+    return '<div class="rd-panel">'
+      + '<div class="rd-panel-h"><div><div class="rd-sub" style="font-weight:700;letter-spacing:.6px;text-transform:uppercase;">Détail</div><div style="font-size:19px;font-weight:800;">' + esc(o.label) + '</div><div class="rd-sub">' + esc(o.sub) + '</div></div>'
+      + (o.unit ? '<button class="btn-sm ghost" onclick="rdAddCharge(\'' + esc(o.key) + '\')">+ Charge</button>' : '') + '</div>'
+      + '<div class="rd-kpis rd-kpis2">'
+      + kpi('Bénéfice', mad(o.profit), '', o.profit >= 0 ? 'rd-pos' : 'rd-neg')
+      + kpi('Occupation', o.occ == null ? '—' : Math.round(o.occ) + ' %', R.elapsed ? num(o.days) + ' j sur ' + R.elapsed : '')
+      + kpi('Chiffre d\'affaires', mad(o.ca), o.days > 0 ? mad(o.ca / o.days) + ' / jour' : '')
+      + kpi('Charges', mad(o.charges))
+      + '</div>'
+      + '<div><div class="rd-panel-t"><span>Par mois · ' + year + '</span><span class="rd-seg"><button class="' + (st.chart === 'days' ? 'on' : '') + '" onclick="rdSet(\'chart\',\'days\')">Jours</button><button class="' + (st.chart !== 'days' ? 'on' : '') + '" onclick="rdSet(\'chart\',\'ca\')">CA</button></span></div>' + chart + '</div>'
+      + '<div><div class="rd-panel-t"><span>Locations</span></div>' + (resRows || '<div class="rd-sub">Aucune location sur cette période.</div>') + '</div>'
+      + '<div><div class="rd-panel-t"><span>Charges</span></div>' + (chRows || '<div class="rd-sub">Aucune charge sur cette période.</div>') + '</div>'
+      + '</div>';
+  }
+  function rdStyle55() {
+    if (document.getElementById('rd-style-55')) return;
+    var st = document.createElement('style'); st.id = 'rd-style-55';
+    st.textContent = [
+      '#page-rendement .rd-kpis{grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;}',
+      '#page-rendement .rd-kpi{border-radius:14px;padding:14px 16px;}',
+      '#page-rendement .rd-kpi .v{font-size:22px;}',
+      '#page-rendement .rd-kpi-dark{background:#101216;border-color:#101216;color:#fff;}',
+      '#page-rendement .rd-kpi-dark .l{color:rgba(255,255,255,.72);}#page-rendement .rd-kpi-dark .s{color:#86EFAC;}',
+      '#page-rendement .rd-split{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;}',
+      '#page-rendement .rd-main{flex:999 1 560px;min-width:0;}',
+      '#page-rendement .rd-panel{flex:1 1 360px;min-width:0;background:var(--dark2,#fff);border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:14px;}',
+      '#page-rendement .rd-panel-h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}',
+      '#page-rendement .rd-panel-t{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px;font-weight:800;margin-bottom:6px;}',
+      '#page-rendement .rd-kpis2{grid-template-columns:repeat(2,minmax(0,1fr));margin:0;gap:8px;}',
+      '#page-rendement .rd-kpis2 .rd-kpi{padding:10px 12px;}#page-rendement .rd-kpis2 .v{font-size:18px;}',
+      '#page-rendement .rd-rank{font-weight:800;color:var(--text3);width:28px;}#page-rendement .rd-rank.top{color:var(--red);}',
+      '#page-rendement tr.rd-sel td{background:rgba(196,30,58,.05);}#page-rendement tr.rd-sel td:first-child{box-shadow:inset 3px 0 0 var(--red);}',
+      '#page-rendement .rd-chart{height:150px;}#page-rendement .rd-chart .c b{opacity:.35;}#page-rendement .rd-chart .c.cur b{opacity:1;}',
+      '#page-rendement .rd-line{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--border);font-size:13px;}',
+      '#page-rendement .rd-line small{display:block;font-size:11.5px;color:var(--text3);font-weight:500;}',
+      '#page-rendement .rd-line > b{white-space:nowrap;}'
+    ].join('\n');
+    document.head.appendChild(st);
+  }
 
   function renderUnit(st, per, R) {
     var o = R.list.filter(function (x) { return x.key === st.unit; })[0];
@@ -1228,6 +1307,50 @@
       + '<div class="rd-sec"><h3><span>Charges — ' + esc(per.label) + '</span>' + (o.unit ? '<button class="btn-sm ghost" onclick="rdAddCharge(\'' + esc(o.key) + '\')">+ Charge</button>' : '') + '</h3>'
       + (chRows ? '<div style="overflow-x:auto;"><table><thead><tr><th>Date</th><th>Type</th><th>Part de cette voiture</th><th>Statut</th></tr></thead><tbody>' + chRows + '</tbody></table></div>' : '<div class="rd-sub">Aucune charge sur cette période.</div>') + '</div>';
   }
+
+  /* ★ LOT 53 — Robustesse : si le navigateur ou le serveur sert encore une
+     ANCIENNE page admin/index.html (sans l'entrée « Rendement » ni sa page),
+     on les crée ici, sous « Caisse ». Sans effet quand la page est à jour. */
+  function ensureRendementDom() {
+    if (!document.getElementById('page-rendement')) {
+      var cais = document.getElementById('page-caisse');
+      if (cais && cais.parentNode) {
+        var pg = document.createElement('div'); pg.id = 'page-rendement'; pg.className = 'page';
+        pg.innerHTML = '<div id="rendement-root"></div>';
+        cais.parentNode.insertBefore(pg, cais);
+      }
+    }
+    if (!document.querySelector('.sb-item[onclick*="\'rendement\'"]')) {
+      var ci = document.querySelector('.sb-item[onclick*="\'caisse\'"]');
+      var allowed = (typeof window.ASL_HAS_PERM !== 'function') || window.ASL_HAS_PERM('caisse');
+      if (ci && ci.parentNode && allowed) {
+        var a = document.createElement('a'); a.className = 'sb-item'; a.style.cursor = 'pointer';
+        a.setAttribute('onclick', "showPage('rendement',this)");
+        a.innerHTML = '<span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></span>Rendement';
+        ci.parentNode.insertBefore(a, ci.nextSibling);
+      }
+    }
+  }
+  function hookShowPage() {
+    if (typeof window.showPage !== 'function' || window.showPage._rdHooked) return;
+    var orig = window.showPage;
+    var wrapped = function (id) {
+      if (id === 'rendement') ensureRendementDom();
+      var out = orig.apply(this, arguments);
+      if (id === 'rendement' && typeof renderRendement === 'function') {
+        try { renderRendement(); } catch (e) {}
+        var tt = document.querySelector('.topbar-title, #page-title, .page-title');
+        if (tt && /^rendement$/i.test((tt.textContent || '').trim())) tt.textContent = 'Rendement des véhicules';
+      }
+      return out;
+    };
+    wrapped._rdHooked = true;
+    window.showPage = wrapped;
+  }
+  function rdBoot() { ensureRendementDom(); hookShowPage(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { setTimeout(rdBoot, 0); });
+  else setTimeout(rdBoot, 0);
+  setTimeout(rdBoot, 1500); // après les autres modules (permissions, menu)
 
   try {
     if (typeof ASLDB !== 'undefined' && ASLDB.onChange) {
