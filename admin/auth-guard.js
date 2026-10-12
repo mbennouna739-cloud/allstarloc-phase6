@@ -54,7 +54,7 @@
     dashboard: 'dashboard', fleet: 'fleet', maintenance: 'maintenance',
     reservations: 'reservations', rentals: 'rentals', customers: 'customers', sublease: 'sublease',
     payments: 'payments', caisse: 'caisse', settings: 'settings',
-    rendement: 'caisse', // ★ LOT 51 : chiffres financiers → même permission que la Caisse
+    rendement: 'caisse', // Rendement : chiffres financiers → même permission que la Caisse
     options: 'fleet', bookopt: 'fleet', minstay: 'fleet'
   };
 

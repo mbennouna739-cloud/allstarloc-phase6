@@ -983,31 +983,8 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
         <div id="maint-alerts-bar" style="flex:1;min-width:280px;"></div>
         <button class="topbar-btn primary" onclick="openMaintModal(null)">+ Mettre à jour entretien</button>
       </div>
-      <!-- ★ LOT 46 (point 6) : filtre par mois bien visible + calendrier -->
-      <div class="maint-toolbar">
-        <div class="maint-toolbar-title">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-          Échéances par mois
-        </div>
-        <div class="maint-toolbar-ctrls">
-          <button type="button" class="maint-nav" onclick="maintShiftMonth(-1)" aria-label="Mois précédent">‹</button>
-          <select class="form-select" id="maint-month" onchange="renderMaintenance()" aria-label="Mois">
-            <option value="">Tous les véhicules</option>
-            <option value="01">Janvier</option><option value="02">Février</option><option value="03">Mars</option>
-            <option value="04">Avril</option><option value="05">Mai</option><option value="06">Juin</option>
-            <option value="07">Juillet</option><option value="08">Août</option><option value="09">Septembre</option>
-            <option value="10">Octobre</option><option value="11">Novembre</option><option value="12">Décembre</option>
-          </select>
-          <select class="form-select" id="maint-year" onchange="renderMaintenance()" aria-label="Année"></select>
-          <button type="button" class="maint-nav" onclick="maintShiftMonth(1)" aria-label="Mois suivant">›</button>
-          <button type="button" class="btn-sm ghost" onclick="maintThisMonth()">Ce mois-ci</button>
-          <button type="button" class="btn-sm ghost" id="maint-all-btn" onclick="maintShowAll()">Tous les véhicules</button>
-          <button type="button" class="btn-sm primary" onclick="openPlanningShare()" title="Lien privé : calendriers toujours à jour, en lecture seule">Partager</button>
-        </div>
-      </div>
-      <div id="maint-calendar"></div>
       <div class="table-card">
-        <div class="table-header"><div class="table-title" id="maint-table-title">Suivi entretien flotte</div></div>
+        <div class="table-header"><div class="table-title">Suivi entretien flotte</div></div>
         <div style="overflow-x:auto;">
         <table>
           <thead><tr><th>Véhicule</th><th>Immatriculation</th><th>Km prochaine vidange</th><th>Prochaine visite technique</th><th>Dernière mise à jour</th><th>Prochain rappel</th><th>Actions</th></tr></thead>
@@ -1087,7 +1064,7 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
     </div>
 
     <!-- ===== CAISSE ===== -->
-    <!-- ★ LOT 51 : Rendement par véhicule (contenu construit par admin-caisse.js) -->
+    <!-- ★ Rendement par véhicule (contenu construit par admin-caisse.js) -->
     <div id="page-rendement" class="page"><div id="rendement-root"></div></div>
 
     <div id="page-caisse" class="page">
@@ -1824,7 +1801,7 @@ function viewRes(id) {
       <div class="res-detail-item"><div class="res-detail-label">Téléphone</div><div class="res-detail-val">${r.phone}</div></div>
       <div class="res-detail-item"><div class="res-detail-label">Email</div><div class="res-detail-val">${r.email}</div></div>
       <div class="res-detail-item"><div class="res-detail-label">Nationalité</div><div class="res-detail-val">${r.nationality}</div></div>
-      <div class="res-detail-item"><div class="res-detail-label">Véhicule</div><div class="res-detail-val">${typeof aslVehLabel === 'function' ? aslVehLabel(r) : r.car}</div></div>
+      <div class="res-detail-item"><div class="res-detail-label">Véhicule</div><div class="res-detail-val">${r.car}</div></div>
       <div class="res-detail-item"><div class="res-detail-label">Durée</div><div class="res-detail-val">${r.days} jours</div></div>
       <div class="res-detail-item"><div class="res-detail-label">Prise en charge</div><div class="res-detail-val">${r.pickup}<br><small>${r.startDate}</small></div></div>
       <div class="res-detail-item"><div class="res-detail-label">Retour</div><div class="res-detail-val">${r.endDate}</div></div>
@@ -1928,7 +1905,7 @@ function renderCalendar() {
       if (r.endDate === dateStr && calFilter === 'returns') cls = 'return';
       if (r.status === 'maintenance') cls = 'maintenance';
       const carName = (r.car || 'Véhicule').split(' ')[0];
-      return `<div class="cal-event ${cls}" title="${r.client||''}: ${typeof aslVehLabel === 'function' ? aslVehLabel(r) : (r.car||'')}">${carName}</div>`;
+      return `<div class="cal-event ${cls}" title="${r.client||''}: ${r.car||''}">${carName}</div>`;
     }).join('');
     const more = displayRes.length > 3 ? `<div style="font-size:8.5px;color:var(--text3);">+${displayRes.length-3}</div>` : '';
 
@@ -1959,7 +1936,7 @@ function calDayClick(d) {
   const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
   const dayRes = RESERVATIONS.filter(r => dateStr >= r.startDate && dateStr <= r.endDate);
   if(dayRes.length) {
-    alert(`${dayRes.length} réservation(s) le ${d}:\n${dayRes.map(r=>`• ${r.client} - ${typeof aslVehLabel === 'function' ? aslVehLabel(r) : r.car}`).join('\n')}`);
+    alert(`${dayRes.length} réservation(s) le ${d}:\n${dayRes.map(r=>`• ${r.client} - ${r.car}`).join('\n')}`);
   }
 }
 
@@ -2472,7 +2449,7 @@ function renderPayments() {
     <tr>
       <td><strong>${x.ref}</strong></td>
       <td>${x.r.client || '—'}</td>
-      <td style="font-size:12px;color:var(--text2);">${typeof aslVehLabel === 'function' ? aslVehLabel(x.r) : (x.r.car || '—')}</td>
+      <td style="font-size:12px;color:var(--text2);">${x.r.car || '—'}</td>
       <td><span class="badge badge-gray">${x.type}</span></td>
       <td>${fmt(x.total)}</td>
       <td style="color:var(--green);">${fmt(x.paid)}</td>
@@ -2531,7 +2508,6 @@ function openModal(type) {
         </div>
         <div style="font-size:11px;color:var(--text3);margin-top:5px;">Le « Prénom / Nom » ci-dessous = le client final.</div></div>
       <div class="form-group"><label class="form-label">N° Contrat</label><input class="form-input" id="nr-ref" placeholder="ASL-2026-001"><div style="font-size:11px;color:var(--text3,#888);margin-top:4px;">Pré-rempli automatiquement — modifiable. Se synchronise avec Paiements, Clients et le tableau de bord.</div></div>
-      ${typeof aslClientPickerHTML === 'function' ? aslClientPickerHTML('nr') : ''}
       <div class="form-row">
         <div class="form-group"><label class="form-label">Prénom</label><input class="form-input" placeholder="Prénom" id="nr-firstname"></div>
         <div class="form-group"><label class="form-label">Nom</label><input class="form-input" placeholder="Nom" id="nr-lastname"></div>
@@ -2663,9 +2639,8 @@ function openModal(type) {
       if (totalEl) totalEl.addEventListener('input', function(){ this.dataset.manual = '1'; });
       autoTotal();
       // ★ Point 8 : restaure un brouillon existant, puis surveille la saisie.
-      var NR_DRAFT_FIELDS = ['nr-ref','nr-firstname','nr-lastname','nr-phone','nr-profession','nr-car','nr-ppu','nr-days','nr-start','nr-start-time','nr-end','nr-end-time','nr-pickup','nr-source','nr-total','nr-paid','nr-mode','nr-collected-by','nr-notes','nr-doctype','nr-sublease','nr-cust-key','nr-cust-email','nr-cust-nat'];
+      var NR_DRAFT_FIELDS = ['nr-ref','nr-firstname','nr-lastname','nr-phone','nr-profession','nr-car','nr-ppu','nr-days','nr-start','nr-start-time','nr-end','nr-end-time','nr-pickup','nr-source','nr-total','nr-paid','nr-mode','nr-collected-by','nr-notes','nr-doctype','nr-sublease'];
       if (typeof draftRestore === 'function' && draftRestore('nr', NR_DRAFT_FIELDS)) { if (typeof showToast === 'function') showToast('Brouillon restauré ✓'); }
-      if (typeof aslClientPickerRestore === 'function') aslClientPickerRestore('nr');
       if (typeof draftWatch === 'function') draftWatch('nr', document.getElementById('modal-body'), NR_DRAFT_FIELDS);
     }, 60);
     document.getElementById('modal-save').onclick = () => {
@@ -2751,22 +2726,17 @@ function openModal(type) {
       const newRes = ASLDB.addReservation({
         client: `${fn} ${ln||''}`.trim(),
         contractRef: contractRef,
-        // ★ Demande 3 : client existant choisi → même email que sa fiche, pour
-        //   rattacher ce dossier au même client (vide pour un nouveau client).
-        email: document.getElementById('nr-cust-email')?.value || '', phone: document.getElementById('nr-phone')?.value||'',
+        email: '', phone: document.getElementById('nr-phone')?.value||'',
         profession: document.getElementById('nr-profession')?.value||'',
         car: car?.name||'', carId,
         pricePerDay: ppu, assignedPlate: nrAssignedPlate, assignedColor: nrAssignedColor,
         days, amount: total, paid: paid, paymentStatus: payStatus, paymentMode: paymentMode,
         collectedBy: nrCollectedBy,
-        // ★ LOT 46 (point 4) : montant reçu à la création inscrit au journal
-        //   des versements (date du jour, mode, encaisseur).
-        payments: paid > 0 ? [{ date: (typeof ASLDB !== 'undefined' && ASLDB.localDateISO) ? ASLDB.localDateISO() : new Date().toISOString().slice(0,10), amount: Math.round(paid * 100) / 100, mode: paymentMode, collectedBy: nrCollectedBy, comment: 'Paiement à la création' }] : undefined,
         startDate: start, endDate: end,
         startTime: startTime, endTime: endTime,
         pickup: document.getElementById('nr-pickup')?.value || '',
         source: nrSourceVal,
-        status: 'confirmed', type: 'reservation', payment: 'onsite', nationality: document.getElementById('nr-cust-nat')?.value || 'N/A',
+        status: 'confirmed', type: 'reservation', payment: 'onsite', nationality: 'N/A',
         subleaseId: nrSubleaseId, finalClient: nrSubleaseId ? nrFinalClient : '',
         notes: document.getElementById('nr-notes')?.value||'',
         // ★ CORRECTIF CRITIQUE (régression Mission 2) : les documents ne sont
@@ -2983,7 +2953,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if(id==='rentals') renderRentals();
     if(id==='customers') renderCustomers();
     if(id==='payments') renderPayments();
-    if(id==='rendement' && typeof renderRendement==='function') renderRendement();
     if(typeof updateBadges==='function') updateBadges();
   });
 });
@@ -3112,12 +3081,6 @@ function collectUnits(prefix) {
 // Affiche la couleur + immatriculation attribuées à une réservation (gestion interne)
 function resUnitInfo(r) {
   if (!r) return '';
-  // ★ Demande 6 : plaque · couleur via la fonction commune (retrouve la
-  //   couleur depuis la flotte si elle manque au dossier).
-  if (typeof aslVehPlateColor === 'function') {
-    const pc = aslVehPlateColor(r);
-    return pc ? `<br><span style="font-size:11px;color:var(--text3,#888);">🚗 ${pc}</span>` : '';
-  }
   const bits = [];
   if (r.assignedColor) bits.push(r.assignedColor);
   if (r.assignedPlate) bits.push(r.assignedPlate);
@@ -3347,10 +3310,8 @@ function renderMobileDash() {
   var alerts = [];
   Object.keys(MAINT).forEach(function(carId){
     var m = MAINT[carId] || {};
-    // ★ LOT 44 : clés d'entretien « idModèle::plaque » (par immatriculation).
-    var keyParts = String(carId).split('::');
-    var car = fleet.find(function(c){ return String(c.id) === keyParts[0]; });
-    var carName = (car ? car.name : ('Véhicule #' + keyParts[0])) + (keyParts[1] && keyParts[1] !== '_' ? ' (' + keyParts[1] + ')' : '');
+    var car = fleet.find(function(c){ return String(c.id) === String(carId); });
+    var carName = car ? car.name : ('Véhicule #' + carId);
     [['Vidange', m.vidange_next], ['Entretien / VT', m.vt_next], ['Assurance', m.assur]].forEach(function(pair){
       var label = pair[0], date = pair[1];
       var dd = diffDays(date);
@@ -3427,6 +3388,5 @@ document.addEventListener('DOMContentLoaded', function(){ setTimeout(renderMobil
 <script src="admin-seasonal-preview.js"></script>
 <script src="admin-lld-ui.js"></script>
 <script src="admin-mobile.js"></script>
-<script src="admin-ux.js"></script>
 </body>
 </html>

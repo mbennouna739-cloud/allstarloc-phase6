@@ -823,16 +823,6 @@
       '#rd-cm .car .amt{width:96px;text-align:right;padding:4px 8px;font-size:12.5px;}',
       '#rd-cm .note{font-size:12px;color:var(--text3);margin-top:6px;}',
       '#rd-cm .sum{font-size:12.5px;font-weight:600;flex:1;}',
-      /* ★ LOT 53 — finition : cartes voitures, sélection visible, boutons nets */
-      '#rd-cm .cars{border:none;display:flex;flex-direction:column;gap:8px;max-height:260px;padding:2px;}',
-      '#rd-cm .car{border:1px solid var(--border);border-radius:12px;padding:9px 12px;background:var(--dark2,#fff);transition:border-color .15s,background .15s;}',
-      '#rd-cm .car:last-child{border-bottom:1px solid var(--border);}',
-      '#rd-cm .car:has(input:checked){border-color:var(--red);background:rgba(196,30,58,.05);box-shadow:inset 0 0 0 1px var(--red);}',
-      '#rd-cm .chip{border-radius:999px;transition:background .15s,border-color .15s;}',
-      '#rd-cm .chip:not(.on):hover{border-color:var(--red);color:var(--red);}',
-      '#rd-cm .form-input{border-radius:12px;}',
-      '#rd-cm .ft .btn-sm.primary{padding-left:22px;padding-right:22px;}',
-      '#rd-cm .box{overflow:hidden;}',
       /* ★ LOT 52 — Sur téléphone : plein écran, grandes zones tactiles. */
       '@media (max-width:600px){#rd-cm{padding:0;align-items:stretch;}#rd-cm .box{max-width:none;max-height:none;height:100%;border-radius:0;}'
       + '#rd-cm .hd{padding-top:calc(env(safe-area-inset-top,0px) + 14px);}#rd-cm .ft{flex-wrap:wrap;padding-bottom:calc(env(safe-area-inset-bottom,0px) + 14px);}'
@@ -1093,7 +1083,7 @@
     return out;
   }
   window.aslRendementCompute = function (st) { return compute(periodOf(st)); }; // (tests)
-  // ★ LOT 55 : mêmes calculs, lus par l'onglet Rendement du mobile (lecture seule).
+  // ★ Mêmes calculs, lus par l'onglet Rendement du mobile (lecture seule).
   window.aslRendementPeriod = function (st) { return periodOf(st); };
   window.aslRendementMonthly = function (key, year) { return monthly(key, year); };
 
@@ -1307,50 +1297,6 @@
       + '<div class="rd-sec"><h3><span>Charges — ' + esc(per.label) + '</span>' + (o.unit ? '<button class="btn-sm ghost" onclick="rdAddCharge(\'' + esc(o.key) + '\')">+ Charge</button>' : '') + '</h3>'
       + (chRows ? '<div style="overflow-x:auto;"><table><thead><tr><th>Date</th><th>Type</th><th>Part de cette voiture</th><th>Statut</th></tr></thead><tbody>' + chRows + '</tbody></table></div>' : '<div class="rd-sub">Aucune charge sur cette période.</div>') + '</div>';
   }
-
-  /* ★ LOT 53 — Robustesse : si le navigateur ou le serveur sert encore une
-     ANCIENNE page admin/index.html (sans l'entrée « Rendement » ni sa page),
-     on les crée ici, sous « Caisse ». Sans effet quand la page est à jour. */
-  function ensureRendementDom() {
-    if (!document.getElementById('page-rendement')) {
-      var cais = document.getElementById('page-caisse');
-      if (cais && cais.parentNode) {
-        var pg = document.createElement('div'); pg.id = 'page-rendement'; pg.className = 'page';
-        pg.innerHTML = '<div id="rendement-root"></div>';
-        cais.parentNode.insertBefore(pg, cais);
-      }
-    }
-    if (!document.querySelector('.sb-item[onclick*="\'rendement\'"]')) {
-      var ci = document.querySelector('.sb-item[onclick*="\'caisse\'"]');
-      var allowed = (typeof window.ASL_HAS_PERM !== 'function') || window.ASL_HAS_PERM('caisse');
-      if (ci && ci.parentNode && allowed) {
-        var a = document.createElement('a'); a.className = 'sb-item'; a.style.cursor = 'pointer';
-        a.setAttribute('onclick', "showPage('rendement',this)");
-        a.innerHTML = '<span class="sb-item-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg></span>Rendement';
-        ci.parentNode.insertBefore(a, ci.nextSibling);
-      }
-    }
-  }
-  function hookShowPage() {
-    if (typeof window.showPage !== 'function' || window.showPage._rdHooked) return;
-    var orig = window.showPage;
-    var wrapped = function (id) {
-      if (id === 'rendement') ensureRendementDom();
-      var out = orig.apply(this, arguments);
-      if (id === 'rendement' && typeof renderRendement === 'function') {
-        try { renderRendement(); } catch (e) {}
-        var tt = document.querySelector('.topbar-title, #page-title, .page-title');
-        if (tt && /^rendement$/i.test((tt.textContent || '').trim())) tt.textContent = 'Rendement des véhicules';
-      }
-      return out;
-    };
-    wrapped._rdHooked = true;
-    window.showPage = wrapped;
-  }
-  function rdBoot() { ensureRendementDom(); hookShowPage(); }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { setTimeout(rdBoot, 0); });
-  else setTimeout(rdBoot, 0);
-  setTimeout(rdBoot, 1500); // après les autres modules (permissions, menu)
 
   try {
     if (typeof ASLDB !== 'undefined' && ASLDB.onChange) {
