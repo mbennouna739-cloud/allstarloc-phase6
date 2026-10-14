@@ -1018,6 +1018,10 @@
     try { if (typeof window._caisseRefresh === 'function') window._caisseRefresh(); } catch (e) {}
     try { var p = document.getElementById('page-rendement'); if (p && p.classList.contains('active')) renderRendement(); } catch (e) {}
   }
+  /* ★ Accès partagé pour le parcours mobile « Nouvelle charge » : mêmes
+     données, même enregistrement et même synchronisation que cette fenêtre. */
+  window.aslChargeAPI = { read: readCharges, write: writeCharges, units: units, unitByKey: unitByKey, allocationsOf: allocationsOf,
+    cats: function () { return cmCats(); }, payers: RD_PAYERS, modes: RD_MODES, refresh: rdRefreshAll, today: today };
 
   /* ======================= MOTEUR DE CALCUL ======================= */
   /* Clé voiture d'un dossier : plaque attribuée ; sinon, si le modèle n'a

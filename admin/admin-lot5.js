@@ -1878,7 +1878,10 @@ function saveRentalChanges(id, totalFallback) {
   var newCollectedBy = (document.getElementById('rd-collected-by') && document.getElementById('rd-collected-by').value) || '';
   // ★ « Encaissé par » : obligatoire uniquement s'il y a réellement un
   //   montant encaissé — jamais forcé si le montant reçu est à 0.
-  if (newPaid > 0 && !newCollectedBy) { alert('Un montant reçu est indiqué : merci de préciser qui l\'a encaissé (Mohamed / Younes / Khalil).'); return; }
+  // ★ Demandé seulement si le montant reçu AUGMENTE (nouvel argent) : un dossier
+  //   déjà payé dont on corrige les dates ne doit pas être bloqué.
+  var _rdOld = (aslRes() || []).find(function (x) { return String(x.id) === String(id); });
+  if (newPaid > ((_rdOld && Number(_rdOld.paid)) || 0) + 0.001 && !newCollectedBy) { alert('Un nouveau montant reçu est indiqué : merci de préciser qui l\'a encaissé (Mohamed / Younes / Khalil).'); return; }
   // ★ CORRECTIF (item 2) : dates/heures modifiables directement depuis la fiche.
   var newStartDate = (document.getElementById('rd-start-date') && document.getElementById('rd-start-date').value) || '';
   var newStartTime = (document.getElementById('rd-start-time') && document.getElementById('rd-start-time').value) || '10:00';
@@ -2770,7 +2773,9 @@ function viewRes(id) {
       var newMode = (document.getElementById('vr-mode')&&document.getElementById('vr-mode').value) || r.paymentMode;
       var newCollectedBy = (document.getElementById('vr-collected-by')&&document.getElementById('vr-collected-by').value) || '';
       // ★ « Encaissé par » : obligatoire uniquement si un montant est reçu.
-      if (newPaid > 0 && !newCollectedBy) { alert('Un montant reçu est indiqué : merci de préciser qui l\'a encaissé (Mohamed / Younes / Khalil).'); return; }
+      // ★ Demandé seulement si le montant reçu AUGMENTE : corriger les dates,
+      //   la voiture ou le prix d'un dossier déjà payé n'est jamais bloqué.
+      if (newPaid > (Number(r.paid) || 0) + 0.001 && !newCollectedBy) { alert('Un nouveau montant reçu est indiqué : merci de préciser qui l\'a encaissé (Mohamed / Younes / Khalil).'); return; }
       var payStatus = newPaid<=0 ? 'Non payé' : (newPaid>=newTotal ? 'Paiement complet' : 'Paiement partiel');
       // ★ MISSION « FINI TOUT » (point 1) : tout est désormais modifiable —
       //   client, téléphone, véhicule, dates, durée, prix/jour. Le montant
@@ -2785,7 +2790,7 @@ function viewRes(id) {
       var newEndTime = (document.getElementById('vr-end-time')&&document.getElementById('vr-end-time').value) || r.endTime || '10:00';
       var newDaysEl = document.getElementById('vr-days');
       var newDays = newDaysEl ? parseInt(newDaysEl.value, 10) : r.days;
-      var patch = { paid: newPaid, amount: newTotal, pricePerDay: newPpu, paymentMode: newMode, paymentStatus: payStatus, contractRef: newRef, collectedBy: newCollectedBy,
+      var patch = { paid: newPaid, amount: newTotal, pricePerDay: newPpu, paymentMode: newMode, paymentStatus: payStatus, contractRef: newRef, collectedBy: newCollectedBy || r.collectedBy || '',
                     client: newClient, phone: newPhone, pickup: newPickup,
                     startDate: newStartDate, startTime: newStartTime, endDate: newEndDate, endTime: newEndTime };
       if (newDays && newDays >= 1) patch.days = newDays;

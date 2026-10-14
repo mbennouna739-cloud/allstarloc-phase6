@@ -2944,12 +2944,331 @@
       }).join('');
       html = '<div class="cs-tot static"><span><small>' + (w === 'all' ? 'Total encaissé' : w === 'na' ? 'Non attribué' : 'Encaissé par ' + w) + ' · ' + esc(csLabel()) + '</small><b>' + money(total) + '</b><span>' + csN(count, 'paiement', 'paiements') + (w === 'na' ? ' sans personne attribuée' : '') + '</span></span></div>' + chips();
     }
+    if (w === 'charges') {
+      maSetTitle('Charges');
+      host.innerHTML = '<button type="button" class="cs-per small chw-per" onclick="maCsPeriod()">' + ic('calendar') + '<span><small>Période</small><b>' + esc(csLabel()) + '</b></span><em>Changer ▾</em></button>' + chgListHTML();
+      return;
+    }
     maSetTitle(title);
     host.innerHTML = '<button type="button" class="cs-per small" onclick="maCsPeriod()">' + ic('calendar') + '<span><small>Période</small><b>' + esc(csLabel()) + '</b></span><em>Changer ▾</em></button>'
       + html + '<div class="mu-sec">' + (w === 'rest' ? 'Dossiers' : w === 'charges' ? 'Charges' : w === 'moves' ? 'Entrées et sorties' : 'Paiements') + '</div>'
       + (count ? body : '<div class="mt-none">Rien sur cette période.</div>')
       + (count && w !== 'charges' ? '<div class="mu-jn mt-center">Touchez une ligne pour ouvrir la fiche de la location.</div>' : '');
   }
+  /* ======================================================================
+     ★ CHARGES — mobile : liste, fiche et « Nouvelle charge » en 4 étapes
+     (Type → Voitures → Montant → Paiement). Mêmes données, même
+     enregistrement et même synchro que la fenêtre de l'ordinateur
+     (window.aslChargeAPI, clé asl_charges_v1) : Caisse, Rendement et
+     Grand livre restent calculés exactement comme avant.
+     ====================================================================== */
+  var CHG_IC = {
+    'Carburant': ['#FCE8EC', '#C41E3A', '<path d="M3 22V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v17"/><path d="M2 22h14"/><path d="M15 9h2a2 2 0 0 1 2 2v6a1.5 1.5 0 0 0 3 0V9l-3-3"/><path d="M6 8h6"/>'],
+    'AdBlue': ['#E6F0FD', '#1D5FC2', '<path d="M7 3h10v4l2 3v11H5V10l2-3z"/><path d="M9 14h6"/>'],
+    'Vidange': ['#FDF3DC', '#9A6A00', '<path d="M12 3s5 5.5 5 9.5a5 5 0 0 1-10 0C7 8.5 12 3 12 3z"/><path d="M4 21h16"/>'],
+    'Pneus': ['#EEF0F3', '#4B5260', '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/>'],
+    'Réparation': ['#EEF0F3', '#4B5260', '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>'],
+    'Lavage': ['#E6F0FD', '#1D5FC2', '<path d="M12 2.7s6 6.4 6 11.3a6 6 0 0 1-12 0C6 9.1 12 2.7 12 2.7z"/>'],
+    'Visite technique': ['#EAF6EE', '#16803C', '<path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/>'],
+    'Assurance': ['#EAF6EE', '#16803C', '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>'],
+    'Entretien': ['#EEF0F3', '#4B5260', '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/>'],
+    'Parking': ['#E6F0FD', '#1D5FC2', '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 17V7h4a3 3 0 0 1 0 6H9"/>'],
+    'Amende': ['#FCE8EC', '#B5172F', '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M12 12v3M12 18h.01"/>'],
+    'Loyer': ['#FDF3DC', '#9A6A00', '<path d="M3 10.5 12 3l9 7.5V21H3z"/><path d="M9 21v-6h6v6"/>'],
+    'Accessoire': ['#EEF0F3', '#4B5260', '<path d="M20 7h-9M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/>']
+  };
+  var CHG_DEF = ['#EEF0F3', '#4B5260', '<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>'];
+  function chgIc(cat, size) {
+    var d = CHG_IC[cat] || CHG_DEF, sz = size || 44;
+    return '<span class="chw-ico" style="width:' + sz + 'px;height:' + sz + 'px;background:' + d[0] + ';color:' + d[1] + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d[2] + '</svg></span>';
+  }
+  function chgApi() { return window.aslChargeAPI || null; }
+  function chgR2(n) { return Math.round((Number(n) || 0) * 100) / 100; }
+  function chgAll() { var a = chgApi(); return a ? a.read() : []; }
+  function chgUnits() { var a = chgApi(); return a ? a.units() : []; }
+  function chgAllocs(c) { var a = chgApi(); return a ? a.allocationsOf(c) : (c.allocations || []); }
+  function chgLongDate(iso) {
+    var J = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'], M = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+    var d = new Date(String(iso || '').slice(0, 10) + 'T12:00:00'); if (isNaN(d)) return '—';
+    return J[d.getDay()] + ' ' + d.getDate() + ' ' + M[d.getMonth()] + ' ' + d.getFullYear();
+  }
+  function chgAddDays(iso, n) { var d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function chgNum(n) { return Math.round(Number(n) || 0).toLocaleString('fr-FR'); }
+
+  /* ---------- Liste des charges (Caisse › Charges) ---------- */
+  CS.chf = CS.chf || 'all';
+  function chgListHTML() {
+    var all = chgAll().filter(function (c) { return c && csIn(c.date); })
+      .sort(function (a, b) { return String(b.date || '').localeCompare(String(a.date || '')); });
+    var paid = all.filter(function (c) { return c.status !== 'pending'; }), pend = all.filter(function (c) { return c.status === 'pending'; });
+    var tot = paid.reduce(function (s, c) { return s + (Number(c.amount) || 0); }, 0), totP = pend.reduce(function (s, c) { return s + (Number(c.amount) || 0); }, 0);
+    var byCat = {}; paid.forEach(function (c) { var k = c.category || 'Autre'; byCat[k] = (byCat[k] || 0) + (Number(c.amount) || 0); });
+    var cats = Object.keys(byCat).sort(function (a, b) { return byCat[b] - byCat[a]; });
+    var COLS = ['#F2C14E', '#E8687F', '#7FB3F5', '#7ED3A6', '#C9A7F2', '#B9BDC6'];
+    var top = cats.slice(0, 3), other = cats.slice(3).reduce(function (s, k) { return s + byCat[k]; }, 0);
+    var parts = top.map(function (k, i) { return [k, byCat[k], COLS[i]]; }); if (other > 0) parts.push(['Autres', other, COLS[5]]);
+    var hero = '<div class="chw-hero"><div class="chw-hero-top"><span><small>Charges payées · ' + esc(csLabel().toLowerCase()) + '</small><b>' + chgNum(tot) + ' <em>MAD</em></b></span><span class="chw-pill">' + paid.length + ' payée' + (paid.length > 1 ? 's' : '') + '</span></div>'
+      + (parts.length ? '<div class="chw-bar">' + parts.map(function (p) { return '<i style="flex:' + Math.max(1, Math.round(p[1])) + ' 1 0;background:' + p[2] + '"></i>'; }).join('') + '</div>'
+        + '<div class="chw-leg">' + parts.map(function (p) { return '<span><small><i style="background:' + p[2] + '"></i>' + esc(p[0]) + '</small><b>' + chgNum(p[1]) + '</b></span>'; }).join('') + '</div>' : '')
+      + (totP > 0 ? '<div class="chw-due"><span>À payer (pas encore sorti de la caisse)</span><b>' + chgNum(totP) + ' MAD</b></div>' : '') + '</div>';
+    var F = [['all', 'Toutes'], ['cars', 'Voitures'], ['agency', 'Agence'], ['pending', 'À payer']];
+    var seg = '<div class="chw-seg chw-seg4" role="group" aria-label="Filtrer les charges">' + F.map(function (f) { return '<button type="button" class="' + (CS.chf === f[0] ? 'on' : '') + '" onclick="maChgFilter(\'' + f[0] + '\')">' + f[1] + '</button>'; }).join('') + '</div>';
+    var shown = all.filter(function (c) {
+      var n = chgAllocs(c).length;
+      if (CS.chf === 'cars') return n > 0; if (CS.chf === 'agency') return n === 0; if (CS.chf === 'pending') return c.status === 'pending'; return true;
+    });
+    var days = {}, order = [];
+    shown.forEach(function (c) { var d = String(c.date || '').slice(0, 10); if (!days[d]) { days[d] = []; order.push(d); } days[d].push(c); });
+    var list = order.map(function (d) {
+      return '<div class="chw-day">' + esc(chgLongDate(d)) + '</div>' + days[d].map(function (c) {
+        var al = chgAllocs(c), pend = c.status === 'pending', tag;
+        if (!al.length) tag = '<span class="chw-tag ag">Charge de l\'agence</span>';
+        else if (al.length === 1) { var u = (chgApi() && chgApi().unitByKey(al[0].key)) || null; tag = u ? '<span class="chw-tag">' + esc(u.model) + '</span>' + (u.plate ? '<span class="chw-tag">' + esc(u.plate) + '</span>' : '') : '<span class="chw-tag">' + esc(c.vehicle || '1 voiture') + '</span>'; }
+        else tag = '<span class="chw-tag">' + al.length + ' voitures</span>';
+        return '<button type="button" class="chw-row' + (pend ? ' pend' : '') + '" data-id="' + esc(String(c.id)) + '" onclick="maChgFiche(this.dataset.id)">' + chgIc(c.category)
+          + '<span class="chw-rt"><b>' + esc(c.category || 'Charge') + '</b>' + (c.description ? '<small>' + esc(c.description) + '</small>' : '') + '<span class="chw-tags">' + tag + (pend ? '<span class="chw-tag due">À payer</span>' : '') + '</span></span>'
+          + '<span class="chw-ra"><b class="' + (pend ? 'due' : '') + '">' + (pend ? '' : '−') + chgNum(c.amount) + '</b><small>' + (pend ? 'non payée' : esc([c.paidBy, c.payMode].filter(Boolean).join(' · '))) + '</small></span></button>';
+      }).join('');
+    }).join('');
+    return hero + seg + (shown.length ? list : '<div class="mt-none">Aucune charge sur cette période.</div>')
+      + '<div class="chw-fab"><button type="button" onclick="maAddCharge()">' + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>' + ' Ajouter une charge</button></div>';
+  }
+  window.maChgFilter = function (f) { CS.chf = f; renderCaisse(); };
+
+  /* ---------- Fiche d'une charge ---------- */
+  window.maChgFiche = function (id) {
+    var c = chgAll().filter(function (x) { return String(x.id) === String(id); })[0]; if (!c) return;
+    var al = chgAllocs(c), pend = c.status === 'pending', api = chgApi();
+    var rows = al.map(function (a) { var u = api ? api.unitByKey(a.key) : null; return '<div class="chw-kv"><span><b>' + esc(u ? u.model : (a.model || 'Voiture')) + '</b><small>' + esc(u ? u.plate : (a.plate || '')) + '</small></span><b>' + money(a.amount) + '</b></div>'; }).join('');
+    var idA = esc(JSON.stringify(String(c.id))).replace(/"/g, '&quot;');
+    openSheet('<div class="chw-fiche">' + chgIc(c.category, 56)
+      + '<div class="chw-ft">' + esc(c.category || 'Charge') + '</div><div class="chw-fa' + (pend ? ' due' : '') + '">' + (pend ? '' : '−') + money(c.amount) + '</div>'
+      + '<div class="chw-tags center"><span class="chw-tag ' + (pend ? 'due' : 'ok') + '">' + (pend ? 'À payer' : 'Payée') + '</span><span class="chw-tag">' + esc(chgLongDate(c.date)) + '</span></div></div>'
+      + '<div class="chw-card">' + (c.paidBy ? '<div class="chw-kv"><span>Payé par</span><b>' + esc(c.paidBy) + '</b></div>' : '') + (c.payMode ? '<div class="chw-kv"><span>Mode</span><b>' + esc(c.payMode) + '</b></div>' : '')
+      + (c.description ? '<div class="chw-kv"><span>Note</span><b>' + esc(c.description) + '</b></div>' : '')
+      + (al.length >= 2 ? '<div class="chw-kv"><span>Saisie</span><b>' + (c.splitMode === 'each' ? money(al[0].amount) + ' par voiture' : 'Total partagé') + '</b></div>' : '') + '</div>'
+      + (al.length ? '<div class="mu-sec">Voitures concernées · ' + al.length + '</div><div class="chw-card">' + rows + '</div>' : '<div class="mu-jn">Charge de l\'agence : elle compte dans la Caisse, pas dans une voiture.</div>')
+      + '<div class="chw-2"><button type="button" class="chw-del" onclick="maChgDelete(' + idA + ')">Supprimer</button><button type="button" class="chw-edit" onclick="maChgEdit(' + idA + ')">Modifier</button></div>');
+  };
+  window.maChgDelete = function (id) {
+    maConfirm('Supprimer cette charge ?', 'Elle disparaît de la Caisse et du Rendement.', 'Supprimer', function () {
+      var api = chgApi(); if (!api) return;
+      api.write(api.read().filter(function (x) { return String(x.id) !== String(id); }));
+      try { api.refresh(); } catch (e) {}
+      closeSheet(); if (typeof showToast === 'function') showToast('Charge supprimée ✓');
+      chgAfterSave();
+    });
+  };
+
+  /* ---------- Nouvelle charge : parcours en 4 étapes ---------- */
+  var CW = null;
+  function chgNew(preset) {
+    var api = chgApi();
+    return { id: null, step: 1, category: '', custom: false, scope: 'cars', sel: {}, q: '', brand: '', amount: '', mode: 'total',
+      status: 'paid', paidBy: '', payMode: 'Espèces', date: api ? api.today() : todayISO(), description: '', orig: null, after: null, preset: preset || null };
+  }
+  window.maAddCharge = function (presetKey, after) {
+    closeSheet();
+    CW = chgNew(); CW.after = after || null;
+    if (presetKey) { CW.sel[presetKey] = true; }
+    chgOpen();
+  };
+  window.maChgEdit = function (id) {
+    var c = chgAll().filter(function (x) { return String(x.id) === String(id); })[0]; if (!c) return;
+    closeSheet();
+    CW = chgNew(); CW.id = c.id; CW.category = c.category || ''; CW.status = c.status === 'pending' ? 'pending' : 'paid';
+    CW.paidBy = c.paidBy || ''; CW.payMode = c.payMode || 'Espèces'; CW.date = String(c.date || '').slice(0, 10) || CW.date; CW.description = c.description || '';
+    var al = chgAllocs(c); al.forEach(function (a) { CW.sel[a.key] = true; });
+    CW.scope = al.length ? 'cars' : 'agency';
+    if (c.splitMode === 'each' && al.length >= 2) { CW.mode = 'each'; CW.amount = String(chgR2(al[0].amount)); } else { CW.mode = 'total'; CW.amount = String(chgR2(c.amount)); }
+    CW.orig = { allocs: JSON.stringify(al.map(function (a) { return [a.key, chgR2(a.amount)]; })), amount: CW.amount, mode: CW.mode, keys: Object.keys(CW.sel).sort().join('|') };
+    var api = chgApi(); if (api && CW.category && api.cats().indexOf(CW.category) < 0 && !CHG_IC[CW.category]) CW.custom = true;
+    chgOpen();
+  };
+  function chgOpen() {
+    var host = document.getElementById('ma-chg');
+    if (!host) { host = document.createElement('div'); host.id = 'ma-chg'; document.body.appendChild(host); }
+    host.style.display = 'block'; document.body.classList.add('ma-locked');
+    chgRender();
+  }
+  window.maChgClose = function () {
+    var h = document.getElementById('ma-chg'); if (h) { h.style.display = 'none'; h.innerHTML = ''; }
+    document.body.classList.remove('ma-locked'); CW = null;
+  };
+  function chgSelKeys() { return Object.keys(CW.sel).filter(function (k) { return CW.sel[k]; }); }
+  function chgCarsN() { return CW.scope === 'agency' ? 0 : chgSelKeys().length; }
+  function chgAmt() { return chgR2(parseFloat(String(CW.amount || '').replace(',', '.')) || 0); }
+  function chgTotal() { var n = chgCarsN(), a = chgAmt(); return (n >= 2 && CW.mode === 'each') ? chgR2(a * n) : a; }
+  function chgOk(step) {
+    if (step === 1) return !!String(CW.category || '').trim();
+    if (step === 2) return CW.scope === 'agency' || chgSelKeys().length > 0;
+    if (step === 3) return chgAmt() > 0;
+    return true;
+  }
+  function chgSub() {
+    var p = [];
+    if (CW.step > 1 && CW.category) p.push(CW.category);
+    if (CW.step > 2) { var n = chgCarsN(); p.push(n ? n + ' voiture' + (n > 1 ? 's' : '') : 'Agence'); }
+    if (CW.step > 3) p.push(chgNum(chgTotal()) + ' MAD');
+    return p.join(' · ');
+  }
+  function chgRender(keepScroll) {
+    var host = document.getElementById('ma-chg'); if (!host || !CW) return;
+    var prev = document.getElementById('chw-body'), sc = keepScroll && prev ? prev.scrollTop : 0;
+    var LB = ['Type de charge', 'Voitures', 'Montant', 'Paiement'], s = CW.step, body = '', btn = 'Continuer', sum = '';
+    if (s === 1) body = chgStep1(); else if (s === 2) { body = chgStep2(); var n = chgSelKeys().length; btn = CW.scope === 'agency' ? 'Continuer · agence' : (n ? 'Continuer · ' + n + ' voiture' + (n > 1 ? 's' : '') : 'Choisissez une voiture'); }
+    else if (s === 3) { body = chgStep3(); sum = ['Total de la charge', chgNum(chgTotal()) + ' MAD']; }
+    else { body = chgStep4(); btn = CW.id ? 'Enregistrer les modifications' : 'Enregistrer la charge'; var n4 = chgCarsN(); sum = [[CW.category, n4 ? n4 + ' voiture' + (n4 > 1 ? 's' : '') : 'agence', CW.status === 'pending' ? 'à payer' : (CW.paidBy || '')].filter(Boolean).join(' · '), chgNum(chgTotal()) + ' MAD']; }
+    var ok = chgOk(s);
+    host.innerHTML = '<div class="chw-box" role="dialog" aria-modal="true" aria-label="' + (CW.id ? 'Modifier la charge' : 'Nouvelle charge') + '">'
+      + '<div class="chw-top"><button type="button" class="chw-icon" aria-label="' + (s === 1 ? 'Fermer' : 'Étape précédente') + '" onclick="' + (s === 1 ? 'maChgClose()' : 'maChgStep(-1)') + '">' + ic(s === 1 ? 'x' : 'arrowLeft') + '</button>'
+      + '<div class="chw-ttl"><b>' + (CW.id ? 'Modifier la charge' : 'Nouvelle charge') + '</b>' + (chgSub() ? '<small>' + esc(chgSub()) + '</small>' : '') + '</div></div>'
+      + '<div class="chw-steps"><div>' + [1, 2, 3, 4].map(function (i) { return '<i class="' + (i <= s ? 'on' : '') + '"></i>'; }).join('') + '</div><span>Étape ' + s + ' sur 4 · ' + LB[s - 1] + '</span></div>'
+      + '<div class="chw-body" id="chw-body">' + body + '</div>'
+      + '<div class="chw-foot">' + (sum ? '<div class="chw-sum"><span>' + esc(sum[0]) + '</span><b>' + esc(sum[1]) + '</b></div>' : '')
+      + '<button type="button" class="chw-main" ' + (ok ? '' : 'disabled') + ' onclick="' + (s < 4 ? 'maChgStep(1)' : 'maChgSave()') + '">' + esc(btn) + '</button></div></div>';
+    var nb = document.getElementById('chw-body'); if (nb && sc) nb.scrollTop = sc;
+  }
+  function chgStep1() {
+    var api = chgApi(), cats = api ? api.cats().filter(function (c) { return c !== 'Autre'; }) : Object.keys(CHG_IC);
+    if (cats.indexOf('Loyer') < 0) cats.push('Loyer');
+    if (CW.category && !CW.custom && cats.indexOf(CW.category) < 0) cats.push(CW.category);
+    return '<div class="chw-h">Qu\'avez-vous payé ?</div><div class="chw-tiles3">' + cats.map(function (c) {
+      return '<button type="button" class="chw-tile' + (!CW.custom && CW.category === c ? ' on' : '') + '" data-c="' + esc(c) + '" onclick="maChgCat(this.dataset.c)">' + chgIc(c, 40) + '<span>' + esc(c) + '</span></button>';
+    }).join('') + '</div>'
+      + (CW.custom ? '<label class="chw-field"><span>Type de charge</span><input id="chw-cat" type="text" value="' + esc(CW.category) + '" placeholder="Ex : Accessoire, Gardiennage…" oninput="maChgSet(\'category\',this.value,1)"></label>'
+        : '<button type="button" class="chw-dashed" onclick="maChgCustom()">Autre type… (écrire)</button>');
+  }
+  window.maChgCat = function (c) { if (!CW) return; CW.custom = false; CW.category = c; if (c === 'Loyer' && !chgSelKeys().length) CW.scope = 'agency'; CW.step = 2; chgRender(); };
+  window.maChgCustom = function () { if (!CW) return; CW.custom = true; CW.category = ''; chgRender(); setTimeout(function () { var i = document.getElementById('chw-cat'); if (i) i.focus(); }, 30); };
+  window.maChgSet = function (f, v, quiet) {
+    if (!CW) return; CW[f] = v;
+    if (quiet) { var b = document.querySelector('#ma-chg .chw-main'); if (b) b.disabled = !chgOk(CW.step); return; }
+    chgRender(true);
+  };
+  function chgBrand(model) { return String(model || '').trim().split(/\s+/)[0] || ''; }
+  function chgStep2() {
+    var us = chgUnits(), q = String(CW.q || '').trim().toLowerCase(), qd = q.replace(/[^a-z0-9]/g, '');
+    var brands = []; us.forEach(function (u) { var b = chgBrand(u.model); if (b && brands.indexOf(b) < 0) brands.push(b); });
+    var shown = us.filter(function (u) {
+      if (CW.brand && chgBrand(u.model) !== CW.brand) return false;
+      if (!q) return true;
+      return (u.model + ' ' + u.plate).toLowerCase().indexOf(q) >= 0 || (qd.length >= 2 && String(u.plate || '').toLowerCase().replace(/[^a-z0-9]/g, '').indexOf(qd) >= 0);
+    });
+    var seg = '<div class="chw-seg" role="group" aria-label="Voitures ou agence"><button type="button" class="' + (CW.scope === 'cars' ? 'on' : '') + '" onclick="maChgSet(\'scope\',\'cars\')">Pour des voitures</button><button type="button" class="' + (CW.scope === 'agency' ? 'on' : '') + '" onclick="maChgSet(\'scope\',\'agency\')">Pour l\'agence</button></div>';
+    if (CW.scope === 'agency') return seg + '<div class="chw-agency">' + chgIc('Loyer', 52) + '<b>Charge de l\'agence</b><span>Loyer, téléphone, internet… Elle compte dans la Caisse et le total, pas dans une voiture.</span></div>';
+    var n = chgSelKeys().length;
+    return seg
+      + '<label class="chw-search">' + ic('search') + '<input id="chw-q" type="search" value="' + esc(CW.q) + '" placeholder="Tapez une plaque ou un modèle" autocomplete="off" oninput="maChgQ(this.value)"></label>'
+      + (brands.length > 1 ? '<div class="chw-brands">' + [''].concat(brands).map(function (b) { return '<button type="button" class="' + (CW.brand === b ? 'on' : '') + '" data-b="' + esc(b) + '" onclick="maChgBrand(this.dataset.b)">' + esc(b || 'Toutes') + '</button>'; }).join('') + '</div>' : '')
+      + '<div id="chw-cars">' + chgCarsHTML(shown) + '</div>'
+      + (n ? '<div class="chw-note">' + n + ' voiture' + (n > 1 ? 's' : '') + ' choisie' + (n > 1 ? 's' : '') + '</div>' : '');
+  }
+  function chgCarsHTML(shown) {
+    if (!shown.length) return '<div class="mt-none">Aucune voiture trouvée.</div>';
+    return shown.map(function (u) {
+      var on = !!CW.sel[u.key], b = chgBrand(u.model);
+      return '<button type="button" class="chw-car' + (on ? ' on' : '') + '" aria-pressed="' + on + '" data-k="' + esc(encodeURIComponent(u.key)) + '" onclick="maChgCar(this.dataset.k)">'
+        + '<span class="chw-av">' + esc(b.slice(0, 2).toUpperCase() || '?') + '</span>'
+        + '<span class="chw-ct"><b>' + esc(u.model) + '</b><small>' + esc(u.plate || 'Sans plaque') + '</small></span>'
+        + '<span class="chw-ck">' + (on ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>' : '') + '</span></button>';
+    }).join('');
+  }
+  window.maChgQ = function (v) {
+    if (!CW) return; CW.q = v;
+    var us = chgUnits(), q = String(v || '').trim().toLowerCase(), qd = q.replace(/[^a-z0-9]/g, '');
+    var shown = us.filter(function (u) {
+      if (CW.brand && chgBrand(u.model) !== CW.brand) return false;
+      if (!q) return true;
+      return (u.model + ' ' + u.plate).toLowerCase().indexOf(q) >= 0 || (qd.length >= 2 && String(u.plate || '').toLowerCase().replace(/[^a-z0-9]/g, '').indexOf(qd) >= 0);
+    });
+    var box = document.getElementById('chw-cars'); if (box) box.innerHTML = chgCarsHTML(shown);
+  };
+  window.maChgBrand = function (b) { if (!CW) return; CW.brand = b || ''; chgRender(true); };
+  window.maChgCar = function (enc) { if (!CW) return; var k = decodeURIComponent(enc); CW.sel[k] = !CW.sel[k]; chgRender(true); };
+  function chgStep3() {
+    var n = chgCarsN(), a = chgAmt();
+    var keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', ',', '0'].map(function (k) { return '<button type="button" onclick="maChgKey(\'' + k + '\')">' + k + '</button>'; }).join('')
+      + '<button type="button" class="del" aria-label="Effacer" onclick="maChgKey(\'del\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 5H8l-6 7 6 7h13z"/><path d="m16 9-6 6M10 9l6 6"/></svg></button>';
+    return '<div class="chw-amt"><small>' + (n >= 2 && CW.mode === 'each' ? 'Montant par voiture' : 'Montant payé') + '</small><b>' + esc(String(CW.amount || '0').replace('.', ',')) + ' <em>MAD</em></b></div>'
+      + (n >= 2 ? '<div class="mu-sec">' + n + ' voitures : ce montant est…</div><div class="chw-2">'
+        + '<button type="button" class="chw-opt' + (CW.mode === 'total' ? ' on' : '') + '" onclick="maChgSet(\'mode\',\'total\')"><b>Le total</b><small>' + (a ? chgNum(a / n) + ' par voiture' : 'partagé entre elles') + '</small></button>'
+        + '<button type="button" class="chw-opt' + (CW.mode === 'each' ? ' on' : '') + '" onclick="maChgSet(\'mode\',\'each\')"><b>Par voiture</b><small>' + (a ? 'total ' + chgNum(a * n) : 'même montant chacune') + '</small></button></div>' : '')
+      + '<div class="chw-keys">' + keys + '</div>';
+  }
+  window.maChgKey = function (k) {
+    if (!CW) return; var v = String(CW.amount || '');
+    if (k === 'del') v = v.slice(0, -1);
+    else if (k === ',') { if (v.indexOf('.') < 0) v = (v || '0') + '.'; }
+    else { if (v === '0') v = ''; var dec = v.indexOf('.'); if (dec >= 0 && v.length - dec > 2) return; if (v.replace('.', '').length >= 8) return; v += k; }
+    CW.amount = v; chgRender(true);
+  };
+  function chgChips(f, opts) {
+    return '<div class="chw-chips">' + opts.map(function (o) { return '<button type="button" class="' + (CW[f] === o ? 'on' : '') + '" data-v="' + esc(o) + '" onclick="maChgSet(\'' + f + '\',this.dataset.v)">' + esc(o) + '</button>'; }).join('') + '</div>';
+  }
+  function chgStep4() {
+    var api = chgApi(), t = api ? api.today() : todayISO(), y = chgAddDays(t, -1);
+    var dk = CW.date === t ? 'today' : CW.date === y ? 'yday' : 'other';
+    return '<div class="mu-sec">Statut</div><div class="chw-seg"><button type="button" class="' + (CW.status !== 'pending' ? 'on ok' : '') + '" onclick="maChgSet(\'status\',\'paid\')">Payée</button><button type="button" class="' + (CW.status === 'pending' ? 'on' : '') + '" onclick="maChgSet(\'status\',\'pending\')">À payer</button></div>'
+      + '<div class="mu-sec">Payé par</div>' + chgChips('paidBy', api ? api.payers : ['Mohamed', 'Younes', 'Khalil'])
+      + '<div class="mu-sec">Mode</div>' + chgChips('payMode', api ? api.modes : ['Espèces', 'Carte bancaire', 'Virement', 'Chèque', 'Autre'])
+      + '<div class="mu-sec">Date</div><div class="chw-seg chw-seg3"><button type="button" class="' + (dk === 'today' ? 'on' : '') + '" onclick="maChgDate(\'today\')">Aujourd\'hui</button><button type="button" class="' + (dk === 'yday' ? 'on' : '') + '" onclick="maChgDate(\'yday\')">Hier</button><button type="button" class="' + (dk === 'other' ? 'on' : '') + '" onclick="maChgDate(\'other\')">Autre date</button></div>'
+      + '<label class="mpd-field chw-date"><span class="mpd-ico">' + ic('calendar') + '</span><span class="mpd-txt"><b>' + esc(chgLongDate(CW.date)) + '</b><small>Date enregistrée dans la caisse</small></span><span class="mpd-chg">Modifier</span>'
+      + '<input type="date" id="chw-date" value="' + esc(CW.date) + '" max="' + esc(t) + '" aria-label="Date de la charge" onclick="try{this.showPicker&&this.showPicker()}catch(e){}" onchange="maChgDate(\'set\',this.value)"></label>'
+      + '<label class="chw-field"><span>Note (facultatif)</span><input type="text" value="' + esc(CW.description) + '" placeholder="Ex : station Shell, 4 bidons" oninput="maChgSet(\'description\',this.value,1)"></label>';
+  }
+  window.maChgDate = function (k, v) {
+    if (!CW) return; var api = chgApi(), t = api ? api.today() : todayISO();
+    if (k === 'today') CW.date = t; else if (k === 'yday') CW.date = chgAddDays(t, -1);
+    else if (k === 'set') { if (v && v <= t) CW.date = v; else if (v) { CW.date = t; if (typeof showToast === 'function') showToast('Une date future n\'est pas possible'); } }
+    else if (k === 'other') { var i = document.getElementById('chw-date'); if (i) { try { if (i.showPicker) { i.showPicker(); return; } } catch (e) {} i.focus(); i.click(); } return; }
+    chgRender(true);
+  };
+  window.maChgStep = function (d) {
+    if (!CW) return;
+    if (d > 0 && !chgOk(CW.step)) return;
+    CW.step = Math.max(1, Math.min(4, CW.step + d)); chgRender();
+  };
+  /* Enregistrement : même calcul et même format que l'ordinateur (rdCmSave). */
+  window.maChgSave = function () {
+    var api = chgApi(); if (!CW || !api) return;
+    var cat = String(CW.category || '').trim(), amt = chgAmt();
+    if (!cat || amt <= 0) return;
+    var keys = CW.scope === 'agency' ? [] : chgSelKeys(), n = keys.length, allocations, total, mode;
+    if (!n) { allocations = []; total = amt; mode = 'general'; }
+    else if (n === 1) { allocations = [{ key: keys[0], amount: amt }]; total = amt; mode = 'single'; }
+    else if (CW.mode === 'each') { allocations = keys.map(function (k) { return { key: k, amount: amt }; }); total = chgR2(amt * n); mode = 'each'; }
+    else {
+      mode = 'total'; total = amt;
+      var same = CW.orig && CW.orig.mode === 'total' && CW.orig.amount === String(CW.amount) && CW.orig.keys === keys.slice().sort().join('|');
+      if (same) allocations = JSON.parse(CW.orig.allocs).map(function (x) { return { key: x[0], amount: x[1] }; });
+      else {
+        var base = Math.floor(amt / n * 100) / 100, acc = 0;
+        allocations = keys.map(function (k, i) { var v = i === n - 1 ? chgR2(amt - acc) : base; acc = chgR2(acc + v); return { key: k, amount: v }; });
+      }
+    }
+    allocations.forEach(function (a) { var u = api.unitByKey(a.key); if (u) { a.carId = u.carId; a.plate = u.plate; a.model = u.model; } });
+    var models = {}; allocations.forEach(function (a) { if (a.model) models[a.model] = 1; }); var mk = Object.keys(models);
+    var list = api.read(), old = CW.id ? list.filter(function (x) { return x.id === CW.id; })[0] : null;
+    var item = {
+      id: CW.id || ('chg' + Date.now()), date: CW.date || api.today(),
+      vehicle: mk.length === 1 ? mk[0] : (allocations.length ? 'Plusieurs véhicules' : ''),
+      category: cat, amount: total, status: CW.status === 'pending' ? 'pending' : 'paid',
+      description: String(CW.description || '').trim(), photo: (old && old.photo) || '',
+      allocations: allocations, splitMode: mode, paidBy: CW.paidBy || '', payMode: CW.payMode || ''
+    };
+    var i = list.findIndex(function (x) { return x.id === item.id; });
+    if (i >= 0) list[i] = item; else list.push(item);
+    api.write(list);
+    try { api.refresh(); } catch (e) {}
+    var after = CW.after; maChgClose();
+    if (typeof showToast === 'function') showToast('Charge enregistrée ✓ — ' + money(total));
+    if (typeof after === 'function') { try { after(); } catch (e2) {} } else chgAfterSave();
+  };
+  function chgAfterSave() {
+    try { if (current === 'caisse') renderCaisse(); else if (current === 'rendement' && typeof renderRendementM === 'function') renderRendementM(); } catch (e) {}
+  }
+
   /* Fiche de la location (la même que l'Historique) ; le retour ramène ici. */
   window.maCsRes = function (id) { CS.keep = true; maGo('history'); HF.ret = 'caisse'; maHistFiche(id); };
 
@@ -3198,7 +3517,7 @@
   };
   /* Ajouter une charge depuis le mobile : même fenêtre que l'ordinateur
      (adaptée au téléphone par son style). */
-  window.maAddCharge = function () { closeSheet(); if (typeof window.openChargeModal === 'function') window.openChargeModal(); };
+  // ★ « Ajouter une charge » : parcours mobile en 4 étapes (window.maAddCharge, module Charges).
   /* ======================================================================
      ★ LOT 52 — NOUVELLE LOCATION / RÉSERVATION EN 3 ÉTAPES (mobile)
      Étape 1 : client (recherche dans la base, ou nouveau client)
@@ -4103,6 +4422,13 @@
   window.maRdmBack = function () { rdmSt().unit = null; renderRendementM(); rdmTop(); };
   window.maRdmMonth = function (y, i) { var st = rdmSt(); st.mode = 'month'; st.ym = y + '-' + String(i + 1).padStart(2, '0'); renderRendementM(); };
   window.maRdmCharge = function (enc) {
+    // ★ Parcours mobile « Nouvelle charge » (voiture déjà cochée depuis sa fiche Rendement)
+    if (typeof window.maAddCharge === 'function' && window.aslChargeAPI) {
+      var k0 = enc ? decodeURIComponent(enc) : '';
+      var ok0 = k0 && window.aslChargeAPI.units().some(function (u) { return u.key === k0; });
+      window.maAddCharge(ok0 ? k0 : null, function () { if (current === 'rendement') renderRendementM(); });
+      return;
+    }
     if (typeof window.rdAddCharge !== 'function') return;
     window.rdAddCharge(enc ? decodeURIComponent(enc) : undefined);
     // la fenêtre de charge se ferme → on recalcule l'écran

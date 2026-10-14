@@ -4347,13 +4347,38 @@ function _aslConditionsFix() {
     });
   });
   if (changedLegal) save(K.legalPages, all);
-  if ((changedFaq || changedLegal) && typeof syncToKV === 'function') {
-    Promise.resolve(syncToKV(changedLegal ? 'Légal' : 'FAQ')).then(function () {
+  // --- Blog : article « Louer une voiture à Marrakech » (âge, permis, assurance) ---
+  var BLOG_PAIRS = [
+    ["<strong>permis de conduire valide depuis plus d'un an</strong>", "<strong>permis de conduire valide depuis au moins 2 ans</strong>"],
+    ["Avoir <strong>21 ans minimum</strong> (selon la catégorie de véhicule)", "Avoir <strong>19 ans minimum</strong> (25 ans pour les SUV Premium)"],
+    ["<strong>driving licence held for more than one year</strong>", "<strong>driving licence held for at least 2 years</strong>"],
+    ["<strong>at least 21 years old</strong>", "<strong>at least 19 years old</strong>"],
+    ["<strong>permiso de conducir con más de un año</strong>", "<strong>permiso de conducir con al menos 2 años</strong>"],
+    ["<strong>al menos 21 años</strong>", "<strong>al menos 19 años</strong>"],
+    ["<strong>21 سنة على الأقل</strong>", "<strong>19 سنة على الأقل</strong>"],
+    ["<strong>رخصة سياقة سارية منذ أكثر من سنة</strong>", "<strong>رخصة سياقة سارية منذ سنتين على الأقل</strong>"],
+    ["Chez ALL STAR LOC, la <strong>responsabilité civile est toujours incluse</strong>. Vous pouvez réduire ou supprimer la franchise avec nos protections Premium ou Tout Risque, sélectionnables directement lors de la réservation en ligne.",
+     "Chez ALL STAR LOC, l'<strong>assurance tous risques est toujours incluse</strong>, avec une franchise de 5 %. Vous pouvez supprimer cette franchise avec l'option Premium (110 MAD/jour), à choisir lors de la réservation."]
+  ];
+  var changedBlog = 0, blog = load(K.blog) || [];
+  var fixStr = function (str) { var out = str; BLOG_PAIRS.forEach(function (pr) { if (out.indexOf(pr[0]) >= 0) out = out.split(pr[0]).join(pr[1]); }); return out; };
+  (function walk(o) {
+    if (!o || typeof o !== 'object') return;
+    Object.keys(o).forEach(function (k) {
+      if (typeof o[k] === 'string') { var nv = fixStr(o[k]); if (nv !== o[k]) { o[k] = nv; changedBlog++; } }
+      else if (o[k] && typeof o[k] === 'object') walk(o[k]);
+    });
+  })(blog);
+  if (changedBlog) save(K.blog, blog);
+  if ((changedFaq || changedLegal || changedBlog) && typeof syncToKV === 'function') {
+    Promise.resolve(syncToKV(changedLegal ? 'Légal' : (changedFaq ? 'FAQ' : 'Blog'))).then(function () {
       if (changedFaq && changedLegal) return syncToKV('FAQ');
+    }).then(function () {
+      if (changedBlog && (changedFaq || changedLegal)) return syncToKV('Blog');
     }).catch(function () {});
-    if (typeof showSyncStatus === 'function') showSyncStatus('Conditions de location mises à jour sur le site (FAQ ' + changedFaq + ', pages ' + changedLegal + ').');
+    if (typeof showSyncStatus === 'function') showSyncStatus('Conditions de location mises à jour sur le site (FAQ ' + changedFaq + ', pages ' + changedLegal + ', blog ' + changedBlog + ').');
   }
-  return { faq: changedFaq, legal: changedLegal };
+  return { faq: changedFaq, legal: changedLegal, blog: changedBlog };
 }
 
 renderDashboard();
