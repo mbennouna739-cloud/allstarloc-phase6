@@ -36,6 +36,19 @@
   }
 
   /* ---- Calculs financiers (source unique : amount / paid) ---- */
+  /* ★ CORRECTIF CAISSE — chaque versement est attribué à la personne qui
+     l'a encaissé, À SA DATE (journal des versements), comme sur le mobile.
+     Avant : tout le montant payé d'un dossier était attribué à la DERNIÈRE
+     personne ayant encaissé, à la date de départ du dossier. Le nom est
+     reconnu sans tenir compte des majuscules ni des espaces. */
+  var CS_NAMES = ['Mohamed', 'Younes', 'Khalil'];
+  function csWho(n) { n = String(n || '').trim().toLowerCase(); for (var i = 0; i < CS_NAMES.length; i++) if (CS_NAMES[i].toLowerCase() === n) return CS_NAMES[i]; return ''; }
+  function payLines(r) {
+    var j = (typeof aslPaymentJournal === 'function') ? aslPaymentJournal(r) : ((Number(r.paid) || 0) > 0 ? [{ date: String(r.createdAt || r.startDate || '').slice(0, 10), amount: Number(r.paid) || 0, mode: r.paymentMode || '', collectedBy: r.collectedBy || '' }] : []);
+    return j.filter(function (p) { return (Number(p.amount) || 0) > 0; });
+  }
+  window.aslCsWho = csWho;
+
   function computeTotals(fromTs, toTs) {
     // ★ SOURCE UNIQUE : sans filtre de période, on délègue à la fonction
     //   partagée (ASLDB.computeCashTotals) utilisée aussi par Mobile —
@@ -58,7 +71,14 @@
       var amount = Number(r.amount) || 0;
       var paid = Number(r.paid) || 0;
       var reste = Math.max(0, amount - paid);
-      // Filtre période (sur la date de réservation/prise en charge si fournie)
+      // ★ Encaissé : chaque versement compte à SA date (journal des versements).
+      payLines(r).forEach(function (p) {
+        var ds = String(p.date || r.createdAt || r.startDate || '').slice(0, 10);
+        var t = ds ? new Date(ds + 'T12:00:00').getTime() : null;
+        if (t != null && !isNaN(t)) { if (fromTs && t < fromTs) return; if (toTs && t > toTs) return; }
+        encaisse += Number(p.amount) || 0;
+      });
+      // Reste à encaisser : rattaché à la date du dossier
       if (fromTs || toTs) {
         var d = _resDate(r);
         if (d != null) {
@@ -66,7 +86,6 @@
           if (toTs && d > toTs) return;
         }
       }
-      encaisse += paid;
       aEncaisser += reste;
     });
 
@@ -122,11 +141,12 @@
     var globalCollected = 0;
     allReservations().forEach(function (r) {
       if (r.status === 'cancelled') return;
-      var paid = Number(r.paid) || 0;
-      if (paid <= 0) return;
-      globalCollected += paid;
-      var who = r.collectedBy || '';
-      if (byPerson.hasOwnProperty(who)) byPerson[who] += paid;
+      payLines(r).forEach(function (p) {
+        var amt = Number(p.amount) || 0;
+        globalCollected += amt;
+        var who = csWho(p.collectedBy);
+        if (who) byPerson[who] += amt;
+      });
     });
     setTxt('cs-collected-global', money(globalCollected));
     setTxt('cs-collected-mohamed', money(byPerson.Mohamed));
@@ -431,29 +451,32 @@
     if (fType === '' || fType === 'Paiement') {
       allReservations().forEach(function (r) {
         if (r.status === 'cancelled') return;
-        var paid = Number(r.paid) || 0;
-        if (paid <= 0) return; // uniquement ce qui est réellement encaissé
         if (fVeh && (r.car || '') !== fVeh) return;
-        if (fMode && (r.paymentMode || '') !== fMode) return;
         if (fCat) return; // les paiements n'ont pas de catégorie de charge
-        if (fCollectedBy && (r.collectedBy || '') !== fCollectedBy) return;
-        var ts = _resDate(r);
-        if (!inRange(ts)) return;
-        moves.push({
-          ts: ts || 0,
-          date: r.startDate || r.createdAt || '',
-          type: 'Paiement',
-          label: 'Encaissement ' + (r.contractRef || r.id || ''),
-          party: r.client || '',
-          vehicle: r.car || '',
-          // ★ Demande 6 : libellé affiché (modèle — plaque · couleur). Le champ
-          //   « vehicle » reste le modèle, utilisé par le filtre par véhicule.
-          vehicleLabel: (typeof aslVehLabel === 'function') ? aslVehLabel(r) : (r.car || ''),
-          category: '',
-          mode: r.paymentMode || '',
-          collectedBy: r.collectedBy || '—',
-          entree: paid,
-          sortie: 0
+        // ★ Une ligne PAR VERSEMENT, à sa date, avec la personne qui l'a encaissé.
+        payLines(r).forEach(function (p) {
+          var amt = Number(p.amount) || 0;
+          var mode = p.mode || r.paymentMode || '';
+          var who = csWho(p.collectedBy);
+          if (fMode && mode !== fMode) return;
+          if (fCollectedBy && who !== fCollectedBy) return;
+          var dStr = String(p.date || r.createdAt || r.startDate || '').slice(0, 10);
+          var ts = dStr ? new Date(dStr + 'T12:00:00').getTime() : _resDate(r);
+          if (!inRange(ts)) return;
+          moves.push({
+            ts: ts || 0,
+            date: dStr,
+            type: 'Paiement',
+            label: 'Encaissement ' + (r.contractRef || r.id || '') + (p.comment ? ' · ' + p.comment : ''),
+            party: r.client || '',
+            vehicle: r.car || '',
+            vehicleLabel: (typeof aslVehLabel === 'function') ? aslVehLabel(r) : (r.car || ''),
+            category: '',
+            mode: mode,
+            collectedBy: who || '—',
+            entree: amt,
+            sortie: 0
+          });
         });
       });
     }
@@ -1014,24 +1037,46 @@
     if (st.mode === 'custom') { var f = st.from || t, to = st.to || t; if (to < f) { var x = f; f = to; to = x; } return { from: f, to: to, label: 'Du ' + f.split('-').reverse().join('/') + ' au ' + to.split('-').reverse().join('/') }; }
     return { from: st.year + '-01-01', to: st.year + '-12-31', label: 'Année ' + st.year };
   }
-  /* Parcourt chaque jour de chaque dossier (non annulé, hors sous-location).
+  /* Parcourt chaque jour de chaque dossier.
      Un dossier du 28/09 au 03/10 = 5 jours (28, 29, 30, 1er, 2) ; montant,
      jours facturés et encaissé sont répartis à parts égales sur ces jours.
-     Réalisé = location en cours / terminée (ou longue durée), jour ≤ aujourd'hui.
-     À venir = réservation confirmée / location en cours, jour > aujourd'hui. */
+     ★ CORRECTIF (voitures louées tout le mois affichées à 0 MAD) :
+       - un dossier CONFIRMÉ dont la date de départ est passée compte comme
+         loué (c'est ce que fait tout le logiciel, ASLDB.computePhase) — avant,
+         seuls les statuts « active »/« completed » comptaient ;
+       - les SOUS-LOCATIONS (voitures confiées à un partenaire) comptent :
+         ce sont vos voitures et vos revenus — avant, elles étaient ignorées ;
+       - les dossiers ARCHIVÉS par une « clôture de période » comptent aussi
+         (lecture seule) : sinon les mois clôturés tombaient à 0 ;
+       - longue durée sans date de fin : comptée jusqu'à aujourd'hui.
+     Réalisé = jour ≤ aujourd'hui. À venir = jour > aujourd'hui (non terminé).
+     Exclus : annulés, et demandes « en attente » jamais confirmées. */
+  function rdArchives() { try { return (typeof ASLDB !== 'undefined' && ASLDB.getArchives) ? (ASLDB.getArchives() || []) : []; } catch (e) { return []; } }
+  function rdAllRes() {
+    var live = (typeof aslRes === 'function' ? aslRes() : []) || [], seen = {}, out = [];
+    live.forEach(function (r) { if (r && r.id != null) seen[String(r.id)] = 1; out.push(r); });
+    rdArchives().forEach(function (a) { (a && a.reservations || []).forEach(function (r) { if (!r || r.id == null || seen[String(r.id)]) return; seen[String(r.id)] = 1; out.push(r); }); });
+    return out;
+  }
+  function rdAllCharges() {
+    var live = readCharges() || [], seen = {}, out = [];
+    live.forEach(function (c) { if (c && c.id != null) seen[String(c.id)] = 1; out.push(c); });
+    rdArchives().forEach(function (a) { (a && a.charges || []).forEach(function (c) { if (!c || (c.id != null && seen[String(c.id)])) return; if (c.id != null) seen[String(c.id)] = 1; out.push(c); }); });
+    return out;
+  }
   function eachDay(fn) {
     var t = today();
-    (typeof aslRes === 'function' ? aslRes() : []).forEach(function (r) {
-      if (!r || r.status === 'cancelled' || r.subleaseId || !r.startDate) return;
-      var s = String(r.startDate).slice(0, 10), e = String(r.endDate || r.startDate).slice(0, 10);
+    rdAllRes().forEach(function (r) {
+      if (!r || r.status === 'cancelled' || r.status === 'pending' || !r.startDate) return;
+      var s = String(r.startDate).slice(0, 10);
+      var e = String(r.endDate || (r.type === 'lld' && r.status !== 'completed' ? t : r.startDate)).slice(0, 10);
+      if (e < s) e = s;
       var n = Math.max(1, daysBetween(s, e));
       var billed = Number(r.days) > 0 ? Number(r.days) : n;
       var amount = Number(r.amount) || 0, paid = Math.min(Number(r.paid) || 0, amount || Number(r.paid) || 0);
-      var realizedType = (r.status === 'active' || r.status === 'completed' || r.type === 'lld');
-      var plannedType = (r.status === 'active' || r.status === 'confirmed');
       for (var i = 0; i < n; i++) {
         var d = addDays(s, i);
-        var real = realizedType && d <= t, plan = !real && plannedType && d > t;
+        var real = d <= t, plan = !real && r.status !== 'completed';
         if (!real && !plan) continue;
         fn(r, d, { days: billed / n, ca: amount / n, paid: paid / n, real: real });
       }
@@ -1055,7 +1100,7 @@
       if (p.real) { var x = o.res[r.id] || (o.res[r.id] = { r: r, days: 0, ca: 0, paid: 0 }); x.days += p.days; x.ca += p.ca; x.paid += p.paid; }
     });
     var general = 0, chargeLines = [];
-    readCharges().forEach(function (c) {
+    rdAllCharges().forEach(function (c) {
       var d = String(c.date || '').slice(0, 10);
       if (!d || d < per.from || d > per.to) return;
       var al = allocationsOf(c);

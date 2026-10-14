@@ -32,23 +32,23 @@ window._ASL_FAQ_SEED = [
   "i18n": {
    "fr": {
     "question": "Quel est l'âge minimum pour louer ?",
-    "answer": "L'âge minimum est de 18 ans, avec un permis de conduire valide depuis au moins un an."
+    "answer": "L'âge minimum est de 21 ans (25 ans pour la catégorie SUV Premium), avec un permis de conduire valide depuis au moins un an."
    },
    "en": {
     "question": "What is the minimum age to rent?",
-    "answer": "The minimum age is 18, with a driving licence held for at least one year."
+    "answer": "The minimum age is 21 (25 for the SUV Premium category), with a driving licence held for at least one year."
    },
    "es": {
     "question": "¿Cuál es la edad mínima para alquilar?",
-    "answer": "La edad mínima es de 18 años, con un permiso de conducir con al menos un año de antigüedad."
+    "answer": "La edad mínima es de 21 años (25 años para la categoría SUV Premium), con un permiso de conducir con al menos un año de antigüedad."
    },
    "ar": {
     "question": "ما هو السن الأدنى للكراء؟",
-    "answer": "السن الأدنى هو 18 سنة، مع رخصة سياقة سارية منذ سنة على الأقل."
+    "answer": "السن الأدنى هو 21 سنة (25 سنة لفئة SUV Premium)، مع رخصة سياقة سارية منذ سنة على الأقل."
    }
   },
   "question": "Quel est l'âge minimum pour louer ?",
-  "answer": "L'âge minimum est de 18 ans, avec un permis de conduire valide depuis au moins un an."
+  "answer": "L'âge minimum est de 21 ans (25 ans pour la catégorie SUV Premium), avec un permis de conduire valide depuis au moins un an."
  },
  {
   "id": "seed-faq-3",
@@ -80,23 +80,23 @@ window._ASL_FAQ_SEED = [
   "i18n": {
    "fr": {
     "question": "Le kilométrage est-il limité ?",
-    "answer": "Non, tous nos véhicules sont loués en kilométrage illimité."
+    "answer": "Le kilométrage est illimité pour les locations de plus de 10 jours. Pour les locations plus courtes, il est limité à 250 km par jour en moyenne."
    },
    "en": {
     "question": "Is mileage limited?",
-    "answer": "No, all our vehicles come with unlimited mileage."
+    "answer": "Mileage is unlimited for rentals of more than 10 days. For shorter rentals, it is limited to an average of 250 km per day."
    },
    "es": {
     "question": "¿El kilometraje es limitado?",
-    "answer": "No, todos nuestros vehículos se alquilan con kilometraje ilimitado."
+    "answer": "El kilometraje es ilimitado para alquileres de más de 10 días. Para alquileres más cortos, está limitado a una media de 250 km por día."
    },
    "ar": {
     "question": "هل المسافة المقطوعة محدودة؟",
-    "answer": "لا، جميع سياراتنا تُكرى بمسافة غير محدودة."
+    "answer": "المسافة غير محدودة بالنسبة للكراء لأكثر من 10 أيام. أما الكراء لمدة أقصر، فهي محدودة في 250 كم في اليوم كمعدل."
    }
   },
   "question": "Le kilométrage est-il limité ?",
-  "answer": "Non, tous nos véhicules sont loués en kilométrage illimité."
+  "answer": "Le kilométrage est illimité pour les locations de plus de 10 jours. Pour les locations plus courtes, il est limité à 250 km par jour en moyenne."
  },
  {
   "id": "seed-faq-5",
@@ -128,23 +128,23 @@ window._ASL_FAQ_SEED = [
   "i18n": {
    "fr": {
     "question": "Puis-je annuler ma réservation ?",
-    "answer": "Oui. Vous disposez de 24 heures après votre réservation pour demander une annulation. Passé ce délai, la réservation est considérée comme ferme, sauf accord exceptionnel de l'agence."
+    "answer": "Oui, l'annulation est gratuite si vous nous prévenez au moins 24 h avant la prise en charge. Sans prévenir, ou à moins de 24 h, un montant peut être retenu (par exemple l'avance versée)."
    },
    "en": {
     "question": "Can I cancel my booking?",
-    "answer": "Yes. You have 24 hours after booking to request a cancellation. After that, the booking is considered firm, except by exceptional agreement of the agency."
+    "answer": "Yes, cancellation is free if you let us know at least 24 hours before pick-up. Without notice, or less than 24 hours before, an amount may be retained (for example the advance paid)."
    },
    "es": {
     "question": "¿Puedo cancelar mi reserva?",
-    "answer": "Sí. Dispone de 24 horas tras su reserva para solicitar una cancelación. Pasado ese plazo, la reserva se considera firme, salvo acuerdo excepcional de la agencia."
+    "answer": "Sí, la cancelación es gratuita si nos avisa al menos 24 h antes de la recogida. Sin aviso, o con menos de 24 h, puede retenerse un importe (por ejemplo, el anticipo abonado)."
    },
    "ar": {
     "question": "هل يمكنني إلغاء حجزي؟",
-    "answer": "نعم. لديك 24 ساعة بعد الحجز لطلب الإلغاء. بعد هذا الأجل، يُعتبر الحجز نهائياً، إلا باتفاق استثنائي من الوكالة."
+    "answer": "نعم، الإلغاء مجاني إذا أخبرتمونا قبل 24 ساعة على الأقل من الاستلام. بدون إشعار، أو قبل أقل من 24 ساعة، يمكن الاحتفاظ بمبلغ (مثلاً التسبيق المدفوع)."
    }
   },
   "question": "Puis-je annuler ma réservation ?",
-  "answer": "Oui. Vous disposez de 24 heures après votre réservation pour demander une annulation. Passé ce délai, la réservation est considérée comme ferme, sauf accord exceptionnel de l'agence."
+  "answer": "Oui, l'annulation est gratuite si vous nous prévenez au moins 24 h avant la prise en charge. Sans prévenir, ou à moins de 24 h, un montant peut être retenu (par exemple l'avance versée)."
  },
  {
   "id": "seed-faq-7",
@@ -152,23 +152,23 @@ window._ASL_FAQ_SEED = [
   "i18n": {
    "fr": {
     "question": "Comment puis-je payer ?",
-    "answer": "Nous acceptons la carte bancaire, les espèces et le virement bancaire, en ligne, par acompte ou sur place."
+    "answer": "En espèces à l'arrivée, par virement bancaire ou par une avance pour confirmer la réservation. Aucun paiement en ligne n'est demandé."
    },
    "en": {
     "question": "How can I pay?",
-    "answer": "We accept bank card, cash and bank transfer, online, by deposit or on site."
+    "answer": "In cash on arrival, by bank transfer or with an advance to confirm the booking. No online payment is required."
    },
    "es": {
     "question": "¿Cómo puedo pagar?",
-    "answer": "Aceptamos tarjeta bancaria, efectivo y transferencia bancaria, en línea, mediante anticipo o en persona."
+    "answer": "En efectivo a la llegada, por transferencia bancaria o con un anticipo para confirmar la reserva. No se solicita ningún pago en línea."
    },
    "ar": {
     "question": "كيف يمكنني الأداء؟",
-    "answer": "نقبل البطاقة البنكية والنقد والتحويل البنكي، عبر الإنترنت أو بعربون أو في عين المكان."
+    "answer": "نقداً عند الوصول، أو عبر تحويل بنكي، أو بتسبيق لتأكيد الحجز. لا يُطلب أي أداء عبر الإنترنت."
    }
   },
   "question": "Comment puis-je payer ?",
-  "answer": "Nous acceptons la carte bancaire, les espèces et le virement bancaire, en ligne, par acompte ou sur place."
+  "answer": "En espèces à l'arrivée, par virement bancaire ou par une avance pour confirmer la réservation. Aucun paiement en ligne n'est demandé."
  },
  {
   "id": "seed-faq-8",

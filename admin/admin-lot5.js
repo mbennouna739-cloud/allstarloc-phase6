@@ -40,6 +40,89 @@ function aslFleet() {
 function aslRes() {
   try { return (typeof ASLDB !== 'undefined' && ASLDB.getReservations) ? ASLDB.getReservations() : (typeof RESERVATIONS !== 'undefined' ? RESERVATIONS : []); } catch(e) { return []; }
 }
+/* ★ CORRECTIF (véhicule « disponible » alors qu'il est loué) — Une location
+   dont le retour avait été confirmé (statut « terminée ») puis dont on
+   modifie les dates dans une fiche, avec une nouvelle date de retour à
+   venir, redevient une location EN COURS : la voiture est de nouveau
+   occupée par ce client jusqu'à la nouvelle date de retour (ou redevient
+   une réservation si le départ est lui aussi à venir). Une simple
+   correction de dates dans le passé ne change rien. Appelé par toutes les
+   fiches qui enregistrent des dates (ordinateur et mobile). */
+/* ★ CORRECTIF CAISSE — Quand le « Montant reçu » d'une fiche est augmenté,
+   la différence est inscrite comme un VERSEMENT daté d'aujourd'hui, avec la
+   personne qui l'a encaissé. Avant, seul le total changeait : la différence
+   apparaissait ensuite en « Non attribué », à la date de création du dossier. */
+/* ★ ÉTAT RÉEL D'UNE VOITURE (Véhicules mobile + Ma flotte ordinateur)
+   Calculé à partir des DOSSIERS, comme le tableau de bord — jamais d'une
+   étiquette saisie à la main. Seuls « Maintenance » et « Hors service » sont
+   réglés manuellement.
+   Ordre : Maintenance / Hors service → En retard → Louée (ou Longue durée)
+   → Réservée (dossier à venir attribué à cette voiture) → Disponible. */
+function aslUnitRealStatus(car, unit, now) {
+  var manual = (unit && unit.status) || 'available';
+  if (manual === 'maintenance' || manual === 'offroad') return manual;
+  var plate = (unit && unit.plate) || '';
+  var res = [];
+  try { res = (typeof ASLDB !== 'undefined' && ASLDB.getReservations) ? (ASLDB.getReservations() || []) : []; } catch (e) {}
+  now = now || new Date();
+  var st = { late: 0, active: 0, lld: 0, reserved: 0 };
+  res.forEach(function (r) {
+    if (!r || r.status === 'cancelled' || r.status === 'completed') return;
+    if (String(r.carId) !== String(car && car.id)) return;
+    if (!plate || r.assignedPlate !== plate) return; // dossier non attribué à CETTE voiture
+    var ph = 'reserved';
+    try { ph = ASLDB.computePhase(r, now); } catch (e2) {}
+    if (ph === 'late') st.late++;
+    else if (ph === 'active') { if (r.type === 'lld') st.lld++; else st.active++; }
+    else if (ph === 'reserved') st.reserved++;
+  });
+  if (st.late) return 'late';
+  if (st.lld) return 'lld';
+  if (st.active) return 'active';
+  if (manual === 'lld') return 'lld';
+  if (st.reserved) return 'reserved';
+  return 'available';
+}
+window.aslUnitRealStatus = aslUnitRealStatus;
+function aslJournalizePaidChange(r, patch) {
+  try {
+    if (!r || !patch || patch.paid == null || typeof aslPaymentJournal !== 'function') return;
+    var journal = aslJournalClean(aslPaymentJournal(r));
+    var sum = aslJournalSum(journal), newPaid = aslRound2(patch.paid);
+    if (newPaid - sum < 0.01) return; // pas d'augmentation : rien à inscrire
+    journal.push({ date: (typeof ASLDB !== 'undefined' && ASLDB.localDateISO) ? ASLDB.localDateISO() : new Date().toISOString().slice(0, 10),
+      amount: aslRound2(newPaid - sum), mode: patch.paymentMode || r.paymentMode || '', collectedBy: patch.collectedBy || '', comment: 'Ajouté depuis la fiche' });
+    patch.payments = journal;
+    patch.paid = aslJournalSum(journal);
+  } catch (e) {}
+}
+window.aslJournalizePaidChange = aslJournalizePaidChange;
+function aslReopenIfStillOut(r, patch) {
+  try {
+    if (!r || !patch || r.status !== 'completed') return false;
+    var sd = patch.startDate || r.startDate, st = patch.startTime || r.startTime || '10:00';
+    var ed = patch.endDate || r.endDate, et = patch.endTime || r.endTime || '10:00';
+    var changed = (patch.endDate && patch.endDate !== r.endDate) || (patch.endTime && patch.endTime !== (r.endTime || '10:00'))
+               || (patch.startDate && patch.startDate !== r.startDate) || (patch.startTime && patch.startTime !== (r.startTime || '10:00'));
+    if (!changed || !ed || !sd) return false;
+    var end = new Date(String(ed).slice(0, 10) + 'T' + (et || '10:00')), start = new Date(String(sd).slice(0, 10) + 'T' + (st || '10:00'));
+    var now = new Date();
+    if (isNaN(end) || !(end > now)) return false;
+    patch.status = (start <= now) ? 'active' : 'confirmed';
+    patch.reopenedAt = now.toISOString();
+    if (patch.status === 'active' && typeof ASLDB !== 'undefined' && ASLDB.setUnitStatusByPlate) {
+      var carId = patch.carId != null ? patch.carId : r.carId;
+      var plate = patch.assignedPlate != null ? patch.assignedPlate : r.assignedPlate;
+      if (carId != null && plate) { try { ASLDB.setUnitStatusByPlate(carId, plate, 'active'); } catch (e1) {} }
+    }
+    var msg = patch.status === 'active'
+      ? 'Location de nouveau en cours — véhicule loué jusqu\'au ' + String(ed).slice(0, 10).split('-').reverse().join('/') + ' ' + (et || '')
+      : 'Dossier repassé en réservation (départ à venir)';
+    setTimeout(function () { try { if (typeof showToast === 'function') showToast(msg); } catch (e2) {} }, 900);
+    return true;
+  } catch (e) { return false; }
+}
+window.aslReopenIfStillOut = aslReopenIfStillOut;
 function todayStr() {
   // ★ CORRECTIF FUSEAU HORAIRE : l'ancien code faisait
   //   `new Date().toISOString().slice(0,10)`, qui convertit en UTC et
@@ -1865,6 +1948,8 @@ function saveRentalChanges(id, totalFallback) {
     }
   }
 
+  aslJournalizePaidChange(r, patch); // ★ versement daté + personne
+  aslReopenIfStillOut(r, patch); // ★ retour annulé si la nouvelle date de retour est à venir
   if (typeof ASLDB !== 'undefined' && ASLDB.updateReservation) {
     ASLDB.updateReservation(id, patch);
   }
@@ -2710,6 +2795,8 @@ function viewRes(id) {
         patch.carId = newCarIdR; patch.car = newCarR ? newCarR.name : (r.car||''); patch.assignedPlate = newPlateR; patch.assignedColor = newColorR;
       }
       if (r.status==='pending' && typeof confirmRes==='function') { confirmRes(id); }
+      aslJournalizePaidChange(r, patch); // ★ versement daté + personne
+      aslReopenIfStillOut(r, patch); // ★
       if (typeof ASLDB!=='undefined' && ASLDB.updateReservation) {
         ASLDB.updateReservation(id, patch);
       }
@@ -3078,6 +3165,7 @@ function viewUnpaidFiche(id) {
         if (typeof ASLDB.setUnitStatusByPlate === 'function' && newPlateU) { try { ASLDB.setUnitStatusByPlate(newCarIdU, newPlateU, 'active'); } catch(e) {} }
         patchU.carId = newCarIdU; patchU.car = newCarU ? newCarU.name : (r.car||''); patchU.assignedPlate = newPlateU;
       }
+      aslReopenIfStillOut(r, patchU); // ★
       if (typeof ASLDB!=='undefined' && ASLDB.updateReservation) {
         ASLDB.updateReservation(id, patchU);
       }

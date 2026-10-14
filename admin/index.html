@@ -1596,8 +1596,10 @@ function fleetUnitStats() {
     if (!units || !units.length) units = [{ status: c.status || 'available' }];
     units.forEach(u => {
       total++;
-      let s = (u && u.status) || 'available';
-      if (s === 'rented' || s === 'active') s = 'reserved'; // occupée → comptée comme réservée
+      // ★ État RÉEL (dossiers) et non l'étiquette enregistrée — même règle que le tableau de bord.
+      let s = (typeof aslUnitRealStatus === 'function') ? aslUnitRealStatus(c, u) : ((u && u.status) || 'available');
+      if (s === 'reserved') s = 'available'; // réservée pour plus tard = libre aujourd'hui (comme le tableau de bord)
+      else if (s === 'rented' || s === 'active' || s === 'late') s = 'reserved'; // occupée → comptée comme réservée
       if (counts[s] == null) counts[s] = 0;
       counts[s]++;
     });
@@ -1806,7 +1808,7 @@ function viewRes(id) {
       <div class="res-detail-item"><div class="res-detail-label">Prise en charge</div><div class="res-detail-val">${r.pickup}<br><small>${r.startDate}</small></div></div>
       <div class="res-detail-item"><div class="res-detail-label">Retour</div><div class="res-detail-val">${r.endDate}</div></div>
       <div class="res-detail-item"><div class="res-detail-label">Montant Total</div><div class="res-detail-val" style="color:var(--red);font-size:20px;">${r.amount} MAD</div></div>
-      <div class="res-detail-item"><div class="res-detail-label">Paiement</div><div class="res-detail-val">${r.payment==='full'?'Complet':r.payment==='advance'?'Acompte 40%':'Sur place'}</div></div>
+      <div class="res-detail-item"><div class="res-detail-label">Paiement</div><div class="res-detail-val">${r.payment==='full'?'Complet':r.payment==='advance'?'Avance':r.payment==='transfer'?'Virement bancaire':'Espèces à l\'arrivée'}</div></div>
       <div class="res-detail-item"><div class="res-detail-label">Source</div><div class="res-detail-val">${r.source}</div></div>
       <div class="res-detail-item"><div class="res-detail-label">Statut</div><div class="res-detail-val"><span class="badge ${STATUS_LABELS[r.status].class}">${STATUS_LABELS[r.status].label}</span></div></div>
     </div>
@@ -2003,7 +2005,18 @@ function renderFleetPage() {
   };
   grid.innerHTML = list.map(c => {
     try {
-    const avail = statusLabel(c.status);
+    // ★ Badge = état RÉEL des voitures de ce modèle (dossiers), plus d'étiquette manuelle.
+    const _rs = (function () {
+      const us = (typeof ASLDB !== 'undefined' && ASLDB.normalizeUnits) ? (ASLDB.normalizeUnits(c) || []) : [];
+      const st = us.map(u => (typeof aslUnitRealStatus === 'function') ? aslUnitRealStatus(c, u) : (u.status || 'available'));
+      if (!st.length) return c.status;
+      if (st.indexOf('available') >= 0 || st.indexOf('reserved') >= 0) return 'available'; // réservée plus tard = libre aujourd'hui
+      if (st.indexOf('active') >= 0 || st.indexOf('late') >= 0) return 'active';
+      if (st.indexOf('reserved') >= 0) return 'reserved';
+      if (st.indexOf('lld') >= 0) return 'lld';
+      return st[0];
+    })();
+    const avail = statusLabel(_rs);
     const img = c.img || c.image || c.photo || '';
     const ma = (typeof ASLDB!=='undefined' && ASLDB.modelAvailability) ? ASLDB.modelAvailability(c) : null;
     const stockBadge = (ma && ma.total > 1)
@@ -2031,9 +2044,8 @@ function renderFleetPage() {
             <button class="fleet-btn" onclick="editCar(${c.id})"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg> Modifier</button>
             <button class="fleet-btn" onclick="deleteCar(${c.id})" style="color:#ef4444;"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg> Supprimer</button>
             <select class="fleet-btn" onchange="changeStatus(${c.id}, this.value)" style="font-size:11px;">
-              <option value="">Changer statut</option>
-              <option value="available">Disponible</option>
-              <option value="reserved">Réservé</option>
+              <option value="">Hors service / maintenance</option>
+              <option value="available">Remettre en service</option>
               <option value="maintenance">Maintenance</option>
               <option value="offroad">Hors service</option>
             </select>
@@ -2054,6 +2066,14 @@ function renderFleetPage() {
 
 function changeStatus(id, status) {
   if(!status) return;
+  // ★ Seul l'état technique se règle à la main ; loué / réservé / disponible
+  //   viennent des dossiers. Avertissement si une voiture du modèle est en location.
+  if (status !== 'available' && status !== 'maintenance' && status !== 'offroad') return;
+  if (status !== 'available' && typeof aslUnitRealStatus === 'function' && typeof ASLDB !== 'undefined' && ASLDB.normalizeUnits) {
+    var _car = (ASLDB.getFleet() || []).find(function(c){ return c.id === id; });
+    var _busy = _car ? ASLDB.normalizeUnits(_car).filter(function(u){ var r = aslUnitRealStatus(_car, u); return r === 'active' || r === 'late' || r === 'reserved' || r === 'lld'; }) : [];
+    if (_busy.length && !confirm('Attention : ' + _busy.length + ' voiture(s) de ce modèle sont louées ou réservées (' + _busy.map(function(u){ return u.plate || 'sans plaque'; }).join(', ') + ').\nLes mettre quand même ' + (status === 'offroad' ? 'hors service' : 'en maintenance') + ' ?')) { renderFleetPage(); return; }
+  }
   // Synchronise les unités : si on remet le modèle "disponible", toutes les unités
   // non occupées par une réservation repassent disponibles. Pour maintenance/hors service,
   // on applique le statut à toutes les unités.
@@ -2349,11 +2369,11 @@ function renderAvailability() {
       const nextRes = RESERVATIONS.filter(r=>r.carId===c.id && r.status!=='cancelled' && r.endDate >= new Date().toISOString().split('T')[0]).sort((a,b)=>a.startDate.localeCompare(b.startDate))[0];
       // Détail des unités : plaque + couleur + statut (vérification de la synchro du stock)
       const unitChips = units.map(u => {
-        const us = (u.status||'available');
-        const ul = labelOf(us);
+        const us = (typeof aslUnitRealStatus === 'function') ? aslUnitRealStatus(c, u) : (u.status||'available'); // ★ état réel
+        const ul = us === 'late' ? { label:'En retard', class:'badge-red' } : labelOf(us);
         const col = u.color ? ` · ${esc(u.color)}` : '';
         const pl = u.plate ? esc(u.plate) : '—';
-        return `<span class="badge ${ul.class}" style="margin:2px 4px 2px 0;font-size:10.5px;">${pl}${col} — ${UNIT_STATUS_LABELS[us]||ul.label}</span>`;
+        return `<span class="badge ${ul.class}" style="margin:2px 4px 2px 0;font-size:10.5px;">${pl}${col} — ${us === 'late' ? 'En retard' : (UNIT_STATUS_LABELS[us]||ul.label)}</span>`;
       }).join('');
       const stockLine = `<div style="font-size:11px;color:var(--text2);margin-top:4px;"><strong>${ma.available}</strong> dispo / ${ma.total} en stock</div>`;
       return `
@@ -3063,7 +3083,7 @@ function renderUnitsEditor(prefix, units, forceCount) {
       <div style="margin-top:8px;">
         <label style="font-size:11px;color:var(--text3,#888);display:block;margin-bottom:3px;">Statut de cette unité</label>
         <select class="form-select unit-status" style="width:100%;">
-          ${Object.keys(UNIT_STATUS_LABELS).map(s => `<option value="${s}" ${(u.status||'available')===s?'selected':''}>${UNIT_STATUS_LABELS[s]}</option>`).join('')}
+          ${(function(){ var cur = u.status || 'available'; var opts = [['available','En service (disponible / louée selon les dossiers)'],['maintenance','Maintenance'],['offroad','Hors service']]; if (cur === 'lld') opts.push(['lld','Location longue durée']); var sel = (cur === 'maintenance' || cur === 'offroad' || cur === 'lld') ? cur : 'available'; return opts.map(o => `<option value="${o[0]}" ${sel===o[0]?'selected':''}>${o[1]}</option>`).join(''); })()}
         </select>
       </div>
     </div>

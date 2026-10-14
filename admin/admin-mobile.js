@@ -390,9 +390,12 @@
   window.maVehFilter = function () { renderVehicles(); }; // ancien filtre (compatibilité)
   var VH_ST = {
     available: ['ok', 'Disponible', '#16A34A'], reserved: ['res', 'Réservée', '#6D28D9'], rented: ['rent', 'Louée', '#1D4ED8'], active: ['rent', 'Louée', '#1D4ED8'],
-    maintenance: ['mnt', 'Maintenance', '#D97706'], offroad: ['off', 'Hors service', '#C41E3A'], lld: ['res', 'Longue durée', '#6D28D9']
+    maintenance: ['mnt', 'Maintenance', '#D97706'], offroad: ['off', 'Hors service', '#C41E3A'], lld: ['res', 'Longue durée', '#6D28D9'],
+    late: ['off', 'En retard', '#C41E3A']
   };
-  var VH_UNIT_OPTS = [['available', 'Disponible'], ['reserved', 'Réservée'], ['active', 'Louée'], ['maintenance', 'Maintenance'], ['offroad', 'Hors service']];
+  // ★ Seul réglage manuel possible : en service / maintenance / hors service.
+  //   « Disponible », « Réservée », « Louée » se déduisent des dossiers.
+  var VH_UNIT_OPTS = [['available', 'En service'], ['maintenance', 'Maintenance'], ['offroad', 'Hors service']];
   var VH_CAT = [['citadine', 'Citadine'], ['economique', 'Économique'], ['familiale', 'Familiale'], ['suv', 'SUV']];
   var VH_FEAT = [['ac', 'Climatisation'], ['bluetooth', 'Bluetooth'], ['gps', 'GPS'], ['camera', 'Caméra de recul'], ['insurance', 'Assurance incluse'], ['airport', 'Livraison aéroport']];
   function vhSt(s) { return VH_ST[s] || ['na', s || '—', '#9AA0AA']; }
@@ -400,7 +403,17 @@
   function vhUnits(c) {
     var u = (typeof ASLDB !== 'undefined' && ASLDB.normalizeUnits) ? ASLDB.normalizeUnits(c) : null;
     if (!u || !u.length) u = [{ plate: c.plate || '', color: '', status: c.status || 'available' }];
-    return u.map(function (x) { return { plate: x.plate || '', color: x.color || '', status: x.status || 'available' }; });
+    // ★ État RÉEL (dossiers), identique au tableau de bord ; « manual » = réglage manuel.
+    return u.map(function (x) {
+      var real = (typeof window.aslUnitRealStatus === 'function') ? window.aslUnitRealStatus(c, x) : (x.status || 'available');
+      return { plate: x.plate || '', color: x.color || '', status: real, manual: x.status || 'available' };
+    });
+  }
+  /* Date de la prochaine réservation attribuée à cette voiture (JJ/MM). */
+  function vhNextRes(c, plate) {
+    var d = ((ASLDB.getReservations && ASLDB.getReservations()) || []).filter(function (r) { return r && r.status !== 'cancelled' && r.status !== 'completed' && String(r.carId) === String(c.id) && r.assignedPlate === plate && String(r.startDate || '') >= todayISO(); })
+      .map(function (r) { return String(r.startDate).slice(0, 10); }).sort()[0];
+    return d ? 'dès le ' + d.slice(8, 10) + '/' + d.slice(5, 7) : 'à venir';
   }
   function vhPhoto(c) { return c.photo || c.image || c.img || ''; }
   function vhCatLbl(v) { var x = VH_CAT.filter(function (k) { return k[0] === v; })[0]; return x ? x[1] : (v || ''); }
@@ -437,9 +450,12 @@
     if (!box) return;
     var cars = fleet();
     var cnt = {}, nU = 0;
-    cars.forEach(function (c) { vhUnits(c).forEach(function (u) { nU++; var k = (u.status === 'rented') ? 'active' : u.status; cnt[k] = (cnt[k] || 0) + 1; }); });
+    // ★ Mêmes comptes que le tableau de bord : une voiture réservée pour plus
+    //   tard est disponible aujourd'hui ; « loués » = en cours (dont longue durée) ;
+    //   « en retard » à part.
+    cars.forEach(function (c) { vhUnits(c).forEach(function (u) { nU++; var k = u.status; if (k === 'reserved') k = 'available'; else if (k === 'rented' || k === 'lld') k = 'active'; cnt[k] = (cnt[k] || 0) + 1; }); });
     if (sum) sum.innerHTML = '<div class="vh-sum"><b>' + nU + ' véhicule' + (nU > 1 ? 's' : '') + '</b><span>' + cars.length + ' modèle' + (cars.length > 1 ? 's' : '') + '</span></div>'
-      + '<div class="vh-dots">' + [['available', 'disponible', 'disponibles'], ['active', 'loué', 'loués'], ['reserved', 'réservé', 'réservés'], ['maintenance', 'maintenance', 'maintenance'], ['offroad', 'hors service', 'hors service'], ['lld', 'longue durée', 'longue durée']].filter(function (x) { return cnt[x[0]]; }).map(function (x) {
+      + '<div class="vh-dots">' + [['available', 'disponible', 'disponibles'], ['active', 'loué', 'loués'], ['late', 'en retard', 'en retard'], ['maintenance', 'maintenance', 'maintenance'], ['offroad', 'hors service', 'hors service']].filter(function (x) { return cnt[x[0]]; }).map(function (x) {
         var n = cnt[x[0]], lbl = n > 1 ? x[2] : x[1];
         return '<span><i style="background:' + vhSt(x[0])[2] + '"></i>' + n + ' ' + lbl + '</span>';
       }).join('') + '</div>';
@@ -459,6 +475,7 @@
           + '<span class="vh-price">' + money(vhPrice(c)) + ' <em>/ jour</em></span></span>' + ic('arrowLeft', 'mu-chev') + '</span>'
           + '<span class="vh-units">' + units.map(function (u) {
             var s = vhSt(u.status);
+            if (u.status === 'reserved') s = ['ok', 'Disponible · réservée ' + vhNextRes(c, u.plate), '#16A34A']; // ★ libre aujourd'hui
             return '<span class="vh-unit"><span class="vh-plate">' + esc(u.plate || 'Sans plaque') + '</span><span class="vh-col">' + esc(u.color || '') + '</span><span class="vh-pill ' + s[0] + '">' + s[1] + '</span></span>';
           }).join('') + '</span></button>';
       }).join('') : '<div class="mu-none"><b>Aucun véhicule trouvé</b><div>Aucun véhicule ne correspond à « ' + esc(VH.q.trim()) + ' ».</div></div>');
@@ -500,7 +517,7 @@
       + '<div class="mh-card vh-ulist">' + units.map(function (u) {
         var s = vhSt(u.status);
         return '<div class="vh-uc"><div class="vh-unit"><span class="vh-plate">' + esc(u.plate || 'Sans plaque') + '</span><span class="vh-col">' + esc(u.color || '') + '</span><span class="vh-pill ' + s[0] + '">' + s[1] + '</span></div>'
-          + '<button type="button" class="sl-btn vh-stbtn" data-id="' + idA + '" data-p="' + esc(u.plate || '') + '" onclick="maChangeStatus(this.dataset.id,this.dataset.p)">' + ic('swap') + ' Changer le statut</button></div>';
+          + '<button type="button" class="sl-btn vh-stbtn" data-id="' + idA + '" data-p="' + esc(u.plate || '') + '" onclick="maChangeStatus(this.dataset.id,this.dataset.p)">' + ic('swap') + ' Hors service / maintenance</button></div>';
       }).join('') + '</div>'
       + '<div class="mu-sec">Caractéristiques</div>'
       + '<div class="mh-card"><div class="mh-2">' + kv('Boîte', c.transmission) + kv('Carburant', c.fuel) + kv('Places', c.seats || 5) + kv('Portes', c.doors) + kv('Coffre', c.trunk) + kv('Consommation', c.consumption) + '</div>'
@@ -550,7 +567,7 @@
         return '<div class="vh-ued"><b>' + (e.units.length > 1 ? 'Unité ' + (i + 1) : 'Voiture') + '</b>'
           + '<div class="mu-2"><label class="sl-field"><span>Immatriculation</span><input type="text" value="' + esc(u.plate) + '" placeholder="AA-123456" autocapitalize="characters" oninput="maVhU(' + i + ',\'plate\',this.value)"></label>'
           + '<label class="sl-field"><span>Couleur</span><input type="text" value="' + esc(u.color) + '" placeholder="Ex : Blanc" oninput="maVhU(' + i + ',\'color\',this.value)"></label></div>'
-          + '<div class="vh-sch">' + VH_UNIT_OPTS.map(function (o) { var on = (u.status === o[0]) || (o[0] === 'active' && u.status === 'rented'); return '<button type="button" class="' + (on ? 'on' : '') + '" onclick="maVhU(' + i + ',\'status\',\'' + o[0] + '\',1)">' + o[1] + '</button>'; }).join('') + '</div></div>';
+          + '<div class="vh-sch">' + VH_UNIT_OPTS.map(function (o) { var cur = (u.status === 'maintenance' || u.status === 'offroad') ? u.status : 'available'; var on = cur === o[0]; return '<button type="button" class="' + (on ? 'on' : '') + '" onclick="maVhU(' + i + ',\'status\',\'' + o[0] + '\',1)">' + o[1] + '</button>'; }).join('') + '</div></div>';
       }).join('') + '</div>'
       + '<div class="mu-sec">Caractéristiques</div><div class="mh-card">'
       + '<div class="sl-field"><span>Boîte de vitesses</span>' + seg('transmission', ['Automatique', 'Manuelle']) + '</div>'
@@ -586,7 +603,12 @@
   window.maVhSave = function () {
     var c = vhCar(VH.id), e = VH.e; if (!c || !e) return;
     var name = String(e.name || '').trim(); if (!name) return;
-    var units = e.units.map(function (u) { return { plate: String(u.plate || '').trim(), color: String(u.color || '').trim(), status: u.status || 'available' }; });
+    // ★ On n'enregistre que le réglage manuel (en service / maintenance / hors service) ;
+    //   l'état « louée / réservée » affiché vient des dossiers et n'est jamais écrit ici.
+    var units = e.units.map(function (u) {
+      var st = (u.status === 'available' || u.status === 'maintenance' || u.status === 'offroad') ? u.status : (u.manual === 'lld' ? 'lld' : (u.manual === 'maintenance' || u.manual === 'offroad' ? u.manual : 'available'));
+      return { plate: String(u.plate || '').trim(), color: String(u.color || '').trim(), status: st };
+    });
     var agg = units.some(function (u) { return u.status === 'available'; }) ? 'available' : (units.length ? units[0].status : (c.status || 'available'));
     var pm = parseInt(e.priceMAD, 10);
     var cfOut = {}; var old = c.customFeatures || {}; for (var k0 in old) cfOut[k0] = old[k0]; for (var k1 in e.custom) cfOut[k1] = !!e.custom[k1];
@@ -612,40 +634,52 @@
      ★ Cible désormais l'UNITÉ précise (identifiée par sa plaque), pas tout le
      modèle : changer le statut d'une Clio 5 Bleue ne doit plus affecter la
      Clio 5 Grise/Blanche/Noire du même modèle. */
+  /* ★ « Hors service » : seul l'état technique se règle à la main
+     (en service / maintenance / hors service). Louée, réservée, disponible
+     se déduisent toujours des dossiers. */
   window.maChangeStatus = function (id, plate) {
-    var f = fleet();
-    var car = f.filter(function (c) { return String(c.id) === String(id); })[0];
+    var car = fleet().filter(function (c) { return String(c.id) === String(id); })[0];
     if (!car) return;
     var units = (typeof ASLDB !== 'undefined' && ASLDB.normalizeUnits) ? ASLDB.normalizeUnits(car) : [{ plate: car.plate || '', color: '', status: car.status || 'available' }];
     var unit = (plate ? units.filter(function (u) { return u.plate === plate; })[0] : null) || units[0];
-    var opts = [
-      ['available', 'Disponible', 'green'],
-      ['reserved', 'Réservé', 'blue'],
-      ['rented', 'Loué', 'blue'],
-      ['maintenance', 'Maintenance', 'yellow'],
-      ['offroad', 'Hors service', 'red']
-    ];
-    var idArg = (typeof car.id === 'number' ? car.id : "'" + String(car.id) + "'");
-    var plateArg = "'" + esc(unit.plate || '') + "'";
+    var manual = unit.status === 'maintenance' || unit.status === 'offroad' ? unit.status : 'available';
+    var real = (typeof window.aslUnitRealStatus === 'function') ? window.aslUnitRealStatus(car, unit) : manual;
+    var opts = [['available', manual === 'available' ? 'En service' : 'Remettre en service', 'green'], ['maintenance', 'Maintenance', 'yellow'], ['offroad', 'Hors service', 'red']];
+    var idArg = esc(JSON.stringify(car.id)).replace(/"/g, '&quot;'), plateArg = esc(JSON.stringify(unit.plate || '')).replace(/"/g, '&quot;');
     openSheet(
       '<div class="ma-sheet-title">' + esc(car.name || 'Véhicule') + '</div>'
-      + '<div class="ma-sheet-sub">' + esc(unit.plate || '—') + (unit.color ? ' · ' + esc(unit.color) : '') + ' — changer le statut</div>'
+      + '<div class="ma-sheet-sub">' + esc(unit.plate || '—') + (unit.color ? ' · ' + esc(unit.color) : '') + ' — état actuel : <b>' + esc(vhSt(real)[1]) + '</b></div>'
+      + '<div class="ma-sheet-sub" style="margin-top:-4px;">Disponible, réservée ou louée se mettent à jour automatiquement selon les dossiers.</div>'
       + opts.map(function (o) {
-        var activeNow = (unit.status === o[0]) || (o[0] === 'rented' && unit.status === 'active');
-        return '<button class="ma-sheet-opt' + (activeNow ? ' active' : '') + '" onclick="maSetStatus(' + idArg + ',' + plateArg + ',\'' + o[0] + '\')">'
+        var on = manual === o[0];
+        return '<button class="ma-sheet-opt' + (on ? ' active' : '') + '" onclick="maSetStatus(' + idArg + ',' + plateArg + ',\'' + o[0] + '\')">'
           + '<span class="ma-dot-status ' + o[2] + '"></span>' + o[1]
-          + (activeNow ? '<span class="ma-sheet-chk">' + ic('check') + '</span>' : '') + '</button>';
+          + (on ? '<span class="ma-sheet-chk">' + ic('check') + '</span>' : '') + '</button>';
       }).join('')
     );
   };
   window.maSetStatus = function (id, plate, status) {
-    try {
-      if (ASLDB && ASLDB.setUnitStatusByPlate) ASLDB.setUnitStatusByPlate(id, plate, status);
-      else if (ASLDB && ASLDB.updateVehicle) ASLDB.updateVehicle(id, { status: status }); // repli ancien modèle mono-unité
-    } catch (e) {}
-    closeSheet();
-    if (typeof window.showToast === 'function') window.showToast('Statut mis à jour ✓');
-    renderVehicles();
+    if (['available', 'maintenance', 'offroad'].indexOf(status) < 0) return;
+    var car = fleet().filter(function (c) { return String(c.id) === String(id); })[0];
+    var units = car && ASLDB.normalizeUnits ? ASLDB.normalizeUnits(car) : [];
+    var unit = units.filter(function (u) { return u.plate === plate; })[0] || units[0] || { plate: plate };
+    var real = (car && typeof window.aslUnitRealStatus === 'function') ? window.aslUnitRealStatus(car, unit) : 'available';
+    var apply = function () {
+      try {
+        if (ASLDB && ASLDB.setUnitStatusByPlate) ASLDB.setUnitStatusByPlate(id, plate, status);
+        else if (ASLDB && ASLDB.updateVehicle) ASLDB.updateVehicle(id, { status: status }); // repli ancien modèle mono-unité
+      } catch (e) {}
+      closeSheet();
+      if (typeof window.showToast === 'function') window.showToast(status === 'available' ? 'Voiture remise en service ✓' : (status === 'offroad' ? 'Voiture mise hors service ✓' : 'Voiture mise en maintenance ✓'));
+      renderVehicles();
+    };
+    if (status !== 'available' && (real === 'active' || real === 'late' || real === 'reserved' || real === 'lld')) {
+      var r = (ASLDB.getReservations() || []).filter(function (x) { return x && x.status !== 'cancelled' && x.status !== 'completed' && String(x.carId) === String(id) && x.assignedPlate === plate; })[0];
+      var who = r ? ' (' + (r.client || 'client') + (r.endDate ? ', retour prévu le ' + String(r.endDate).slice(0, 10).split('-').reverse().join('/') : '') + ')' : '';
+      if (typeof maConfirm === 'function') { maConfirm('Cette voiture est ' + vhSt(real)[1].toLowerCase() + who, 'La mettre quand même ' + (status === 'offroad' ? 'hors service' : 'en maintenance') + ' ?', 'Confirmer', apply); return; }
+      if (!confirm('Cette voiture est ' + vhSt(real)[1].toLowerCase() + who + '. Continuer ?')) return;
+    }
+    apply();
   };
 
   /* ---- Photo véhicule (mobile natif) ----
@@ -2682,8 +2716,10 @@
         var amt = Number(p.amount) || 0; if (amt <= 0) return;
         var d = String(p.date || r.createdAt || r.startDate || '').slice(0, 10);
         if (!csIn(d)) return;
-        var who = CS_PEOPLE.indexOf(p.collectedBy) >= 0 ? p.collectedBy : 'na';
-        out.push({ r: r, date: d, amount: amt, mode: p.mode || '', who: who, comment: p.comment || '' });
+        // ★ Nom reconnu sans tenir compte des majuscules / espaces
+        var cb = String(p.collectedBy || '').trim().toLowerCase(), who = 'na';
+        CS_PEOPLE.forEach(function (n) { if (n.toLowerCase() === cb) who = n; });
+        out.push({ r: r, date: d, amount: amt, mode: p.mode || '', who: who, comment: p.comment || '', idx: p._i });
       });
     });
     out.sort(function (a, b) { return b.date.localeCompare(a.date) || b.amount - a.amount; });
@@ -2743,6 +2779,27 @@
 
   /* ---- Listes ---- */
   window.maCsOpen = function (w) { CS.view = 'list'; CS.who = w; var h = document.getElementById('ma-caisse'); if (h) h.innerHTML = ''; renderCaisse(); maTop(); };
+  /* ★ Attribuer un versement « non attribué » à la personne qui l'a reçu :
+     la ligne du journal des versements reçoit ce nom (montant et date
+     inchangés). Même donnée que l'ordinateur → synchronisée partout. */
+  window.maCsAssign = function (resId, idx, name) {
+    var r = (ASLDB.getReservations() || []).filter(function (x) { return String(x.id) === String(resId); })[0];
+    if (!r || typeof aslPaymentJournal !== 'function' || CS_PEOPLE.indexOf(name) < 0) return;
+    var j = aslPaymentJournal(r), line = j.filter(function (x) { return x._i === idx; })[0];
+    if (!line) return;
+    var go = function () {
+      var r2 = (ASLDB.getReservations() || []).filter(function (x) { return String(x.id) === String(resId); })[0]; if (!r2) return;
+      var j2 = aslPaymentJournal(r2), l2 = j2.filter(function (x) { return x._i === idx; })[0]; if (!l2) return;
+      l2.collectedBy = name;
+      var payments = aslJournalClean(j2);
+      try { ASLDB.updateReservation(r2.id, { payments: payments, paid: aslJournalSum(payments) }); } catch (e) { return; }
+      try { if (typeof reloadData === 'function') reloadData(); } catch (e2) {}
+      if (typeof showToast === 'function') showToast(money(l2.amount) + ' attribué à ' + name + ' ✓');
+      renderCaisse();
+    };
+    var txt = money(line.amount) + ' du ' + String(line.date || '').slice(0, 10).split('-').reverse().join('/') + ' — ' + (r.client || '') + ' (' + (r.contractRef || r.id) + ')';
+    if (typeof maConfirm === 'function') maConfirm('Attribuer à ' + name + ' ?', txt, 'Attribuer', go); else if (confirm('Attribuer à ' + name + ' ?\n' + txt)) go();
+  };
   window.maCsBack = function () { CS.view = 'sum'; CS.who = ''; var h = document.getElementById('ma-caisse'); if (h) h.innerHTML = ''; renderCaisse(); maTop(); };
   function csPayRow(p) {
     var r = p.r, rest = Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0));
@@ -2795,7 +2852,15 @@
       var pays = csPayments().filter(function (p) { return w === 'all' || p.who === w; });
       title = w === 'all' ? 'Total encaissé' : (w === 'na' ? 'Non attribué' : w);
       total = pays.reduce(function (s, p) { return s + p.amount; }, 0); count = pays.length;
-      body = pays.map(csPayRow).join('');
+      // ★ « Non attribué » : chaque versement peut être attribué à la bonne personne.
+      body = pays.map(function (p) {
+        var row = csPayRow(p);
+        if (w !== 'na' || p.idx == null) return row;
+        var rid = esc(JSON.stringify(String(p.r.id))).replace(/"/g, '&quot;');
+        return row + '<div class="cs-assign"><span>Encaissé par :</span>' + CS_PEOPLE.map(function (n) {
+          return '<button type="button" onclick="maCsAssign(' + rid + ',' + p.idx + ',\'' + n + '\')">' + n + '</button>';
+        }).join('') + '</div>';
+      }).join('');
       html = '<div class="cs-tot static"><span><small>' + (w === 'all' ? 'Total encaissé' : w === 'na' ? 'Non attribué' : 'Encaissé par ' + w) + ' · ' + esc(csLabel()) + '</small><b>' + money(total) + '</b><span>' + csN(count, 'paiement', 'paiements') + (w === 'na' ? ' sans personne attribuée' : '') + '</span></span></div>' + chips();
     }
     maSetTitle(title);
@@ -3766,6 +3831,7 @@
     }
     var paidNow = patch.paid != null ? patch.paid : (Number(r.paid) || 0);
     patch.paymentStatus = paidNow <= 0 ? 'Non payé' : (paidNow >= total ? 'Paiement complet' : 'Paiement partiel');
+    try { if (typeof window.aslReopenIfStillOut === 'function') window.aslReopenIfStillOut(r, patch); } catch (eR) {} // ★ retour annulé si nouvelle date à venir
     try { ASLDB.updateReservation(r.id, patch); } catch (e3) { console.error(e3); return; }
     // Documents ajoutés ici → fiche du même client (aucun doublon)
     try {

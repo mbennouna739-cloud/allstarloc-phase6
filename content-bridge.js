@@ -170,6 +170,8 @@
     var star = '<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="none" style="vertical-align:-0.125em;flex-shrink:0;margin-right:1px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
     var active = reviewsData.items.filter(function(r){ return r.active !== false; });
     if (!active.length) return;
+    // La section « Avis clients » n'apparaît que lorsqu'il y a des avis publiés.
+    try { var sec = document.getElementById('reviews-section'); if (sec) sec.style.display = ''; } catch (e) {}
     var html = active.map(function(rv){
       var txt = (rv.text && (rv.text[lang] || rv.text.fr)) || '';
       if (!txt) return '';
