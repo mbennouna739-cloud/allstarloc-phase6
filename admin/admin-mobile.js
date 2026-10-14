@@ -3030,8 +3030,9 @@
           + '<span class="chw-ra"><b class="' + (pend ? 'due' : '') + '">' + (pend ? '' : '−') + chgNum(c.amount) + '</b><small>' + (pend ? 'non payée' : esc([c.paidBy, c.payMode].filter(Boolean).join(' · '))) + '</small></span></button>';
       }).join('');
     }).join('');
-    return hero + seg + (shown.length ? list : '<div class="mt-none">Aucune charge sur cette période.</div>')
-      + '<div class="chw-fab"><button type="button" onclick="maAddCharge()">' + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>' + ' Ajouter une charge</button></div>';
+    // ★ Bouton en bas, après la dernière charge (il ne suit pas le défilement)
+    var add = '<div class="chw-fab"><button type="button" onclick="maAddCharge()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> Ajouter une charge</button></div>';
+    return hero + seg + (shown.length ? list : '<div class="mt-none">Aucune charge sur cette période.</div>') + add;
   }
   window.maChgFilter = function (f) { CS.chf = f; renderCaisse(); };
 
