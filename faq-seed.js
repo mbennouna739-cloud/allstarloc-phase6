@@ -8,23 +8,23 @@ window._ASL_FAQ_SEED = [
   "i18n": {
    "fr": {
     "question": "Quels documents faut-il pour louer ?",
-    "answer": "Une pièce d'identité valide (carte nationale d'identité ou passeport) et un permis de conduire valide depuis au moins un an. Aucun permis international n'est exigé pour la plupart des nationalités."
+    "answer": "Une pièce d'identité valide (carte nationale d'identité ou passeport) et un permis de conduire valide depuis au moins 2 ans. Aucun permis international n'est exigé pour la plupart des nationalités."
    },
    "en": {
     "question": "What documents are needed to rent?",
-    "answer": "A valid identity document (national ID card or passport) and a driving licence held for at least one year. An international licence is not required for most nationalities."
+    "answer": "A valid identity document (national ID card or passport) and a driving licence held for at least 2 years. An international licence is not required for most nationalities."
    },
    "es": {
     "question": "¿Qué documentos se necesitan para alquilar?",
-    "answer": "Un documento de identidad válido (DNI o pasaporte) y un permiso de conducir con al menos un año de antigüedad. No se exige permiso internacional para la mayoría de nacionalidades."
+    "answer": "Un documento de identidad válido (DNI o pasaporte) y un permiso de conducir con al menos 2 años de antigüedad. No se exige permiso internacional para la mayoría de nacionalidades."
    },
    "ar": {
     "question": "ما الوثائق المطلوبة للكراء؟",
-    "answer": "وثيقة هوية سارية (بطاقة التعريف الوطنية أو جواز السفر) ورخصة سياقة سارية منذ سنة على الأقل. لا تُشترط رخصة دولية بالنسبة لأغلب الجنسيات."
+    "answer": "وثيقة هوية سارية (بطاقة التعريف الوطنية أو جواز السفر) ورخصة سياقة سارية منذ سنتين على الأقل. لا تُشترط رخصة دولية بالنسبة لأغلب الجنسيات."
    }
   },
   "question": "Quels documents faut-il pour louer ?",
-  "answer": "Une pièce d'identité valide (carte nationale d'identité ou passeport) et un permis de conduire valide depuis au moins un an. Aucun permis international n'est exigé pour la plupart des nationalités."
+  "answer": "Une pièce d'identité valide (carte nationale d'identité ou passeport) et un permis de conduire valide depuis au moins 2 ans. Aucun permis international n'est exigé pour la plupart des nationalités."
  },
  {
   "id": "seed-faq-2",
@@ -32,23 +32,23 @@ window._ASL_FAQ_SEED = [
   "i18n": {
    "fr": {
     "question": "Quel est l'âge minimum pour louer ?",
-    "answer": "L'âge minimum est de 21 ans (25 ans pour la catégorie SUV Premium), avec un permis de conduire valide depuis au moins un an."
+    "answer": "L'âge minimum est de 19 ans (25 ans pour la catégorie SUV Premium), avec un permis de conduire valide depuis au moins 2 ans."
    },
    "en": {
     "question": "What is the minimum age to rent?",
-    "answer": "The minimum age is 21 (25 for the SUV Premium category), with a driving licence held for at least one year."
+    "answer": "The minimum age is 19 (25 for the SUV Premium category), with a driving licence held for at least 2 years."
    },
    "es": {
     "question": "¿Cuál es la edad mínima para alquilar?",
-    "answer": "La edad mínima es de 21 años (25 años para la categoría SUV Premium), con un permiso de conducir con al menos un año de antigüedad."
+    "answer": "La edad mínima es de 19 años (25 años para la categoría SUV Premium), con un permiso de conducir con al menos 2 años de antigüedad."
    },
    "ar": {
     "question": "ما هو السن الأدنى للكراء؟",
-    "answer": "السن الأدنى هو 21 سنة (25 سنة لفئة SUV Premium)، مع رخصة سياقة سارية منذ سنة على الأقل."
+    "answer": "السن الأدنى هو 19 سنة (25 سنة لفئة SUV Premium)، مع رخصة سياقة سارية منذ سنتين على الأقل."
    }
   },
   "question": "Quel est l'âge minimum pour louer ?",
-  "answer": "L'âge minimum est de 21 ans (25 ans pour la catégorie SUV Premium), avec un permis de conduire valide depuis au moins un an."
+  "answer": "L'âge minimum est de 19 ans (25 ans pour la catégorie SUV Premium), avec un permis de conduire valide depuis au moins 2 ans."
  },
  {
   "id": "seed-faq-3",

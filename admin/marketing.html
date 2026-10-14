@@ -4291,7 +4291,69 @@ async function hydrateFromServer() {
     if (typeof showSyncStatus === 'function') {
       showSyncStatus('✓ Contenu du site chargé depuis le serveur — tout est éditable ici.');
     }
+    try { _aslConditionsFix(); } catch(eFix) {}
   } catch(e) { /* hors-ligne / test local : on garde les stores locaux */ }
+}
+
+/* ★ Mise à jour des conditions de location (octobre 2026) : remplace
+   UNIQUEMENT les anciens textes par défaut encore enregistrés (FAQ,
+   CGV, Mentions légales, Location courte durée) qui contiennent des
+   informations devenues fausses (âge 18/21 ans, permis 1 an, kilométrage
+   illimité pour tous, annulation « 24 h après la réservation », carte
+   bancaire / paiement en ligne, mentions sans RC/ICE). Un texte que vous
+   avez réécrit sans ces anciennes formules n'est jamais touché. Lancée
+   après le chargement du contenu serveur ; sans effet une fois appliquée. */
+function _aslConditionsFix() {
+  var LANGS = ['fr','en','es','ar'];
+  var has = function (txt, list) { txt = String(txt || ''); return list.some(function (m) { return txt.indexOf(m) >= 0; }); };
+  var changedFaq = 0, changedLegal = 0;
+  // --- FAQ ---
+  var FAQ_OLD = {
+    'seed-faq-1': ['au moins un an', 'at least one year', 'al menos un año', 'منذ سنة على الأقل'],
+    'seed-faq-2': ['18 ans', '18 years', 'is 18', '18 años', '18 سنة', '21 ans', 'au moins un an', 'one year'],
+    'seed-faq-4': ['Non, tous nos véhicules', 'No, all our vehicles', 'No, todos nuestros', 'لا، جميع سياراتنا'],
+    'seed-faq-6': ['24 heures après', '24 hours after', '24 horas tras', '24 ساعة بعد الحجز'],
+    'seed-faq-7': ['carte bancaire', 'bank card', 'tarjeta bancaria', 'البطاقة البنكية', 'en ligne, par acompte']
+  };
+  if (window._ASL_FAQ_SEED) {
+    var faqs = load(K.faq) || [];
+    faqs.forEach(function (f) {
+      var markers = f && FAQ_OLD[f.id]; if (!markers) return;
+      var seed = window._ASL_FAQ_SEED.filter(function (x) { return x.id === f.id; })[0]; if (!seed) return;
+      var txts = [f.answer].concat(LANGS.map(function (l) { return f.i18n && f.i18n[l] && f.i18n[l].answer; }));
+      if (!txts.some(function (t) { return has(t, markers); })) return;
+      f.i18n = f.i18n || {};
+      LANGS.forEach(function (l) { f.i18n[l] = f.i18n[l] || {}; if (seed.i18n && seed.i18n[l]) f.i18n[l].answer = seed.i18n[l].answer; });
+      f.answer = seed.answer; changedFaq++;
+    });
+    if (changedFaq) save(K.faq, faqs);
+  }
+  // --- Pages (CGV, Mentions légales, Location courte durée) ---
+  var PAGE_OLD = {
+    'cgv': { content: ['18 ans', '18 years', '18 años', '18 سنة', '21 ans', '21 years', '21 años', 'au moins un an', 'Carte bancaire', 'Bank card', 'Tarjeta bancaria', 'البطاقة البنكية', '24 heures après sa réservation', '24 hours after booking', '24 horas tras su reserva'] },
+    'mentions': { content: ['Agence de location de voitures.<br>', 'Car rental agency.<br>', 'Agencia de alquiler de coches.<br>', 'وكالة كراء السيارات.<br>', 'disponibles sur demande en agence'] },
+    'courte-duree': { content: ['illimité sur tous', 'Unlimited mileage on all', 'ilimitado en todos', 'غير محدودة على جميع'], metaDesc: ['kilométrage illimité', 'unlimited mileage', 'kilometraje ilimitado', 'مسافة غير محدودة'] }
+  };
+  var PSEED = window._ASL_PAGES_SEED || {};
+  var all = load(K.legalPages) || {};
+  Object.keys(PAGE_OLD).forEach(function (slug) {
+    var entry = all[slug], seed = PSEED[slug]; if (!entry || !seed) return;
+    LANGS.forEach(function (l) {
+      var e = entry[l]; if (!e) return;
+      Object.keys(PAGE_OLD[slug]).forEach(function (field) {
+        var nv = seed[field] && seed[field][l];
+        if (nv && has(e[field], PAGE_OLD[slug][field])) { e[field] = nv; changedLegal++; }
+      });
+    });
+  });
+  if (changedLegal) save(K.legalPages, all);
+  if ((changedFaq || changedLegal) && typeof syncToKV === 'function') {
+    Promise.resolve(syncToKV(changedLegal ? 'Légal' : 'FAQ')).then(function () {
+      if (changedFaq && changedLegal) return syncToKV('FAQ');
+    }).catch(function () {});
+    if (typeof showSyncStatus === 'function') showSyncStatus('Conditions de location mises à jour sur le site (FAQ ' + changedFaq + ', pages ' + changedLegal + ').');
+  }
+  return { faq: changedFaq, legal: changedLegal };
 }
 
 renderDashboard();

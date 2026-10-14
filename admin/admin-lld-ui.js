@@ -286,6 +286,7 @@
       else if (typeof ASLDB.assignUnit === 'function') { try { ASLDB.assignUnit(newCarId, 'active'); } catch(e) {} }
       patch.carId = newCarId; patch.car = newCar ? newCar.name : (c.car||''); patch.assignedPlate = newPlate; patch.assignedColor = optPlate != null ? optColor : (newCar ? (newCar.color||'') : '');
     }
+    try { if (typeof aslReopenIfStillOut === 'function') aslReopenIfStillOut(c, patch); } catch (eR) {} // ★ contrat clôturé + nouvelle fin à venir → de nouveau en cours
     if (typeof ASLDB !== 'undefined' && ASLDB.updateReservation) ASLDB.updateReservation(id, patch);
     if (typeof reloadData === 'function') reloadData();
     renderLLD();

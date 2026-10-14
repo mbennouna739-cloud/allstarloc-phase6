@@ -107,9 +107,15 @@ function aslReopenIfStillOut(r, patch) {
     if (!changed || !ed || !sd) return false;
     var end = new Date(String(ed).slice(0, 10) + 'T' + (et || '10:00')), start = new Date(String(sd).slice(0, 10) + 'T' + (st || '10:00'));
     var now = new Date();
-    if (isNaN(end) || !(end > now)) return false;
+    /* ★ Retour prévu AUJOURD'HUI ou plus tard (même si l'heure est déjà
+       passée) : le véhicule n'est pas rentré → dossier rouvert (« Loué », ou
+       « En retard » si l'heure est dépassée) jusqu'à la confirmation du retour.
+       Une date de retour passée (correction d'historique) ne rouvre rien. */
+    var today = (typeof todayStr === 'function') ? todayStr() : now.toISOString().slice(0, 10);
+    if (isNaN(end) || String(ed).slice(0, 10) < today) return false;
     patch.status = (start <= now) ? 'active' : 'confirmed';
     patch.reopenedAt = now.toISOString();
+    if (r.earlyOrCancelled) patch.earlyOrCancelled = false;
     if (patch.status === 'active' && typeof ASLDB !== 'undefined' && ASLDB.setUnitStatusByPlate) {
       var carId = patch.carId != null ? patch.carId : r.carId;
       var plate = patch.assignedPlate != null ? patch.assignedPlate : r.assignedPlate;
@@ -2027,7 +2033,9 @@ function prolongerLocation(id) {
   var newDays  = (r.days||0) + jours;
   if (!confirm('Prolongation de ' + jours + ' j\nNouvelle date de retour : ' + newEndStr + ' à ' + newTime + '\nSupplément : ' + fmtMAD(supplement) + '\nNouveau total : ' + fmtMAD(newTotal) + '\n\nConfirmer ?')) return;
   if (typeof ASLDB !== 'undefined' && ASLDB.updateReservation) {
-    ASLDB.updateReservation(id, { endDate: newEndStr, endTime: newTime, days: newDays, amount: newTotal, extended: true });
+    var extPatch = { endDate: newEndStr, endTime: newTime, days: newDays, amount: newTotal, extended: true };
+    aslReopenIfStillOut(r, extPatch); // ★ prolongation d'un dossier marqué rendu → de nouveau loué
+    ASLDB.updateReservation(id, extPatch);
   }
   if (typeof reloadData === 'function') reloadData();
   renderRentals(); renderDashboard();
@@ -2655,7 +2663,12 @@ function viewRes(id) {
   var bodyEl  = document.getElementById('modal-body');
   var footEl  = document.getElementById('modal-footer');
   if (!overlay) return;
-  if (titleEl) titleEl.textContent = 'Réservation ' + (r.contractRef||r.id);
+  // ★ Titre : « Location » dès que le véhicule a été remis au client (en
+  //   cours, en retard ou rendu) ; « Réservation » seulement pour un départ à venir.
+  var vrPhase = (typeof ASLDB !== 'undefined' && ASLDB.computePhase) ? ASLDB.computePhase(r) : '';
+  var vrIsLoc = r.status === 'active' || r.status === 'completed' || vrPhase === 'active' || vrPhase === 'late' || vrPhase === 'completed';
+  var vrKind = r.type === 'lld' ? 'Location longue durée' : (vrIsLoc ? 'Location' : 'Réservation');
+  if (titleEl) titleEl.textContent = vrKind + ' ' + (r.contractRef||r.id);
   overlay.classList.add('open');
 
   var total = Number(r.amount)||0, paid = Number(r.paid)||0;
@@ -2805,7 +2818,7 @@ function viewRes(id) {
       if (typeof renderPayments==='function') renderPayments();
       renderRentals(); renderDashboard(); updateBadges();
       if (typeof closeModal==='function') closeModal();
-      showToast('Réservation mise à jour et synchronisée ✓');
+      showToast((vrKind === 'Réservation' ? 'Réservation' : 'Location') + ' mise à jour et synchronisée ✓');
     };
   }
   setTimeout(function(){ vrPayCalc(total); }, 50);

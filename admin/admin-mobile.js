@@ -289,7 +289,8 @@
       { num: c.returnsToday, lbl: "Retours aujourd'hui", cls: 'orange', ico: 'returns', act: "maDash('returns')" },
       { num: c.late, lbl: 'En retard', cls: 'red', ico: 'alert', act: "maDash('late')" },
       { num: c.reserved, lbl: 'Réservés', cls: 'purple', ico: 'calendar', act: "maDash('reserved')" },
-      { num: money(csMonthTotal()), lbl: 'Encaissé ce mois', cls: 'teal', ico: 'wallet', act: "maDash('revenue')", small: true }
+      // ★ « Impayés » (reste à encaisser) à la place de « Encaissé ce mois » : la Caisse reste dans le menu du bas.
+      { num: money(((ASLDB.selectUnpaid && ASLDB.selectUnpaid()) || []).reduce(function (s, r) { return s + Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0)); }, 0)), lbl: 'Impayés', cls: 'teal', ico: 'card', act: "maDash('unpaid')", small: true }
     ];
     var host = document.getElementById('ma-dashboard');
     if (!host) return;
@@ -427,6 +428,10 @@
   function renderVehicles() {
     var host = document.getElementById('ma-vehicles');
     if (!host) return;
+    if (VH.view === 'new') {
+      if (VH.e) { vhBack(true); vhRenderEdit(host, {}); return; }
+      VH.view = 'list'; host.innerHTML = '';
+    }
     if (VH.view !== 'list') {
       var c = vhCar(VH.id);
       if (c) { vhBack(true); if (VH.view === 'edit') vhRenderEdit(host, c); else vhRenderFiche(host, c); return; }
@@ -438,6 +443,7 @@
     var g = document.querySelector('.ma-greet'); if (g) g.style.display = 'none';
     if (!document.getElementById('ma-vh-q')) {
       host.innerHTML = '<div id="ma-vh-sum"></div>'
+        + '<button type="button" class="mu-go ll-new vh-new" onclick="maVhNew()">' + ic('plus') + ' Ajouter un véhicule</button>'
         + '<label class="mu-search">' + ic('search') + '<span class="mu-sr">Rechercher un véhicule</span>'
         + '<input id="ma-vh-q" type="search" value="' + esc(VH.q) + '" placeholder="Modèle, plaque, couleur…" autocomplete="off" oninput="maVhQ(this.value)">'
         + '<button type="button" class="mu-clear" id="ma-vh-clear" aria-label="Effacer la recherche" onclick="maVhQ(\'\',1)"' + (VH.q ? '' : ' style="display:none;"') + '>' + ic('x') + '</button></label>'
@@ -495,7 +501,7 @@
   window.maVhBack = function () {
     var host = document.getElementById('ma-vehicles'); if (host) host.innerHTML = '';
     if (VH.view === 'edit') { VH.view = 'fiche'; VH.e = null; }
-    else { VH.view = 'list'; VH.id = null; }
+    else { VH.view = 'list'; VH.id = null; VH.e = null; }
     renderVehicles(); maTop();
   };
   // Anciens points d'entrée : ouvrent désormais la fiche / la modification mobiles.
@@ -527,6 +533,18 @@
       + '<button type="button" class="mu-go vh-editbtn" onclick="maVhEdit(\'' + idA + '\')">' + ic('edit') + ' Modifier le véhicule</button>';
   }
 
+  /* ---- ★ Ajout d'un véhicule depuis le mobile (nouveau modèle / nouvelle marque) ----
+     Même formulaire que la modification ; enregistrement identique à
+     l'ordinateur (ASLDB.addVehicle) : visible aussitôt sur le site client. */
+  window.maVhNew = function () {
+    VH.e = { name: '', category: 'economique', priceMAD: '', deposit: '', units: [{ plate: '', color: '', status: 'available' }],
+      transmission: 'Manuelle', fuel: 'Diesel', seats: 5, doors: 5, trunk: '', consumption: '', extras: '',
+      features: { ac: true, bluetooth: false, gps: false, camera: false, insurance: true, airport: true },
+      custom: (function () { var o = {}; vhCustomList().forEach(function (x) { o[x.id] = false; }); return o; })() };
+    VH.view = 'new'; VH.id = null;
+    var host = document.getElementById('ma-vehicles'); if (host) { host.innerHTML = ''; vhRenderEdit(host, {}, true); }
+    vhBack(true); maTop();
+  };
   /* ---- Modification ---- */
   window.maVhEdit = function (id) {
     var c = vhCar(id); if (!c) return;
@@ -541,8 +559,9 @@
     vhBack(true); maTop();
   };
   function vhRenderEdit(host, c, force) {
-    maSetTitle('Modifier le véhicule');
-    if (!VH.e) { VH.view = 'fiche'; vhRenderFiche(host, c); return; }
+    var isNew = VH.view === 'new';
+    maSetTitle(isNew ? 'Nouveau véhicule' : 'Modifier le véhicule');
+    if (!VH.e) { if (isNew) { VH.view = 'list'; renderVehicles(); return; } VH.view = 'fiche'; vhRenderFiche(host, c); return; }
     if (!force && document.getElementById('vh-edit')) return; // saisie en cours : on ne reconstruit pas
     var e = VH.e;
     var inp = function (k, label, type, ph, unit, extra) {
@@ -579,10 +598,11 @@
       + VH_FEAT.map(function (x) { return sw(e.features[x[0]], "maVhFeat('" + x[0] + "')", x[1]); }).join('')
       + vhCustomList().map(function (x) { return sw(e.custom[x.id], "maVhCustom('" + esc(x.id) + "')", x.name, 'personnalisé'); }).join('') + '</div>'
       + '<div class="mu-hint sl-need"' + (ok ? ' style="display:none;"' : '') + '>Saisissez la marque et le modèle</div>'
-      + '<button type="button" class="mu-go sl-save"' + (ok ? '' : ' disabled') + ' onclick="maVhSave()">Enregistrer les modifications</button>'
+      + (isNew ? '<div class="mu-jn">La photo s\'ajoute juste après, depuis la fiche du véhicule (« Changer la photo »).</div>' : '')
+      + '<button type="button" class="mu-go sl-save"' + (ok ? '' : ' disabled') + ' onclick="maVhSave()">' + (isNew ? 'Ajouter le véhicule' : 'Enregistrer les modifications') + '</button>'
       + '</div>';
   }
-  function vhReEdit() { var c = vhCar(VH.id), host = document.getElementById('ma-vehicles'); if (c && host) vhRenderEdit(host, c, true); }
+  function vhReEdit() { var c = VH.view === 'new' ? {} : vhCar(VH.id), host = document.getElementById('ma-vehicles'); if (c && host) vhRenderEdit(host, c, true); }
   window.maVhE = function (k, v) {
     if (!VH.e) return; VH.e[k] = v;
     if (k === 'name') { var ok = !!String(v || '').trim(); document.querySelectorAll('#vh-edit .sl-save').forEach(function (b) { b.disabled = !ok; }); document.querySelectorAll('#vh-edit .sl-need').forEach(function (h) { h.style.display = ok ? 'none' : ''; }); }
@@ -601,6 +621,7 @@
   /* Enregistrement : mêmes champs et même règle que l'ordinateur (editCar),
      sans toucher aux champs non affichés ici (photo, description, ALT…). */
   window.maVhSave = function () {
+    if (VH.view === 'new') { vhSaveNew(); return; }
     var c = vhCar(VH.id), e = VH.e; if (!c || !e) return;
     var name = String(e.name || '').trim(); if (!name) return;
     // ★ On n'enregistre que le réglage manuel (en service / maintenance / hors service) ;
@@ -629,6 +650,34 @@
     var host = document.getElementById('ma-vehicles'); if (host) host.innerHTML = '';
     renderVehicles(); maTop();
   };
+
+  function vhSaveNew() {
+    var e = VH.e; if (!e) return;
+    var name = String(e.name || '').trim(); if (!name) return;
+    var units = e.units.map(function (u) { return { plate: String(u.plate || '').trim(), color: String(u.color || '').trim(), status: (u.status === 'maintenance' || u.status === 'offroad') ? u.status : 'available' }; });
+    var pm = parseInt(e.priceMAD, 10) || 300, rate = (ASLDB && ASLDB.RATE_MAD) || 10.8;
+    var catLabels = { citadine: 'Citadine', economique: 'Économique', familiale: 'Familiale', suv: 'SUV' };
+    var cf = {}; for (var k1 in e.custom) cf[k1] = !!e.custom[k1];
+    var v;
+    try {
+      v = ASLDB.addVehicle({
+        name: name, plate: (units[0] && units[0].plate) || '', units: units, stock: units.length || 1,
+        priceMAD: pm, priceEUR: Math.round(pm / rate), category: e.category, badge: catLabels[e.category] || '',
+        status: units.some(function (u) { return u.status === 'available'; }) ? 'available' : units[0].status,
+        fuel: e.fuel, transmission: e.transmission, seats: Number(e.seats) || 5, doors: Number(e.doors) || null,
+        trunk: String(e.trunk || ''), consumption: String(e.consumption || ''), deposit: parseInt(e.deposit, 10) || null, depositShow: false, extras: String(e.extras || ''),
+        features: { ac: !!e.features.ac, bluetooth: !!e.features.bluetooth, gps: !!e.features.gps, camera: !!e.features.camera, insurance: !!e.features.insurance, airport: !!e.features.airport },
+        customFeatures: cf, tiers: [], seasonalTiers: [], featured: false, services: ['Clim', 'Radio'],
+        img: 'https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=600&q=80', imgAlt: '', shortDesc: '', shortDescI18n: { fr: '' }
+      });
+    } catch (err) { console.error(err); return; }
+    try { if (typeof reloadData === 'function') reloadData(); } catch (e1) {}
+    try { if (typeof renderFleetPage === 'function') renderFleetPage(); if (typeof renderAvailability === 'function') renderAvailability(); } catch (e2) {}
+    if (typeof showToast === 'function') showToast('Véhicule « ' + name + ' » ajouté ✓ — visible sur le site');
+    VH.e = null; VH.view = v && v.id != null ? 'fiche' : 'list'; VH.id = v ? v.id : null;
+    var host = document.getElementById('ma-vehicles'); if (host) host.innerHTML = '';
+    renderVehicles(); maTop();
+  }
 
   /* Changer le statut : feuille tactile, écrit via ASLDB.setUnitStatusByPlate
      ★ Cible désormais l'UNITÉ précise (identifiée par sa plaque), pas tout le
@@ -1826,6 +1875,36 @@
     var hint = box.querySelector('.mu-hint'); hint.textContent = ok ? '' : (amt <= 0 ? 'Saisissez le montant reçu' : 'Indiquez qui a encaissé'); hint.style.display = ok ? 'none' : '';
     var b = box.querySelector('.mu-go'); b.disabled = !ok; b.textContent = 'Enregistrer ' + money(Math.min(amt, MP.due));
   }
+  /* ★ Date de l'encaissement : aujourd'hui par défaut ; « Hier » ou
+     « Autre date » (calendrier du téléphone) si le paiement a été reçu avant.
+     Une date future est refusée. */
+  function mpAddDays(iso, n) { var d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+  function mpLongDate(iso) {
+    var J = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'], M = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+    var d = new Date(iso + 'T12:00:00'); if (isNaN(d)) return iso;
+    return J[d.getDay()] + ' ' + d.getDate() + ' ' + M[d.getMonth()] + ' ' + d.getFullYear();
+  }
+  function mpDateHTML() {
+    var t = todayISO(), y = mpAddDays(t, -1), v = (MP && MP.date) || t;
+    var kind = v === t ? 'today' : v === y ? 'yday' : 'other';
+    var seg = [['today', 'Aujourd\'hui'], ['yday', 'Hier'], ['other', 'Autre date']].map(function (x) {
+      return '<button type="button" class="mpd-opt' + (kind === x[0] ? ' on' : '') + '" onclick="maPayDate(\'' + x[0] + '\')">' + x[1] + '</button>';
+    }).join('');
+    return '<div class="mpd-seg" role="group" aria-label="Date de l\'encaissement">' + seg + '</div>'
+      + '<label class="mpd-field"><span class="mpd-ico">' + ic('calendar') + '</span>'
+      + '<span class="mpd-txt"><b>' + esc(mpLongDate(v)) + '</b><small>' + (kind === 'today' ? 'Encaissé aujourd\'hui' : 'Enregistré dans la caisse à cette date') + '</small></span>'
+      + '<span class="mpd-chg">Modifier</span>'
+      + '<input type="date" id="mu-pay-date" value="' + esc(v) + '" max="' + esc(t) + '" aria-label="Choisir la date de l\'encaissement" onclick="try{this.showPicker&&this.showPicker()}catch(e){}" onchange="maPayDate(\'set\',this.value)"></label>';
+  }
+  window.maPayDate = function (kind, v) {
+    if (!MP) return;
+    var t = todayISO();
+    if (kind === 'today') MP.date = t;
+    else if (kind === 'yday') MP.date = mpAddDays(t, -1);
+    else if (kind === 'set') { if (v && v <= t) MP.date = v; else if (v && v > t) { MP.date = t; if (typeof showToast === 'function') showToast('Une date future n\'est pas possible'); } }
+    else if (kind === 'other') { var inp = document.getElementById('mu-pay-date'); if (inp) { try { if (inp.showPicker) { inp.showPicker(); return; } } catch (e) {} inp.focus(); inp.click(); } return; }
+    var box = document.getElementById('mu-paydate'); if (box) box.innerHTML = mpDateHTML();
+  };
   /* Feuille d'encaissement partagée (Impayés, Sous-location, Longue durée).
      opts.title, opts.dueLabel, opts.quick [{label, amount}], opts.dated
      (date + commentaire), opts.lld (mode/encaissé par mémorisés comme sur
@@ -1843,7 +1922,7 @@
       + '<div class="mu-duebox"><span>' + esc(opts.dueLabel || 'Reste dû') + '</span><b>' + money(due) + '</b></div>'
       + '<label class="mu-amt"><span>Montant reçu (MAD)</span><span class="mu-amtin"><input id="mu-pay-amt" type="number" inputmode="decimal" min="0" step="any" value="' + esc(MP.amount) + '" oninput="maPaySet(\'amount\',this.value,1)"><em>MAD</em></span></label>'
       + '<div class="mu-chips wrap">' + quick.map(function (q, i) { return '<button type="button" class="mu-all" onclick="maPayQuick(' + i + ')">' + esc(q.label) + '</button>'; }).join('') + '</div>'
-      + (MP.dated ? '<label class="mu-dateline"><span>Date du versement</span><input type="date" id="mu-pay-date" value="' + esc(MP.date) + '" oninput="maPaySet(\'date\',this.value,1)"></label>' : '')
+      + '<div class="mu-sec">Date de l\'encaissement</div><div id="mu-paydate" class="mpd">' + mpDateHTML() + '</div>'
       + '<div class="mu-sec">Mode de paiement</div><div class="mu-modes"></div>'
       + '<div class="mu-sec">Encaissé par</div><div class="mu-people"></div>'
       + (MP.dated ? '<input class="mu-txt mu-cmt" id="mu-pay-cmt" placeholder="Commentaire (facultatif)" oninput="maPaySet(\'comment\',this.value,1)">' : '')
@@ -1867,10 +1946,11 @@
     var amount = parseFloat(String(MP.amount).replace(',', '.')) || 0;
     if (amount <= 0 || !MP.by) return;
     if (amount > reste) amount = reste;
+    if (!(amount > 0)) { MP = null; closeSheet(); if (typeof showToast === 'function') showToast('Ce dossier est déjà soldé'); return; } // ★ jamais de versement à 0
     // Même enregistrement que l'ordinateur : versement ajouté au journal,
     // avec son mode et la personne qui a encaissé.
     var patch;
-    var pDate = (MP.dated && MP.date) ? MP.date : todayISO();
+    var pDate = (MP.date && /^\d{4}-\d{2}-\d{2}$/.test(MP.date) && MP.date <= todayISO()) ? MP.date : todayISO(); // ★ date choisie, sinon aujourd'hui
     var pCmt = MP.dated ? String(MP.comment || '').trim() : 'Encaissé depuis le mobile';
     if (typeof aslPaymentJournal === 'function') {
       var journal = aslJournalClean(aslPaymentJournal(r));
@@ -2340,7 +2420,7 @@
     if (!force && document.getElementById('ll-edit')) return; // saisie en cours
     var e = LL.e, k = llCalc(c), pl = k.plan;
     var ext = pl.p === '15d' ? [['15d', '+ 15 jours'], ['1', '+ 1 mois'], ['3', '+ 3 mois']] : [['1', '+ 1 mois'], ['3', '+ 3 mois'], ['6', '+ 6 mois']];
-    var fld = function (k2, label, type, extra) { return '<label class="sl-field"><span>' + label + '</span><input type="' + type + '" value="' + esc(e[k2]) + '" ' + (extra || '') + ' oninput="maLLE(\'' + k2 + '\',this.value)"></label>'; };
+    var fld = function (k2, label, type, extra) { return '<label class="sl-field"><span>' + label + '</span><input type="' + type + '" value="' + esc(e[k2]) + '" ' + (extra || '') + ' oninput="maLLE(\'' + k2 + '\',this.value)" onchange="maLLE(\'' + k2 + '\',this.value)"></label>'; };
     host.innerHTML = '<div id="ll-edit" class="sl-form">'
       + '<div class="ll-edhead"><b>' + esc(c.client || '') + '</b><small>' + esc((c.car || '') + ' · Contrat ' + (c.contractRef || c.id || '')) + '</small></div>'
       + fld('phone', 'Téléphone du client', 'tel', 'inputmode="tel"')
@@ -2390,6 +2470,7 @@
     var paid = llCalc(c).paid;
     var patch = { phone: String(e.phone || '').trim(), startDate: e.start, endDate: e.end, days: Math.max(1, llDays(e.start, e.end)), amount: amount,
       paymentStatus: paid <= 0 ? 'Non payé' : (paid >= amount ? 'Paiement complet' : 'Paiement partiel') };
+    try { if (typeof window.aslReopenIfStillOut === 'function') window.aslReopenIfStillOut(c, patch); } catch (eR) {} // ★ contrat clôturé + nouvelle fin à venir → de nouveau en cours
     ASLDB.updateReservation(c.id, patch);
     try { if (typeof reloadData === 'function') reloadData(); } catch (e1) {}
     if (typeof showToast === 'function') showToast('Contrat mis à jour ✓');
@@ -3326,13 +3407,15 @@
         ok = false;
       } else if (!WZ.isNew) {
         var list = wzClientsList();
-        body += '<label class="wz-search">' + ic('search') + '<input id="wz-q" type="search" value="' + esc(WZ.q) + '" placeholder="Nom ou téléphone du client" autocomplete="off" oninput="maWzQ(this.value)"></label>'
-          + '<div class="wz-sec">' + (WZ.q ? 'Clients trouvés' : 'Clients récents') + '</div>'
+        if (!WZ.q) list = list.slice(0, 4); // ★ 4 clients récents seulement (la recherche trouve tous les autres)
+        // ★ Ordre : « Nouveau client » d'abord, puis clients récents + recherche
+        body += '<button type="button" class="wz-newcl" onclick="maWz(\'isNew\',\'1\')">' + ic('plus') + ' Nouveau client</button>'
+          + '<div class="wz-sec">' + (WZ.q ? 'Clients trouvés' : 'Client récent') + '</div>'
+          + '<label class="wz-search">' + ic('search') + '<input id="wz-q" type="search" value="' + esc(WZ.q) + '" placeholder="Rechercher un client (nom ou téléphone)" autocomplete="off" oninput="maWzQ(this.value)"></label>'
           + (list.length ? list.map(function (c) {
               var on = WZ.client && WZ.client.key === c.key;
               return '<button type="button" class="wz-row' + (on ? ' on' : '') + '" data-k="' + esc(encodeURIComponent(c.key)) + '" onclick="maWzPick(this.dataset.k)"><span class="wz-ava">' + esc((c.display || '?').charAt(0).toUpperCase()) + '</span><span class="wz-rt"><b>' + esc(c.display) + '</b><small>' + esc((c.phone || 'Pas de téléphone') + ' · ' + c.count + ' dossier' + (c.count > 1 ? 's' : '')) + '</small></span>' + (on ? '<span class="wz-check">' + ic('check') + '</span>' : '') + '</button>';
-            }).join('') : '<div class="wz-note">Aucun client trouvé.</div>')
-          + '<button type="button" class="wz-dashed" onclick="maWz(\'isNew\',\'1\')">' + ic('plus') + ' Nouveau client</button>';
+            }).join('') : '<div class="wz-note">Aucun client trouvé.</div>');
         if (WZ.client) {
           var c0 = WZ.client;
           body += '<div class="wz-card"><div class="wz-sec" style="margin:0 0 6px;">Rempli automatiquement</div>'
