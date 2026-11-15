@@ -423,7 +423,7 @@ function openRevenueDrawer() {
       personCard('Mohamed', byPerson.Mohamed, '#16a34a') +
       personCard('Younes', byPerson.Younes, '#3b82f6') +
       personCard('Khalil', byPerson.Khalil, '#8b5cf6') +
-      (byPerson.PayPal > 0 ? personCard('PayPal', byPerson.PayPal, '#1d4ed8') : '') +
+      personCard('PayPal', byPerson.PayPal, '#1d4ed8') +
       (nonAttribue > 0 ? personCard('Non attribué', nonAttribue, '#9ca3af') : '') +
       row('Reste à encaisser', dueGlobal, (dueGlobal > 0 ? '#ef4444' : '#16a34a'), 'Total de tous les impayés') +
       '<div id="collector-detail"></div>';

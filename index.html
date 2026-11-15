@@ -903,6 +903,27 @@ html:has(#booking-drawer.open) { overflow: hidden; }
 
 /* ---- Step: Payment ---- */
 .payment-options { display: flex; flex-direction: column; gap: 10px; }
+.pay-warn{display:flex;gap:7px;align-items:flex-start;margin-top:8px;font-size:12px;line-height:1.4;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:9px;padding:7px 9px}
+.doc-zone{margin-top:6px;background:var(--gray);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.doc-hint{font-size:12px;color:var(--text2);line-height:1.4;margin-top:-2px}
+.doc-block{background:#fff;border:1.5px solid #e5e7eb;border-radius:12px;padding:12px;transition:border-color .15s}
+.doc-block.ok{border-color:#10B981}.doc-block.missing{border-color:var(--red)}
+.doc-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.doc-head b{font-size:14px;color:var(--black)}.doc-head small{display:block;font-size:11.5px;color:#6b7280;margin-top:2px}
+.doc-ok{font-size:11.5px;font-weight:800;color:#047857;background:#d1fae5;border-radius:20px;padding:2px 9px;white-space:nowrap}
+.doc-chips{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap}
+.doc-chip{border:1.5px solid #e5e7eb;background:#fff;border-radius:20px;padding:6px 12px;font-size:12.5px;font-weight:700;color:#374151;font-family:inherit;cursor:pointer}
+.doc-chip.on{border-color:var(--red);color:var(--red);background:rgba(196,30,58,.05)}
+.doc-thumbs{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.doc-thumb{position:relative;width:92px;height:64px;border-radius:9px;overflow:hidden;border:1px solid #e5e7eb;background:#f3f4f6;flex:none}
+.doc-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.doc-x{position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(17,17,17,.75);color:#fff;font-size:15px;line-height:20px;padding:0;cursor:pointer}
+.doc-actions{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:10px}
+.doc-btn{position:relative;display:flex;align-items:center;justify-content:center;gap:7px;height:42px;border-radius:10px;background:var(--black,#111);color:#fff;font-size:13.5px;font-weight:700;border:0;cursor:pointer;font-family:inherit;padding:0 14px;overflow:hidden}
+.doc-btn.ghost{background:#fff;color:#111;border:1.5px solid #d1d5db}
+.doc-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0}
+.doc-private{display:flex;gap:6px;align-items:center;font-size:11.5px;color:#6b7280}
+
 .pp-badge{display:inline-block;font-size:10.5px;font-weight:800;color:#047857;background:#d1fae5;border-radius:20px;padding:2px 9px;margin-inline-start:6px;vertical-align:2px;white-space:nowrap}
 .pp-box{margin-top:12px;border-top:1px dashed var(--border,#e5e5e5);padding-top:12px}
 .pp-q{font-size:13px;font-weight:700;margin-bottom:8px;color:var(--black)}
@@ -2493,13 +2514,34 @@ function nextStep() {
     if (state.step === 5) {
       // Garde-fou (le bouton est déjà désactivé tant que la case n'est pas cochée)
       if (!state.termsAccepted) { alert(t('pay.acceptAlert')); return; }
-      /* ★ Si le véhicule vient d'être réservé (conflit), on reste sur l'étape :
-         auparavant l'écran « Réservation confirmée » s'affichait quand même. */
-      if (confirmBooking() === false) return;
+      submitBookingWithDocs();   // envoie les photos puis enregistre la réservation
+      return;
     }
     state.step++;
     renderStep();
   }
+}
+
+async function submitBookingWithDocs() {
+  const btn = document.getElementById('btn-next');
+  const span = btn && btn.querySelector('span');
+  const label = span ? span.textContent : '';
+  if (btn) btn.disabled = true;
+  if (span) span.textContent = t('doc.uploading');
+  try {
+    state.docRefs = await docsUpload();
+  } catch (e) {
+    if (btn) btn.disabled = false;
+    if (span) span.textContent = label;
+    alert(t('doc.uploadFail'));
+    return;
+  }
+  if (btn) btn.disabled = false;
+  if (span) span.textContent = label;
+  /* ★ Si le véhicule vient d'être réservé (conflit), on reste sur l'étape. */
+  if (confirmBooking() === false) return;
+  state.step++;
+  renderStep();
 }
 
 function prevStep() {
@@ -2740,66 +2782,154 @@ function renderSummary() {
 }
 
 function renderCustomerForm() {
+  // ★ Étape « Infos » simplifiée : prénom, nom, téléphone, WhatsApp, e-mail
+  //   + photos du permis et de la pièce d'identité (galerie, appareil photo
+  //   ou copier-coller), envoyées de façon sécurisée au back-office.
+  const c = state.customer || {};
+  const esc = v => String(v || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  const pref = (id, cur) => `<select class="phone-prefix" id="${id}">${['+212','+33','+34','+44','+1','+49','+39','+32','+31','+41'].map(p => `<option${p === cur ? ' selected' : ''}>${p}</option>`).join('')}</select>`;
   return `
     <div class="form-grid">
       <div class="form-row">
         <div class="form-field">
-          <label class="form-label">${t('f.first')} <span class="req">*</span></label>
-          <input class="form-input" type="text" placeholder="${t('ph.first')}" id="f-firstname" value="${state.customer.firstname||''}">
+          <label class="form-label" for="f-firstname">${t('f.first')} <span class="req">*</span></label>
+          <input class="form-input" type="text" autocomplete="given-name" placeholder="${t('ph.first')}" id="f-firstname" value="${esc(c.firstname)}">
         </div>
         <div class="form-field">
-          <label class="form-label">${t('f.last')} <span class="req">*</span></label>
-          <input class="form-input" type="text" placeholder="${t('ph.last')}" id="f-lastname" value="${state.customer.lastname||''}">
+          <label class="form-label" for="f-lastname">${t('f.last')} <span class="req">*</span></label>
+          <input class="form-input" type="text" autocomplete="family-name" placeholder="${t('ph.last')}" id="f-lastname" value="${esc(c.lastname)}">
         </div>
       </div>
       <div class="form-field">
-        <label class="form-label">${t('f.email')}</label>
-        <input class="form-input" type="email" placeholder="${t('ph.email')}" id="f-email" value="${state.customer.email||''}">
+        <label class="form-label" for="f-phone">${t('f.phone')} <span class="req">*</span></label>
+        <div class="phone-row">${pref('f-prefix', c.prefix || '+212')}<input class="form-input phone-number" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="6XXXXXXXX" id="f-phone" value="${esc(c.phone)}"></div>
       </div>
       <div class="form-field">
-        <label class="form-label">${t('f.phone')} <span class="req">*</span></label>
-        <div class="phone-row">
-          <select class="phone-prefix" id="f-prefix">
-            <option>+212</option><option>+33</option><option>+34</option>
-            <option>+44</option><option>+1</option><option>+49</option>
-          </select>
-          <input class="form-input phone-number" type="tel" placeholder="6XXXXXXXX" id="f-phone" value="${state.customer.phone||''}">
-        </div>
+        <label class="form-label" for="f-wa">${t('f.wa')}</label>
+        <div class="phone-row">${pref('f-wa-prefix', c.waPrefix || c.prefix || '+212')}<input class="form-input phone-number" type="tel" inputmode="tel" placeholder="6XXXXXXXX" id="f-wa" value="${esc(c.whatsapp)}"></div>
       </div>
       <div class="form-field">
-        <label class="form-label">${t('f.wa')}</label>
-        <div class="phone-row">
-          <select class="phone-prefix" id="f-wa-prefix">
-            <option>+212</option><option>+33</option><option>+34</option>
-            <option>+44</option><option>+1</option>
-          </select>
-          <input class="form-input phone-number" type="tel" placeholder="6XXXXXXXX" id="f-wa" value="${state.customer.whatsapp||''}">
-        </div>
+        <label class="form-label" for="f-email">${t('f.email')}</label>
+        <input class="form-input" type="email" inputmode="email" autocomplete="email" placeholder="${t('ph.email')}" id="f-email" value="${esc(c.email)}">
       </div>
-      <div class="form-field">
-        <label class="form-label">${t('f.addr')}</label>
-        <input class="form-input" type="text" placeholder="${t('ph.addr')}" id="f-address" value="${state.customer.address||''}">
-      </div>
-
-
-      <div class="form-field full">
-        <label class="form-label">${t('f.notes')}</label>
-        <textarea class="form-input" rows="3" placeholder="${t('ph.notes')}" id="f-notes" style="resize:vertical;">${state.customer.notes||''}</textarea>
-      </div>
-      <div style="background:var(--gray);border-radius:12px;padding:16px;">
-        <div class="step-section-title">Documents</div>
-        <div class="form-field" style="margin-bottom:10px;">
-          <label class="form-label">Numéro de permis de conduire <span class="req">*</span></label>
-          <input class="form-input" type="text" placeholder="Ex : 12345/2020" id="f-license" value="${state.customer.license||''}">
-        </div>
-        <div class="form-field">
-          <label class="form-label">Numéro de carte nationale (CIN) <span class="req">*</span></label>
-          <input class="form-input" type="text" placeholder="Ex : AB123456" id="f-cin" value="${state.customer.cin||''}">
-        </div>
-      </div>
+      <div class="doc-zone" id="doc-zone">${renderDocZone()}</div>
     </div>
     <div style="height:20px;"></div>
   `;
+}
+
+/* ==================== DOCUMENTS DU CLIENT (photos) ==================== */
+const DOCS_MAX = 2;
+function docState() {
+  if (!state.docs) state.docs = { permis: [], identite: [], idType: 'passport' };
+  return state.docs;
+}
+function renderDocZone() {
+  const d = docState();
+  const thumbs = type => d[type].map((x, i) => `<div class="doc-thumb"><img src="${x.dataUrl}" alt=""><button type="button" class="doc-x" aria-label="${t('doc.remove')}" onclick="docRemove('${type}',${i})">×</button></div>`).join('');
+  const block = (type, title, sub, extra) => `
+    <div class="doc-block ${d[type].length ? 'ok' : ''}" data-doc="${type}" onclick="docState().target='${type}'">
+      <div class="doc-head"><div><b>${title} <span class="req">*</span></b>${sub ? `<small>${sub}</small>` : ''}</div>${d[type].length ? `<span class="doc-ok">✓ ${t('doc.added')}</span>` : ''}</div>
+      ${extra || ''}
+      ${d[type].length ? `<div class="doc-thumbs">${thumbs(type)}</div>` : ''}
+      ${d[type].length < DOCS_MAX ? `<div class="doc-actions">
+        <label class="doc-btn"><input type="file" accept="image/*" multiple onchange="docPick('${type}', this)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>${t('doc.pick')}</label>
+        <button type="button" class="doc-btn ghost" onclick="docPaste('${type}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>${t('doc.paste')}</button>
+      </div>` : ''}
+    </div>`;
+  const idChips = `<div class="doc-chips">${['passport', 'cin'].map(k => `<button type="button" class="doc-chip ${d.idType === k ? 'on' : ''}" onclick="event.stopPropagation();docSetIdType('${k}')">${t(k === 'passport' ? 'doc.passport' : 'doc.cin')}</button>`).join('')}</div>`;
+  return `
+    <div class="step-section-title" style="margin-bottom:4px;">${t('doc.title')}</div>
+    <div class="doc-hint">${t('doc.hint')}</div>
+    ${block('permis', t('doc.permis'), t('doc.permisSub'))}
+    ${block('identite', t('doc.id'), '', idChips)}
+    <div class="doc-private"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>${t('doc.private')}</div>`;
+}
+function docRefresh() {
+  const z = document.getElementById('doc-zone');
+  if (z) z.innerHTML = renderDocZone();   // seule la zone documents est redessinée : pas de saut de défilement
+}
+function docSetIdType(k) { docState().idType = k; docRefresh(); }
+function docRemove(type, i) { const d = docState(); d[type].splice(i, 1); docRefresh(); }
+/* Compression : max 1600 px, JPEG ~0,82 → photo légère et lisible. */
+function docCompress(blob) {
+  return new Promise((resolve, reject) => {
+    if (!blob || !/^image\//.test(blob.type || '')) { reject(new Error('type')); return; }
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const max = 1600, r = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+        const w = Math.max(1, Math.round(img.naturalWidth * r)), h = Math.max(1, Math.round(img.naturalHeight * r));
+        const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+        const cx = cv.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, w, h); cx.drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        resolve(cv.toDataURL('image/jpeg', 0.82));
+      } catch (e) { URL.revokeObjectURL(url); reject(e); }
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('decode')); };
+    img.src = url;
+  });
+}
+async function docAddBlobs(type, blobs) {
+  const d = docState();
+  let bad = false, full = false;
+  for (const b of blobs) {
+    if (d[type].length >= DOCS_MAX) { full = true; break; }
+    try { d[type].push({ dataUrl: await docCompress(b), ref: '' }); } catch (e) { bad = true; }
+  }
+  docRefresh();
+  if (bad) alert(t('doc.badFile')); else if (full) alert(t('doc.max'));
+}
+function docPick(type, input) {
+  const files = Array.from((input && input.files) || []);
+  if (input) input.value = '';
+  if (files.length) docAddBlobs(type, files);
+}
+async function docPaste(type) {
+  docState().target = type;
+  try {
+    if (navigator.clipboard && navigator.clipboard.read) {
+      const items = await navigator.clipboard.read();
+      const blobs = [];
+      for (const it of items) {
+        const ty = (it.types || []).find(x => /^image\//.test(x));
+        if (ty) blobs.push(await it.getType(ty));
+      }
+      if (blobs.length) { docAddBlobs(type, blobs); return; }
+    }
+  } catch (e) {}
+  alert(t('doc.pasteFail'));
+}
+/* Ctrl+V / Cmd+V à l'étape Infos : l'image collée va dans le document choisi
+   (ou le premier document encore manquant). */
+document.addEventListener('paste', ev => {
+  try {
+    if (typeof state === 'undefined' || state.step !== 4) return;
+    const files = Array.from((ev.clipboardData && ev.clipboardData.files) || []).filter(f => /^image\//.test(f.type));
+    if (!files.length) return;
+    ev.preventDefault();
+    const d = docState();
+    const type = d.target || (!d.permis.length ? 'permis' : 'identite');
+    docAddBlobs(type, files);
+  } catch (e) {}
+});
+/* Envoi sécurisé des photos (une seule fois chacune) au moment de valider. */
+async function docsUpload() {
+  const d = docState();
+  const one = async x => {
+    if (x.ref) return x.ref;
+    const data = x.dataUrl.split(',')[1] || '';
+    const r = await fetch('/api/doc/public', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'image/jpeg', data: data }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok || !j.ok || !j.id) throw new Error('upload');
+    x.ref = 'asldoc:' + j.id + '|image/jpeg';
+    return x.ref;
+  };
+  const permis = [], identite = [];
+  for (const x of d.permis) permis.push(await one(x));
+  for (const x of d.identite) identite.push(await one(x));
+  return { permis: permis, identite: identite, identiteType: d.idType === 'cin' ? 'cin' : 'passeport' };
 }
 
 function saveCustomerForm() {
@@ -2810,17 +2940,14 @@ function saveCustomerForm() {
     phone: document.getElementById('f-phone')?.value || '',
     prefix: (document.getElementById('f-prefix')?.value || '').split(' ').pop() || '',
     whatsapp: document.getElementById('f-wa')?.value || '',
-    address: document.getElementById('f-address')?.value || '',
-    notes: document.getElementById('f-notes')?.value || '',
-    license: document.getElementById('f-license')?.value || '',
-    cin: document.getElementById('f-cin')?.value || '',
+    waPrefix: (document.getElementById('f-wa-prefix')?.value || '').split(' ').pop() || '',
   };
 }
 
 // Champs OBLIGATOIRES avant de poursuivre : nom complet, téléphone, n° de permis.
 // (Email, adresse et informations complémentaires restent optionnels.)
 function validateCustomer() {
-  // Champs obligatoires simples (non vides, pas uniquement des espaces)
+  // Obligatoires : prénom, nom, téléphone + photo du permis et de la pièce d'identité.
   const required = ['f-firstname', 'f-lastname', 'f-phone'];
   let ok = true;
   required.forEach(id => {
@@ -2830,30 +2957,32 @@ function validateCustomer() {
     el.classList.toggle('input-error', empty);
     if (empty) ok = false;
   });
-  // Permis et CIN : obligatoires + minimum 3 caractères + pas uniquement des espaces
-  ['f-license', 'f-cin'].forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const val = (el.value || '').trim();
-    const invalid = val.length < 3;
-    el.classList.toggle('input-error', invalid);
-    if (invalid) ok = false;
-  });
   if (!ok) {
-    alert('Veuillez remplir tous les champs obligatoires. Le numéro de permis et le numéro de carte nationale doivent contenir au moins 3 caractères.');
+    alert(t('doc.fields'));
     const firstErr = document.querySelector('.input-error');
     if (firstErr && firstErr.scrollIntoView) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return false;
   }
-  return ok;
+  const d = docState();
+  const missing = !d.permis.length ? 'permis' : (!d.identite.length ? 'identite' : '');
+  document.querySelectorAll('.doc-block').forEach(b => b.classList.toggle('missing', b.dataset.doc === 'permis' ? !d.permis.length : !d.identite.length));
+  if (missing) {
+    alert(t('doc.missing'));
+    const b = document.querySelector('.doc-block[data-doc="' + missing + '"]');
+    if (b && b.scrollIntoView) b.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return false;
+  }
+  return true;
 }
 
 function renderPayment() {
   if (state.step === 4) saveCustomerForm();
   // 3 options de paiement claires. Tout passe via WhatsApp, le paiement réel
   // est confirmé manuellement avec le client.
-  // ★ PayPal (acompte ou totalité) : proposé en premier dès que PayPal est
+  // ★ PayPal (acompte 30 %) : proposé en premier dès que PayPal est
   //   configuré côté Cloudflare ; sinon l'étape reste exactement comme avant.
-  const PAY_MODES = ppOn() ? ['paypal', 'delivery', 'advance', 'transfer'] : ['delivery', 'advance', 'transfer'];
+  // ★ Audit : seulement 2 choix clairs — PayPal (en ligne) ou espèces à l'arrivée.
+  const PAY_MODES = ppOn() ? ['paypal', 'delivery'] : ['delivery'];
   if (!PAY_MODES.includes(state.payment)) state.payment = 'delivery';
   ASL_PP.result = null;
   const payName = {
@@ -2864,7 +2993,7 @@ function renderPayment() {
   };
   const payDesc = {
     paypal: t('pp.desc') + (state.payment === 'paypal' ? ppChoiceHTML() : ''),
-    delivery: t('pay.deliveryDesc') || '',
+    delivery: (t('pay.deliveryDesc') || '') + (ppOn() ? `<div class="pay-warn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="flex:none;margin-top:1px"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg><span>${t('pay.cashWarn')}</span></div>` : ''),
     advance:  t('pay.advanceDesc') || '',
     transfer: t('pay.transferDesc') || '',
   };
@@ -2950,7 +3079,7 @@ function buildReservationItem(ref) {
     id: ref,
     client: `${c.firstname || ''} ${c.lastname || ''}`.trim() || 'Client en ligne',
     email: c.email || '',
-    license: c.license || '',
+    license: '',
     phone: c.phone ? `${(c.prefix||'').replace(/[^+0-9]/g,'')}${c.phone}` : '',
     car: state.car ? state.car.name : '',
     carId: state.car ? state.car.id : null,
@@ -2971,7 +3100,9 @@ function buildReservationItem(ref) {
     nationality: c.country || 'N/A',
     protection: state.protection,
     options: state.options.slice(),
-    notes: c.notes || '',
+    notes: '',
+    whatsapp: c.whatsapp ? `${(c.waPrefix||c.prefix||'').replace(/[^+0-9]/g,'')}${c.whatsapp}` : '',
+    docs: state.docRefs ? { permis: state.docRefs.permis, identite: state.docRefs.identite, identiteType: state.docRefs.identiteType } : undefined,
     flight: c.flight || '',
     createdAt: new Date().toISOString(),
   };
@@ -3011,9 +3142,8 @@ function renderConfirmation() {
     `• Montant estimé : ${Math.round(calcTotal())} MAD\n` +
     (_depositVal ? `• Caution : ${_depositVal}\n` : '') +
     `• Assurance : ${state.protection === 'premium' ? 'Premium (rachat franchise, 110 MAD/j)' : 'Tous risques gratuite (franchise 5%)'}\n` +
-    `• N° permis : ${c.license || '-'}\n` +
-    `• N° carte nationale : ${c.cin || '-'}\n` +
-    `• Paiement : ${payLabelFR[state.payment] || payLabelFR.delivery}\n` +
+    `• Documents : permis ${(state.docRefs && state.docRefs.permis.length) || 0} photo(s), ${state.docRefs && state.docRefs.identiteType === 'cin' ? 'CIN' : 'passeport'} ${(state.docRefs && state.docRefs.identite.length) || 0} photo(s) — dans le back-office\n` +
+    `• Paiement : ${payLabelFR[state.payment] || payLabelFR.delivery}${(state.payment === 'delivery' && ppOn()) ? ' (sans acompte : véhicule non bloqué)' : ''}\n` +
     ((c.notes && c.notes.trim()) ? `• Détails : ${c.notes.trim()}\n` : '') +
     `Merci de me confirmer la disponibilité.`);
   const payKey = { agency:'pay.agency', delivery:'pay.delivery', advance:'pay.advance', transfer:'pay.transfer', whatsapp:'pay.wa' };
@@ -3021,7 +3151,7 @@ function renderConfirmation() {
     <div class="confirmation">
       <div class="confirm-icon"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;color:#22c55e;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg></div>
       <div class="confirm-title">${t('cf.title')}</div>
-      <div class="confirm-sub">${t('cf.sub',{name:(state.customer.firstname||'').trim()})}</div>
+      <div class="confirm-sub">${(state.payment === 'delivery' && ppOn()) ? t('cf.cashSub',{name:(state.customer.firstname||'').trim()}) : t('cf.sub',{name:(state.customer.firstname||'').trim()})}</div>
       <div class="confirm-ref">
         <div class="confirm-ref-label">${t('cf.refLabel')}</div>
         <div class="confirm-ref-num">${ref}</div>
@@ -3034,7 +3164,7 @@ function renderConfirmation() {
           <div><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg> ${state.pickupLoc || 'Aéroport RAK'} → ${state.returnLoc || 'Aéroport RAK'}</div>
           ${(()=>{ const _r = dailyRate(state.car, state.days); const _b = activeBracket(state.days); const _tl = normalizeTiers(state.car&&state.car.tiers).length && _b ? ` · ${tierLabel(_b)}` : ""; return `<div style="color:var(--red);font-weight:700;font-size:13.5px;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg> ${t("cf.total")} : <strong>${price(calcTotal())}</strong> <span style="font-size:11px;font-weight:600;opacity:.75;">(${price(_r)}/j${_tl})</span></div>`; })()} 
           <div><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg> ${t(payKey[state.payment] || 'pay.agency')}</div>
-          <div style="color:#b45309;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="m22 6-3-3"/></svg> ${t('cf.statusLabel')} : <strong>${t('pay.awaiting')}</strong></div>
+          <div style="color:#b45309;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="m22 6-3-3"/></svg> ${t('cf.statusLabel')} : <strong>${(state.payment === 'delivery' && ppOn()) ? t('cf.cashStatus') : t('pay.awaiting')}</strong></div>
         </div>
       </div>
       <a href="https://wa.me/212675312453?text=${waMsg}" target="_blank" class="btn-wa-confirm">
@@ -3077,10 +3207,11 @@ function ppEur(v) {
   try { return Number(v).toLocaleString(loc, { style: 'currency', currency: 'EUR' }); } catch (e) { return Number(v).toFixed(2) + ' €'; }
 }
 function ppChoiceHTML() {
+  // ★ Acompte uniquement (commission PayPal la plus basse) ; le reste à la remise des clés.
+  ASL_PP.share = 'deposit';
   const a = ppAmounts();
-  return `<div class="pp-box"><div class="pp-q">${t('pp.choose')}</div><div class="pp-tiles">
-    <div class="pp-tile ${ASL_PP.share !== 'full' ? 'on' : ''}" data-share="deposit"><b>${t('pp.deposit', { p: ppPct() })}</b><div class="amt">${ppEur(a.eurDep)}</div><small>${t('pp.depositSub', { rest: price(a.total - a.dep) })}</small></div>
-    <div class="pp-tile ${ASL_PP.share === 'full' ? 'on' : ''}" data-share="full"><b>${t('pp.full')}</b><div class="amt">${ppEur(a.eurTotal)}</div><small>${t('pp.fullSub')}</small></div>
+  return `<div class="pp-box"><div class="pp-tiles" style="grid-template-columns:1fr;">
+    <div class="pp-tile on" data-share="deposit"><b>${t('pp.deposit', { p: ppPct() })}</b><div class="amt">${ppEur(a.eurDep)}</div><small>${t('pp.depositSub', { rest: price(a.total - a.dep) })}</small></div>
   </div></div>`;
 }
 function ppPayBlockHTML() {
@@ -3140,6 +3271,7 @@ function ppMountButtons() {
         return actions.resolve();
       },
       createOrder: async () => {
+        state.docRefs = await docsUpload();
         const ref = 'ASL' + Date.now().toString().slice(-6);
         const item = buildReservationItem(ref);
         item.amount = Math.round(calcTotal());

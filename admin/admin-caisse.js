@@ -154,7 +154,6 @@
     (function () {
       var g = document.getElementById('cs-collected-global'); if (!g) return;
       var sub = document.getElementById('cs-collected-paypal');
-      if (!ppCollected) { if (sub) sub.remove(); return; }
       if (!sub) { sub = document.createElement('div'); sub.id = 'cs-collected-paypal'; sub.style.cssText = 'font-size:11.5px;color:#1d4ed8;margin-top:4px;font-weight:700;'; g.parentNode.insertBefore(sub, g.nextSibling); }
       sub.textContent = 'dont reçu sur PayPal : ' + money(ppCollected);
     })();

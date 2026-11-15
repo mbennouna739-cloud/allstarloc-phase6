@@ -20,6 +20,7 @@
    POST /api/share/planning      → gérer ce lien (clé admin)
    GET  /api/share/view?code=    → page du calendrier partagé (HTML)
    POST /api/doc                 → dépose un document client PRIVÉ (clé admin)
+   POST /api/doc/public          → le client dépose sa photo de permis/pièce d'identité (dépôt seul, lecture admin)
    GET  /api/doc/<id>            → lit un document client PRIVÉ (clé admin)
    GET  /api/health              → diagnostic de configuration
    GET  /api/paypal/config       → PayPal activé ? (aucun secret renvoyé)
@@ -131,7 +132,7 @@ function hashPass(pass) {
 
 
 /* ============================================================
-   ★ PAIEMENT PAYPAL (acompte ou totalité) — côté serveur
+   ★ PAIEMENT PAYPAL (acompte 30 % ; totalité seulement si PAYPAL_ALLOW_FULL=1) — côté serveur
    Variables Cloudflare (Workers & Pages → allstarloc → Settings →
    Variables and Secrets) :
      PAYPAL_CLIENT_ID      (texte)   identifiant de l'application PayPal
@@ -553,6 +554,23 @@ export async function onRequest(context) {
      lisible sans authentification). Lecture ET écriture exigent la clé
      admin, transmise à tout utilisateur connecté (admin et employés).
      Endpoints ajoutés uniquement : aucun endpoint existant n'est modifié. */
+  /* ---- Documents envoyés par le CLIENT depuis le site (permis, passeport, CIN) ----
+     Dépôt seulement (aucune lecture publique) : photos JPEG/PNG/WebP, ~3 Mo max.
+     Lecture réservée au back-office (GET /api/doc/<id> avec la clé admin). */
+  if (path === 'doc/public' && request.method === 'POST') {
+    let body;
+    try { body = await request.json(); } catch (e) { return err(400, 'JSON invalide'); }
+    const type = String(body.type || '');
+    if (!/^image\/(jpeg|png|webp)$/.test(type)) return err(415, 'Format non supporté (photo JPEG, PNG ou WebP)');
+    if (typeof body.data !== 'string' || body.data.length < 200 || body.data.length > 4_000_000) {
+      return err(413, 'Photo trop volumineuse');
+    }
+    let bytes;
+    try { bytes = b64ToBytes(body.data); } catch (e) { return err(400, 'Encodage base64 invalide'); }
+    const id = docId();
+    await env.ASL_DB.put('doc:' + id, bytes.buffer, { metadata: { type: type, src: 'site' } });
+    return json({ ok: true, id: id, type: type });
+  }
   if (path === 'doc' && request.method === 'POST') {
     if (!authorized(request, env)) return err(403, 'Clé admin invalide ou absente (X-ASL-Key)');
     let body;
@@ -693,7 +711,7 @@ export async function onRequest(context) {
     if (!c.enabled) return err(503, 'PayPal non configuré');
     let b; try { b = await request.json(); } catch (e) { return err(400, 'JSON invalide'); }
     const ref = String(b.ref || '').replace(/[^A-Za-z0-9-]/g, '').slice(0, 30);
-    const share = b.share === 'full' ? 'full' : 'deposit';
+    const share = (b.share === 'full' && String(env.PAYPAL_ALLOW_FULL || '') === '1') ? 'full' : 'deposit'; // acompte uniquement par défaut
     const totalMAD = Math.round(Number(b.totalMAD) || 0);
     const days = ppDays(b.startDate, b.endDate);
     if (!ref || totalMAD <= 0 || !days) return err(400, 'Réservation incomplète');

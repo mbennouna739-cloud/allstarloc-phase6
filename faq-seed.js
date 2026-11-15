@@ -152,23 +152,23 @@ window._ASL_FAQ_SEED = [
   "i18n": {
    "fr": {
     "question": "Comment puis-je payer ?",
-    "answer": "En espèces à l'arrivée, par virement bancaire, par une avance pour confirmer la réservation, ou en ligne par PayPal (avec ou sans compte PayPal) pour garantir immédiatement votre réservation : acompte de 30 % ou totalité."
+    "answer": "En espèces à l'arrivée, par virement bancaire, par une avance pour confirmer la réservation, ou en ligne par PayPal (avec ou sans compte PayPal) pour garantir immédiatement votre réservation : acompte de 30 %."
    },
    "en": {
     "question": "How can I pay?",
-    "answer": "In cash on arrival, by bank transfer, with an advance to confirm the booking, or online by PayPal (with or without a PayPal account) to guarantee your booking instantly: 30% deposit or full amount."
+    "answer": "In cash on arrival, by bank transfer, with an advance to confirm the booking, or online by PayPal (with or without a PayPal account) to guarantee your booking instantly: 30% deposit."
    },
    "es": {
     "question": "¿Cómo puedo pagar?",
-    "answer": "En efectivo a la llegada, por transferencia bancaria, con un anticipo para confirmar la reserva o en línea con PayPal (con o sin cuenta PayPal) para garantizar su reserva al instante: anticipo del 30 % o importe total."
+    "answer": "En efectivo a la llegada, por transferencia bancaria, con un anticipo para confirmar la reserva o en línea con PayPal (con o sin cuenta PayPal) para garantizar su reserva al instante: anticipo del 30 %."
    },
    "ar": {
     "question": "كيف يمكنني الأداء؟",
-    "answer": "نقداً عند الوصول، أو عبر تحويل بنكي، أو بتسبيق لتأكيد الحجز، أو عبر الإنترنت بواسطة PayPal (بحساب PayPal أو بدونه) لضمان حجزكم فوراً: تسبيق 30٪ أو المبلغ الكامل."
+    "answer": "نقداً عند الوصول، أو عبر تحويل بنكي، أو بتسبيق لتأكيد الحجز، أو عبر الإنترنت بواسطة PayPal (بحساب PayPal أو بدونه) لضمان حجزكم فوراً: تسبيق 30٪."
    }
   },
   "question": "Comment puis-je payer ?",
-  "answer": "En espèces à l'arrivée, par virement bancaire, par une avance pour confirmer la réservation, ou en ligne par PayPal (avec ou sans compte PayPal) pour garantir immédiatement votre réservation : acompte de 30 % ou totalité."
+  "answer": "En espèces à l'arrivée, par virement bancaire, par une avance pour confirmer la réservation, ou en ligne par PayPal (avec ou sans compte PayPal) pour garantir immédiatement votre réservation : acompte de 30 %."
  },
  {
   "id": "seed-faq-8",

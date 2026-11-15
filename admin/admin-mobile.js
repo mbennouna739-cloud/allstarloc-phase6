@@ -305,7 +305,8 @@
       }).join('') + '</div>'
       + '<div class="ma-section-title">À surveiller</div>'
       + alertRow('returns', "Activités du jour", c.entrants + ' entrant(s) · ' + c.sortants + ' sortant(s) · ' + c.vt + ' VT · ' + c.vidanges + ' vidange(s)', "maDash('activites')", 'blue')
-      + alertRow('card', c.unpaid + ' impayé(s)', 'Dossiers avec reste à payer', "maDash('unpaid')", 'orange');
+      // ★ « Impayés » est déjà une carte en haut : ici, l'Entretien (visites techniques + vidanges).
+      + alertRow('wrench', 'Entretien', c.vt + ' visite(s) technique(s) à prévoir · ' + c.vidanges + ' vidange(s) à faire', "maGo('maintenance')", 'orange');
   }
 
   /* Revenus : réutilise la logique desktop si disponible, sinon recalcule
@@ -2865,7 +2866,7 @@
     host.innerHTML = '<button type="button" class="cs-per" onclick="maCsPeriod()">' + ic('calendar') + '<span><small>Période</small><b>' + esc(csLabel()) + '</b></span><em>Changer ▾</em></button>'
       + '<button type="button" class="cs-tot" onclick="maCsOpen(\'all\')"><span><small>Total encaissé par l\'agence</small><b>' + money(tot) + '</b><span>' + (pays.length ? csN(pays.length, 'paiement', 'paiements') + ' · voir la liste' : 'Aucun paiement sur cette période') + '</span></span>' + ic('arrowLeft', 'mu-chev') + '</button>'
       + '<div class="mu-sec">Encaissé par</div>'
-      + CS_PEOPLE.map(person).join('') + (by.PayPal[1] ? person('PayPal') : '') + person('na')
+      + CS_PEOPLE.map(person).join('') + person('PayPal') + person('na')   // PayPal toujours visible (0 tant qu'aucun paiement)
       + '<div class="mu-sec">À encaisser</div>'
       + '<button type="button" class="cs-rest" onclick="maCsOpen(\'rest\')"><span class="cs-pt"><b>Reste à encaisser</b><small>' + (CS.mode === 'all' ? 'Tous les dossiers' : 'Locations de ' + esc(csLabel().toLowerCase())) + ' · ' + csN(rest.length, 'dossier', 'dossiers') + '</small></span><span class="cs-amt red">' + money(restSum).replace(' MAD', '') + '</span>' + ic('arrowLeft', 'mu-chev') + '</button>'
       + '<div class="mu-sec">Charges et solde · ' + esc(csLabel().toLowerCase()) + '</div>'
@@ -2911,7 +2912,7 @@
   function csRenderList(host) {
     var w = CS.who, html = '', title = '', total = 0, count = 0, body = '';
     var chips = function () {
-      return '<div class="mu-chips wrap">' + CS_PEOPLE.concat(csPayments().some(function (p) { return p.who === 'PayPal'; }) ? ['PayPal'] : []).concat(['na', 'all']).map(function (k) { return '<button type="button" class="mu-chip' + (w === k ? ' on' : '') + '" onclick="maCsOpen(\'' + k + '\')">' + (k === 'all' ? 'Tous' : csWhoLabel(k)) + '</button>'; }).join('') + '</div>';
+      return '<div class="mu-chips wrap">' + CS_PEOPLE.concat(['PayPal', 'na', 'all']).map(function (k) { return '<button type="button" class="mu-chip' + (w === k ? ' on' : '') + '" onclick="maCsOpen(\'' + k + '\')">' + (k === 'all' ? 'Tous' : csWhoLabel(k)) + '</button>'; }).join('') + '</div>';
     };
     if (w === 'rest') {
       var rest = csRest(); title = 'Reste à encaisser';
