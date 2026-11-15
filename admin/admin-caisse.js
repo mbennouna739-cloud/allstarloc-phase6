@@ -138,7 +138,7 @@
     //   jamais perdre d'argent dans le total si une ancienne donnée n'a pas
     //   ce champ).
     var byPerson = { Mohamed: 0, Younes: 0, Khalil: 0 };
-    var globalCollected = 0;
+    var globalCollected = 0, ppCollected = 0;
     allReservations().forEach(function (r) {
       if (r.status === 'cancelled') return;
       payLines(r).forEach(function (p) {
@@ -146,9 +146,18 @@
         globalCollected += amt;
         var who = csWho(p.collectedBy);
         if (who) byPerson[who] += amt;
+        else if (/^\s*paypal\s*$/i.test(String(p.collectedBy || ''))) ppCollected += amt;
       });
     });
     setTxt('cs-collected-global', money(globalCollected));
+    // ★ PayPal : argent reçu sur le compte PayPal (ni Mohamed, ni Younes, ni Khalil).
+    (function () {
+      var g = document.getElementById('cs-collected-global'); if (!g) return;
+      var sub = document.getElementById('cs-collected-paypal');
+      if (!ppCollected) { if (sub) sub.remove(); return; }
+      if (!sub) { sub = document.createElement('div'); sub.id = 'cs-collected-paypal'; sub.style.cssText = 'font-size:11.5px;color:#1d4ed8;margin-top:4px;font-weight:700;'; g.parentNode.insertBefore(sub, g.nextSibling); }
+      sub.textContent = 'dont reçu sur PayPal : ' + money(ppCollected);
+    })();
     setTxt('cs-collected-mohamed', money(byPerson.Mohamed));
     setTxt('cs-collected-younes', money(byPerson.Younes));
     setTxt('cs-collected-khalid', money(byPerson.Khalil));
@@ -457,7 +466,7 @@
         payLines(r).forEach(function (p) {
           var amt = Number(p.amount) || 0;
           var mode = p.mode || r.paymentMode || '';
-          var who = csWho(p.collectedBy);
+          var who = csWho(p.collectedBy) || (/^\s*paypal\s*$/i.test(String(p.collectedBy || '')) ? 'PayPal' : '');
           if (fMode && mode !== fMode) return;
           if (fCollectedBy && who !== fCollectedBy) return;
           var dStr = String(p.date || r.createdAt || r.startDate || '').slice(0, 10);

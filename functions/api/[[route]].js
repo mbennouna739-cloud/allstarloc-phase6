@@ -22,6 +22,10 @@
    POST /api/doc                 → dépose un document client PRIVÉ (clé admin)
    GET  /api/doc/<id>            → lit un document client PRIVÉ (clé admin)
    GET  /api/health              → diagnostic de configuration
+   GET  /api/paypal/config       → PayPal activé ? (aucun secret renvoyé)
+   POST /api/paypal/create-order → crée la commande PayPal (montant recalculé serveur)
+   POST /api/paypal/capture      → encaisse + enregistre la réservation payée
+   POST /api/paypal/refund       → rembourse (clé admin)
    ============================================================ */
 
 const JSON_HEADERS = {
@@ -123,6 +127,60 @@ function hashPass(pass) {
   var str = 'asl::' + String(pass == null ? '' : pass);
   for (var i = 0; i < str.length; i++) { h = ((h << 5) + h) + str.charCodeAt(i); h = h & 0xffffffff; }
   return 'h' + (h >>> 0).toString(16);
+}
+
+
+/* ============================================================
+   ★ PAIEMENT PAYPAL (acompte ou totalité) — côté serveur
+   Variables Cloudflare (Workers & Pages → allstarloc → Settings →
+   Variables and Secrets) :
+     PAYPAL_CLIENT_ID      (texte)   identifiant de l'application PayPal
+     PAYPAL_CLIENT_SECRET  (SECRET)  ne jamais le mettre dans le code
+     PAYPAL_ENV            (texte)   "sandbox" pour les tests, "live" en réel
+     PAYPAL_DEPOSIT_PCT    (option)  pourcentage de l'acompte (défaut 30)
+     PAYPAL_RATE_MAD       (option)  1 € = x MAD (défaut 10.8, comme le site)
+   Sans CLIENT_ID + SECRET, l'option PayPal n'apparaît pas sur le site.
+   Le montant débité est recalculé ICI (jamais repris tel quel du navigateur)
+   et la réservation n'est enregistrée comme payée qu'après la capture
+   confirmée par PayPal.
+   ============================================================ */
+function ppCfg(env) {
+  const live = String(env.PAYPAL_ENV || 'sandbox').toLowerCase() === 'live';
+  return {
+    enabled: !!(env.PAYPAL_CLIENT_ID && env.PAYPAL_CLIENT_SECRET),
+    clientId: env.PAYPAL_CLIENT_ID || '',
+    env: live ? 'live' : 'sandbox',
+    api: live ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com',
+    depositPct: Math.min(100, Math.max(1, Number(env.PAYPAL_DEPOSIT_PCT) || 30)),
+    rate: Number(env.PAYPAL_RATE_MAD) > 0 ? Number(env.PAYPAL_RATE_MAD) : 10.8,
+  };
+}
+async function ppToken(cfg, env) {
+  const r = await fetch(cfg.api + '/v1/oauth2/token', {
+    method: 'POST',
+    headers: { 'Authorization': 'Basic ' + btoa(env.PAYPAL_CLIENT_ID + ':' + env.PAYPAL_CLIENT_SECRET), 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'grant_type=client_credentials',
+  });
+  const d = await r.json().catch(function () { return {}; });
+  if (!r.ok || !d.access_token) throw new Error('Connexion PayPal impossible (identifiants ?)');
+  return d.access_token;
+}
+function ppDays(a, b) {
+  const s = Date.parse(String(a || '').slice(0, 10) + 'T00:00:00Z'), e = Date.parse(String(b || '').slice(0, 10) + 'T00:00:00Z');
+  if (!isFinite(s) || !isFinite(e)) return 0;
+  return Math.max(1, Math.round((e - s) / 86400000));
+}
+/* Prix plancher : le plus petit tarif journalier connu du véhicule × jours × 50 %
+   (laisse de la place aux promotions) — empêche de payer 1 € pour une location. */
+function ppFloorMAD(car, days) {
+  const vals = [];
+  const push = function (v) { v = Number(v); if (v > 0) vals.push(v); };
+  push(car.price); push(car.priceMAD);
+  const t = car.tiers;
+  if (Array.isArray(t)) t.forEach(function (b) { push(b && b.price); });
+  else if (t && typeof t === 'object') Object.keys(t).forEach(function (k) { push(t[k]); });
+  if (!vals.length) return 0;
+  return Math.min.apply(null, vals) * days * 0.5;
 }
 
 export async function onRequest(context) {
@@ -620,6 +678,134 @@ export async function onRequest(context) {
     }
     if (action !== 'status') { cfg.updated = new Date().toISOString(); await env.ASL_DB.put('share_planning', JSON.stringify(cfg)); }
     return json({ ok: true, enabled: !!cfg.enabled, code: cfg.enabled ? cfg.code : '' });
+  }
+
+
+  /* ---- PayPal : configuration publique (aucun secret renvoyé) ---- */
+  if (path === 'paypal/config' && request.method === 'GET') {
+    const c = ppCfg(env);
+    return json({ ok: true, enabled: c.enabled, clientId: c.enabled ? c.clientId : '', env: c.env, depositPct: c.depositPct, rate: c.rate });
+  }
+
+  /* ---- PayPal : création de la commande (montant recalculé ici) ---- */
+  if (path === 'paypal/create-order' && request.method === 'POST') {
+    const c = ppCfg(env);
+    if (!c.enabled) return err(503, 'PayPal non configuré');
+    let b; try { b = await request.json(); } catch (e) { return err(400, 'JSON invalide'); }
+    const ref = String(b.ref || '').replace(/[^A-Za-z0-9-]/g, '').slice(0, 30);
+    const share = b.share === 'full' ? 'full' : 'deposit';
+    const totalMAD = Math.round(Number(b.totalMAD) || 0);
+    const days = ppDays(b.startDate, b.endDate);
+    if (!ref || totalMAD <= 0 || !days) return err(400, 'Réservation incomplète');
+    const fleet = await readDoc(env, 'fleet');
+    const car = ((fleet && fleet.items) || []).find(function (x) { return String(x.id) === String(b.carId); });
+    if (!car) return err(400, 'Véhicule introuvable');
+    if (totalMAD < ppFloorMAD(car, days)) return err(400, 'Montant incohérent');
+    const payMAD = share === 'full' ? totalMAD : Math.round(totalMAD * c.depositPct / 100);
+    const eur = (Math.round(payMAD / c.rate * 100) / 100).toFixed(2);
+    try {
+      const tok = await ppToken(c, env);
+      const r = await fetch(c.api + '/v2/checkout/orders', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json', 'PayPal-Request-Id': 'asl-' + ref + '-' + share },
+        body: JSON.stringify({
+          intent: 'CAPTURE',
+          purchase_units: [{
+            reference_id: ref, custom_id: ref, invoice_id: ref + '-' + share,
+            description: (share === 'full' ? 'Location ' : 'Acompte location ') + String(car.name || '').slice(0, 60) + ' — ' + days + ' j — réf. ' + ref,
+            amount: { currency_code: 'EUR', value: eur },
+          }],
+          application_context: { brand_name: 'ALL STAR LOC', shipping_preference: 'NO_SHIPPING', user_action: 'PAY_NOW' },
+        }),
+      });
+      const d = await r.json().catch(function () { return {}; });
+      if (!r.ok || !d.id) return err(502, 'PayPal a refusé la commande');
+      await env.ASL_DB.put('pp_order:' + d.id, JSON.stringify({ ref: ref, share: share, payMAD: payMAD, totalMAD: totalMAD, eur: eur, carId: String(b.carId), at: Date.now() }), { expirationTtl: 86400 });
+      return json({ ok: true, orderID: d.id, eur: eur, payMAD: payMAD });
+    } catch (e) { return err(502, String(e && e.message || 'Erreur PayPal')); }
+  }
+
+  /* ---- PayPal : capture + enregistrement de la réservation payée ---- */
+  if (path === 'paypal/capture' && request.method === 'POST') {
+    const c = ppCfg(env);
+    if (!c.enabled) return err(503, 'PayPal non configuré');
+    let b; try { b = await request.json(); } catch (e) { return err(400, 'JSON invalide'); }
+    const orderID = String(b.orderID || '').replace(/[^A-Za-z0-9]/g, '');
+    const item = (b.item && typeof b.item === 'object') ? b.item : null;
+    if (!orderID || !item) return err(400, 'Données manquantes');
+    if (JSON.stringify(item).length > 20000) return err(413, 'Réservation trop volumineuse');
+    const ord = await readDoc(env, 'pp_order:' + orderID);
+    if (!ord || ord.ref !== String(item.id || '')) return err(400, 'Commande inconnue');
+    let cap;
+    try {
+      const tok = await ppToken(c, env);
+      const r = await fetch(c.api + '/v2/checkout/orders/' + orderID + '/capture', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json', 'Prefer': 'return=representation', 'PayPal-Request-Id': 'asl-cap-' + orderID },
+      });
+      cap = await r.json().catch(function () { return {}; });
+      if (!r.ok && !(cap && cap.status === 'COMPLETED')) {
+        const issue = cap && cap.details && cap.details[0] && cap.details[0].issue;
+        return json({ ok: false, error: 'Paiement refusé', issue: issue || '' }, 402);
+      }
+    } catch (e) { return err(502, String(e && e.message || 'Erreur PayPal')); }
+    const pu = (cap.purchase_units || [])[0] || {};
+    const capture = ((pu.payments || {}).captures || [])[0] || {};
+    const amt = capture.amount || {};
+    const completed = capture.status === 'COMPLETED' && amt.currency_code === 'EUR' && Number(amt.value) + 0.001 >= Number(ord.eur);
+    const today = new Date().toISOString().slice(0, 10);
+    // Les champs de paiement viennent du SERVEUR (jamais du navigateur).
+    item.amount = ord.totalMAD;
+    item.payment = 'paypal';
+    item.paymentMethod = 'paypal';
+    item.paymentMode = 'PayPal';
+    item.collectedBy = 'PayPal';
+    item.paypal = { orderId: orderID, captureId: capture.id || '', status: capture.status || cap.status || '', amountEUR: amt.value || ord.eur, paidMAD: ord.payMAD, share: ord.share, env: c.env, payer: (cap.payer && cap.payer.email_address) || '', refunds: [] };
+    if (completed) {
+      item.paid = ord.payMAD;
+      item.payments = [{ date: today, amount: ord.payMAD, mode: 'PayPal', collectedBy: 'PayPal', comment: (ord.share === 'full' ? 'Paiement total' : 'Acompte') + ' PayPal ' + (amt.value || ord.eur) + ' € — transaction ' + (capture.id || orderID) }];
+      item.paymentStatus = ord.payMAD >= ord.totalMAD ? 'Paiement complet' : 'Paiement partiel';
+      item.status = 'confirmed';
+    } else {
+      item.paid = 0;
+      item.paymentStatus = 'PayPal en cours de vérification';
+      item.status = 'pending';
+    }
+    if (!item.createdAt) item.createdAt = new Date().toISOString();
+    const doc = (await readDoc(env, 'reservations')) || { rev: 0, items: [] };
+    const items2 = Array.isArray(doc.items) ? doc.items.slice() : [];
+    if (!items2.some(function (x) { return x.id === item.id; })) {
+      items2.push(item);
+      await writeReservationsDoc(env, items2, doc.resetAt);
+    }
+    return json({ ok: true, completed: completed, item: item });
+  }
+
+
+  /* ---- PayPal : remboursement (back-office uniquement, clé admin) ---- */
+  if (path === 'paypal/refund' && request.method === 'POST') {
+    if (!authorized(request, env)) return err(401, 'Non autorisé');
+    const c = ppCfg(env);
+    if (!c.enabled) return err(503, 'PayPal non configuré');
+    let b; try { b = await request.json(); } catch (e) { return err(400, 'JSON invalide'); }
+    const captureId = String(b.captureId || '').replace(/[^A-Za-z0-9]/g, '');
+    const eur = Math.round((Number(b.amountEUR) || 0) * 100) / 100;
+    if (!captureId || !(eur > 0)) return err(400, 'Montant ou transaction manquant');
+    try {
+      const tok = await ppToken(c, env);
+      const r = await fetch(c.api + '/v2/payments/captures/' + captureId + '/refund', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json', 'Prefer': 'return=representation', 'PayPal-Request-Id': 'asl-rf-' + captureId + '-' + eur.toFixed(2) + '-' + String(Number(b.n) || 0) },
+        body: JSON.stringify({ amount: { currency_code: 'EUR', value: eur.toFixed(2) }, note_to_payer: 'ALL STAR LOC — remboursement réservation ' + String(b.resId || '').slice(0, 30) }),
+      });
+      const d = await r.json().catch(function () { return {}; });
+      if (!r.ok || !d.id) {
+        const issue = d && d.details && d.details[0] && d.details[0].issue;
+        return json({ ok: false, error: 'Remboursement refusé par PayPal', issue: issue || '' }, 402);
+      }
+      await env.ASL_DB.put('pp_refund:' + d.id, JSON.stringify({ captureId: captureId, eur: eur, resId: String(b.resId || ''), status: d.status, at: Date.now() }));
+      return json({ ok: true, refundId: d.id, status: d.status, amountEUR: eur.toFixed(2) });
+    } catch (e) { return err(502, String(e && e.message || 'Erreur PayPal')); }
   }
 
   return err(404, 'Endpoint inconnu: ' + path);

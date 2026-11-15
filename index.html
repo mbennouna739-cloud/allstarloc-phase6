@@ -903,6 +903,22 @@ html:has(#booking-drawer.open) { overflow: hidden; }
 
 /* ---- Step: Payment ---- */
 .payment-options { display: flex; flex-direction: column; gap: 10px; }
+.pp-badge{display:inline-block;font-size:10.5px;font-weight:800;color:#047857;background:#d1fae5;border-radius:20px;padding:2px 9px;margin-inline-start:6px;vertical-align:2px;white-space:nowrap}
+.pp-box{margin-top:12px;border-top:1px dashed var(--border,#e5e5e5);padding-top:12px}
+.pp-q{font-size:13px;font-weight:700;margin-bottom:8px;color:var(--black)}
+.pp-tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pp-tile{border:2px solid #e5e7eb;border-radius:12px;padding:10px;background:#fff;cursor:pointer}
+.pp-tile.on{border-color:var(--red);background:rgba(196,30,58,.04)}
+.pp-tile b{display:block;font-size:13.5px;color:var(--black)}.pp-tile .amt{font-size:17px;font-weight:800;color:var(--red);margin:3px 0}
+.pp-tile small{display:block;font-size:11px;color:#6b7280;line-height:1.35}
+.pp-pay{margin-top:14px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:14px;padding:14px}
+.pp-line{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:13px}
+.pp-line strong{font-size:20px}
+.pp-note{font-size:11.5px;color:#6b7280;margin-top:4px}
+.pp-busy{font-size:12.5px;font-weight:700;color:#1d4ed8;background:#eff6ff;border-radius:10px;padding:8px 10px;margin-top:8px;text-align:center}
+.pp-sec{display:flex;gap:7px;align-items:flex-start;font-size:11.5px;color:#4b5563;margin-top:10px;line-height:1.4}
+.pp-cancel{font-size:11.5px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:8px 10px;margin-top:10px;line-height:1.4}
+
 .payment-option {
   border: 2px solid var(--gray2); border-radius: 14px; padding: 16px;
   cursor: pointer; transition: all 0.2s; display: flex; align-items: flex-start; gap: 14px;
@@ -1445,7 +1461,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="why-item">
         <div class="why-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg></div>
         <div class="why-title" data-i18n="why.t4">Paiement Flexible</div>
-        <div class="why-desc" data-i18n="why.d4">Payez en espèces à l'arrivée, par virement bancaire ou par une avance pour confirmer votre réservation. Devises acceptées : MAD, EUR, USD, GBP.</div>
+        <div class="why-desc" data-i18n="why.d4">Payez en espèces à l'arrivée, par virement bancaire, par une avance, ou en ligne par PayPal pour garantir votre réservation. Devises acceptées : MAD, EUR, USD, GBP.</div>
       </div>
       <div class="why-item">
         <div class="why-icon"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/></svg></div>
@@ -2465,6 +2481,7 @@ function updateConfirmGate() {
   const btn = document.getElementById('btn-next');
   if (!btn) return;
   btn.disabled = (state.step === 5 && !state.termsAccepted);
+  btn.style.display = (state.step === 5 && state.payment === 'paypal' && ppOn()) ? 'none' : '';
 }
 
 function nextStep() {
@@ -2503,7 +2520,7 @@ window.onBookingOptionsLoaded = function() {
 function renderStep() {
   updateProgress();
   const labels = ['', t('dr.s1'), t('dr.s2'), t('dr.s3'), t('dr.s4'), t('dr.s5'), t('dr.s6')];
-  document.getElementById('drawer-step-label').textContent = state.step < 6 ? t('dr.step', { n: state.step }) : t('dr.done');
+  document.getElementById('drawer-step-label').textContent = state.step < 6 ? t('dr.step', { n: state.step }) : ((state.payment === 'paypal' && ASL_PP.result && ASL_PP.result.completed) ? t('dr.ppDone') : t('dr.done'));
   document.getElementById('drawer-title').textContent = labels[state.step];
   const footer = document.getElementById('drawer-footer');
   footer.style.display = state.step === 6 ? 'none' : 'block';
@@ -2834,14 +2851,19 @@ function renderPayment() {
   if (state.step === 4) saveCustomerForm();
   // 3 options de paiement claires. Tout passe via WhatsApp, le paiement réel
   // est confirmé manuellement avec le client.
-  const PAY_MODES = ['delivery', 'advance', 'transfer'];
+  // ★ PayPal (acompte ou totalité) : proposé en premier dès que PayPal est
+  //   configuré côté Cloudflare ; sinon l'étape reste exactement comme avant.
+  const PAY_MODES = ppOn() ? ['paypal', 'delivery', 'advance', 'transfer'] : ['delivery', 'advance', 'transfer'];
   if (!PAY_MODES.includes(state.payment)) state.payment = 'delivery';
+  ASL_PP.result = null;
   const payName = {
+    paypal: t('pp.title') + ' <span class="pp-badge">✓ ' + t('pp.badge') + '</span>',
     delivery: t('pay.delivery') || 'Espèces à l\'arrivée',
     advance:  t('pay.advance') || 'Avance pour confirmer la réservation',
     transfer: t('pay.transfer') || 'Paiement par virement bancaire',
   };
   const payDesc = {
+    paypal: t('pp.desc') + (state.payment === 'paypal' ? ppChoiceHTML() : ''),
     delivery: t('pay.deliveryDesc') || '',
     advance:  t('pay.advanceDesc') || '',
     transfer: t('pay.transferDesc') || '',
@@ -2849,7 +2871,7 @@ function renderPayment() {
   return `
     <div class="step-section">
       <div class="step-section-title">${t('pay.modeTitle') || 'Mode de paiement'}</div>
-      <div style="font-size:12.5px;color:var(--text2);margin:-4px 0 12px;">${t('pay.noOnline') || ''}</div>
+      <div style="font-size:12.5px;color:var(--text2);margin:-4px 0 12px;">${ppOn() ? t('pp.sub') : (t('pay.noOnline') || '')}</div>
       <div class="payment-options">
         ${PAY_MODES.map(m => `
         <div class="payment-option ${state.payment===m?'selected':''}" data-pay="${m}">
@@ -2866,14 +2888,26 @@ function renderPayment() {
       <input type="checkbox" class="terms-checkbox" id="terms-cb" ${state.termsAccepted?'checked':''} onchange="state.termsAccepted=this.checked; updateConfirmGate();">
       <label class="terms-text" for="terms-cb" style="cursor:pointer;">${t('pay.termsHtml')}</label>
     </div>
+    ${state.payment === 'paypal' ? ppPayBlockHTML() : ''}
     <div style="height:20px;"></div>
   `;
 }
 
 function attachPaymentEvents() {
+  document.querySelectorAll('.pp-tile').forEach(el => {
+    el.addEventListener('click', (ev) => {
+      ev.stopPropagation();
+      if (ASL_PP.share === el.dataset.share) return;
+      ASL_PP.share = el.dataset.share;
+      ppRerender();
+    });
+  });
+  if (state.payment === 'paypal') ppMountButtons();
   document.querySelectorAll('.payment-option').forEach(el => {
     el.addEventListener('click', () => {
+      const _was = state.payment;
       state.payment = el.dataset.pay;
+      if (_was !== state.payment && (_was === 'paypal' || state.payment === 'paypal')) { ppRerender(); return; }
       document.querySelectorAll('.payment-option').forEach(e => {
         e.classList.remove('selected','best');
       });
@@ -2888,15 +2922,9 @@ function attachPaymentEvents() {
 
 
 
-function confirmBooking() {
-  // Enregistre la réservation dans la base partagée (visible dans l'admin)
-  const ref = 'ASL' + Date.now().toString().slice(-6);
-  state.reservationRef = ref;
-  const totalMAD = calcTotal(); // total calculé en MAD (base admin)
-  const c = state.customer || {};
-
-  /* ★ VÉRIFICATION FINALE DE DISPONIBILITÉ avant d'enregistrer
-     (évite qu'un véhicule soit attribué à deux clients). */
+/* ★ VÉRIFICATION FINALE DE DISPONIBILITÉ (évite qu'un véhicule soit
+   attribué à deux clients) — partagée par la confirmation classique et PayPal. */
+function bookingStillAvailable() {
   if (typeof ASLDB !== 'undefined' && ASLDB.checkAvailability && state.car) {
     const chk = ASLDB.checkAvailability(state.car, state.startDate, state.endDate, state.startTime, state.endTime);
     if (!chk.available) {
@@ -2911,8 +2939,14 @@ function confirmBooking() {
       return false;   // on bloque l'enregistrement
     }
   }
+  return true;
+}
 
-  ASLDB.addReservation({
+/* Objet réservation (même contenu qu'avant, utilisé aussi par PayPal). */
+function buildReservationItem(ref) {
+  const totalMAD = calcTotal(); // total calculé en MAD (base admin)
+  const c = state.customer || {};
+  return {
     id: ref,
     client: `${c.firstname || ''} ${c.lastname || ''}`.trim() || 'Client en ligne',
     email: c.email || '',
@@ -2940,13 +2974,23 @@ function confirmBooking() {
     notes: c.notes || '',
     flight: c.flight || '',
     createdAt: new Date().toISOString(),
-  });
+  };
+}
+
+function confirmBooking() {
+  // Enregistre la réservation dans la base partagée (visible dans l'admin)
+  const ref = 'ASL' + Date.now().toString().slice(-6);
+  state.reservationRef = ref;
+  const totalMAD = calcTotal(); // total calculé en MAD (base admin)
+  if (!bookingStillAvailable()) return false;   // on bloque l'enregistrement
+  ASLDB.addReservation(buildReservationItem(ref));
   /* ★ Conversion « réservation » → GA4 (generate_lead), Google Ads, Meta (Lead). */
   try { window.ASLConv && window.ASLConv.track('reservation', { value: Math.round(totalMAD), currency: 'MAD', transaction_id: ref, item: state.car ? state.car.name : '', method: 'formulaire_reservation' }); } catch (e) {}
   return true;
 }
 
 function renderConfirmation() {
+  if (state.payment === 'paypal' && ASL_PP.result) return ppConfirmHTML();
   const ref = state.reservationRef || 'ASL' + Math.floor(Math.random()*900000+100000);
   const c = state.customer || {};
   const payLabelFR = {
@@ -2999,6 +3043,158 @@ function renderConfirmation() {
       </a>
     </div>
   `;
+}
+
+
+// ==================== PAIEMENT PAYPAL ====================
+/* Activé automatiquement quand PAYPAL_CLIENT_ID + PAYPAL_CLIENT_SECRET sont
+   configurés dans Cloudflare (voir functions/api/[[route]].js). Le montant
+   débité est recalculé par le serveur ; la réservation n'est enregistrée
+   « payée » qu'après la capture confirmée par PayPal. */
+const ASL_PP = { cfg: null, share: 'deposit', sdk: null, item: null, result: null };
+(function () {
+  try {
+    fetch('/api/paypal/config', { cache: 'no-store' }).then(r => r.json()).then(c => {
+      if (c && c.ok && c.enabled && c.clientId) {
+        ASL_PP.cfg = c;
+        if (typeof state !== 'undefined' && state.step === 5) ppRerender();
+      }
+    }).catch(() => {});
+  } catch (e) {}
+})();
+function ppOn() { return !!ASL_PP.cfg; }
+function ppPct() { return (ASL_PP.cfg && ASL_PP.cfg.depositPct) || 30; }
+function ppRate() { return (ASL_PP.cfg && ASL_PP.cfg.rate) || 10.8; }
+function ppAmounts() {
+  const total = Math.round(calcTotal());
+  const dep = Math.round(total * ppPct() / 100);
+  const now = ASL_PP.share === 'full' ? total : dep;
+  const eurOf = mad => Math.round(mad / ppRate() * 100) / 100;
+  return { total, dep, now, eur: eurOf(now), eurDep: eurOf(dep), eurTotal: eurOf(total) };
+}
+function ppEur(v) {
+  const loc = (getLang && getLang() === 'ar') ? 'fr-FR' : (typeof langLocale === 'function' ? langLocale() : 'fr-FR');
+  try { return Number(v).toLocaleString(loc, { style: 'currency', currency: 'EUR' }); } catch (e) { return Number(v).toFixed(2) + ' €'; }
+}
+function ppChoiceHTML() {
+  const a = ppAmounts();
+  return `<div class="pp-box"><div class="pp-q">${t('pp.choose')}</div><div class="pp-tiles">
+    <div class="pp-tile ${ASL_PP.share !== 'full' ? 'on' : ''}" data-share="deposit"><b>${t('pp.deposit', { p: ppPct() })}</b><div class="amt">${ppEur(a.eurDep)}</div><small>${t('pp.depositSub', { rest: price(a.total - a.dep) })}</small></div>
+    <div class="pp-tile ${ASL_PP.share === 'full' ? 'on' : ''}" data-share="full"><b>${t('pp.full')}</b><div class="amt">${ppEur(a.eurTotal)}</div><small>${t('pp.fullSub')}</small></div>
+  </div></div>`;
+}
+function ppPayBlockHTML() {
+  const a = ppAmounts();
+  return `<div class="pp-pay" id="pp-pay"><div class="pp-line"><span>${t('pp.charged')}</span><strong>${ppEur(a.eur)}</strong></div>
+    <div class="pp-note">${t('pp.eur', { mad: price(a.now) })}</div>
+    <div id="pp-buttons" style="margin-top:12px;min-height:50px;"><div class="pp-note" style="text-align:center;padding:12px 0;">${t('pp.loading')}</div></div>
+    <div id="pp-busy" class="pp-busy" style="display:none;">${t('pp.processing')}</div>
+    <div class="pp-sec"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none;margin-top:1px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span>${t('pp.secure')}</span></div>
+    <div class="pp-cancel">${t('pp.cancel', { p: ppPct() })}</div></div>`;
+}
+function ppRerender() {
+  if (state.step !== 5) return;
+  const body = document.getElementById('drawer-body');
+  if (!body) return;
+  const y = body.scrollTop;
+  body.innerHTML = renderPayment();
+  attachPaymentEvents();
+  updateConfirmGate();
+  updateFooter();
+  body.scrollTop = y;
+}
+function ppLoadSdk() {
+  if (window.paypal && window.paypal.Buttons) return Promise.resolve();
+  if (ASL_PP.sdk) return ASL_PP.sdk;
+  const loc = { fr: 'fr_FR', en: 'en_GB', es: 'es_ES' }[(typeof getLang === 'function' && getLang()) || 'fr'];
+  ASL_PP.sdk = new Promise((resolve, reject) => {
+    const sc = document.createElement('script');
+    sc.src = 'https://www.paypal.com/sdk/js?client-id=' + encodeURIComponent(ASL_PP.cfg.clientId) + '&currency=EUR&intent=capture&components=buttons' + (loc ? '&locale=' + loc : '');
+    sc.onload = resolve;
+    sc.onerror = () => { ASL_PP.sdk = null; reject(new Error('sdk')); };
+    document.head.appendChild(sc);
+  });
+  return ASL_PP.sdk;
+}
+function ppBusy(on) {
+  const b = document.getElementById('pp-busy'), btns = document.getElementById('pp-buttons');
+  if (b) b.style.display = on ? 'block' : 'none';
+  if (btns) btns.style.opacity = on ? '.35' : '';
+}
+async function ppPost(path, body) {
+  const r = await fetch('/api/paypal/' + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const d = await r.json().catch(() => ({}));
+  return d;
+}
+function ppMountButtons() {
+  if (!ppOn()) return;
+  ppLoadSdk().then(() => {
+    const host = document.getElementById('pp-buttons');
+    if (!host || !window.paypal) return;
+    host.innerHTML = '';
+    window.paypal.Buttons({
+      style: { layout: 'vertical', color: 'gold', shape: 'pill', label: 'paypal', height: 45 },
+      onClick: (data, actions) => {
+        if (!state.termsAccepted) { alert(t('pp.needTerms') || t('pay.acceptAlert')); return actions.reject(); }
+        if (!bookingStillAvailable()) return actions.reject();
+        return actions.resolve();
+      },
+      createOrder: async () => {
+        const ref = 'ASL' + Date.now().toString().slice(-6);
+        const item = buildReservationItem(ref);
+        item.amount = Math.round(calcTotal());
+        ASL_PP.item = item;
+        const d = await ppPost('create-order', { ref: ref, carId: item.carId, startDate: item.startDate, endDate: item.endDate, totalMAD: item.amount, share: ASL_PP.share });
+        if (!d.ok || !d.orderID) throw new Error(d.error || 'create-order');
+        return d.orderID;
+      },
+      onApprove: async (data, actions) => {
+        ppBusy(true);
+        const d = await ppPost('capture', { orderID: data.orderID, item: ASL_PP.item });
+        if (d && d.issue === 'INSTRUMENT_DECLINED') { ppBusy(false); alert(t('pp.declined')); return actions.restart(); }
+        if (!d || !d.ok || !d.item) { ppBusy(false); alert(t('pp.error')); return; }
+        // Même dossier ajouté localement (le serveur l'a déjà enregistré : pas de doublon, même id).
+        try { ASLDB.addReservation(Object.assign({}, d.item)); } catch (e) {}
+        try { window.ASLConv && window.ASLConv.track('reservation', { value: Number(d.item.amount) || 0, currency: 'MAD', transaction_id: d.item.id, item: d.item.car || '', method: 'paypal' }); } catch (e) {}
+        state.reservationRef = d.item.id;
+        ASL_PP.result = d;
+        state.step = 6;
+        renderStep();
+      },
+      onError: () => { ppBusy(false); alert(t('pp.error')); },
+    }).render('#pp-buttons').catch(() => {});
+  }).catch(() => {
+    const host = document.getElementById('pp-buttons');
+    if (host) host.innerHTML = '<div class="pp-note" style="text-align:center;padding:10px 0;color:#b91c1c;">' + t('pp.error') + '</div>';
+  });
+}
+function ppConfirmHTML() {
+  const d = ASL_PP.result, it = d.item || {}, pp = it.paypal || {};
+  const total = Number(it.amount) || 0, paid = Number(it.paid) || 0;
+  const name = ((state.customer && state.customer.firstname) || '').trim();
+  const ok = !!d.completed;
+  const waMsg = encodeURIComponent(
+    `Bonjour ALL STAR LOC,\nJe viens de payer ma réservation ${it.id} par PayPal :\n` +
+    `• Client : ${it.client || ''}\n• Véhicule : ${it.car || ''}\n• Dates : du ${it.startDate || ''} au ${it.endDate || ''}\n` +
+    `• Payé : ${pp.amountEUR || ''} € (${pp.share === 'full' ? 'totalité' : 'acompte'}) — transaction ${pp.captureId || pp.orderId || ''}\n` +
+    `• Reste à régler : ${Math.max(0, total - paid)} MAD\nMerci !`);
+  return `
+    <div class="confirmation">
+      <div class="confirm-icon"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="${ok ? '#22c55e' : '#f59e0b'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg></div>
+      <div class="confirm-title">${ok ? t('cf.ppTitle') : t('cf.title')}</div>
+      <div class="confirm-sub">${ok ? t('cf.ppSub', { name: name }) : t('cf.ppPending')}</div>
+      <div class="confirm-ref"><div class="confirm-ref-label">${t('cf.refLabel')}</div><div class="confirm-ref-num">${it.id || ''}</div></div>
+      <div style="background:var(--gray);border-radius:12px;padding:16px;margin-bottom:14px;text-align:start;font-size:13px;display:grid;gap:8px;">
+        <div><strong>${it.car || ''}</strong> · ${state.days} ${t(state.days > 1 ? 'u.days' : 'u.day')}</div>
+        <div style="display:flex;justify-content:space-between;gap:10px;"><span>${t('cf.total')}</span><b>${price(total)}</b></div>
+        ${ok ? `<div style="display:flex;justify-content:space-between;gap:10px;color:#047857;"><span>✓ ${t('cf.ppPaid')}</span><b>${ppEur(pp.amountEUR || 0)}</b></div>
+        <div style="display:flex;justify-content:space-between;gap:10px;"><span>${t('cf.ppRest')}</span><b>${price(Math.max(0, total - paid))}</b></div>` : ''}
+        <div style="display:flex;justify-content:space-between;gap:10px;color:#6b7280;"><span>${t('cf.ppTx')}</span><span style="word-break:break-all;text-align:end;">${pp.captureId || pp.orderId || ''}</span></div>
+        <div style="color:${ok ? '#047857' : '#b45309'};font-weight:700;">● ${t('cf.statusLabel')} : ${ok ? t('cf.ppStatus') : t('pay.awaiting')}</div>
+      </div>
+      ${ok ? `<div style="font-size:12px;color:#6b7280;margin-bottom:14px;">${t('cf.ppMail')}</div>` : ''}
+      <a href="https://wa.me/212675312453?text=${waMsg}" target="_blank" class="btn-wa-confirm">${t('cf.waBtn')}</a>
+    </div>`;
 }
 
 function setCurrency(c) {

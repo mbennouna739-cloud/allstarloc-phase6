@@ -84,6 +84,73 @@ function aslUnitRealStatus(car, unit, now) {
   return 'available';
 }
 window.aslUnitRealStatus = aslUnitRealStatus;
+/* ★ PayPal : rappel clair dans la fiche quand le client a payé en ligne. */
+function aslPayPalNoteHTML(r) {
+  if (!r || !r.paypal) return '';
+  var p = r.paypal, ok = String(p.status || '').toUpperCase() === 'COMPLETED' || (Number(r.paid) || 0) > 0;
+  return '<div style="display:flex;gap:8px;align-items:flex-start;background:' + (ok ? '#eff6ff' : '#fffbeb') + ';border:1px solid ' + (ok ? '#bfdbfe' : '#fde68a') + ';border-radius:8px;padding:9px 11px;margin-bottom:12px;font-size:12.5px;line-height:1.45;">'
+    + '<span style="font-weight:800;color:#003087;">Pay<span style="color:#009cde;">Pal</span></span>'
+    + '<span>' + (ok ? 'Payé en ligne : <b>' + (p.amountEUR || '') + ' €</b> (' + (p.share === 'full' ? 'totalité' : 'acompte') + ')' : '<b>Paiement PayPal en cours de vérification</b>')
+    + aslPayPalRefundLine(r)
+    + '<br><span style="color:var(--text3);">Transaction ' + (p.captureId || p.orderId || '') + (p.env === 'sandbox' ? ' · TEST (sandbox)' : '') + '</span>'
+    + (ok && p.captureId && aslPayPalRemainingEUR(r) > 0 ? '<br><button type="button" class="btn-sm ghost" style="margin-top:6px;" data-rid="' + r.id + '" onclick="aslPayPalRefund(this.dataset.rid)">↩ Rembourser via PayPal</button>' : '')
+    + '</span></div>';
+}
+window.aslPayPalNoteHTML = aslPayPalNoteHTML;
+/* Remboursements déjà faits / reste remboursable (en €). */
+function aslPayPalRefundedEUR(r) {
+  var list = (r && r.paypal && Array.isArray(r.paypal.refunds)) ? r.paypal.refunds : [];
+  return Math.round(list.reduce(function (s, x) { return s + (Number(x.amountEUR) || 0); }, 0) * 100) / 100;
+}
+function aslPayPalRemainingEUR(r) {
+  return Math.max(0, Math.round(((Number(r && r.paypal && r.paypal.amountEUR) || 0) - aslPayPalRefundedEUR(r)) * 100) / 100);
+}
+function aslPayPalRefundLine(r) {
+  var done = aslPayPalRefundedEUR(r);
+  return done > 0 ? '<br><span style="color:#b91c1c;font-weight:700;">Remboursé : ' + done.toFixed(2) + ' €</span>' : '';
+}
+window.aslPayPalRemainingEUR = aslPayPalRemainingEUR;
+window.aslPayPalRefundLine = aslPayPalRefundLine;
+/* ★ Rembourser un paiement PayPal depuis la fiche (ordinateur et mobile).
+   Le serveur rembourse via PayPal ; la fiche est ensuite mise à jour par la
+   synchronisation habituelle (ASLDB.updateReservation) : le montant reçu
+   baisse, la caisse aussi, et le remboursement est noté dans la fiche. */
+async function aslPayPalRefund(id) {
+  var r = (ASLDB.getReservations() || []).filter(function (x) { return String(x.id) === String(id); })[0];
+  if (!r || !r.paypal || !r.paypal.captureId) { alert('Aucun paiement PayPal à rembourser sur ce dossier.'); return; }
+  var p = r.paypal, rest = aslPayPalRemainingEUR(r), captured = Number(p.amountEUR) || 0;
+  if (rest <= 0) { alert('Ce paiement PayPal a déjà été entièrement remboursé.'); return; }
+  var s = prompt('Montant à rembourser au client, en euros (maximum ' + rest.toFixed(2) + ' €).\nLaissez ce montant pour tout rembourser :', rest.toFixed(2));
+  if (s == null) return;
+  var eur = Math.round((parseFloat(String(s).replace(',', '.')) || 0) * 100) / 100;
+  if (!(eur > 0) || eur > rest + 0.001) { alert('Montant invalide (entre 0,01 et ' + rest.toFixed(2) + ' €).'); return; }
+  if (!confirm('Rembourser ' + eur.toFixed(2) + ' € à ' + (r.client || 'ce client') + ' via PayPal ?\n\nCette action est définitive : l\'argent repart immédiatement sur son compte PayPal ou sa carte.')) return;
+  var h = { 'Content-Type': 'application/json' };
+  try { var k = localStorage.getItem('asl_admin_key') || ''; if (k) h['X-ASL-Key'] = k; } catch (e) {}
+  var d = {};
+  try {
+    var resp = await fetch('/api/paypal/refund', { method: 'POST', headers: h, body: JSON.stringify({ captureId: p.captureId, amountEUR: eur, resId: r.id, n: (p.refunds || []).length }) });
+    d = await resp.json().catch(function () { return {}; });
+  } catch (e) { d = { ok: false, error: 'Connexion impossible' }; }
+  if (!d.ok) { alert('Remboursement non effectué : ' + (d.error || 'erreur') + (d.issue ? ' (' + d.issue + ')' : '') + '.\nAucun montant n\'a été remboursé.'); return; }
+  // Part en MAD correspondant aux euros remboursés (même proportion que le paiement reçu).
+  var journal = aslJournalClean(aslPaymentJournal(r));
+  var line = journal.filter(function (x) { return String(x.mode || '').toLowerCase() === 'paypal' && (Number(x.amount) || 0) > 0; })[0];
+  var paidMAD = Number(p.paidMAD) || (line ? Number(line.amount) : 0);
+  var mad = captured > 0 ? Math.round(paidMAD * eur / captured) : 0;
+  if (line) {
+    line.amount = aslRound2(Math.max(0, (Number(line.amount) || 0) - mad));
+    line.comment = (line.comment || '') + ' · remboursé ' + eur.toFixed(2) + ' € le ' + ((typeof ASLDB !== 'undefined' && ASLDB.localDateISO) ? ASLDB.localDateISO() : new Date().toISOString().slice(0, 10));
+  }
+  var newPaid = aslJournalSum(journal), total = Number(r.amount) || 0;
+  var pp2 = Object.assign({}, p, { paidMAD: paidMAD, refunds: (p.refunds || []).concat([{ id: d.refundId, amountEUR: d.amountEUR, status: d.status, date: new Date().toISOString() }]) });
+  ASLDB.updateReservation(r.id, { payments: journal, paid: newPaid, paymentStatus: newPaid <= 0 ? 'Remboursé' : (newPaid >= total ? 'Paiement complet' : 'Paiement partiel'), paypal: pp2 });
+  alert('Remboursement de ' + eur.toFixed(2) + ' € effectué via PayPal' + (d.status === 'PENDING' ? ' (en cours de traitement par PayPal)' : '') + '.\nMontant reçu mis à jour : ' + newPaid + ' MAD.\nSi le client ne vient plus, pensez à annuler la réservation.');
+  try { if (typeof reloadData === 'function') reloadData(); if (typeof renderAllReservations === 'function') renderAllReservations(); if (typeof renderDashboard === 'function') renderDashboard(); } catch (e) {}
+  try { if (typeof closeModal === 'function') closeModal(); } catch (e) {}
+  try { if (typeof window.maCloseSheet === 'function') window.maCloseSheet(); if (typeof window.maRefresh === 'function') window.maRefresh(); } catch (e) {}
+}
+window.aslPayPalRefund = aslPayPalRefund;
 function aslJournalizePaidChange(r, patch) {
   try {
     if (!r || !patch || patch.paid == null || typeof aslPaymentJournal !== 'function') return;
@@ -424,7 +491,11 @@ function renderDashboard() {
     //   littéralement les mêmes fonctions que Mobile et que les listes —
     //   une divergence n'est plus possible par construction.
     var D = (typeof ASLDB !== 'undefined') ? ASLDB : null;
-    var rented   = (D && D.selectRented)     ? D.selectRented()      : res.filter(function(r) { return phase(r) === 'active'; });
+    // ★ « Loués » = toutes les voitures encore dehors : en cours + EN RETARD
+    //   (un retour non confirmé reste loué). Les retours d'aujourd'hui sont
+    //   déjà dedans (en cours ou en retard). Les cartes « Retours aujourd'hui »
+    //   et « En retard » restent inchangées.
+    var rented   = (D && D.selectRented)     ? D.selectRented().concat(D.selectLate ? D.selectLate() : []) : res.filter(function(r) { var p = phase(r); return p === 'active' || p === 'late'; });
     var reserved = (D && D.selectReserved)   ? D.selectReserved()    : res.filter(function(r) { return phase(r) === 'reserved'; });
     var returns  = (D && D.selectReturnsOn)  ? D.selectReturnsOn(ts) : res.filter(function(r) { return (r.endDate||'').slice(0,10) === ts && r.status !== 'cancelled' && r.status !== 'completed'; });
     var late     = (D && D.selectLate)       ? D.selectLate()        : res.filter(function(r) { return phase(r) === 'late'; });
@@ -784,8 +855,10 @@ function openDashDrawer(type) {
     title = '🔵 Véhicules loués actuellement';
     // ★ CORRECTIF : phase réelle (date+heure+fuseau), plus l'ancien filtre
     //   "date seule" qui retardait d'un jour le passage en "Loué".
-    (ASLDB.selectRented ? ASLDB.selectRented() : []).forEach(function(r) {
+    // ★ Même liste que le compteur « Loués » : en cours + en retard.
+    (ASLDB.selectRented ? ASLDB.selectRented().concat(ASLDB.selectLate ? ASLDB.selectLate() : []) : []).forEach(function(r) {
       var plateColor = aslVehPlateColor(r);
+      var _isLate = (ASLDB.computePhase && ASLDB.computePhase(r) === 'late');
       // ★ Vue rapide (item 7) : uniquement la DATE+HEURE DE RETOUR, sans la
       //   date de départ ni les autres détails (disponibles dans la fiche).
       rows.push(
@@ -796,9 +869,9 @@ function openDashDrawer(type) {
         //   coup d'œil, depuis "Véhicules loués", lesquelles sont des LLD.
         + '<div style="font-weight:700;">' + (r.car||'') + (r.type === 'lld' ? ' <span style="font-size:10px;font-weight:700;color:#8b5cf6;background:rgba(139,92,246,.12);border-radius:6px;padding:2px 7px;vertical-align:middle;">📅 LLD</span>' : '') + '</div>'
         + (plateColor ? '<div style="font-size:12px;color:var(--text3);">🚗 ' + plateColor + '</div>' : '')
-        + '<div style="font-size:13px;margin-top:2px;">Retour :<br><strong>' + fmtD(r.endDate||'') + (r.endTime ? ' à ' + r.endTime : '') + '</strong></div>'
+        + '<div style="font-size:13px;margin-top:2px;">Retour :<br><strong>' + fmtD(r.endDate||'') + (r.endTime ? ' à ' + r.endTime : '') + '</strong>' + (_isLate ? ' <span class="badge badge-red" style="font-size:10.5px;">En retard</span>' : '') + '</div>'
         + '</div>'
-        + '<div style="flex-shrink:0;"><button class="btn-sm ghost" data-rid="' + r.id + '" onclick="setDashReturnContext(\'rented\');closeDashDrawer();viewRental(this.dataset.rid,\'rented\')">Fiche →</button></div>'
+        + '<div style="flex-shrink:0;"><button class="btn-sm ghost" data-rid="' + r.id + '" onclick="setDashReturnContext(\'' + (_isLate ? 'late' : 'rented') + '\');closeDashDrawer();viewRental(this.dataset.rid,\'' + (_isLate ? 'late' : 'rented') + '\')">Fiche →</button></div>'
         + '</div>'
       );
     });
@@ -1691,6 +1764,7 @@ function viewRental(id, mode) {
 
     '<div style="background:rgba(18,22,30,.04);border-radius:10px;padding:14px;">' +
     '<div style="font-weight:700;margin-bottom:10px;color:var(--red);">Paiement</div>' +
+    aslPayPalNoteHTML(r) +
     // ★ CORRECTIF (point 9) : prix/jour et montant total désormais modifiables
     //   même après enregistrement — aucune donnée financière n'est figée.
     //   Le total se recalcule automatiquement (prix × jours) mais reste lui
@@ -1706,14 +1780,14 @@ function viewRental(id, mode) {
     '<input class="form-input" type="number" id="rd-paid" value="' + paid + '" oninput="rdPayCalc(parseFloat(document.getElementById(\'rd-total\').value)||' + total + ')"></div>' +
     '<div class="form-group"><label class="form-label">Mode de paiement</label>' +
     '<select class="form-select" id="rd-mode">' +
-    ['Espèces','Carte bancaire','Virement','Chèque','Autre'].map(function(m) {
+    ['Espèces','Carte bancaire','Virement','Chèque','PayPal','Autre'].map(function(m) {
       return '<option' + (r.paymentMode===m?' selected':'') + '>' + m + '</option>';
     }).join('') +
     '</select></div></div>' +
     '<div class="form-group"><label class="form-label">Encaissé par</label>' +
     '<select class="form-select" id="rd-collected-by">' +
     '<option value=""' + (!r.collectedBy?' selected':'') + '>— Non renseigné —</option>' +
-    ['Mohamed','Younes','Khalil'].map(function(m) {
+    ['Mohamed','Younes','Khalil','PayPal'].map(function(m) {
       return '<option' + (r.collectedBy===m?' selected':'') + '>' + m + '</option>';
     }).join('') +
     '</select></div>' +
@@ -2732,6 +2806,7 @@ function viewRes(id) {
     '</div>' +
     '<div style="background:rgba(18,22,30,.04);border-radius:10px;padding:14px;">' +
     '<div style="font-weight:700;margin-bottom:10px;color:var(--red);">Paiement</div>' +
+    aslPayPalNoteHTML(r) +
     '<div class="form-row">' +
     '<div class="form-group"><label class="form-label">Prix / jour (MAD)</label>' +
     '<input class="form-input" type="number" id="vr-ppu" value="' + (r.pricePerDay || Math.round(total/Math.max(1,r.days||1))) + '" oninput="vrRecalcTotal()"></div>' +
@@ -2745,12 +2820,12 @@ function viewRes(id) {
     '<div class="form-row">' +
     '<div class="form-group"><label class="form-label">Mode de paiement</label>' +
     '<select class="form-select" id="vr-mode">' +
-    ['Espèces','Carte bancaire','Virement','Chèque','Autre'].map(function(m){ return '<option' + (mode===m?' selected':'') + '>' + m + '</option>'; }).join('') +
+    ['Espèces','Carte bancaire','Virement','Chèque','PayPal','Autre'].map(function(m){ return '<option' + (mode===m?' selected':'') + '>' + m + '</option>'; }).join('') +
     '</select></div>' +
     '<div class="form-group"><label class="form-label">Encaissé par</label>' +
     '<select class="form-select" id="vr-collected-by">' +
     '<option value=""' + (!r.collectedBy?' selected':'') + '>— Non renseigné —</option>' +
-    ['Mohamed','Younes','Khalil'].map(function(m){ return '<option' + (r.collectedBy===m?' selected':'') + '>' + m + '</option>'; }).join('') +
+    ['Mohamed','Younes','Khalil','PayPal'].map(function(m){ return '<option' + (r.collectedBy===m?' selected':'') + '>' + m + '</option>'; }).join('') +
     '</select></div>' +
     '</div>' +
     '<div id="vr-rest" style="font-weight:700;font-size:13px;margin-top:6px;"></div></div>' +

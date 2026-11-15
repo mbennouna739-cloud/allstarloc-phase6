@@ -345,14 +345,14 @@ function showCollectorDetail(name) {
         var amt = Number(p.amount) || 0;
         if (amt <= 0) return;
         var who = p.collectedBy || '';
-        var matches = (name === 'Non attribué') ? !['Mohamed','Younes','Khalil'].includes(who) : who === name;
+        var matches = (name === 'Non attribué') ? !['Mohamed','Younes','Khalil','PayPal'].includes(who) : who === name;
         if (matches) lines.push({ r: r, amount: amt, date: p.date || '' });
       });
     } else {
       var paid = Number(r.paid) || 0;
       if (paid <= 0) return;
       var who2 = r.collectedBy || '';
-      var matches2 = (name === 'Non attribué') ? !['Mohamed','Younes','Khalil'].includes(who2) : who2 === name;
+      var matches2 = (name === 'Non attribué') ? !['Mohamed','Younes','Khalil','PayPal'].includes(who2) : who2 === name;
       if (matches2) lines.push({ r: r, amount: paid, date: '' });
     }
   });
@@ -391,7 +391,7 @@ function openRevenueDrawer() {
     //   désormais la répartition par personne ayant réellement encaissé
     //   (champ "Encaissé par", jamais l'utilisateur connecté) + le reste à
     //   encaisser global, à la place des revenus semaine/mois/année.
-    var byPerson = { Mohamed: 0, Younes: 0, Khalil: 0 };
+    var byPerson = { Mohamed: 0, Younes: 0, Khalil: 0, PayPal: 0 };
     var dueGlobal = 0, nonAttribue = 0;
     asl7Res().forEach(function (r) {
       if (r.status === 'cancelled') return;
@@ -405,7 +405,7 @@ function openRevenueDrawer() {
     });
     // ★ Total global en haut (identique à la carte du Dashboard), puis la
     //   répartition par personne, puis le reste à encaisser.
-    var totalEncaisse = byPerson.Mohamed + byPerson.Younes + byPerson.Khalil + (nonAttribue || 0);
+    var totalEncaisse = byPerson.Mohamed + byPerson.Younes + byPerson.Khalil + byPerson.PayPal + (nonAttribue || 0);
     function personCard(name, val, color) {
       return '<div style="border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;cursor:pointer;transition:.15s;" ' +
         'onclick="showCollectorDetail(\'' + name + '\')" onmouseover="this.style.background=\'rgba(18,22,30,.03)\'" onmouseout="this.style.background=\'\'">' +
@@ -423,6 +423,7 @@ function openRevenueDrawer() {
       personCard('Mohamed', byPerson.Mohamed, '#16a34a') +
       personCard('Younes', byPerson.Younes, '#3b82f6') +
       personCard('Khalil', byPerson.Khalil, '#8b5cf6') +
+      (byPerson.PayPal > 0 ? personCard('PayPal', byPerson.PayPal, '#1d4ed8') : '') +
       (nonAttribue > 0 ? personCard('Non attribué', nonAttribue, '#9ca3af') : '') +
       row('Reste à encaisser', dueGlobal, (dueGlobal > 0 ? '#ef4444' : '#16a34a'), 'Total de tous les impayés') +
       '<div id="collector-detail"></div>';

@@ -1808,7 +1808,7 @@ function viewRes(id) {
       <div class="res-detail-item"><div class="res-detail-label">Prise en charge</div><div class="res-detail-val">${r.pickup}<br><small>${r.startDate}</small></div></div>
       <div class="res-detail-item"><div class="res-detail-label">Retour</div><div class="res-detail-val">${r.endDate}</div></div>
       <div class="res-detail-item"><div class="res-detail-label">Montant Total</div><div class="res-detail-val" style="color:var(--red);font-size:20px;">${r.amount} MAD</div></div>
-      <div class="res-detail-item"><div class="res-detail-label">Paiement</div><div class="res-detail-val">${r.payment==='full'?'Complet':r.payment==='advance'?'Avance':r.payment==='transfer'?'Virement bancaire':'Espèces à l\'arrivée'}</div></div>
+      <div class="res-detail-item"><div class="res-detail-label">Paiement</div><div class="res-detail-val">${r.payment==='paypal'?('PayPal en ligne'+(r.paypal?' — '+(r.paypal.amountEUR||'')+' € ('+(r.paypal.share==='full'?'totalité':'acompte')+')<br><small>Transaction '+(r.paypal.captureId||r.paypal.orderId||'')+'</small>':'')):r.payment==='full'?'Complet':r.payment==='advance'?'Avance':r.payment==='transfer'?'Virement bancaire':'Espèces à l\'arrivée'}</div></div>
       <div class="res-detail-item"><div class="res-detail-label">Source</div><div class="res-detail-val">${r.source}</div></div>
       <div class="res-detail-item"><div class="res-detail-label">Statut</div><div class="res-detail-val"><span class="badge ${STATUS_LABELS[r.status].class}">${STATUS_LABELS[r.status].label}</span></div></div>
     </div>

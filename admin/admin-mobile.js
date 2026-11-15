@@ -183,7 +183,8 @@
       //   littéralement les mêmes fonctions que Desktop et que les listes
       //   Mobile — plus aucune réimplémentation locale, donc plus aucune
       //   divergence possible entre compteur, liste, Desktop et Mobile.
-      rented: (ASLDB.selectRented ? ASLDB.selectRented().length : r.filter(function (x) { return phase(x) === 'active'; }).length),
+      // ★ « Loués » = en cours + EN RETARD (retour non confirmé = toujours louée).
+      rented: (ASLDB.selectRented ? ASLDB.selectRented().length + (ASLDB.selectLate ? ASLDB.selectLate().length : 0) : r.filter(function (x) { var p = phase(x); return p === 'active' || p === 'late'; }).length),
       reserved: (ASLDB.selectReserved ? ASLDB.selectReserved().length : r.filter(function (x) { return phase(x) === 'reserved'; }).length),
       returnsToday: (ASLDB.selectReturnsOn ? ASLDB.selectReturnsOn(ts).length : 0),
       late: (ASLDB.selectLate ? ASLDB.selectLate().length : r.filter(function (x) { return phase(x) === 'late'; }).length),
@@ -1126,7 +1127,8 @@
     //   cette liste incluait aussi les véhicules EN RETARD, contrairement à
     //   son propre compteur et à Desktop — d'où liste ≠ compteur et
     //   Mobile ≠ Desktop).
-    var list = ASLDB.selectRented ? ASLDB.selectRented() : reservations().filter(function (r) { return ASLDB.computePhase(r) === 'active'; });
+    // ★ Même règle que le compteur « Loués » : en cours + en retard.
+    var list = ASLDB.selectRented ? ASLDB.selectRented().concat(ASLDB.selectLate ? ASLDB.selectLate() : []) : reservations().filter(function (r) { var p = ASLDB.computePhase(r); return p === 'active' || p === 'late'; });
     var q = ((document.getElementById('ma-rentals-search') || {}).value || '').toLowerCase().trim();
     var filtered = q ? list.filter(function (r) {
       return ((r.car || '') + ' ' + (r.assignedPlate || '') + ' ' + (r.client || '')).toLowerCase().indexOf(q) >= 0;
@@ -1149,6 +1151,7 @@
         // ★ Badge LLD (cohérent avec Desktop)
         + '<div class="ma-card-info"><div class="ma-card-name">' + esc(r.car || 'Véhicule') + (r.type === 'lld' ? ' <span style="font-size:9.5px;font-weight:700;color:#8b5cf6;background:rgba(139,92,246,.12);border-radius:6px;padding:2px 6px;">📅 LLD</span>' : '') + '</div>'
         + '<div class="ma-card-sub">' + esc(r.client || 'Client') + (plate ? ' · ' + esc(plate) : '') + '</div></div>'
+        + ((ASLDB.computePhase && ASLDB.computePhase(r) === 'late') ? '<span class="ma-badge red" style="margin-right:4px;">En retard</span>' : '')
         + payBadge + '</div>'
         + '<div class="ma-card-meta">'
         + '<div class="ma-meta">Départ<b>' + fmtDateT(r.startDate, r.startTime, '10:00') + '</b></div>'
@@ -1183,12 +1186,23 @@
       + '<div class="ma-meta">Départ<b>' + fmtDateT(r.startDate, r.startTime, '10:00') + '</b></div>'
       + '<div class="ma-meta">Retour<b>' + fmtDateT(r.endDate, r.endTime, '18:00') + '</b></div>'
       + '<div class="ma-meta">Total<b>' + money(r.amount || 0) + '</b></div></div>'
-      + '<div class="ma-pay-line">' + payBadge + '</div>'
+      + '<div class="ma-pay-line">' + payBadge + (r.paypal ? ' <span class="ma-badge blue">PayPal</span>' : '') + '</div>'
       + actions + '</div>';
   }
 
   /* Fiche location en POPUP mobile propre (centrée, stable, scroll vertical,
      bouton fermer = croix, aucun bouton caché). */
+  /* ★ PayPal : ligne claire « payé en ligne » (montant en €, acompte/totalité, n° de transaction). */
+  function maPayPalNote(r) {
+    if (!r || !r.paypal) return '';
+    var p = r.paypal, ok = String(p.status || '').toUpperCase() === 'COMPLETED' || (Number(r.paid) || 0) > 0;
+    return '<div style="display:flex;gap:8px;align-items:flex-start;background:' + (ok ? '#eff6ff' : '#fffbeb') + ';border:1px solid ' + (ok ? '#bfdbfe' : '#fde68a') + ';border-radius:10px;padding:9px 11px;margin:10px 0;font-size:12.5px;line-height:1.45;">'
+      + '<b style="color:#003087;">Pay<span style="color:#009cde;">Pal</span></b><span>' + (ok ? 'Payé en ligne : <b>' + esc(p.amountEUR || '') + ' €</b> (' + (p.share === 'full' ? 'totalité' : 'acompte') + ')' : '<b>Paiement en cours de vérification</b>')
+      + (typeof window.aslPayPalRefundLine === 'function' ? window.aslPayPalRefundLine(r) : '')
+      + '<br><span style="color:#6b7280;">Transaction ' + esc(p.captureId || p.orderId || '') + (p.env === 'sandbox' ? ' · TEST' : '') + '</span>'
+      + (ok && p.captureId && typeof window.aslPayPalRemainingEUR === 'function' && window.aslPayPalRemainingEUR(r) > 0 ? '<br><button type="button" style="margin-top:7px;border:1px solid #bfdbfe;background:#fff;color:#1d4ed8;border-radius:8px;padding:6px 10px;font-weight:700;font-size:12px;" onclick="aslPayPalRefund(' + "'" + esc(String(r.id)) + "'" + ')">↩ Rembourser via PayPal</button>' : '')
+      + '</span></div>';
+  }
   window.maRentalFiche = function (id, mode) {
     var r = (ASLDB.getReservations() || []).filter(function (x) { return x.id === id; })[0];
     if (!r) return;
@@ -1228,6 +1242,7 @@
       + row('Total', money(r.amount || 0))
       + row('Payé', money(r.paid || 0), '#16a34a')
       + row('Reste à payer', money(reste), reste > 0 ? '#C41E3A' : '#16a34a')
+      + maPayPalNote(r)
       + editBtn
       + actionsHTML
       + (r.phone ? '<a class="ma-act-btn" style="margin-top:8px;text-decoration:none;background:#25D366;color:#fff;border:none;" href="https://wa.me/' + esc(r.phone.replace(/[^0-9]/g, '')) + '" target="_blank">' + ic('phone') + 'WhatsApp</a>' : '')
@@ -2781,7 +2796,7 @@
      ====================================================================== */
   var CS = { view: 'sum', mode: 'month', ym: '', who: '', keep: false };
   var CS_PEOPLE = ['Mohamed', 'Younes', 'Khalil'];
-  var CS_COL = { Mohamed: ['#15803D', 'rgba(22,163,74,.12)'], Younes: ['#1D4ED8', 'rgba(29,78,216,.12)'], Khalil: ['#6D28D9', 'rgba(109,40,217,.12)'], na: ['#646B78', '#ECEDF0'] };
+  var CS_COL = { Mohamed: ['#15803D', 'rgba(22,163,74,.12)'], Younes: ['#1D4ED8', 'rgba(29,78,216,.12)'], Khalil: ['#6D28D9', 'rgba(109,40,217,.12)'], PayPal: ['#003087', 'rgba(255,196,57,.35)'], na: ['#646B78', '#ECEDF0'] };
   var CS_M = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
   var CS_MS = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
   function csCurYM() { return todayISO().slice(0, 7); }
@@ -2800,6 +2815,7 @@
         // ★ Nom reconnu sans tenir compte des majuscules / espaces
         var cb = String(p.collectedBy || '').trim().toLowerCase(), who = 'na';
         CS_PEOPLE.forEach(function (n) { if (n.toLowerCase() === cb) who = n; });
+        if (cb === 'paypal') who = 'PayPal'; // ★ reçu sur le compte PayPal (paiement en ligne)
         out.push({ r: r, date: d, amount: amt, mode: p.mode || '', who: who, comment: p.comment || '', idx: p._i });
       });
     });
@@ -2836,7 +2852,7 @@
     var b = document.getElementById('ma-head-back'); if (b) b.style.display = CS.view === 'sum' ? 'none' : 'flex';
     if (CS.view === 'list') { csRenderList(host); return; }
     maSetTitle('Caisse');
-    var pays = csPayments(), tot = 0, by = { Mohamed: [0, 0], Younes: [0, 0], Khalil: [0, 0], na: [0, 0] };
+    var pays = csPayments(), tot = 0, by = { Mohamed: [0, 0], Younes: [0, 0], Khalil: [0, 0], PayPal: [0, 0], na: [0, 0] };
     pays.forEach(function (p) { tot += p.amount; by[p.who][0] += p.amount; by[p.who][1]++; });
     var rest = csRest(), restSum = rest.reduce(function (s, r) { return s + Math.max(0, (Number(r.amount) || 0) - (Number(r.paid) || 0)); }, 0);
     var ch = csCharges(), chSum = ch.reduce(function (s, c) { return s + (Number(c.amount) || 0); }, 0);
@@ -2849,7 +2865,7 @@
     host.innerHTML = '<button type="button" class="cs-per" onclick="maCsPeriod()">' + ic('calendar') + '<span><small>Période</small><b>' + esc(csLabel()) + '</b></span><em>Changer ▾</em></button>'
       + '<button type="button" class="cs-tot" onclick="maCsOpen(\'all\')"><span><small>Total encaissé par l\'agence</small><b>' + money(tot) + '</b><span>' + (pays.length ? csN(pays.length, 'paiement', 'paiements') + ' · voir la liste' : 'Aucun paiement sur cette période') + '</span></span>' + ic('arrowLeft', 'mu-chev') + '</button>'
       + '<div class="mu-sec">Encaissé par</div>'
-      + CS_PEOPLE.map(person).join('') + person('na')
+      + CS_PEOPLE.map(person).join('') + (by.PayPal[1] ? person('PayPal') : '') + person('na')
       + '<div class="mu-sec">À encaisser</div>'
       + '<button type="button" class="cs-rest" onclick="maCsOpen(\'rest\')"><span class="cs-pt"><b>Reste à encaisser</b><small>' + (CS.mode === 'all' ? 'Tous les dossiers' : 'Locations de ' + esc(csLabel().toLowerCase())) + ' · ' + csN(rest.length, 'dossier', 'dossiers') + '</small></span><span class="cs-amt red">' + money(restSum).replace(' MAD', '') + '</span>' + ic('arrowLeft', 'mu-chev') + '</button>'
       + '<div class="mu-sec">Charges et solde · ' + esc(csLabel().toLowerCase()) + '</div>'
@@ -2895,7 +2911,7 @@
   function csRenderList(host) {
     var w = CS.who, html = '', title = '', total = 0, count = 0, body = '';
     var chips = function () {
-      return '<div class="mu-chips wrap">' + CS_PEOPLE.concat(['na', 'all']).map(function (k) { return '<button type="button" class="mu-chip' + (w === k ? ' on' : '') + '" onclick="maCsOpen(\'' + k + '\')">' + (k === 'all' ? 'Tous' : csWhoLabel(k)) + '</button>'; }).join('') + '</div>';
+      return '<div class="mu-chips wrap">' + CS_PEOPLE.concat(csPayments().some(function (p) { return p.who === 'PayPal'; }) ? ['PayPal'] : []).concat(['na', 'all']).map(function (k) { return '<button type="button" class="mu-chip' + (w === k ? ' on' : '') + '" onclick="maCsOpen(\'' + k + '\')">' + (k === 'all' ? 'Tous' : csWhoLabel(k)) + '</button>'; }).join('') + '</div>';
     };
     if (w === 'rest') {
       var rest = csRest(); title = 'Reste à encaisser';
@@ -4490,6 +4506,7 @@
       + '<div class="rdm-sub">' + esc(r.client || 'Client') + ' · ' + esc(veh) + (r.status === 'pending' ? ' · <b style="color:#b45309;">en attente</b>' : '') + '</div>'
       + '<div class="rdm-sum"><div><span>Départ</span><b>' + fmtDateT(r.startDate, r.startTime, '10:00') + '</b></div><div><span>Retour</span><b>' + fmtDateT(r.endDate, r.endTime, '18:00') + '</b></div>'
       + '<div><span>Total</span><b>' + money(total) + '</b></div><div><span>Reste</span><b style="color:' + (rest > 0 ? '#C41E3A' : '#16a34a') + ';">' + money(rest) + '</b></div></div>'
+      + maPayPalNote(r)
       + act('calendar', 'Étapes de la réservation', '1 Client · 2 Voiture et dates · 3 Paiement', 'maResEdit(' + idA + ')')
       + act('user', 'Informations du client', 'Nom, téléphone, e-mail, nationalité, documents', 'maResClient(' + idA + ')')
       + act('x', 'Supprimer la réservation', 'Définitif — la voiture redevient libre', 'maResDelete(' + idA + ')', true));
