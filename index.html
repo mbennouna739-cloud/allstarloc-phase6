@@ -757,6 +757,13 @@ html:has(#booking-drawer.open) { overflow: hidden; }
   padding: 16px 24px; border-top: 1px solid var(--gray2);
   background: white; flex-shrink: 0;
 }
+/* ★ Mobile : bouton éloigné du bord bas de l'écran (sinon, sur iPhone, le
+   1er appui sert à faire réapparaître la barre de Safari et le 2e seulement
+   déclenche « Continuer »). touch-action : pas de délai de double-tap. */
+@media (max-width: 768px) {
+  .drawer-footer { padding: 12px 18px calc(22px + env(safe-area-inset-bottom, 0px)); }
+}
+.btn-next, .drawer button, .drawer .payment-option, .drawer .ins-card, .drawer .doc-btn { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 .footer-summary-mini {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 12px;
@@ -2438,7 +2445,93 @@ function openDrawer() {
   renderStep();
 }
 
+/* ==================== REPRISE DU PARCOURS ====================
+   Si le client quitte la page (fenêtre PayPal, bouton « Retour », page
+   rechargée…), il retrouve sa réservation à la même étape, avec ses
+   informations et ses photos — rien à ressaisir. Conservé 2 h sur cet
+   appareil (localStorage) ; effacé après la confirmation ou
+   quand le client ferme lui-même la réservation. */
+const BOOKING_KEY = 'asl_booking_resume_v1';
+function bookingSave() {
+  try {
+    if (!state.car || state.step < 1) return;
+    if (state.step >= 6) { localStorage.removeItem(BOOKING_KEY); return; }
+    if (state.step === 4) saveCustomerForm();
+    const snap = { t: Date.now(), step: state.step, carId: state.car.id, days: state.days,
+      startDate: state.startDate, endDate: state.endDate, startTime: state.startTime, endTime: state.endTime,
+      pickupLoc: state.pickupLoc, returnLoc: state.returnLoc, protection: state.protection, options: state.options,
+      promo: state.promo, promoDiscount: state.promoDiscount, customer: state.customer, payment: state.payment,
+      termsAccepted: !!state.termsAccepted, docs: state.docs || null };
+    try { localStorage.setItem(BOOKING_KEY, JSON.stringify(snap)); }
+    catch (e) { snap.docs = null; localStorage.setItem(BOOKING_KEY, JSON.stringify(snap)); } // photos trop lourdes : on garde le reste
+  } catch (e) {}
+}
+function bookingForget() { try { localStorage.removeItem(BOOKING_KEY); sessionStorage.removeItem(BOOKING_KEY); } catch (e) {} }
+function bookingResume() {
+  let snap = null;
+  try { snap = JSON.parse(localStorage.getItem(BOOKING_KEY) || 'null'); } catch (e) {}
+  if (document.getElementById('booking-drawer') && document.getElementById('booking-drawer').classList.contains('open')) return false;
+  if (!snap || !snap.carId || !(snap.step >= 1 && snap.step <= 5) || Date.now() - (snap.t || 0) > 2 * 3600 * 1000) return false;
+  const car = (CARS || []).find(c => String(c.id) === String(snap.carId));
+  if (!car) return false;
+  Object.assign(state, { car: car, step: snap.step, days: snap.days, startDate: snap.startDate, endDate: snap.endDate,
+    startTime: snap.startTime || state.startTime, endTime: snap.endTime || state.endTime,
+    pickupLoc: snap.pickupLoc || state.pickupLoc, returnLoc: snap.returnLoc || state.returnLoc,
+    protection: snap.protection || state.protection, options: Array.isArray(snap.options) ? snap.options : [],
+    promo: snap.promo || '', promoDiscount: snap.promoDiscount || 0, customer: snap.customer || {},
+    payment: snap.payment || state.payment, termsAccepted: !!snap.termsAccepted });
+  if (snap.docs) state.docs = snap.docs;
+  _histResumed = true;
+  openDrawer();
+  return true;
+}
+(function () {
+  let tries = 0;
+  const go = () => {
+    tries++;
+    try { if (CARS && CARS.length) { bookingResume(); return; } } catch (e) {}
+    if (tries < 100) setTimeout(go, 200);   // jusqu'à 20 s (réseau mobile lent)
+  };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(go, 50));
+  else setTimeout(go, 50);
+})();
+/* Retour depuis PayPal (page restaurée par le navigateur) : on resauvegarde
+   simplement ; le tiroir et les données sont déjà là. */
+window.addEventListener('pagehide', () => { try { if (document.getElementById('booking-drawer').classList.contains('open')) bookingSave(); } catch (e) {} });
+/* Page restaurée depuis le cache du navigateur (bouton Retour) : si le tiroir
+   n'est plus ouvert, on reprend la réservation enregistrée. */
+window.addEventListener('pageshow', () => { try { if (CARS && CARS.length) bookingResume(); } catch (e) {} });
+
+/* ==================== BOUTON « RETOUR » DU NAVIGATEUR ====================
+   Pendant la réservation, chaque étape est une entrée d'historique : le
+   bouton Retour revient à l'étape précédente au lieu de quitter le site. */
+let _histFromPop = false, _histResumed = false, _histStepPushed = 0;
+function bookingHistPush() {
+  try {
+    if (!history.pushState || state.step < 1 || state.step > 5) return;
+    const url = location.pathname + location.search + '#reservation';
+    const st = { aslBooking: state.step };
+    if (_histFromPop) { _histStepPushed = state.step; return; }
+    if (_histStepPushed === 0) {
+      if (history.state && history.state.aslBooking) history.replaceState(st, '', url);
+      else history.pushState(st, '', url);
+    } else if (state.step > _histStepPushed) history.pushState(st, '', url);
+    else if (state.step !== _histStepPushed) history.replaceState(st, '', url);
+    _histStepPushed = state.step;
+  } catch (e) {}
+}
+window.addEventListener('popstate', () => {
+  try {
+    const dr = document.getElementById('booking-drawer');
+    if (!dr || !dr.classList.contains('open')) return;
+    _histFromPop = true;
+    if (state.step > 1 && state.step < 6) { state.step--; renderStep(); }
+    else { _histStepPushed = 0; closeDrawer(); }
+  } catch (e) {} finally { _histFromPop = false; }
+});
+
 function closeDrawer() {
+  bookingForget(); ppPendingClear(); _histStepPushed = 0; _histResumed = false;   // fermeture volontaire : pas de reprise automatique
   document.getElementById('drawer-overlay').classList.remove('open');
   document.getElementById('booking-drawer').classList.remove('open');
   document.body.style.overflow = '';
@@ -2505,7 +2598,12 @@ function updateConfirmGate() {
   btn.style.display = (state.step === 5 && state.payment === 'paypal' && ppOn()) ? 'none' : '';
 }
 
+/* ★ Un seul appui suffit, et un double appui ne saute jamais d'étape. */
+let _nextLock = 0;
 function nextStep() {
+  const now = Date.now();
+  if (now < _nextLock) return;
+  _nextLock = now + 400;
   if (state.step < 6) {
     if (state.step === 4) {
       saveCustomerForm(); // capture les infos client avant de quitter le formulaire
@@ -2580,6 +2678,8 @@ function renderStep() {
   if (state.step === 1) attachProtectionEvents();
   if (state.step === 2) attachOptionEvents();
   if (state.step === 5) attachPaymentEvents();
+  bookingSave();
+  bookingHistPush();
 }
 
 function updateProgress() {
@@ -2848,6 +2948,7 @@ function renderDocZone() {
 function docRefresh() {
   const z = document.getElementById('doc-zone');
   if (z) z.innerHTML = renderDocZone();   // seule la zone documents est redessinée : pas de saut de défilement
+  bookingSave();
 }
 function docSetIdType(k) { docState().idType = k; docRefresh(); }
 function docRemove(type, i) { const d = docState(); d[type].splice(i, 1); docRefresh(); }
@@ -3014,7 +3115,7 @@ function renderPayment() {
     </div>
     ${renderSummary()}
     <div class="terms-row">
-      <input type="checkbox" class="terms-checkbox" id="terms-cb" ${state.termsAccepted?'checked':''} onchange="state.termsAccepted=this.checked; updateConfirmGate();">
+      <input type="checkbox" class="terms-checkbox" id="terms-cb" ${state.termsAccepted?'checked':''} onchange="state.termsAccepted=this.checked; updateConfirmGate(); bookingSave();">
       <label class="terms-text" for="terms-cb" style="cursor:pointer;">${t('pay.termsHtml')}</label>
     </div>
     ${state.payment === 'paypal' ? ppPayBlockHTML() : ''}
@@ -3031,7 +3132,7 @@ function attachPaymentEvents() {
       ppRerender();
     });
   });
-  if (state.payment === 'paypal') ppMountButtons();
+  if (state.payment === 'paypal') { ppMountButtons(); if (ppPendingGet()) ppCheckPending(); }
   document.querySelectorAll('.payment-option').forEach(el => {
     el.addEventListener('click', () => {
       const _was = state.payment;
@@ -3233,6 +3334,7 @@ function ppRerender() {
   updateConfirmGate();
   updateFooter();
   body.scrollTop = y;
+  bookingSave();
 }
 function ppLoadSdk() {
   if (window.paypal && window.paypal.Buttons) return Promise.resolve();
@@ -3278,6 +3380,7 @@ function ppMountButtons() {
         ASL_PP.item = item;
         const d = await ppPost('create-order', { ref: ref, carId: item.carId, startDate: item.startDate, endDate: item.endDate, totalMAD: item.amount, share: ASL_PP.share });
         if (!d.ok || !d.orderID) throw new Error(d.error || 'create-order');
+        ppPendingSet({ orderID: d.orderID, item: item });   // si le client quitte la page, on vérifiera ce paiement au retour
         return d.orderID;
       },
       onApprove: async (data, actions) => {
@@ -3285,6 +3388,7 @@ function ppMountButtons() {
         const d = await ppPost('capture', { orderID: data.orderID, item: ASL_PP.item });
         if (d && d.issue === 'INSTRUMENT_DECLINED') { ppBusy(false); alert(t('pp.declined')); return actions.restart(); }
         if (!d || !d.ok || !d.item) { ppBusy(false); alert(t('pp.error')); return; }
+        ppPendingClear();
         // Même dossier ajouté localement (le serveur l'a déjà enregistré : pas de doublon, même id).
         try { ASLDB.addReservation(Object.assign({}, d.item)); } catch (e) {}
         try { window.ASLConv && window.ASLConv.track('reservation', { value: Number(d.item.amount) || 0, currency: 'MAD', transaction_id: d.item.id, item: d.item.car || '', method: 'paypal' }); } catch (e) {}
@@ -3293,6 +3397,7 @@ function ppMountButtons() {
         state.step = 6;
         renderStep();
       },
+      onCancel: () => { ppPendingClear(); ppBusy(false); alert(t('pp.cancelled')); },
       onError: () => { ppBusy(false); alert(t('pp.error')); },
     }).render('#pp-buttons').catch(() => {});
   }).catch(() => {
@@ -3300,13 +3405,42 @@ function ppMountButtons() {
     if (host) host.innerHTML = '<div class="pp-note" style="text-align:center;padding:10px 0;color:#b91c1c;">' + t('pp.error') + '</div>';
   });
 }
+/* Commande PayPal en cours (référence seulement — aucune donnée bancaire). */
+const PP_PENDING_KEY = 'asl_pp_pending_v1';
+function ppPendingSet(o) { try { localStorage.setItem(PP_PENDING_KEY, JSON.stringify(Object.assign({ t: Date.now() }, o))); } catch (e) {} }
+function ppPendingGet() { try { const o = JSON.parse(localStorage.getItem(PP_PENDING_KEY) || 'null'); return (o && Date.now() - o.t < 3 * 3600 * 1000) ? o : null; } catch (e) { return null; } }
+function ppPendingClear() { try { localStorage.removeItem(PP_PENDING_KEY); } catch (e) {} }
+/* Au retour sur l'étape Paiement : si un paiement avait été lancé, on vérifie
+   son statut RÉEL auprès de PayPal (via le serveur) avant toute nouvelle
+   tentative. Déjà payé → confirmation (sans doublon) ; sinon → rien n'est
+   enregistré et le client peut réessayer. */
+async function ppCheckPending() {
+  const pend = ppPendingGet();
+  if (!pend || !pend.orderID || !pend.item || !ppOn()) return false;
+  ppBusy(true);
+  const b = document.getElementById('pp-busy'); if (b) b.textContent = t('pp.checking');
+  const d = await ppPost('capture', { orderID: pend.orderID, item: pend.item }).catch(() => null);
+  ppBusy(false);
+  if (b) b.textContent = t('pp.processing');
+  if (d && d.ok && d.item && d.completed) {
+    ppPendingClear();
+    try { ASLDB.addReservation(Object.assign({}, d.item)); } catch (e) {}
+    state.reservationRef = d.item.id;
+    ASL_PP.result = d;
+    state.step = 6;
+    renderStep();
+    return true;
+  }
+  if (d && (d.issue === 'ORDER_NOT_APPROVED' || d.issue === 'INSTRUMENT_DECLINED' || d.issue === 'RESOURCE_NOT_FOUND' || d.error === 'Commande inconnue')) ppPendingClear();
+  return false;
+}
 function ppConfirmHTML() {
   const d = ASL_PP.result, it = d.item || {}, pp = it.paypal || {};
   const total = Number(it.amount) || 0, paid = Number(it.paid) || 0;
   const name = ((state.customer && state.customer.firstname) || '').trim();
   const ok = !!d.completed;
   const waMsg = encodeURIComponent(
-    `Bonjour ALL STAR LOC,\nJe viens de payer ma réservation ${it.id} par PayPal :\n` +
+    `Bonjour ALL STAR LOC,\nJ'ai une question concernant ma réservation confirmée ${it.id} (acompte payé par PayPal) :\n` +
     `• Client : ${it.client || ''}\n• Véhicule : ${it.car || ''}\n• Dates : du ${it.startDate || ''} au ${it.endDate || ''}\n` +
     `• Payé : ${pp.amountEUR || ''} € (${pp.share === 'full' ? 'totalité' : 'acompte'}) — transaction ${pp.captureId || pp.orderId || ''}\n` +
     `• Reste à régler : ${Math.max(0, total - paid)} MAD\nMerci !`);
@@ -3325,7 +3459,8 @@ function ppConfirmHTML() {
         <div style="color:${ok ? '#047857' : '#b45309'};font-weight:700;">● ${t('cf.statusLabel')} : ${ok ? t('cf.ppStatus') : t('pay.awaiting')}</div>
       </div>
       ${ok ? `<div style="font-size:12px;color:#6b7280;margin-bottom:14px;">${t('cf.ppMail')}</div>` : ''}
-      <a href="https://wa.me/212675312453?text=${waMsg}" target="_blank" class="btn-wa-confirm">${t('cf.waBtn')}</a>
+      ${ok ? `<div style="font-size:13px;color:var(--text2);margin-bottom:10px;">${t('cf.ppWaText')}</div>` : ''}
+      <a href="https://wa.me/212675312453?text=${waMsg}" target="_blank" rel="noopener" class="btn-wa-confirm">${ok ? t('cf.ppWaBtn') : t('cf.waBtn')}</a>
     </div>`;
 }
 

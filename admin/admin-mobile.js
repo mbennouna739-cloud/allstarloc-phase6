@@ -1198,7 +1198,10 @@
     if (!r || !r.paypal) return '';
     var p = r.paypal, ok = String(p.status || '').toUpperCase() === 'COMPLETED' || (Number(r.paid) || 0) > 0;
     return '<div style="display:flex;gap:8px;align-items:flex-start;background:' + (ok ? '#eff6ff' : '#fffbeb') + ';border:1px solid ' + (ok ? '#bfdbfe' : '#fde68a') + ';border-radius:10px;padding:9px 11px;margin:10px 0;font-size:12.5px;line-height:1.45;">'
-      + '<b style="color:#003087;">Pay<span style="color:#009cde;">Pal</span></b><span>' + (ok ? 'Payé en ligne : <b>' + esc(p.amountEUR || '') + ' €</b> (' + (p.share === 'full' ? 'totalité' : 'acompte') + ')' : '<b>Paiement en cours de vérification</b>')
+      + '<b style="color:#003087;">Pay<span style="color:#009cde;">Pal</span></b><span>' + (ok ? 'Payé en ligne : <b>' + esc(p.amountEUR || '') + ' €</b> (' + (p.share === 'full' ? 'totalité' : 'acompte') + ')'
+          + (p.paidMAD ? ' = <b>' + esc(p.paidMAD) + ' MAD</b>' + (p.rate ? ' (taux ' + esc(String(p.rate).replace('.', ',')) + ')' : '') : '')
+          + (p.feeEUR ? '<br><span style="color:#6b7280;">Frais PayPal : ' + esc(p.feeEUR) + ' € · Net : ' + esc(p.netEUR || '—') + ' €</span>' : '')
+        : '<b>Paiement en cours de vérification</b>')
       + (typeof window.aslPayPalRefundLine === 'function' ? window.aslPayPalRefundLine(r) : '')
       + '<br><span style="color:#6b7280;">Transaction ' + esc(p.captureId || p.orderId || '') + (p.env === 'sandbox' ? ' · TEST' : '') + '</span>'
       + (ok && p.captureId && typeof window.aslPayPalRemainingEUR === 'function' && window.aslPayPalRemainingEUR(r) > 0 ? '<br><button type="button" style="margin-top:7px;border:1px solid #bfdbfe;background:#fff;color:#1d4ed8;border-radius:8px;padding:6px 10px;font-weight:700;font-size:12px;" onclick="aslPayPalRefund(' + "'" + esc(String(r.id)) + "'" + ')">↩ Rembourser via PayPal</button>' : '')

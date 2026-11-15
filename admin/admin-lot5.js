@@ -90,7 +90,10 @@ function aslPayPalNoteHTML(r) {
   var p = r.paypal, ok = String(p.status || '').toUpperCase() === 'COMPLETED' || (Number(r.paid) || 0) > 0;
   return '<div style="display:flex;gap:8px;align-items:flex-start;background:' + (ok ? '#eff6ff' : '#fffbeb') + ';border:1px solid ' + (ok ? '#bfdbfe' : '#fde68a') + ';border-radius:8px;padding:9px 11px;margin-bottom:12px;font-size:12.5px;line-height:1.45;">'
     + '<span style="font-weight:800;color:#003087;">Pay<span style="color:#009cde;">Pal</span></span>'
-    + '<span>' + (ok ? 'Payé en ligne : <b>' + (p.amountEUR || '') + ' €</b> (' + (p.share === 'full' ? 'totalité' : 'acompte') + ')' : '<b>Paiement PayPal en cours de vérification</b>')
+    + '<span>' + (ok ? 'Payé en ligne : <b>' + (p.amountEUR || '') + ' €</b> (' + (p.share === 'full' ? 'totalité' : 'acompte') + ')'
+        + (p.paidMAD ? ' = <b>' + p.paidMAD + ' MAD</b> enregistrés' + (p.rate ? ' (taux ' + String(p.rate).replace('.', ',') + (p.convertedAt ? ' le ' + String(p.convertedAt).slice(0, 10).split('-').reverse().join('/') : '') + ')' : '') : '')
+        + (p.feeEUR ? '<br><span style="color:var(--text3);">Frais PayPal : ' + p.feeEUR + ' € · Net reçu : ' + (p.netEUR || '—') + ' €</span>' : '')
+      : '<b>Paiement PayPal en cours de vérification</b>')
     + aslPayPalRefundLine(r)
     + '<br><span style="color:var(--text3);">Transaction ' + (p.captureId || p.orderId || '') + (p.env === 'sandbox' ? ' · TEST (sandbox)' : '') + '</span>'
     + (ok && p.captureId && aslPayPalRemainingEUR(r) > 0 ? '<br><button type="button" class="btn-sm ghost" style="margin-top:6px;" data-rid="' + r.id + '" onclick="aslPayPalRefund(this.dataset.rid)">↩ Rembourser via PayPal</button>' : '')

@@ -1413,6 +1413,46 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
 
 <script src="../data.js"></script>
 <script>
+/* ★ RÈGLE « PRISE EN CHARGE » (back-office) — une réservation confirmée,
+   même payée, reste « Réservée » : elle ne devient « Louée » qu'après
+   l'action explicite « Prise en charge » (statut 'active'), et non plus
+   automatiquement à la date de départ. Le véhicule reste protégé contre
+   les doubles réservations (contrôle de disponibilité inchangé).
+   data.js n'est pas modifié : la règle s'applique par-dessus, dans le back-office. */
+(function () {
+  if (typeof ASLDB === 'undefined' || !ASLDB.computePhase || ASLDB.__pickupRule) return;
+  var base = ASLDB.computePhase;
+  function phase(r, now) {
+    var p = base(r, now);
+    if (!r) return p;
+    var picked = r.status === 'active' || r.type === 'lld';
+    if ((p === 'active' || p === 'late') && !picked) return 'reserved';
+    if (p === 'reserved' && r.status === 'active') return 'active';   // remise des clés faite en avance
+    return p;
+  }
+  function act() { return (ASLDB.getReservations() || []).filter(function (r) { return r && r.status !== 'cancelled'; }); }
+  ASLDB.computePhase = phase;
+  ASLDB.selectRented = function (now) { return act().filter(function (r) { return phase(r, now) === 'active'; }); };
+  ASLDB.selectReserved = function (now) { return act().filter(function (r) { return phase(r, now) === 'reserved'; }); };
+  ASLDB.selectLate = function (now) { return act().filter(function (r) { return phase(r, now) === 'late'; }); };
+  ASLDB.__pickupRule = true;
+  /* Migration unique : les locations DÉJÀ en cours avant cette mise à jour
+     (départ passé avant le 15/11/2026 à 19 h, toujours « confirmées ») sont
+     marquées « prises en charge », pour que rien ne change sur le terrain. */
+  setTimeout(function () {
+    try {
+      var CUT = new Date('2026-11-15T19:00:00').getTime();
+      (ASLDB.getReservations() || []).forEach(function (r) {
+        if (!r || r.status === 'active' || r.status === 'pending' || r.status === 'cancelled' || r.status === 'completed' || r.type === 'lld') return;
+        var p0 = base(r);
+        var st = new Date(String(r.startDate || '').slice(0, 10) + 'T' + (r.startTime || '10:00')).getTime();
+        if ((p0 === 'active' || p0 === 'late') && st < CUT) ASLDB.updateReservation(r.id, { status: 'active' });
+      });
+    } catch (e) {}
+  }, 4000);
+})();
+</script>
+<script>
 // ==================== DATA (source unique partagée avec le site client) ====================
 let FLEET = ASLDB.getFleet();
 /* Échappement HTML minimal pour sécuriser l'affichage (noms, ALT, plaques). */

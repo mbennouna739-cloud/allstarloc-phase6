@@ -764,7 +764,13 @@ export async function onRequest(context) {
       cap = await r.json().catch(function () { return {}; });
       if (!r.ok && !(cap && cap.status === 'COMPLETED')) {
         const issue = cap && cap.details && cap.details[0] && cap.details[0].issue;
-        return json({ ok: false, error: 'Paiement refusé', issue: issue || '' }, 402);
+        if (issue === 'ORDER_ALREADY_CAPTURED') {
+          // Déjà encaissé (retour arrière, double clic…) : on relit la commande, sans rien débiter à nouveau.
+          const g = await fetch(c.api + '/v2/checkout/orders/' + orderID, { headers: { 'Authorization': 'Bearer ' + tok } });
+          cap = await g.json().catch(function () { return {}; });
+        } else {
+          return json({ ok: false, error: 'Paiement refusé', issue: issue || '' }, 402);
+        }
       }
     } catch (e) { return err(502, String(e && e.message || 'Erreur PayPal')); }
     const pu = (cap.purchase_units || [])[0] || {};
@@ -772,13 +778,25 @@ export async function onRequest(context) {
     const amt = capture.amount || {};
     const completed = capture.status === 'COMPLETED' && amt.currency_code === 'EUR' && Number(amt.value) + 0.001 >= Number(ord.eur);
     const today = new Date().toISOString().slice(0, 10);
+    // Réservation déjà enregistrée pour ce paiement (retour, rechargement…) : on la renvoie telle quelle, sans doublon.
+    const doc0 = (await readDoc(env, 'reservations')) || { rev: 0, items: [] };
+    const existing = (Array.isArray(doc0.items) ? doc0.items : []).find(function (x) { return x.id === String(item.id) && x.paypal && x.paypal.orderId === orderID; });
+    if (existing) return json({ ok: true, completed: !!(existing.paid > 0), item: existing, again: true });
+    const srb = capture.seller_receivable_breakdown || {};
     // Les champs de paiement viennent du SERVEUR (jamais du navigateur).
     item.amount = ord.totalMAD;
     item.payment = 'paypal';
     item.paymentMethod = 'paypal';
     item.paymentMode = 'PayPal';
     item.collectedBy = 'PayPal';
-    item.paypal = { orderId: orderID, captureId: capture.id || '', status: capture.status || cap.status || '', amountEUR: amt.value || ord.eur, paidMAD: ord.payMAD, share: ord.share, env: c.env, payer: (cap.payer && cap.payer.email_address) || '', refunds: [] };
+    // Comptabilité en MAD : l'acompte calculé en MAD à la commande fait foi (pas d'écart de change artificiel).
+    item.paypal = {
+      orderId: orderID, captureId: capture.id || '', status: capture.status || cap.status || '',
+      amountEUR: amt.value || ord.eur, currency: amt.currency_code || 'EUR',
+      paidMAD: ord.payMAD, rate: c.rate, convertedAt: new Date().toISOString(),
+      feeEUR: (srb.paypal_fee && srb.paypal_fee.value) || '', netEUR: (srb.net_amount && srb.net_amount.value) || '',
+      share: ord.share, env: c.env, payer: (cap.payer && cap.payer.email_address) || '', refunds: [],
+    };
     if (completed) {
       item.paid = ord.payMAD;
       item.payments = [{ date: today, amount: ord.payMAD, mode: 'PayPal', collectedBy: 'PayPal', comment: (ord.share === 'full' ? 'Paiement total' : 'Acompte') + ' PayPal ' + (amt.value || ord.eur) + ' € — transaction ' + (capture.id || orderID) }];
@@ -790,11 +808,10 @@ export async function onRequest(context) {
       item.status = 'pending';
     }
     if (!item.createdAt) item.createdAt = new Date().toISOString();
-    const doc = (await readDoc(env, 'reservations')) || { rev: 0, items: [] };
-    const items2 = Array.isArray(doc.items) ? doc.items.slice() : [];
+    const items2 = Array.isArray(doc0.items) ? doc0.items.slice() : [];
     if (!items2.some(function (x) { return x.id === item.id; })) {
       items2.push(item);
-      await writeReservationsDoc(env, items2, doc.resetAt);
+      await writeReservationsDoc(env, items2, doc0.resetAt);
     }
     return json({ ok: true, completed: completed, item: item });
   }
