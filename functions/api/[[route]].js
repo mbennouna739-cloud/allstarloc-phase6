@@ -22,7 +22,7 @@
    POST /api/doc                 → dépose un document client PRIVÉ (clé admin)
    POST /api/doc/public          → le client dépose sa photo de permis/pièce d'identité (dépôt seul, lecture admin)
    GET  /api/doc/<id>            → lit un document client PRIVÉ (clé admin)
-   GET  /api/health              → diagnostic de configuration
+   GET  /api/health              → diagnostic de configuration (dont WhatsApp)
    GET  /api/paypal/config       → PayPal activé ? (aucun secret renvoyé)
    POST /api/paypal/create-order → crée la commande PayPal (montant recalculé serveur)
    POST /api/paypal/capture      → encaisse + enregistre la réservation payée
@@ -184,6 +184,114 @@ function ppFloorMAD(car, days) {
   return Math.min.apply(null, vals) * days * 0.5;
 }
 
+
+/* ============================================================
+   ★ WHATSAPP AUTOMATIQUE (API officielle WhatsApp Business de Meta)
+   Variables Cloudflare (type Secret) :
+     WA_TOKEN       jeton d'accès permanent (utilisateur système Meta)
+     WA_PHONE_ID    « Phone number ID » du numéro WhatsApp Business de l'API
+     WA_AGENCY_TO   numéro de l'agence qui reçoit les alertes (ex. 212675312453)
+   OU, avec le partenaire YCloud (coexistence) :
+     YCLOUD_API_KEY (Secret)  clé API YCloud
+     WA_FROM                  numéro WhatsApp Business connecté (ex. 212675312453)
+     WA_AGENCY_TO             doit être un AUTRE numéro que WA_FROM
+   Optionnelles : WA_API_VERSION (défaut v23.0), WA_TPL_AGENCY, WA_TPL_PAID,
+     WA_TPL_CASH (noms des modèles), WA_CLIENT = "0" pour ne rien envoyer au client.
+   Modèles (catégorie « Utilité ») à créer dans WhatsApp Manager :
+     asl_nouvelle_reservation (fr) → agence ; asl_reservation_confirmee et
+     asl_demande_reservation (fr, en, es, ar) → client.
+   Un échec WhatsApp ne bloque JAMAIS la réservation (envoi en arrière-plan) ;
+   la dernière erreur est visible dans /api/health (sans aucun secret).
+   ============================================================ */
+function waCfg(env) {
+  return {
+    yc: !!(env.YCLOUD_API_KEY && env.WA_FROM),
+    on: !!((env.WA_TOKEN && env.WA_PHONE_ID) || (env.YCLOUD_API_KEY && env.WA_FROM)),
+    from: String(env.WA_FROM || '').replace(/\D/g, ''),
+    ver: env.WA_API_VERSION || 'v23.0',
+    /* WA_AGENCY_TO : un ou plusieurs numéros séparés par des virgules (ex. 2126XXXXXXXX,2126YYYYYYYY) */
+    agencies: String(env.WA_AGENCY_TO || '').split(/[,;]/).map(function (x) { return waNum(x); }).filter(function (x, i, a) { return x && a.indexOf(x) === i; }).slice(0, 5),
+    tplAgency: env.WA_TPL_AGENCY || 'asl_nouvelle_reservation',
+    tplPaid: env.WA_TPL_PAID || 'asl_reservation_confirmee',
+    tplCash: env.WA_TPL_CASH || 'asl_demande_reservation',
+    client: String(env.WA_CLIENT || '1') !== '0',
+  };
+}
+function waTxt(v) { return String(v == null ? '' : v).replace(/[\r\n\t]+/g, ' · ').replace(/ {4,}/g, '   ').trim().slice(0, 900) || '—'; }
+function waNum(v) {
+  let d = String(v || '').replace(/\D/g, '');
+  if (d.indexOf('00') === 0) d = d.slice(2);
+  return d.length >= 8 && d.length <= 15 ? d : '';
+}
+function waDate(iso, time) {
+  const m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? (m[3] + '/' + m[2] + '/' + m[1] + (time ? ' ' + time : '')) : (iso || '');
+}
+async function waSend(env, to, tpl, lang, params) {
+  const c = waCfg(env);
+  if (!c.on || !to) return false;
+  if (c.from && String(to) === c.from) return false; // on ne peut pas s'envoyer un message à soi-même
+  try {
+    const template = { name: tpl, language: { code: lang }, components: [{ type: 'body', parameters: params.map(function (x) { return { type: 'text', text: waTxt(x) }; }) }] };
+    const r = c.yc
+      /* Partenaire YCloud (coexistence : envoi depuis le numéro WhatsApp Business de l'agence) */
+      ? await fetch('https://api.ycloud.com/v2/whatsapp/messages/sendDirectly', {
+          method: 'POST',
+          headers: { 'X-API-Key': env.YCLOUD_API_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ from: '+' + c.from, to: '+' + to, type: 'template', template: template }),
+        })
+      /* API Cloud de Meta en direct */
+      : await fetch('https://graph.facebook.com/' + c.ver + '/' + env.WA_PHONE_ID + '/messages', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + env.WA_TOKEN, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ messaging_product: 'whatsapp', to: to, type: 'template', template: template }),
+        });
+    if (!r.ok) {
+      const d = await r.json().catch(function () { return {}; });
+      const e = (d && d.error) || d || {};
+      await env.ASL_DB.put('wa_last_error', JSON.stringify({ at: new Date().toISOString(), tpl: tpl, lang: lang, code: e.code || r.status, message: String(e.message || '').slice(0, 300) }), { expirationTtl: 30 * 86400 });
+      return false;
+    }
+    return true;
+  } catch (e) { return false; }
+}
+/* Alerte agence + récapitulatif client pour une réservation du site.
+   kind : 'paid' (acompte PayPal reçu), 'pending' (PayPal en vérification), 'cash' (espèces à l'arrivée). */
+async function waNotifyBooking(env, item, kind) {
+  const c = waCfg(env);
+  if (!c.on || !item) return;
+  const total = Math.round(Number(item.amount) || 0), paid = Math.round(Number(item.paid) || 0), rest = Math.max(0, total - paid);
+  const pp = item.paypal || {};
+  const docs = item.docs || {};
+  const nP = Array.isArray(docs.permis) ? docs.permis.length : 0, nI = Array.isArray(docs.identite) ? docs.identite.length : 0;
+  const datesC = waDate(item.startDate, item.startTime) + ' → ' + waDate(item.endDate, item.endTime);
+  const dates = datesC + ' (' + (item.days || '?') + ' j)';
+  const lieu = (item.pickup || '') + (item.dropoff && item.dropoff !== item.pickup ? ' → retour ' + item.dropoff : '');
+  const payTxt = kind === 'paid' ? 'PayPal ✅ acompte reçu ' + (pp.amountEUR || '') + ' € (réservation garantie)'
+    : kind === 'pending' ? 'PayPal ⏳ en vérification — à contrôler'
+    : 'Espèces à l\'arrivée ⚠️ sans acompte (véhicule non bloqué)';
+  const amounts = 'Total ' + total + ' MAD · Payé ' + paid + ' MAD · Reste ' + rest + ' MAD';
+  const docTxt = 'Permis ' + (nP ? nP + ' photo(s) ✅' : '❌') + ' · ' + (docs.identiteType === 'cin' ? 'CIN' : 'Passeport') + ' ' + (nI ? nI + ' photo(s) ✅' : '❌');
+  const tel = (item.phone || '') + (item.whatsapp && item.whatsapp !== item.phone ? ' / WhatsApp ' + item.whatsapp : '');
+  const jobs = [];
+  c.agencies.forEach(function (to) { jobs.push(waSend(env, to, c.tplAgency, 'fr', [item.id, payTxt, item.client || 'Client', tel, item.car || '', dates, lieu, amounts, docTxt])); });
+  const clientTo = waNum(item.whatsapp) || waNum(item.phone);
+  const lang = ['fr', 'en', 'es', 'ar'].indexOf(String(item.lang || 'fr')) >= 0 ? String(item.lang || 'fr') : 'fr';
+  const first = String(item.client || '').split(' ')[0] || 'client';
+  if (c.client && clientTo && c.agencies.indexOf(clientTo) < 0) {
+    if (kind === 'paid') jobs.push(waSend(env, clientTo, c.tplPaid, lang, [first, item.id, item.car || '', datesC, item.pickup || '', paid + ' MAD (' + (pp.amountEUR || '') + ' €)', rest + ' MAD']));
+    else if (kind === 'cash') jobs.push(waSend(env, clientTo, c.tplCash, lang, [first, item.id, item.car || '', datesC, item.pickup || '', total + ' MAD']));
+  }
+  await Promise.all(jobs);
+}
+function waLater(context, p) {
+  try {
+    if (context && context.ctx && typeof context.ctx.waitUntil === 'function') { context.ctx.waitUntil(p); return; }
+    if (context && typeof context.waitUntil === 'function') { context.waitUntil(p); return; }
+  } catch (e) {}
+  return p;
+}
+
 export async function onRequest(context) {
   const { request, env } = context;
   const url = new URL(request.url);
@@ -224,6 +332,8 @@ export async function onRequest(context) {
       marketingWrite: 'ouvert (sans clé)',
       kv: env.ASL_DB ? 'lié (ASL_DB)' : 'NON LIÉ — créez le binding KV "ASL_DB" (voir LISEZMOI_PHASE6.txt)',
       adminKey: env.ADMIN_KEY ? 'configurée' : 'non configurée (écritures ouvertes)',
+      whatsapp: waCfg(env).on ? ('configuré' + (waCfg(env).yc ? ' (YCloud)' : ' (Meta)') + (waCfg(env).agencies.filter(function (x) { return x !== waCfg(env).from; }).length ? ' — alertes vers ' + waCfg(env).agencies.length + ' numéro(s)' : ' — WA_AGENCY_TO manquant ou identique à WA_FROM')) : 'non configuré',
+      whatsappLastError: env.ASL_DB ? (await readDoc(env, 'wa_last_error')) : null,
     });
   }
 
@@ -452,6 +562,9 @@ export async function onRequest(context) {
       if (!item.createdAt) item.createdAt = new Date().toISOString();
       items2.push(item);
       const out = await writeReservationsDoc(env, items2, doc.resetAt);
+      if (item.source === 'online' && (item.payment === 'delivery' || item.paymentMethod === 'delivery')) {
+        await waLater(context, waNotifyBooking(env, item, 'cash'));
+      }
       return json({ ok: true, rev: out.rev, id: id });
     }
 
@@ -702,7 +815,7 @@ export async function onRequest(context) {
   /* ---- PayPal : configuration publique (aucun secret renvoyé) ---- */
   if (path === 'paypal/config' && request.method === 'GET') {
     const c = ppCfg(env);
-    return json({ ok: true, enabled: c.enabled, clientId: c.enabled ? c.clientId : '', env: c.env, depositPct: c.depositPct, rate: c.rate });
+    return json({ ok: true, enabled: c.enabled, clientId: c.enabled ? c.clientId : '', env: c.env, depositPct: c.depositPct, rate: c.rate, waClient: waCfg(env).on && waCfg(env).client });
   }
 
   /* ---- PayPal : création de la commande (montant recalculé ici) ---- */
@@ -812,6 +925,7 @@ export async function onRequest(context) {
     if (!items2.some(function (x) { return x.id === item.id; })) {
       items2.push(item);
       await writeReservationsDoc(env, items2, doc0.resetAt);
+      await waLater(context, waNotifyBooking(env, item, completed ? 'paid' : 'pending'));
     }
     return json({ ok: true, completed: completed, item: item });
   }

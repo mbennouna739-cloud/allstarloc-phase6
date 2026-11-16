@@ -18,6 +18,11 @@
   "name": "allstarloc",
   "compatibility_date": "2026-05-01",
 
+  // Garde les variables « Text » créées dans le tableau de bord Cloudflare
+  // (PAYPAL_ENV, WA_FROM, WA_AGENCY_TO…) à chaque nouveau déploiement GitHub.
+  // Les « Secret » sont toujours conservés.
+  "keep_vars": true,
+
   // Point d'entrée serveur : gère /api/* (synchronisation + images)
   "main": "worker/index.js",
 
