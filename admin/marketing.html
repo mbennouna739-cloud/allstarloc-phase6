@@ -4256,6 +4256,7 @@ async function hydrateFromServer() {
     try { _aslConditionsFix(); } catch(eFix) {}
     try { _aslPayPalTextsFix(); } catch(ePP) {}
     try { _aslDateChangeFix(); } catch(eDC) {}
+    try { _aslDepositPctFix(); } catch(eDP) {}
   } catch(e) { /* hors-ligne / test local : on garde les stores locaux */ }
 }
 
@@ -4264,6 +4265,34 @@ async function hydrateFromServer() {
    PayPal) et FAQ (« Comment payer ? », « Puis-je annuler ? »), dans les
    4 langues. Ajout ciblé de phrases : un texte que vous avez réécrit sans
    les anciennes phrases n'est pas touché ; sans effet une fois appliqué. */
+/* ★ Pourcentage de l'acompte (réglé dans le back-office → Paramètres) :
+   aligne les textes enregistrés (pages légales, FAQ) qui citent « acompte de X % ». */
+async function _aslDepositPctFix() {
+  var d = null;
+  try { d = await (await fetch('/api/pay-settings', { cache: 'no-store' })).json(); } catch (e) { return; }
+  var pct = Math.round(Number(d && d.depositPct)); if (!(pct >= 5 && pct <= 90)) return;
+  var R1 = /(acompte de |deposit of |anticipo del |تسبيق )(\d{1,2})(\s?[%٪])/g, R2 = /\b(\d{1,2})(% deposit)/g;
+  var fix = function (t) { return typeof t !== 'string' ? t : t.replace(R1, function (m, a, n, b) { return a + pct + b; }).replace(R2, function (m, n, b) { return pct + b; }); };
+  var LANGS = ['fr','en','es','ar'], cl = 0, cf = 0;
+  var all = load(K.legalPages) || {};
+  Object.keys(all).forEach(function (slug) {
+    var entry = all[slug]; if (!entry) return;
+    LANGS.forEach(function (l) { var e = entry[l]; if (e && typeof e.content === 'string') { var nv = fix(e.content); if (nv !== e.content) { e.content = nv; cl++; } } });
+  });
+  if (cl) save(K.legalPages, all);
+  var faqs = load(K.faq) || [];
+  faqs.forEach(function (f) {
+    if (!f) return; var ch = false;
+    if (typeof f.answer === 'string') { var na = fix(f.answer); if (na !== f.answer) { f.answer = na; ch = true; } }
+    LANGS.forEach(function (l) { var e = f.i18n && f.i18n[l]; if (e && typeof e.answer === 'string') { var nb = fix(e.answer); if (nb !== e.answer) { e.answer = nb; ch = true; } } });
+    if (ch) cf++;
+  });
+  if (cf) save(K.faq, faqs);
+  if ((cl || cf) && typeof syncToKV === 'function') {
+    Promise.resolve(cl ? syncToKV('Légal') : null).then(function () { if (cf) return syncToKV('FAQ'); }).catch(function () {});
+    if (typeof showSyncStatus === 'function') showSyncStatus('Acompte ' + pct + ' % appliqué aux textes du site (pages ' + cl + ', FAQ ' + cf + ').');
+  }
+}
 /* ★ Changement de dates gratuit (novembre 2026) : ajoute UNE phrase
    « changement de dates gratuit jusqu'à 24 h avant, selon disponibilité »
    à la FAQ « Puis-je annuler ? » et un paragraphe dans les CGV, si elle

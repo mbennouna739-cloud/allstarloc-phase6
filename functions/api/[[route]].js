@@ -145,7 +145,7 @@ function hashPass(pass) {
 
 
 /* ============================================================
-   ★ PAIEMENT PAYPAL (acompte 30 % ; totalité seulement si PAYPAL_ALLOW_FULL=1) — côté serveur
+   ★ PAIEMENT PAYPAL (acompte réglable, 20 % par défaut ; totalité seulement si PAYPAL_ALLOW_FULL=1) — côté serveur
    Variables Cloudflare (Workers & Pages → allstarloc → Settings →
    Variables and Secrets) :
      PAYPAL_CLIENT_ID      (texte)   identifiant de l'application PayPal
@@ -165,9 +165,19 @@ function ppCfg(env) {
     clientId: env.PAYPAL_CLIENT_ID || '',
     env: live ? 'live' : 'sandbox',
     api: live ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com',
-    depositPct: Math.min(100, Math.max(1, Number(env.PAYPAL_DEPOSIT_PCT) || 30)),
+    depositPct: Math.min(90, Math.max(5, Number(env.PAYPAL_DEPOSIT_PCT) || 20)),
     rate: Number(env.PAYPAL_RATE_MAD) > 0 ? Number(env.PAYPAL_RATE_MAD) : 10.8,
   };
+}
+/* ★ Pourcentage de l'acompte en ligne : réglé depuis le back-office (Paramètres),
+   enregistré dans KV « pay_settings ». Sinon : variable PAYPAL_DEPOSIT_PCT, sinon 20 %. */
+async function ppDepositPct(env) {
+  try {
+    const st = env.ASL_DB ? await readDoc(env, 'pay_settings') : null;
+    const v = Math.round(Number(st && st.depositPct));
+    if (v >= 5 && v <= 90) return v;
+  } catch (e) {}
+  return ppCfg(env).depositPct;
 }
 /* Dernière erreur PayPal (sans aucun secret) : visible dans /api/health pour comprendre un refus. */
 async function ppLogError(env, step, status, d, extra) {
@@ -203,6 +213,9 @@ function ppFloorMAD(car, days) {
   const t = car.tiers;
   if (Array.isArray(t)) t.forEach(function (b) { push(b && b.price); });
   else if (t && typeof t === 'object') Object.keys(t).forEach(function (k) { push(t[k]); });
+  // Tarifs saisonniers (même source que le site : car.seasonalTiers[].pricePerDay)
+  const st = car.seasonalTiers;
+  if (Array.isArray(st)) st.forEach(function (r) { push(r && (r.pricePerDay != null ? r.pricePerDay : r.price)); });
   if (!vals.length) return 0;
   return Math.min.apply(null, vals) * days * 0.5;
 }
@@ -579,6 +592,19 @@ export async function onRequest(context) {
       } catch (e) { /* garde le repli FR */ }
     }
     return json({ ok: true, translations: out });
+  }
+
+  /* Réglages du paiement en ligne : GET public (pourcentage de l'acompte), POST admin. */
+  if (path === 'pay-settings') {
+    if (request.method === 'GET') return json({ ok: true, depositPct: await ppDepositPct(env) });
+    if (request.method === 'POST') {
+      if (!authorized(request, env)) return err(403, 'Clé admin invalide ou absente (X-ASL-Key)');
+      let b; try { b = await request.json(); } catch (e) { return err(400, 'JSON invalide'); }
+      const v = Math.round(Number(b.depositPct));
+      if (!(v >= 5 && v <= 90)) return err(400, 'Pourcentage invalide (entre 5 et 90)');
+      await env.ASL_DB.put('pay_settings', JSON.stringify({ depositPct: v, updatedAt: new Date().toISOString() }));
+      return json({ ok: true, depositPct: v });
+    }
   }
 
   /* E-mail de test (clé admin) : POST /api/mail/test { to } */
@@ -1088,7 +1114,7 @@ export async function onRequest(context) {
   /* ---- PayPal : configuration publique (aucun secret renvoyé) ---- */
   if (path === 'paypal/config' && request.method === 'GET') {
     const c = ppCfg(env);
-    return json({ ok: true, enabled: c.enabled, clientId: c.enabled ? c.clientId : '', env: c.env, depositPct: c.depositPct, rate: c.rate, waClient: waCfg(env).on && waCfg(env).client, mailClient: mailCfg(env).on });
+    return json({ ok: true, enabled: c.enabled, clientId: c.enabled ? c.clientId : '', env: c.env, depositPct: await ppDepositPct(env), rate: c.rate, waClient: waCfg(env).on && waCfg(env).client, mailClient: mailCfg(env).on });
   }
 
   /* ---- PayPal : création de la commande (montant recalculé ici) ---- */
@@ -1105,7 +1131,7 @@ export async function onRequest(context) {
     const car = ((fleet && fleet.items) || []).find(function (x) { return String(x.id) === String(b.carId); });
     if (!car) { await ppLogError(env, 'create-order', 400, null, 'Véhicule introuvable : ' + String(b.carId)); return err(400, 'Véhicule introuvable'); }
     if (totalMAD < ppFloorMAD(car, days)) { await ppLogError(env, 'create-order', 400, null, 'Montant incohérent : ' + totalMAD + ' MAD < plancher ' + ppFloorMAD(car, days) + ' MAD'); return err(400, 'Montant incohérent'); }
-    const payMAD = share === 'full' ? totalMAD : Math.round(totalMAD * c.depositPct / 100);
+    const payMAD = share === 'full' ? totalMAD : Math.round(totalMAD * (await ppDepositPct(env)) / 100);
     const eur = (Math.round(payMAD / c.rate * 100) / 100).toFixed(2);
     try {
       const tok = await ppToken(c, env);

@@ -629,4 +629,37 @@
     };
   })();
 
+
+  /* ============================================================
+     ★ Pourcentage de l'acompte en ligne (réglé dans le back-office →
+     Paramètres). Tous les textes affichés (FAQ, CGV, pages…) qui citent
+     « acompte de X % » sont alignés sur la valeur réelle, dans les 4 langues. */
+  (function () {
+    var PCT = null;
+    var R1 = /(acompte de |deposit of |anticipo del |تسبيق )(\d{1,2})(\s?[%٪])/g;
+    var R2 = /\b(\d{1,2})(% deposit)/g;
+    function fixText(str) {
+      if (PCT == null || !str || !/\d/.test(str)) return str;
+      return str.replace(R1, function (m, a, n, b) { return a + PCT + b; }).replace(R2, function (m, n, b) { return PCT + b; });
+    }
+    window.aslFixDepositPct = fixText;
+    function walk(root) {
+      if (PCT == null || !root) return;
+      try {
+        var w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null), n, v;
+        while ((n = w.nextNode())) { v = n.nodeValue; if (v && /\d\s?[%٪]/.test(v)) { var nv = fixText(v); if (nv !== v) n.nodeValue = nv; } }
+      } catch (e) {}
+    }
+    var busy = false;
+    function schedule() { if (busy) return; busy = true; setTimeout(function () { busy = false; walk(document.body); }, 60); }
+    try {
+      fetch('/api/pay-settings', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
+        var v = Math.round(Number(d && d.depositPct));
+        if (!(v >= 5 && v <= 90)) return;
+        PCT = v; walk(document.body);
+        try { new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true, characterData: true }); } catch (e) {}
+      }).catch(function () {});
+    } catch (e) {}
+  })();
+
 })();

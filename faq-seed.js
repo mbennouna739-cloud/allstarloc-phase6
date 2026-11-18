@@ -128,23 +128,23 @@ window._ASL_FAQ_SEED = [
   "i18n": {
    "fr": {
     "question": "Puis-je annuler ma réservation ?",
-    "answer": "Oui, l'annulation est gratuite si vous nous prévenez au moins 24 h avant la prise en charge. Sans prévenir, ou à moins de 24 h, un montant peut être retenu (par exemple l'avance versée). Réservation payée par PayPal : remboursement intégral si vous annulez au moins 24 h avant ; à moins de 24 h, l'acompte de 30 % est conservé. Changement de dates gratuit jusqu'à 24 h avant la prise en charge, selon disponibilité."
+    "answer": "Oui, l'annulation est gratuite si vous nous prévenez au moins 24 h avant la prise en charge. Sans prévenir, ou à moins de 24 h, un montant peut être retenu (par exemple l'avance versée). Réservation payée par PayPal : remboursement intégral si vous annulez au moins 24 h avant ; à moins de 24 h, l'acompte de 20 % est conservé. Changement de dates gratuit jusqu'à 24 h avant la prise en charge, selon disponibilité."
    },
    "en": {
     "question": "Can I cancel my booking?",
-    "answer": "Yes, cancellation is free if you let us know at least 24 hours before pick-up. Without notice, or less than 24 hours before, an amount may be retained (for example the advance paid). Booking paid by PayPal: full refund if you cancel at least 24 hours before; less than 24 hours before, the 30% deposit is kept. Free date change up to 24 hours before pick-up, subject to availability."
+    "answer": "Yes, cancellation is free if you let us know at least 24 hours before pick-up. Without notice, or less than 24 hours before, an amount may be retained (for example the advance paid). Booking paid by PayPal: full refund if you cancel at least 24 hours before; less than 24 hours before, the 20% deposit is kept. Free date change up to 24 hours before pick-up, subject to availability."
    },
    "es": {
     "question": "¿Puedo cancelar mi reserva?",
-    "answer": "Sí, la cancelación es gratuita si nos avisa al menos 24 h antes de la recogida. Sin aviso, o con menos de 24 h, puede retenerse un importe (por ejemplo, el anticipo abonado). Reserva pagada con PayPal: reembolso íntegro si cancela al menos 24 h antes; con menos de 24 h, se conserva el anticipo del 30 %. Cambio de fechas gratuito hasta 24 h antes de la recogida, según disponibilidad."
+    "answer": "Sí, la cancelación es gratuita si nos avisa al menos 24 h antes de la recogida. Sin aviso, o con menos de 24 h, puede retenerse un importe (por ejemplo, el anticipo abonado). Reserva pagada con PayPal: reembolso íntegro si cancela al menos 24 h antes; con menos de 24 h, se conserva el anticipo del 20 %. Cambio de fechas gratuito hasta 24 h antes de la recogida, según disponibilidad."
    },
    "ar": {
     "question": "هل يمكنني إلغاء حجزي؟",
-    "answer": "نعم، الإلغاء مجاني إذا أخبرتمونا قبل 24 ساعة على الأقل من الاستلام. بدون إشعار، أو قبل أقل من 24 ساعة، يمكن الاحتفاظ بمبلغ (مثلاً التسبيق المدفوع). حجز مدفوع عبر PayPal: استرجاع كامل المبلغ إذا ألغيتم قبل 24 ساعة على الأقل؛ وقبل أقل من 24 ساعة يُحتفظ بتسبيق 30٪. تغيير التواريخ مجاني إلى غاية 24 ساعة قبل الاستلام، حسب التوفر."
+    "answer": "نعم، الإلغاء مجاني إذا أخبرتمونا قبل 24 ساعة على الأقل من الاستلام. بدون إشعار، أو قبل أقل من 24 ساعة، يمكن الاحتفاظ بمبلغ (مثلاً التسبيق المدفوع). حجز مدفوع عبر PayPal: استرجاع كامل المبلغ إذا ألغيتم قبل 24 ساعة على الأقل؛ وقبل أقل من 24 ساعة يُحتفظ بتسبيق 20٪. تغيير التواريخ مجاني إلى غاية 24 ساعة قبل الاستلام، حسب التوفر."
    }
   },
   "question": "Puis-je annuler ma réservation ?",
-  "answer": "Oui, l'annulation est gratuite si vous nous prévenez au moins 24 h avant la prise en charge. Sans prévenir, ou à moins de 24 h, un montant peut être retenu (par exemple l'avance versée). Réservation payée par PayPal : remboursement intégral si vous annulez au moins 24 h avant ; à moins de 24 h, l'acompte de 30 % est conservé. Changement de dates gratuit jusqu'à 24 h avant la prise en charge, selon disponibilité."
+  "answer": "Oui, l'annulation est gratuite si vous nous prévenez au moins 24 h avant la prise en charge. Sans prévenir, ou à moins de 24 h, un montant peut être retenu (par exemple l'avance versée). Réservation payée par PayPal : remboursement intégral si vous annulez au moins 24 h avant ; à moins de 24 h, l'acompte de 20 % est conservé. Changement de dates gratuit jusqu'à 24 h avant la prise en charge, selon disponibilité."
  },
  {
   "id": "seed-faq-7",
@@ -152,23 +152,23 @@ window._ASL_FAQ_SEED = [
   "i18n": {
    "fr": {
     "question": "Comment puis-je payer ?",
-    "answer": "En espèces à l'arrivée, par virement bancaire, par une avance pour confirmer la réservation, ou en ligne par PayPal (avec ou sans compte PayPal) pour garantir immédiatement votre réservation : acompte de 30 %."
+    "answer": "En espèces à l'arrivée, par virement bancaire, par une avance pour confirmer la réservation, ou en ligne par PayPal (avec ou sans compte PayPal) pour garantir immédiatement votre réservation : acompte de 20 %."
    },
    "en": {
     "question": "How can I pay?",
-    "answer": "In cash on arrival, by bank transfer, with an advance to confirm the booking, or online by PayPal (with or without a PayPal account) to guarantee your booking instantly: 30% deposit."
+    "answer": "In cash on arrival, by bank transfer, with an advance to confirm the booking, or online by PayPal (with or without a PayPal account) to guarantee your booking instantly: 20% deposit."
    },
    "es": {
     "question": "¿Cómo puedo pagar?",
-    "answer": "En efectivo a la llegada, por transferencia bancaria, con un anticipo para confirmar la reserva o en línea con PayPal (con o sin cuenta PayPal) para garantizar su reserva al instante: anticipo del 30 %."
+    "answer": "En efectivo a la llegada, por transferencia bancaria, con un anticipo para confirmar la reserva o en línea con PayPal (con o sin cuenta PayPal) para garantizar su reserva al instante: anticipo del 20 %."
    },
    "ar": {
     "question": "كيف يمكنني الأداء؟",
-    "answer": "نقداً عند الوصول، أو عبر تحويل بنكي، أو بتسبيق لتأكيد الحجز، أو عبر الإنترنت بواسطة PayPal (بحساب PayPal أو بدونه) لضمان حجزكم فوراً: تسبيق 30٪."
+    "answer": "نقداً عند الوصول، أو عبر تحويل بنكي، أو بتسبيق لتأكيد الحجز، أو عبر الإنترنت بواسطة PayPal (بحساب PayPal أو بدونه) لضمان حجزكم فوراً: تسبيق 20٪."
    }
   },
   "question": "Comment puis-je payer ?",
-  "answer": "En espèces à l'arrivée, par virement bancaire, par une avance pour confirmer la réservation, ou en ligne par PayPal (avec ou sans compte PayPal) pour garantir immédiatement votre réservation : acompte de 30 %."
+  "answer": "En espèces à l'arrivée, par virement bancaire, par une avance pour confirmer la réservation, ou en ligne par PayPal (avec ou sans compte PayPal) pour garantir immédiatement votre réservation : acompte de 20 %."
  },
  {
   "id": "seed-faq-8",
