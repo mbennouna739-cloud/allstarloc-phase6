@@ -169,6 +169,16 @@ function ppCfg(env) {
     rate: Number(env.PAYPAL_RATE_MAD) > 0 ? Number(env.PAYPAL_RATE_MAD) : 10.8,
   };
 }
+/* Dernière erreur PayPal (sans aucun secret) : visible dans /api/health pour comprendre un refus. */
+async function ppLogError(env, step, status, d, extra) {
+  try {
+    const det = (d && d.details && d.details[0]) || {};
+    await env.ASL_DB.put('pp_last_error', JSON.stringify({ at: new Date().toISOString(), step: step, status: status || 0,
+      name: String((d && (d.name || d.error)) || '').slice(0, 80), issue: String(det.issue || '').slice(0, 80),
+      description: String(det.description || (d && (d.message || d.error_description)) || extra || '').slice(0, 300),
+      debug_id: String((d && d.debug_id) || '').slice(0, 40) }), { expirationTtl: 30 * 86400 });
+  } catch (e) {}
+}
 async function ppToken(cfg, env) {
   const r = await fetch(cfg.api + '/v1/oauth2/token', {
     method: 'POST',
@@ -176,7 +186,7 @@ async function ppToken(cfg, env) {
     body: 'grant_type=client_credentials',
   });
   const d = await r.json().catch(function () { return {}; });
-  if (!r.ok || !d.access_token) throw new Error('Connexion PayPal impossible (identifiants ?)');
+  if (!r.ok || !d.access_token) { await ppLogError(env, 'token', r.status, d); throw new Error('Connexion PayPal impossible (identifiants ?)'); }
   return d.access_token;
 }
 function ppDays(a, b) {
@@ -593,6 +603,7 @@ export async function onRequest(context) {
       whatsapp: waCfg(env).on ? ('configuré' + (waCfg(env).yc ? ' (YCloud)' : ' (Meta)') + (waCfg(env).agencies.filter(function (x) { return x !== waCfg(env).from; }).length ? ' — alertes vers ' + waCfg(env).agencies.length + ' numéro(s)' : ' — WA_AGENCY_TO manquant ou identique à WA_FROM')) : 'non configuré',
       whatsappLastError: env.ASL_DB ? (await readDoc(env, 'wa_last_error')) : null,
       paypal: ppCfg(env).enabled ? ('configuré — mode ' + ppCfg(env).env) : 'non configuré',
+      paypalLastError: env.ASL_DB ? (await readDoc(env, 'pp_last_error')) : null,
       email: mailCfg(env).on ? ('configuré — expéditeur ' + mailCfg(env).from + (mailCfg(env).replyTo ? ' · réponses vers ' + mailCfg(env).replyTo : '') + (mailCfg(env).agency.length ? ' · alerte agence vers ' + mailCfg(env).agency.length + ' adresse(s)' : ' · alerte agence : MAIL_AGENCY_TO non renseignée')) : 'non configuré (RESEND_API_KEY manquante)',
       emailLastError: env.ASL_DB ? (await readDoc(env, 'mail_last_error')) : null,
     });
@@ -1092,8 +1103,8 @@ export async function onRequest(context) {
     if (!ref || totalMAD <= 0 || !days) return err(400, 'Réservation incomplète');
     const fleet = await readDoc(env, 'fleet');
     const car = ((fleet && fleet.items) || []).find(function (x) { return String(x.id) === String(b.carId); });
-    if (!car) return err(400, 'Véhicule introuvable');
-    if (totalMAD < ppFloorMAD(car, days)) return err(400, 'Montant incohérent');
+    if (!car) { await ppLogError(env, 'create-order', 400, null, 'Véhicule introuvable : ' + String(b.carId)); return err(400, 'Véhicule introuvable'); }
+    if (totalMAD < ppFloorMAD(car, days)) { await ppLogError(env, 'create-order', 400, null, 'Montant incohérent : ' + totalMAD + ' MAD < plancher ' + ppFloorMAD(car, days) + ' MAD'); return err(400, 'Montant incohérent'); }
     const payMAD = share === 'full' ? totalMAD : Math.round(totalMAD * c.depositPct / 100);
     const eur = (Math.round(payMAD / c.rate * 100) / 100).toFixed(2);
     try {
@@ -1112,7 +1123,7 @@ export async function onRequest(context) {
         }),
       });
       const d = await r.json().catch(function () { return {}; });
-      if (!r.ok || !d.id) return err(502, 'PayPal a refusé la commande');
+      if (!r.ok || !d.id) { await ppLogError(env, 'create-order', r.status, d); return err(502, 'PayPal a refusé la commande'); }
       await env.ASL_DB.put('pp_order:' + d.id, JSON.stringify({ ref: ref, share: share, payMAD: payMAD, totalMAD: totalMAD, eur: eur, carId: String(b.carId), at: Date.now() }), { expirationTtl: 86400 });
       return json({ ok: true, orderID: d.id, eur: eur, payMAD: payMAD });
     } catch (e) { return err(502, String(e && e.message || 'Erreur PayPal')); }
@@ -1145,6 +1156,7 @@ export async function onRequest(context) {
           const g = await fetch(c.api + '/v2/checkout/orders/' + orderID, { headers: { 'Authorization': 'Bearer ' + tok } });
           cap = await g.json().catch(function () { return {}; });
         } else {
+          await ppLogError(env, 'capture', r.status, cap);
           return json({ ok: false, error: 'Paiement refusé', issue: issue || '' }, 402);
         }
       }
