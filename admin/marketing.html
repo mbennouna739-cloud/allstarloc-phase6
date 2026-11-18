@@ -575,7 +575,7 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
     <div class="card" id="seo-editor-card">
       <div class="card-head">
         <div><div class="card-title" id="seo-page-name">Accueil</div>
-          <div class="card-sub" id="seo-page-url">allstarloc.ma/</div>
+          <div class="card-sub" id="seo-page-url">allstarloc.com/</div>
         </div>
         <button class="btn btn-ghost btn-sm" onclick="generateSEOAI()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
@@ -1118,79 +1118,41 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
 
 <!-- PAGE CONFIGURATION EMAIL -->
 <div class="content page" id="page-email">
-  <h2 style="font-size:18px;font-weight:900;margin-bottom:6px;">Configuration Email</h2>
-  <p style="font-size:13px;color:var(--t2);margin-bottom:20px;">
-    Configurez votre adresse email professionnelle pour recevoir automatiquement les demandes de réservation et de contact.
+  <h2 style="font-size:18px;font-weight:900;margin-bottom:6px;">E-mails automatiques</h2>
+  <p style="font-size:13px;color:var(--t2);margin-bottom:18px;max-width:760px;line-height:1.6;">
+    À chaque réservation du site, le client reçoit un e-mail de confirmation avec tous les détails, dans sa langue
+    (français, anglais, espagnol ou arabe) — uniquement s'il a indiqué son e-mail. Paiement PayPal : « Réservation confirmée » ;
+    espèces : « Demande de réservation reçue ».
   </p>
-  <div style="padding:10px 14px;border-radius:10px;background:rgba(217,119,6,.1);border:1px solid rgba(217,119,6,.3);color:var(--yellow);font-size:12.5px;margin:-8px 0 16px;">⚠ L'envoi automatique d'emails n'est pas encore branché côté serveur : ces réglages sont conservés sur cet appareil mais aucun email n'est envoyé pour l'instant. Les réservations arrivent dans le back-office et par WhatsApp.</div>
-
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
-    <div class="card">
-      <div class="card-head"><div class="card-title">Adresses de réception</div>
-        <button class="btn btn-red btn-sm" onclick="saveEmailConfig()">Enregistrer</button>
-      </div>
-      <div class="fg" style="margin-bottom:12px;">
-        <label>Email de réception des réservations</label>
-        <input class="fi" id="email-reservation" type="email" placeholder="reservation@allstarloc.ma">
-      </div>
-      <div class="fg" style="margin-bottom:12px;">
-        <label>Email de réception du contact</label>
-        <input class="fi" id="email-contact" type="email" placeholder="contact@allstarloc.ma">
-      </div>
-      <div class="fg">
-        <label>Email expéditeur (from)</label>
-        <input class="fi" id="email-from" type="email" placeholder="no-reply@allstarloc.ma">
-      </div>
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-head"><div class="card-title">État</div>
+      <button class="btn btn-ghost btn-sm" onclick="loadEmailConfig()">Actualiser</button>
     </div>
-
-    <div class="card">
-      <div class="card-head"><div class="card-title">Serveur SMTP</div></div>
-      <div class="fg" style="margin-bottom:12px;">
-        <label>SMTP Host</label>
-        <input class="fi" id="smtp-host" placeholder="smtp.gmail.com / mail.allstarloc.ma">
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
-        <div class="fg">
-          <label>SMTP Port</label>
-          <input class="fi" id="smtp-port" placeholder="587">
-        </div>
-        <div class="fg">
-          <label>Sécurité</label>
-          <select class="fs" id="smtp-security">
-            <option value="tls">TLS (587)</option>
-            <option value="ssl">SSL (465)</option>
-            <option value="none">Aucune</option>
-          </select>
-        </div>
-      </div>
-      <div class="fg" style="margin-bottom:12px;">
-        <label>SMTP Username</label>
-        <input class="fi" id="smtp-user" placeholder="reservation@allstarloc.ma">
-      </div>
-      <div class="fg" style="margin-bottom:14px;">
-        <label>SMTP Password</label>
-        <input class="fi" id="smtp-pass" type="password" placeholder="••••••••">
-      </div>
-      <div style="display:flex;gap:8px;">
-        <button class="btn btn-red btn-sm" onclick="saveEmailConfig()" style="flex:1;">Enregistrer</button>
-        <button class="btn btn-ghost btn-sm" onclick="testEmailConfig()" style="flex:1;">Tester l'envoi</button>
-      </div>
-      <div id="email-test-result" style="display:none;margin-top:12px;padding:10px 14px;border-radius:9px;font-size:13px;font-weight:600;"></div>
-    </div>
+    <div id="email-status" style="font-size:14px;line-height:1.7;">Vérification…</div>
   </div>
-
-  <div class="card" style="margin-top:16px;">
-    <div class="card-head"><div class="card-title">Informations envoyées dans chaque email de réservation</div></div>
-    <div style="font-size:13px;color:var(--t2);line-height:2;columns:2;">
-      Nom du client · Téléphone · Email · Véhicule choisi · Date de départ · Date de retour ·
-      Lieu de départ · Lieu de retour · Numéro de permis · Numéro de carte nationale ·
-      Mode de paiement · Caution · Détails supplémentaires
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-head"><div class="card-title">Envoyer un e-mail de test</div></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+      <input class="fi" id="email-test-to" type="email" placeholder="votre adresse e-mail" style="flex:1;min-width:220px;max-width:360px;">
+      <select class="fi" id="email-test-lang" style="width:auto;"><option value="fr">Français</option><option value="en">English</option><option value="es">Español</option><option value="ar">العربية</option></select>
+      <button class="btn btn-red" onclick="testEmailConfig()">Envoyer le test</button>
     </div>
-    <div style="margin-top:14px;padding:14px;background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.18);border-radius:10px;font-size:12.5px;color:#1d4ed8;line-height:1.7;">
-      <strong>Note :</strong> Sur un site statique, l'envoi d'email nécessite un service backend (worker Cloudflare,
-      service SMTP via API, ou formulaire relayé). Cette configuration est sauvegardée et prête à être connectée
-      à votre service d'envoi après déploiement. Pour l'instant, les demandes passent par WhatsApp.
-    </div>
+    <div id="email-test-result" style="display:none;margin-top:12px;padding:10px 14px;border-radius:10px;font-size:13px;"></div>
+  </div>
+  <div class="card">
+    <div class="card-head"><div class="card-title">Mise en service (une seule fois)</div></div>
+    <ol style="font-size:13px;line-height:1.8;padding-inline-start:20px;margin:0;color:var(--t1);">
+      <li>Créez un compte gratuit sur <b>resend.com</b>, puis <b>Domains → Add domain</b> : <code>allstarloc.com</code>.</li>
+      <li>Copiez les enregistrements DNS proposés dans <b>Cloudflare → allstarloc.com → DNS</b>, puis cliquez sur <b>Verify</b> dans Resend.</li>
+      <li>Resend → <b>API Keys → Create</b> : copiez la clé (ne la communiquez à personne).</li>
+      <li>Cloudflare → Workers &amp; Pages → allstarloc → <b>Settings → Variables and Secrets</b> :<br>
+        <code>RESEND_API_KEY</code> (Secret) = la clé ·
+        <code>MAIL_REPLY_TO</code> (Text) = l'adresse qui reçoit les réponses des clients ·
+        <code>MAIL_AGENCY_TO</code> (Text) = reçoit l'<b>alerte agence</b> complète avec les <b>photos du permis et du passeport/CIN</b> en pièces jointes ·
+        <code>MAIL_AGENCY_BCC</code> (Text, facultatif) = reçoit une copie de l'e-mail envoyé au client.</li>
+      <li>Revenez ici : l'état passe à « actif ». Envoyez-vous un e-mail de test.</li>
+    </ol>
+    <div style="margin-top:12px;font-size:12px;color:var(--t2);">Expéditeur par défaut : <code>ALL STAR LOC &lt;reservations@allstarloc.com&gt;</code> (modifiable avec la variable <code>MAIL_FROM</code>). Aucun mot de passe n'est enregistré dans le back-office.</div>
   </div>
 </div>
 
@@ -1669,14 +1631,14 @@ function loadSEOPage(key) {
   const setText = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
   const setVal  = (id, v) => { const e = document.getElementById(id); if (e) e.value = v; };
   setText('seo-page-name', names[key] || key);
-  setText('seo-page-url', 'allstarloc.ma/' + (d.slug || key !== 'index' ? key : ''));
+  setText('seo-page-url', 'allstarloc.com/' + (d.slug || key !== 'index' ? key : ''));
   setVal('seo-title',     d.title    || '');
   setVal('seo-desc',      d.desc     || '');
   setVal('seo-h1',        d.h1       || '');
   setVal('seo-slug',      d.slug     || (key !== 'index' ? key : ''));
   setVal('seo-keywords',  d.keywords || '');
   setVal('seo-text',      d.text     || '');
-  setVal('seo-canonical', d.canonical|| ('https://allstarloc.ma/' + (key !== 'index' ? key : '')));
+  setVal('seo-canonical', d.canonical|| ('https://allstarloc.com/' + (key !== 'index' ? key : '')));
   var editorCard = document.getElementById('seo-editor-card') || document.getElementById('seo-editor');
   if (editorCard) editorCard.style.display = 'block';
   updateSEOScore();
@@ -1729,7 +1691,7 @@ function renderSEOSummary() {
   if (schema) schema.textContent = JSON.stringify({
     "@context":"https://schema.org","@type":"LocalBusiness",
     "name":"ALL STAR LOC","description":"Location de voiture à Marrakech depuis 2009",
-    "url":"https://allstarloc.ma","telephone":"+212675312453",
+    "url":"https://allstarloc.com","telephone":"+212675312453",
     "address":{"@type":"PostalAddress","streetAddress":"29 Rue Yougoslavie","addressLocality":"Marrakech","postalCode":"40000","addressCountry":"MA"},
     "priceRange":"25€–120€","openingHours":"Mo-Su 08:00-22:00",
   }, null, 2);
@@ -1841,7 +1803,7 @@ async function generateSEOAI() {
   const pageName = pageNames[currentSEOPage] || currentSEOPage;
 
   const PROMPT = `Tu es un expert SEO spécialisé en location de voiture au Maroc, particulièrement pour Marrakech.
-L'agence s'appelle ALL STAR LOC (allstarloc.ma), spécialisée en location de voiture à Marrakech depuis 2009.
+L'agence s'appelle ALL STAR LOC (allstarloc.com), spécialisée en location de voiture à Marrakech depuis 2009.
 Coordonnées : 29 Rue Yougoslavie, Guéliz, Marrakech. Tél: 06 75 31 24 53.
 
 CONTEXTE TEMPOREL ACTUEL :
@@ -3777,7 +3739,7 @@ async function generateIAMarketing() {
   if (resultEl)  resultEl.style.display = 'none';
 
   const PROMPT = `Tu es un expert SEO spécialisé en location de voiture à Marrakech, Maroc.
-Agence : ALL STAR LOC, 29 Rue Yougoslavie Guéliz, allstarloc.ma
+Agence : ALL STAR LOC, 29 Rue Yougoslavie Guéliz, allstarloc.com
 Page : ${pageName} | Mois : ${ctx.month} | Saison : ${season.fr}
 ${ctx.event ? 'Événement : ' + ctx.event : ''}
 Réponds UNIQUEMENT en JSON valide (sans markdown) :
@@ -4293,6 +4255,7 @@ async function hydrateFromServer() {
     }
     try { _aslConditionsFix(); } catch(eFix) {}
     try { _aslPayPalTextsFix(); } catch(ePP) {}
+    try { _aslDateChangeFix(); } catch(eDC) {}
   } catch(e) { /* hors-ligne / test local : on garde les stores locaux */ }
 }
 
@@ -4301,6 +4264,58 @@ async function hydrateFromServer() {
    PayPal) et FAQ (« Comment payer ? », « Puis-je annuler ? »), dans les
    4 langues. Ajout ciblé de phrases : un texte que vous avez réécrit sans
    les anciennes phrases n'est pas touché ; sans effet une fois appliqué. */
+/* ★ Changement de dates gratuit (novembre 2026) : ajoute UNE phrase
+   « changement de dates gratuit jusqu'à 24 h avant, selon disponibilité »
+   à la FAQ « Puis-je annuler ? » et un paragraphe dans les CGV, si elle
+   n'y est pas déjà. Le reste de vos textes n'est jamais modifié. */
+function _aslDateChangeFix() {
+  var LANGS = ['fr','en','es','ar'];
+  var S = {
+    fr: "Changement de dates gratuit jusqu'à 24 h avant la prise en charge, selon disponibilité.",
+    en: "Free date change up to 24 hours before pick-up, subject to availability.",
+    es: "Cambio de fechas gratuito hasta 24 h antes de la recogida, según disponibilidad.",
+    ar: "تغيير التواريخ مجاني إلى غاية 24 ساعة قبل الاستلام، حسب التوفر."
+  };
+  var P = {
+    fr: "<p>Changement de dates : gratuit s'il est demandé au moins 24 heures avant la prise en charge, selon la disponibilité des véhicules. L'acompte déjà versé est reporté sur les nouvelles dates ; une éventuelle différence de prix est réglée à la remise du véhicule.</p>",
+    en: "<p>Date change: free if requested at least 24 hours before pick-up, subject to vehicle availability. The deposit already paid is carried over to the new dates; any price difference is settled at vehicle handover.</p>",
+    es: "<p>Cambio de fechas: gratuito si se solicita al menos 24 horas antes de la recogida, según la disponibilidad de vehículos. El anticipo ya abonado se traslada a las nuevas fechas; cualquier diferencia de precio se abona en la entrega del vehículo.</p>",
+    ar: "<p>تغيير التواريخ: مجاني إذا طُلب قبل 24 ساعة على الأقل من الاستلام، حسب توفر السيارات. يُنقل التسبيق المدفوع إلى التواريخ الجديدة، ويُسوّى أي فرق في السعر عند تسليم السيارة.</p>"
+  };
+  var MARK = { fr: 'Changement de dates', en: 'date change', es: 'Cambio de fechas', ar: 'تغيير التواريخ' };
+  var PPSTART = { fr: '<p>Réservation payée en ligne par PayPal', en: '<p>Booking paid online by PayPal', es: '<p>Reserva pagada en línea con PayPal', ar: '<p>حجز مدفوع عبر الإنترنت بواسطة PayPal' };
+  var has = function (t, l) { return String(t || '').toLowerCase().indexOf(MARK[l].toLowerCase()) >= 0; };
+  var changedLegal = 0, changedFaq = 0;
+  var all = load(K.legalPages) || {};
+  var cgv = all.cgv;
+  if (cgv) LANGS.forEach(function (l) {
+    var e = cgv[l]; if (!e || typeof e.content !== 'string' || has(e.content, l)) return;
+    var i = e.content.indexOf(PPSTART[l]); if (i < 0) return;
+    var j = e.content.indexOf('</p>', i); if (j < 0) return; j += 4;
+    e.content = e.content.slice(0, j) + '\n' + P[l] + e.content.slice(j); changedLegal++;
+  });
+  if (changedLegal) save(K.legalPages, all);
+  var faqs = load(K.faq) || [];
+  faqs.forEach(function (f) {
+    if (!f || f.id !== 'seed-faq-6') return;
+    var ch = false;
+    if (typeof f.answer === 'string' && f.answer.indexOf('24') >= 0 && !has(f.answer, 'fr')) { f.answer = f.answer + ' ' + S.fr; ch = true; }
+    LANGS.forEach(function (l) {
+      var e = f.i18n && f.i18n[l];
+      if (e && typeof e.answer === 'string' && e.answer.indexOf('24') >= 0 && !has(e.answer, l)) { e.answer = e.answer + ' ' + S[l]; ch = true; }
+    });
+    if (ch) changedFaq++;
+  });
+  if (changedFaq) save(K.faq, faqs);
+  if ((changedLegal || changedFaq) && typeof syncToKV === 'function') {
+    Promise.resolve(changedLegal ? syncToKV('Légal') : null).then(function () {
+      if (changedFaq) return syncToKV('FAQ');
+    }).catch(function () {});
+    if (typeof showSyncStatus === 'function') showSyncStatus('Changement de dates gratuit ajouté sur le site (CGV ' + changedLegal + ', FAQ ' + changedFaq + ').');
+  }
+  return { legal: changedLegal, faq: changedFaq };
+}
+
 function _aslPayPalTextsFix() {
   var LANGS = ['fr','en','es','ar'];
   var PAIRS = [["La réservation est confirmée après validation de l'agence et versement de l'avance éventuellement demandée. Aucun paiement en ligne n'est demandé.", "La réservation est confirmée après validation de l'agence et versement de l'avance éventuellement demandée. En cas de paiement en ligne par PayPal, la réservation est confirmée et garantie dès la réception du paiement."], ["<li>Avance pour confirmer la réservation (le solde est réglé à la remise du véhicule)</li></ul>", "<li>Avance pour confirmer la réservation (le solde est réglé à la remise du véhicule)</li><li>Paiement en ligne sécurisé par PayPal (compte PayPal ou carte bancaire) : acompte de 30 % ou totalité, réglé en euros ; le solde éventuel est réglé à la remise du véhicule</li></ul>"], ["un montant peut être retenu (par exemple l'avance versée).</p>", "un montant peut être retenu (par exemple l'avance versée).</p>\n<p>Réservation payée en ligne par PayPal : en cas d'annulation au moins 24 heures avant la prise en charge, le montant payé est intégralement remboursé sur le moyen de paiement utilisé. À moins de 24 heures, sans prévenir ou en cas de non-présentation, l'acompte de 30 % du montant de la location est conservé et le reste éventuel est remboursé.</p>"], ["The booking is confirmed once the agency validates it and any requested advance has been paid. No online payment is required.", "The booking is confirmed once the agency validates it and any requested advance has been paid. When paid online by PayPal, the booking is confirmed and guaranteed as soon as the payment is received."], ["<li>Advance to confirm the booking (the balance is paid at vehicle handover)</li></ul>", "<li>Advance to confirm the booking (the balance is paid at vehicle handover)</li><li>Secure online payment by PayPal (PayPal account or bank card): 30% deposit or full amount, charged in euros; any balance is paid at vehicle handover</li></ul>"], ["an amount may be retained (for example the advance paid).</p>", "an amount may be retained (for example the advance paid).</p>\n<p>Booking paid online by PayPal: if cancelled at least 24 hours before pick-up, the amount paid is refunded in full to the payment method used. Less than 24 hours before, without notice or in the event of a no-show, the deposit of 30% of the rental amount is kept and any remaining amount is refunded.</p>"], ["La reserva se confirma tras la validación de la agencia y el abono del anticipo que en su caso se solicite. No se solicita ningún pago en línea.", "La reserva se confirma tras la validación de la agencia y el abono del anticipo que en su caso se solicite. En caso de pago en línea con PayPal, la reserva queda confirmada y garantizada en cuanto se recibe el pago."], ["<li>Anticipo para confirmar la reserva (el resto se paga en la entrega del vehículo)</li></ul>", "<li>Anticipo para confirmar la reserva (el resto se paga en la entrega del vehículo)</li><li>Pago en línea seguro con PayPal (cuenta PayPal o tarjeta bancaria): anticipo del 30 % o importe total, cobrado en euros; el resto, en su caso, se paga en la entrega del vehículo</li></ul>"], ["puede retenerse un importe (por ejemplo, el anticipo abonado).</p>", "puede retenerse un importe (por ejemplo, el anticipo abonado).</p>\n<p>Reserva pagada en línea con PayPal: si se cancela al menos 24 horas antes de la recogida, el importe pagado se reembolsa íntegramente en el medio de pago utilizado. Con menos de 24 horas, sin aviso o en caso de no presentación, se conserva el anticipo del 30 % del importe del alquiler y se reembolsa el resto, en su caso.</p>"], ["يتم تأكيد الحجز بعد مصادقة الوكالة ودفع التسبيق المطلوب عند الاقتضاء. لا يُطلب أي أداء عبر الإنترنت.", "يتم تأكيد الحجز بعد مصادقة الوكالة ودفع التسبيق المطلوب عند الاقتضاء. في حالة الأداء عبر الإنترنت بواسطة PayPal، يصبح الحجز مؤكداً ومضموناً فور التوصل بالأداء."], ["<li>تسبيق لتأكيد الحجز (يُدفع الباقي عند تسليم السيارة)</li></ul>", "<li>تسبيق لتأكيد الحجز (يُدفع الباقي عند تسليم السيارة)</li><li>أداء آمن عبر الإنترنت بواسطة PayPal (حساب PayPal أو بطاقة بنكية): تسبيق 30٪ أو المبلغ الكامل، يُقتطع باليورو؛ ويُدفع الباقي عند الاقتضاء عند تسليم السيارة</li></ul>"], ["يمكن الاحتفاظ بمبلغ (مثلاً التسبيق المدفوع).</p>", "يمكن الاحتفاظ بمبلغ (مثلاً التسبيق المدفوع).</p>\n<p>حجز مدفوع عبر الإنترنت بواسطة PayPal: في حالة الإلغاء قبل 24 ساعة على الأقل من الاستلام، يُسترجع المبلغ المدفوع كاملاً عبر وسيلة الأداء المستعملة. قبل أقل من 24 ساعة، أو بدون إشعار، أو عدم الحضور، يُحتفظ بتسبيق 30٪ من مبلغ الكراء ويُسترجع الباقي عند الاقتضاء.</p>"], ["Elles peuvent être partagées avec les autorités si la loi l'exige.</p>", "Elles peuvent être partagées avec les autorités si la loi l'exige. En cas de paiement en ligne, les informations nécessaires au paiement sont traitées par PayPal selon sa propre politique de confidentialité ; nous ne recevons ni ne conservons vos données de carte.</p>"], ["It may be shared with authorities where required by law.</p>", "It may be shared with authorities where required by law. For online payments, the information needed for the payment is processed by PayPal under its own privacy policy; we never receive or store your card details.</p>"], ["Pueden compartirse con las autoridades cuando la ley lo exija.</p>", "Pueden compartirse con las autoridades cuando la ley lo exija. En caso de pago en línea, la información necesaria para el pago la trata PayPal según su propia política de privacidad; nunca recibimos ni conservamos los datos de su tarjeta.</p>"], ["يمكن مشاركتها مع السلطات عند اقتضاء القانون.</p>", "يمكن مشاركتها مع السلطات عند اقتضاء القانون. في حالة الأداء عبر الإنترنت، تتم معالجة المعلومات اللازمة للأداء من طرف PayPal وفق سياسة الخصوصية الخاصة به؛ ولا نتوصل أبداً ببيانات بطاقتكم ولا نحتفظ بها.</p>"], ["et les autorités si la loi l'exige (infractions routières notamment).</p>", "et les autorités si la loi l'exige (infractions routières notamment). En cas de paiement en ligne, les informations nécessaires au paiement sont traitées par PayPal selon sa propre politique de confidentialité ; nous ne recevons ni ne conservons vos données de carte.</p>"]];
@@ -4494,62 +4509,43 @@ function adminLogout() {
 })();
 
 // ================================================================
-// CONFIGURATION EMAIL
+// E-MAILS AUTOMATIQUES (service Resend, configuré dans Cloudflare)
 // ================================================================
 const EMAIL_KEY = 'asl_email_config_v1';
-
-function loadEmailConfig() {
-  const cfg = load(EMAIL_KEY) || {};
-  const set = (id, v) => { const e = document.getElementById(id); if (e) e.value = v || ''; };
-  set('email-reservation', cfg.reservation);
-  set('email-contact', cfg.contact);
-  set('email-from', cfg.from);
-  set('smtp-host', cfg.host);
-  set('smtp-port', cfg.port);
-  set('smtp-user', cfg.user);
-  set('smtp-pass', cfg.pass);
-  const sec = document.getElementById('smtp-security');
-  if (sec && cfg.security) sec.value = cfg.security;
-}
-
-async function saveEmailConfig() {
-  const get = id => document.getElementById(id)?.value || '';
-  const cfg = {
-    reservation: get('email-reservation'),
-    contact: get('email-contact'),
-    from: get('email-from'),
-    host: get('smtp-host'),
-    port: get('smtp-port'),
-    security: get('smtp-security'),
-    user: get('smtp-user'),
-    pass: get('smtp-pass'),
-    updatedAt: new Date().toISOString(),
-  };
-  save(EMAIL_KEY, cfg);
-  // Synchroniser vers KV (sans le mot de passe en clair dans le contenu public marketing)
+function _emEsc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+async function loadEmailConfig() {
+  // Ancien réglage SMTP : on efface le mot de passe éventuellement conservé sur cet appareil.
+  try { const old = load(EMAIL_KEY); if (old && old.pass) { delete old.pass; save(EMAIL_KEY, old); } } catch (e) {}
+  const box = document.getElementById('email-status'); if (!box) return;
+  box.textContent = 'Vérification…';
   try {
-    const mkt = getMktData();
-    mkt.email_config = { reservation: cfg.reservation, contact: cfg.contact, from: cfg.from, host: cfg.host, port: cfg.port, security: cfg.security, user: cfg.user };
-    await syncToKV('Configuration Email');
-  } catch(e) {}
-  toast('Configuration email enregistrée sur cet appareil (envoi automatique pas encore branché)', 'g');
-}
-
-function testEmailConfig() {
-  const res = document.getElementById('email-test-result');
-  const host = document.getElementById('smtp-host')?.value;
-  const user = document.getElementById('smtp-user')?.value;
-  if (!res) return;
-  res.style.display = 'block';
-  if (!host || !user) {
-    res.style.background = 'rgba(217,119,6,.1)';
-    res.style.color = 'var(--yellow)';
-    res.textContent = 'Veuillez remplir au moins le SMTP Host et le Username avant de tester.';
-    return;
+    const h = await (await fetch('/api/health', { cache: 'no-store' })).json();
+    const on = /^configuré/.test(String(h.email || ''));
+    const le = h.emailLastError;
+    box.innerHTML = (on
+      ? '<div style="color:var(--green);font-weight:800;">● Actif</div><div style="color:var(--t2);font-size:13px;">' + _emEsc(h.email) + '</div>'
+      : '<div style="color:var(--yellow);font-weight:800;">● Pas encore configuré</div><div style="color:var(--t2);font-size:13px;">Suivez la « Mise en service » ci-dessous. En attendant, les clients reçoivent la confirmation à l\'écran et sur WhatsApp.</div>')
+      + (le && le.at ? '<div style="margin-top:8px;color:#b91c1c;font-size:12.5px;">Dernière erreur (' + _emEsc(String(le.at).slice(0, 16).replace('T', ' ')) + ') : ' + _emEsc(le.message || le.code) + '</div>' : '');
+  } catch (e) {
+    box.innerHTML = '<div style="color:var(--t2);">Impossible de lire l\'état (hors ligne ?).</div>';
   }
-  res.style.background = 'rgba(37,99,235,.08)';
-  res.style.color = '#1d4ed8';
-  res.innerHTML = 'La configuration est enregistrée. L\'envoi réel sera actif une fois le service SMTP connecté au backend après déploiement (worker Cloudflare ou API d\'envoi).';
+}
+async function testEmailConfig() {
+  const res = document.getElementById('email-test-result'); if (!res) return;
+  const to = (document.getElementById('email-test-to') || {}).value || '';
+  const lang = (document.getElementById('email-test-lang') || {}).value || 'fr';
+  const show = function (ok, msg) { res.style.display = 'block'; res.style.background = ok ? 'rgba(5,150,105,.1)' : 'rgba(220,38,38,.08)'; res.style.color = ok ? 'var(--green)' : '#b91c1c'; res.textContent = msg; };
+  if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(to.trim())) return show(false, 'Indiquez une adresse e-mail valide.');
+  const headers = { 'Content-Type': 'application/json' };
+  try { const k = localStorage.getItem('asl_admin_key'); if (k) headers['X-ASL-Key'] = k; } catch (e) {}
+  show(true, 'Envoi en cours…');
+  try {
+    const r = await fetch('/api/mail/test', { method: 'POST', headers: headers, body: JSON.stringify({ to: to.trim(), lang: lang }) });
+    const d = await r.json().catch(function () { return {}; });
+    if (r.ok && d.ok) show(true, '✓ E-mail de test envoyé à ' + to.trim() + '. Pensez à regarder aussi dans les spams.');
+    else show(false, d.error || ('Erreur ' + r.status));
+  } catch (e) { show(false, 'Le serveur ne répond pas.'); }
+  loadEmailConfig();
 }
 
 </script>

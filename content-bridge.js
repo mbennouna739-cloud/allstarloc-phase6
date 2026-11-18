@@ -298,7 +298,8 @@
       }
       if (seo.canonical) {
         var canon = document.querySelector('link[rel="canonical"]');
-        if (canon) canon.setAttribute('href', seo.canonical);
+        /* Adresse principale du site : allstarloc.com (les anciennes valeurs .ma enregistrées sont corrigées). */
+        if (canon) canon.setAttribute('href', String(seo.canonical).replace(/^https?:\/\/(www\.)?allstarloc\.ma(?=\/|$)/i, 'https://allstarloc.com'));
       }
     }
 

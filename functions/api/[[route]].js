@@ -27,6 +27,7 @@
    POST /api/paypal/create-order → crée la commande PayPal (montant recalculé serveur)
    POST /api/paypal/capture      → encaisse + enregistre la réservation payée
    POST /api/paypal/refund       → rembourse (clé admin)
+   POST /api/mail/test           → e-mail de test (clé admin)
    ============================================================ */
 
 const JSON_HEADERS = {
@@ -42,6 +43,18 @@ function json(obj, status) {
 }
 function err(status, message) { return json({ ok: false, error: message }, status); }
 
+/* ★ Sécurité : un texte saisi sur le site public (nom, notes…) ne doit jamais
+   contenir de balises HTML (il est ensuite affiché dans le back-office). */
+function aslCleanPublic(o, depth) {
+  depth = depth || 0;
+  if (!o || typeof o !== 'object' || depth > 4) return o;
+  Object.keys(o).forEach(function (k) {
+    const v = o[k];
+    if (typeof v === 'string') o[k] = v.replace(/[<>]/g, '');
+    else if (v && typeof v === 'object') aslCleanPublic(v, depth + 1);
+  });
+  return o;
+}
 function authorized(request, env) {
   // Si ADMIN_KEY n'est pas configurée côté Cloudflare, les écritures sont ouvertes
   // (pratique pour les tests). En production, configurez-la (voir en-tête de fichier).
@@ -279,10 +292,243 @@ async function waNotifyBooking(env, item, kind) {
   const lang = ['fr', 'en', 'es', 'ar'].indexOf(String(item.lang || 'fr')) >= 0 ? String(item.lang || 'fr') : 'fr';
   const first = String(item.client || '').split(' ')[0] || 'client';
   if (c.client && clientTo && c.agencies.indexOf(clientTo) < 0) {
-    if (kind === 'paid') jobs.push(waSend(env, clientTo, c.tplPaid, lang, [first, item.id, item.car || '', datesC, item.pickup || '', paid + ' MAD (' + (pp.amountEUR || '') + ' €)', rest + ' MAD']));
-    else if (kind === 'cash') jobs.push(waSend(env, clientTo, c.tplCash, lang, [first, item.id, item.car || '', datesC, item.pickup || '', total + ' MAD']));
+    /* Si le modèle n'existe pas (encore) dans la langue du client, on renvoie la version française. */
+    const sendL = function (tpl, params) { return waSend(env, clientTo, tpl, lang, params).then(function (ok) { return ok || lang === 'fr' ? ok : waSend(env, clientTo, tpl, 'fr', params); }); };
+    if (kind === 'paid') jobs.push(sendL(c.tplPaid, [first, item.id, item.car || '', datesC, item.pickup || '', paid + ' MAD (' + (pp.amountEUR || '') + ' €)', rest + ' MAD']));
+    else if (kind === 'cash') jobs.push(sendL(c.tplCash, [first, item.id, item.car || '', datesC, item.pickup || '', total + ' MAD']));
   }
   await Promise.all(jobs);
+}
+/* ============================================================
+   ★ E-MAIL DE CONFIRMATION AUTOMATIQUE (service Resend — resend.com)
+   Variables Cloudflare :
+     RESEND_API_KEY (Secret)  clé API Resend (re_…)
+     MAIL_FROM      (Text, option) défaut « ALL STAR LOC <reservations@allstarloc.com> »
+                    (le domaine allstarloc.com doit être vérifié dans Resend)
+     MAIL_REPLY_TO  (Text, option) adresse qui reçoit les réponses des clients
+                    (ex. allstarloc@gmail.com)
+     MAIL_AGENCY_BCC (Text, option) copie cachée de chaque e-mail (ex. allstarloc@gmail.com)
+     MAIL_AGENCY_TO (Text, option) reçoit l'ALERTE AGENCE complète (téléphone, montants…)
+                    avec les photos du permis et du passeport/CIN en pièces jointes
+   Envoyé seulement si le client a donné son e-mail. Un échec n'empêche JAMAIS
+   la réservation ; la dernière erreur est visible dans /api/health.
+   ============================================================ */
+function mailCfg(env) {
+  return {
+    on: !!env.RESEND_API_KEY,
+    from: env.MAIL_FROM || 'ALL STAR LOC <reservations@allstarloc.com>',
+    replyTo: String(env.MAIL_REPLY_TO || '').trim(),
+    bcc: String(env.MAIL_AGENCY_BCC || '').split(/[,;]/).map(function (x) { return x.trim(); }).filter(mailValid).slice(0, 3),
+    agency: String(env.MAIL_AGENCY_TO || '').split(/[,;]/).map(function (x) { return x.trim(); }).filter(mailValid).slice(0, 3),
+  };
+}
+function mailValid(v) { return /^[^\s@<>"']+@[^\s@<>"']+\.[a-z]{2,}$/i.test(String(v || '').trim()); }
+function mailEsc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+async function mailSend(env, msg) {
+  const c = mailCfg(env);
+  if (!c.on || !mailValid(msg.to)) return { ok: false, error: !c.on ? 'non configuré' : 'adresse invalide' };
+  try {
+    const body = { from: c.from, to: [String(msg.to).trim()], subject: msg.subject, html: msg.html, text: msg.text };
+    if (msg.replyTo && mailValid(msg.replyTo)) body.reply_to = String(msg.replyTo).trim();
+    else if (c.replyTo) body.reply_to = c.replyTo;
+    if (Array.isArray(msg.attachments) && msg.attachments.length) body.attachments = msg.attachments;
+    if (c.bcc.length && !msg.noBcc) body.bcc = c.bcc;
+    const headers = { 'Authorization': 'Bearer ' + env.RESEND_API_KEY, 'Content-Type': 'application/json' };
+    if (msg.key) headers['Idempotency-Key'] = String(msg.key).slice(0, 250);
+    const r = await fetch('https://api.resend.com/emails', { method: 'POST', headers: headers, body: JSON.stringify(body) });
+    if (!r.ok) {
+      const d = await r.json().catch(function () { return {}; });
+      const e = { at: new Date().toISOString(), code: d.statusCode || r.status, message: String(d.message || d.name || '').slice(0, 300) };
+      if (env.ASL_DB) await env.ASL_DB.put('mail_last_error', JSON.stringify(e), { expirationTtl: 30 * 86400 });
+      return { ok: false, error: e.message || ('HTTP ' + r.status) };
+    }
+    return { ok: true };
+  } catch (e) { return { ok: false, error: String(e && e.message || e) }; }
+}
+const MAIL_T = {
+  fr: {
+    since: 'Marrakech · depuis 2009',
+    subjPaid: 'Réservation confirmée {ref} — ALL STAR LOC', subjPending: 'Réservation {ref} — paiement en cours de vérification', subjCash: 'Demande de réservation reçue {ref} — ALL STAR LOC',
+    hello: 'Bonjour {name},',
+    introPaid: 'Votre paiement a bien été reçu : votre réservation est <b>confirmée et garantie</b>. Votre véhicule vous attend.',
+    introPending: 'Nous avons bien reçu votre réservation. PayPal vérifie actuellement votre paiement : nous vous confirmons très rapidement.',
+    introCash: 'Nous avons bien reçu votre demande de réservation. Le paiement se fait en espèces à votre arrivée.',
+    cashNote: 'Sans acompte, le véhicule n\'est pas bloqué : un véhicule vous est garanti, mais pas forcément ce modèle. Pour bloquer ce modèle, vous pouvez réserver avec un acompte en ligne.',
+    recap: 'Récapitulatif', ref: 'Réservation', car: 'Véhicule', start: 'Prise en charge', end: 'Restitution', dur: 'Durée', days: 'jour(s)',
+    total: 'Total de la location', paid: 'Acompte payé (PayPal)', rest: 'Reste à régler à la remise des clés', dueCash: 'À payer en espèces à l\'arrivée', status: 'Statut',
+    stPaid: 'Confirmée', stPending: 'Paiement en vérification', stCash: 'Demande reçue',
+    bring: 'À présenter à la remise du véhicule : votre <b>permis de conduire</b> et votre <b>passeport ou CIN</b> (originaux).',
+    policy: 'Annulation gratuite jusqu\'à 24 h avant la prise en charge (remboursement intégral). À moins de 24 h, l\'acompte est conservé. Changement de dates gratuit jusqu\'à 24 h avant, selon disponibilité.',
+    help: 'Une question ? Répondez simplement à cet e-mail ou écrivez-nous sur WhatsApp.', btn: 'Nous contacter sur WhatsApp', thanks: 'Merci de votre confiance,<br>L\'équipe ALL STAR LOC',
+  },
+  en: {
+    since: 'Marrakech · since 2009',
+    subjPaid: 'Booking confirmed {ref} — ALL STAR LOC', subjPending: 'Booking {ref} — payment being verified', subjCash: 'Booking request received {ref} — ALL STAR LOC',
+    hello: 'Hello {name},',
+    introPaid: 'Your payment has been received: your booking is <b>confirmed and guaranteed</b>. Your car is waiting for you.',
+    introPending: 'We have received your booking. PayPal is currently verifying your payment: we will confirm very shortly.',
+    introCash: 'We have received your booking request. Payment is made in cash on arrival.',
+    cashNote: 'Without a deposit, the car is not reserved: a car is guaranteed, but not necessarily this model. To secure this model, you can book with an online deposit.',
+    recap: 'Summary', ref: 'Booking', car: 'Car', start: 'Pick-up', end: 'Return', dur: 'Duration', days: 'day(s)',
+    total: 'Rental total', paid: 'Deposit paid (PayPal)', rest: 'Balance due at key handover', dueCash: 'To pay in cash on arrival', status: 'Status',
+    stPaid: 'Confirmed', stPending: 'Payment being verified', stCash: 'Request received',
+    bring: 'Please bring at vehicle handover: your <b>driving licence</b> and your <b>passport or ID card</b> (originals).',
+    policy: 'Free cancellation up to 24 hours before pick-up (full refund). Less than 24 hours before, the deposit is kept. Free date change up to 24 hours before, subject to availability.',
+    help: 'Any question? Simply reply to this email or message us on WhatsApp.', btn: 'Contact us on WhatsApp', thanks: 'Thank you for your trust,<br>The ALL STAR LOC team',
+  },
+  es: {
+    since: 'Marrakech · desde 2009',
+    subjPaid: 'Reserva confirmada {ref} — ALL STAR LOC', subjPending: 'Reserva {ref} — pago en verificación', subjCash: 'Solicitud de reserva recibida {ref} — ALL STAR LOC',
+    hello: 'Hola {name}:',
+    introPaid: 'Hemos recibido su pago: su reserva está <b>confirmada y garantizada</b>. Su vehículo le espera.',
+    introPending: 'Hemos recibido su reserva. PayPal está verificando su pago: le confirmaremos muy pronto.',
+    introCash: 'Hemos recibido su solicitud de reserva. El pago se realiza en efectivo a su llegada.',
+    cashNote: 'Sin anticipo, el vehículo no queda bloqueado: le garantizamos un vehículo, pero no necesariamente este modelo. Para asegurar este modelo, puede reservar con un anticipo en línea.',
+    recap: 'Resumen', ref: 'Reserva', car: 'Vehículo', start: 'Recogida', end: 'Devolución', dur: 'Duración', days: 'día(s)',
+    total: 'Total del alquiler', paid: 'Anticipo pagado (PayPal)', rest: 'Resto a pagar en la entrega de llaves', dueCash: 'A pagar en efectivo a la llegada', status: 'Estado',
+    stPaid: 'Confirmada', stPending: 'Pago en verificación', stCash: 'Solicitud recibida',
+    bring: 'Presente en la entrega del vehículo: su <b>permiso de conducir</b> y su <b>pasaporte o DNI</b> (originales).',
+    policy: 'Cancelación gratuita hasta 24 h antes de la recogida (reembolso íntegro). A menos de 24 h, se conserva el anticipo. Cambio de fechas gratuito hasta 24 h antes, según disponibilidad.',
+    help: '¿Alguna pregunta? Responda a este correo o escríbanos por WhatsApp.', btn: 'Contactar por WhatsApp', thanks: 'Gracias por su confianza,<br>El equipo de ALL STAR LOC',
+  },
+  ar: {
+    since: 'مراكش · منذ 2009',
+    subjPaid: 'تم تأكيد الحجز {ref} — ALL STAR LOC', subjPending: 'الحجز {ref} — الدفع قيد التحقق', subjCash: 'تم استلام طلب الحجز {ref} — ALL STAR LOC',
+    hello: 'مرحباً {name}،',
+    introPaid: 'لقد توصلنا بأدائكم: حجزكم <b>مؤكد ومضمون</b>. سيارتكم في انتظاركم.',
+    introPending: 'توصلنا بحجزكم. يقوم PayPal حالياً بالتحقق من أدائكم، وسنؤكد لكم في أقرب وقت.',
+    introCash: 'توصلنا بطلب حجزكم. يتم الأداء نقداً عند الوصول.',
+    cashNote: 'بدون تسبيق، لا يتم حجز السيارة: نضمن لكم سيارة، لكن ليس بالضرورة هذا الطراز. لضمان هذا الطراز، يمكنكم الحجز بتسبيق عبر الإنترنت.',
+    recap: 'ملخص الحجز', ref: 'الحجز', car: 'السيارة', start: 'الاستلام', end: 'الإرجاع', dur: 'المدة', days: 'يوم/أيام',
+    total: 'مجموع الكراء', paid: 'التسبيق المدفوع (PayPal)', rest: 'الباقي عند تسليم المفاتيح', dueCash: 'المبلغ نقداً عند الوصول', status: 'الحالة',
+    stPaid: 'مؤكد', stPending: 'الدفع قيد التحقق', stCash: 'تم استلام الطلب',
+    bring: 'يرجى الإدلاء عند تسليم السيارة بـ: <b>رخصة السياقة</b> و<b>جواز السفر أو البطاقة الوطنية</b> (الأصل).',
+    policy: 'إلغاء مجاني حتى 24 ساعة قبل الاستلام (استرجاع كامل). أقل من 24 ساعة، يُحتفظ بالتسبيق. تغيير التواريخ مجاني حتى 24 ساعة قبل الاستلام، حسب التوفر.',
+    help: 'لديكم سؤال؟ أجيبوا ببساطة على هذا البريد أو راسلونا عبر واتساب.', btn: 'تواصلوا معنا عبر واتساب', thanks: 'شكراً على ثقتكم،<br>فريق ALL STAR LOC',
+  },
+};
+function mailFill(tpl, vars) { return String(tpl).replace(/\{(\w+)\}/g, function (m, k) { return vars[k] != null ? vars[k] : m; }); }
+function mailBuildBooking(item, kind) {
+  const lang = MAIL_T[item.lang] ? item.lang : 'fr', T = MAIL_T[lang], rtl = lang === 'ar';
+  const total = Math.round(Number(item.amount) || 0), paid = Math.round(Number(item.paid) || 0), rest = Math.max(0, total - paid);
+  const pp = item.paypal || {};
+  const first = String(item.client || '').trim().split(/\s+/)[0] || '';
+  const ref = String(item.id || '');
+  const subj = mailFill(kind === 'paid' ? T.subjPaid : kind === 'pending' ? T.subjPending : T.subjCash, { ref: ref });
+  const intro = kind === 'paid' ? T.introPaid : kind === 'pending' ? T.introPending : T.introCash;
+  const rows = [
+    [T.ref, ref], [T.car, item.car || ''],
+    [T.start, waDate(item.startDate, item.startTime) + (item.pickup ? ' — ' + item.pickup : '')],
+    [T.end, waDate(item.endDate, item.endTime) + ((item.dropoff || item.pickup) ? ' — ' + (item.dropoff || item.pickup) : '')],
+    [T.dur, (item.days || '') + ' ' + T.days], [T.total, total + ' MAD'],
+  ];
+  if (kind === 'paid') { rows.push([T.paid, paid + ' MAD' + (pp.amountEUR ? ' (' + pp.amountEUR + ' €)' : '')]); rows.push([T.rest, rest + ' MAD']); }
+  if (kind === 'cash') rows.push([T.dueCash, total + ' MAD']);
+  rows.push([T.status, kind === 'paid' ? T.stPaid : kind === 'pending' ? T.stPending : T.stCash]);
+  const wa = 'https://wa.me/212675312453';
+  const dir = rtl ? 'rtl' : 'ltr', al = rtl ? 'right' : 'left';
+  const tr = rows.map(function (r, i) {
+    return '<tr><td style="padding:9px 12px;color:#6b7280;font-size:13px;border-top:' + (i ? '1px solid #eee' : '0') + ';">' + mailEsc(r[0]) + '</td><td style="padding:9px 12px;font-size:14px;font-weight:600;color:#111827;border-top:' + (i ? '1px solid #eee' : '0') + ';text-align:' + (rtl ? 'left' : 'right') + ';">' + mailEsc(r[1]) + '</td></tr>';
+  }).join('');
+  const color = kind === 'paid' ? '#047857' : '#b45309';
+  const html = '<!doctype html><html lang="' + lang + '" dir="' + dir + '"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>' +
+    '<body style="margin:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;color:#111827;">' +
+    '<div style="max-width:560px;margin:0 auto;padding:24px 12px;" dir="' + dir + '">' +
+    '<div style="background:#111;color:#fff;border-radius:14px 14px 0 0;padding:18px 22px;font-size:18px;font-weight:800;letter-spacing:.5px;text-align:' + al + ';">ALL STAR <span style="color:#e11d2e;">LOC</span><div style="font-size:12px;font-weight:400;opacity:.75;margin-top:2px;">' + mailEsc(T.since) + '</div></div>' +
+    '<div style="background:#fff;border-radius:0 0 14px 14px;padding:22px;text-align:' + al + ';">' +
+    '<p style="margin:0 0 10px;font-size:15px;">' + mailEsc(mailFill(T.hello, { name: first })) + '</p>' +
+    '<p style="margin:0 0 16px;font-size:15px;line-height:1.55;">' + intro + '</p>' +
+    (kind === 'cash' ? '<p style="margin:0 0 16px;padding:10px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;font-size:13px;color:#92400e;line-height:1.5;">' + mailEsc(T.cashNote) + '</p>' : '') +
+    '<div style="font-size:13px;font-weight:700;color:' + color + ';margin:0 0 6px;">' + mailEsc(T.recap) + '</div>' +
+    '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #eee;border-radius:10px;border-collapse:separate;">' + tr + '</table>' +
+    '<p style="margin:16px 0 0;font-size:13px;line-height:1.55;">' + T.bring + '</p>' +
+    (kind !== 'cash' ? '<p style="margin:10px 0 0;font-size:12px;color:#6b7280;line-height:1.5;">' + mailEsc(T.policy) + '</p>' : '') +
+    '<p style="margin:18px 0 10px;font-size:14px;">' + mailEsc(T.help) + '</p>' +
+    '<a href="' + wa + '" style="display:inline-block;background:#25D366;color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:11px 18px;border-radius:10px;">' + mailEsc(T.btn) + '</a>' +
+    '<p style="margin:22px 0 0;font-size:14px;line-height:1.5;">' + T.thanks + '</p></div>' +
+    '<div style="text-align:center;font-size:11px;color:#9ca3af;margin-top:14px;line-height:1.6;">ALL STAR LOC · 29 Rue Yougoslavie, Guéliz, Marrakech<br>+212 6 75 31 24 53 · <a href="https://allstarloc.com" style="color:#9ca3af;">allstarloc.com</a></div>' +
+    '</div></body></html>';
+  const text = mailFill(T.hello, { name: first }) + '\n\n' + intro.replace(/<[^>]+>/g, '') + '\n' + (kind === 'cash' ? T.cashNote + '\n' : '') + '\n' +
+    rows.map(function (r) { return r[0] + ' : ' + r[1]; }).join('\n') + '\n\n' + T.bring.replace(/<[^>]+>/g, '') + '\n' + (kind !== 'cash' ? T.policy + '\n' : '') +
+    '\n' + T.help + '\nWhatsApp : ' + wa + '\n\n' + T.thanks.replace(/<br>/g, '\n') + '\n\nALL STAR LOC · 29 Rue Yougoslavie, Guéliz, Marrakech · +212 6 75 31 24 53 · allstarloc.com';
+  return { subject: subj, html: html, text: text };
+}
+function bytesToB64(buf) {
+  const u = new Uint8Array(buf); let bin = '';
+  for (let i = 0; i < u.length; i += 0x8000) bin += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+/* Photos des documents (permis, passeport/CIN) de la réservation, en pièces jointes (max 8, ~15 Mo). */
+async function mailDocAttachments(env, item) {
+  const docs = item.docs || {}, out = []; let size = 0;
+  const idType = docs.identiteType === 'cin' ? 'CIN' : 'passeport';
+  const groups = [['permis', Array.isArray(docs.permis) ? docs.permis : []], [idType, Array.isArray(docs.identite) ? docs.identite : []]];
+  for (const g of groups) {
+    let n = 0;
+    for (const ref of g[1]) {
+      const m = String(ref || '').match(/^asldoc:([A-Za-z0-9_-]+)/); if (!m || out.length >= 8) continue;
+      try {
+        const got = await env.ASL_DB.getWithMetadata('doc:' + m[1], 'arrayBuffer');
+        if (!got || !got.value) continue;
+        const type = (got.metadata && got.metadata.type) || 'image/jpeg';
+        const ext = type === 'image/png' ? 'png' : type === 'image/webp' ? 'webp' : type === 'application/pdf' ? 'pdf' : 'jpg';
+        size += got.value.byteLength; if (size > 15 * 1024 * 1024) break;
+        n++;
+        out.push({ filename: String(item.id || 'ASL') + '_' + g[0] + '_' + n + '.' + ext, content: bytesToB64(got.value) });
+      } catch (e) {}
+    }
+  }
+  return out;
+}
+/* ALERTE AGENCE par e-mail (français) : toutes les informations + les photos des documents. */
+async function mailAgencyBooking(env, item, kind) {
+  const c = mailCfg(env);
+  if (!c.on || !c.agency.length || !item) return;
+  const total = Math.round(Number(item.amount) || 0), paid = Math.round(Number(item.paid) || 0), rest = Math.max(0, total - paid);
+  const pp = item.paypal || {}, docs = item.docs || {};
+  const payTxt = kind === 'paid' ? 'PayPal ✅ acompte reçu ' + (pp.amountEUR || '') + ' € (réservation garantie)'
+    : kind === 'pending' ? 'PayPal ⏳ en cours de vérification — à contrôler'
+    : 'Espèces à l\'arrivée ⚠️ sans acompte (véhicule non bloqué)';
+  const langName = { fr: 'Français', en: 'Anglais', es: 'Espagnol', ar: 'Arabe' }[item.lang] || (item.lang || '');
+  const opts = Array.isArray(item.options) ? item.options.map(function (o) { return typeof o === 'string' ? o : (o && (o.name && (o.name.fr || o.name)) || o.id || ''); }).filter(Boolean).join(', ') : '';
+  const atts = await mailDocAttachments(env, item);
+  const nP = Array.isArray(docs.permis) ? docs.permis.length : 0, nI = Array.isArray(docs.identite) ? docs.identite.length : 0;
+  const rows = [
+    ['Réservation', item.id], ['Paiement', payTxt],
+    ['Client', item.client], ['Téléphone', item.phone], ['WhatsApp', item.whatsapp && item.whatsapp !== item.phone ? item.whatsapp : ''],
+    ['E-mail', item.email], ['Langue', langName], ['Nationalité', item.nationality && item.nationality !== 'N/A' ? item.nationality : ''],
+    ['Véhicule', item.car], ['Départ', waDate(item.startDate, item.startTime) + (item.pickup ? ' — ' + item.pickup : '')],
+    ['Retour', waDate(item.endDate, item.endTime) + ((item.dropoff || item.pickup) ? ' — ' + (item.dropoff || item.pickup) : '')],
+    ['Durée', (item.days || '?') + ' jour(s)'], ['Vol', item.flight], ['Assurance', item.protection === 'premium' ? 'Premium (rachat de franchise)' : (item.protection ? 'Tous risques incluse' : '')],
+    ['Options', opts], ['Total', total + ' MAD'], ['Payé', paid + ' MAD' + (pp.amountEUR ? ' (' + pp.amountEUR + ' € PayPal)' : '')], ['Reste à encaisser', rest + ' MAD'],
+    ['Transaction PayPal', pp.captureId || pp.orderId || ''],
+    ['Documents', 'Permis : ' + nP + ' photo(s) · ' + (docs.identiteType === 'cin' ? 'CIN' : 'Passeport') + ' : ' + nI + ' photo(s)' + (atts.length ? ' — en pièces jointes' : '')],
+  ].filter(function (r) { return r[1] != null && String(r[1]).trim() !== ''; });
+  const tr = rows.map(function (r, i) { return '<tr><td style="padding:8px 12px;color:#6b7280;font-size:13px;white-space:nowrap;border-top:' + (i ? '1px solid #eee' : '0') + ';vertical-align:top;">' + mailEsc(r[0]) + '</td><td style="padding:8px 12px;font-size:14px;font-weight:600;border-top:' + (i ? '1px solid #eee' : '0') + ';">' + mailEsc(r[1]) + '</td></tr>'; }).join('');
+  const col = kind === 'paid' ? '#047857' : '#b45309';
+  const html = '<!doctype html><html lang="fr"><head><meta charset="utf-8"></head><body style="margin:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;color:#111827;"><div style="max-width:620px;margin:0 auto;padding:20px 12px;">' +
+    '<div style="background:#111;color:#fff;border-radius:14px 14px 0 0;padding:16px 20px;font-size:17px;font-weight:800;">🚗 Nouvelle réservation ' + mailEsc(item.id) + '</div>' +
+    '<div style="background:#fff;border-radius:0 0 14px 14px;padding:18px;"><div style="font-weight:700;color:' + col + ';margin-bottom:10px;">' + mailEsc(payTxt) + '</div>' +
+    '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #eee;border-radius:10px;border-collapse:separate;">' + tr + '</table>' +
+    '<p style="font-size:12px;color:#6b7280;margin:14px 0 0;">Photos des documents en pièces jointes. Documents personnels : ne pas transférer. Fiche complète dans le back-office ALL STAR LOC.</p></div></div></body></html>';
+  const text = 'Nouvelle réservation ' + item.id + '\n' + rows.map(function (r) { return r[0] + ' : ' + r[1]; }).join('\n');
+  const subj = '🚗 ' + item.id + ' — ' + (kind === 'paid' ? 'PayPal ✅' : kind === 'pending' ? 'PayPal ⏳' : 'Espèces') + ' — ' + (item.car || '') + ' — ' + (item.client || '');
+  await Promise.all(c.agency.map(function (to) {
+    return mailSend(env, { to: to, subject: subj, html: html, text: text, attachments: atts, replyTo: mailValid(item.email) ? item.email : '', noBcc: true, key: 'asl-ag-' + item.id + '-' + kind + '-' + to });
+  }));
+}
+async function mailNotifyBooking(env, item, kind) {
+  if (!mailCfg(env).on || !item) return;
+  const jobs = [mailAgencyBooking(env, item, kind).catch(function () {})];
+  if (mailValid(item.email)) {
+    const m = mailBuildBooking(item, kind);
+    jobs.push(mailSend(env, { to: item.email, subject: m.subject, html: m.html, text: m.text, key: 'asl-' + item.id + '-' + kind }));
+  }
+  await Promise.all(jobs);
+}
+/* Notifications d'une réservation du site : WhatsApp + e-mail (en parallèle). */
+function notifyBooking(env, item, kind) {
+  return Promise.all([waNotifyBooking(env, item, kind).catch(function () {}), mailNotifyBooking(env, item, kind).catch(function () {})]);
 }
 function waLater(context, p) {
   try {
@@ -325,6 +571,18 @@ export async function onRequest(context) {
     return json({ ok: true, translations: out });
   }
 
+  /* E-mail de test (clé admin) : POST /api/mail/test { to } */
+  if (path === 'mail/test' && request.method === 'POST') {
+    if (!authorized(request, env)) return err(403, 'Clé admin invalide ou absente (X-ASL-Key)');
+    if (!mailCfg(env).on) return err(503, 'E-mail non configuré : ajoutez RESEND_API_KEY dans Cloudflare');
+    let b; try { b = await request.json(); } catch (e) { return err(400, 'JSON invalide'); }
+    if (!mailValid(b.to)) return err(400, 'Adresse e-mail invalide');
+    const demo = { id: 'ASL-TEST', client: 'Test ALL STAR LOC', lang: ['fr', 'en', 'es', 'ar'].indexOf(b.lang) >= 0 ? b.lang : 'fr', car: 'Renault Clio 5', startDate: new Date().toISOString().slice(0, 10), startTime: '10:00', endDate: new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10), endTime: '10:00', days: 3, pickup: 'Aéroport Marrakech (RAK)', amount: 750, paid: 225, paypal: { amountEUR: 20.83 } };
+    const m = mailBuildBooking(demo, 'paid');
+    const r = await mailSend(env, { to: b.to, subject: '[TEST] ' + m.subject, html: m.html, text: m.text, noBcc: true });
+    return r.ok ? json({ ok: true }) : err(502, 'Envoi refusé : ' + r.error);
+  }
+
   if (path === 'health') {
     return json({
       ok: !!env.ASL_DB,
@@ -334,6 +592,9 @@ export async function onRequest(context) {
       adminKey: env.ADMIN_KEY ? 'configurée' : 'non configurée (écritures ouvertes)',
       whatsapp: waCfg(env).on ? ('configuré' + (waCfg(env).yc ? ' (YCloud)' : ' (Meta)') + (waCfg(env).agencies.filter(function (x) { return x !== waCfg(env).from; }).length ? ' — alertes vers ' + waCfg(env).agencies.length + ' numéro(s)' : ' — WA_AGENCY_TO manquant ou identique à WA_FROM')) : 'non configuré',
       whatsappLastError: env.ASL_DB ? (await readDoc(env, 'wa_last_error')) : null,
+      paypal: ppCfg(env).enabled ? ('configuré — mode ' + ppCfg(env).env) : 'non configuré',
+      email: mailCfg(env).on ? ('configuré — expéditeur ' + mailCfg(env).from + (mailCfg(env).replyTo ? ' · réponses vers ' + mailCfg(env).replyTo : '') + (mailCfg(env).agency.length ? ' · alerte agence vers ' + mailCfg(env).agency.length + ' adresse(s)' : ' · alerte agence : MAIL_AGENCY_TO non renseignée')) : 'non configuré (RESEND_API_KEY manquante)',
+      emailLastError: env.ASL_DB ? (await readDoc(env, 'mail_last_error')) : null,
     });
   }
 
@@ -514,6 +775,7 @@ export async function onRequest(context) {
       const item = body.item;
       if (!item || typeof item !== 'object') return err(400, 'item manquant');
       if (JSON.stringify(item).length > 20_000) return err(413, 'Réservation trop volumineuse');
+      if (item.source === 'online' || !authorized(request, env)) aslCleanPublic(item);   // ★ sécurité : pas de balises HTML venant du site public
       /* ============================================================
          ★ CORRECTIF (régression Mission 2 — cause exacte trouvée) :
          une version précédente ajoutait ici une boucle "écrire puis relire
@@ -563,7 +825,7 @@ export async function onRequest(context) {
       items2.push(item);
       const out = await writeReservationsDoc(env, items2, doc.resetAt);
       if (item.source === 'online' && (item.payment === 'delivery' || item.paymentMethod === 'delivery')) {
-        await waLater(context, waNotifyBooking(env, item, 'cash'));
+        await waLater(context, notifyBooking(env, item, 'cash'));
       }
       return json({ ok: true, rev: out.rev, id: id });
     }
@@ -815,7 +1077,7 @@ export async function onRequest(context) {
   /* ---- PayPal : configuration publique (aucun secret renvoyé) ---- */
   if (path === 'paypal/config' && request.method === 'GET') {
     const c = ppCfg(env);
-    return json({ ok: true, enabled: c.enabled, clientId: c.enabled ? c.clientId : '', env: c.env, depositPct: c.depositPct, rate: c.rate, waClient: waCfg(env).on && waCfg(env).client });
+    return json({ ok: true, enabled: c.enabled, clientId: c.enabled ? c.clientId : '', env: c.env, depositPct: c.depositPct, rate: c.rate, waClient: waCfg(env).on && waCfg(env).client, mailClient: mailCfg(env).on });
   }
 
   /* ---- PayPal : création de la commande (montant recalculé ici) ---- */
@@ -865,6 +1127,7 @@ export async function onRequest(context) {
     const item = (b.item && typeof b.item === 'object') ? b.item : null;
     if (!orderID || !item) return err(400, 'Données manquantes');
     if (JSON.stringify(item).length > 20000) return err(413, 'Réservation trop volumineuse');
+    aslCleanPublic(item);
     const ord = await readDoc(env, 'pp_order:' + orderID);
     if (!ord || ord.ref !== String(item.id || '')) return err(400, 'Commande inconnue');
     let cap;
@@ -925,7 +1188,7 @@ export async function onRequest(context) {
     if (!items2.some(function (x) { return x.id === item.id; })) {
       items2.push(item);
       await writeReservationsDoc(env, items2, doc0.resetAt);
-      await waLater(context, waNotifyBooking(env, item, completed ? 'paid' : 'pending'));
+      await waLater(context, notifyBooking(env, item, completed ? 'paid' : 'pending'));
     }
     return json({ ok: true, completed: completed, item: item });
   }

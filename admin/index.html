@@ -1317,7 +1317,7 @@ body.sb-is-collapsed .sidebar-wrap { width: 0 !important; flex: 0 0 0 !important
               </div>
               <div class="form-group" style="margin:0;">
                 <label class="form-label">Email</label>
-                <input class="form-input" type="email" id="notif-email" placeholder="contact@allstarloc.ma">
+                <input class="form-input" type="email" id="notif-email" placeholder="contact@allstarloc.com">
               </div>
             </div>
             <div style="font-size:13px;font-weight:700;margin-bottom:10px;">Alertes à activer</div>
@@ -1536,6 +1536,8 @@ function reloadData() {
   RESERVATIONS = ASLDB.getReservations();
 }
 
+/* « 2026-11-28 » → « 28/11/2026 » (affichage des tableaux). */
+function frDate(iso) { var m = String(iso || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? m[3] + '/' + m[2] + '/' + m[1] : (iso || '—'); }
 const STATUS_LABELS = {
   pending: { label:'En attente', class:'badge-yellow' },
   confirmed: { label:'Confirmée', class:'badge-blue' },
@@ -1750,18 +1752,18 @@ function renderAllReservations(filter) {
     <tr>
       <td><strong>${r.id}</strong></td>
       <td>
-        <div style="font-weight:600;">${r.client}</div>
-        <div style="font-size:11px;color:var(--text3);">${r.nationality}</div>
+        <div style="font-weight:600;">${esc(r.client || '')}</div>
+        <div style="font-size:11px;color:var(--text3);">${esc(r.phone || r.nationality || '')}</div>
       </td>
-      <td>${r.car}${resUnitInfo(r)}</td>
-      <td style="font-size:12px;">${r.startDate||'—'}</td>
+      <td>${esc(r.car || '')}${resUnitInfo(r)}</td>
+      <td style="font-size:12px;white-space:nowrap;">${frDate(r.startDate)}</td>
       <td style="font-size:12px;color:var(--text2);">${r.startTime||'—'}</td>
-      <td style="font-size:12px;">${r.endDate||'—'}</td>
+      <td style="font-size:12px;white-space:nowrap;">${frDate(r.endDate)}</td>
       <td style="font-size:12px;color:var(--text2);">${r.endTime||'—'}</td>
       <td>${r.days}j</td>
       <td><strong>${r.amount} MAD</strong></td>
-      <td><span class="badge ${r.source==='online'?'badge-blue':r.source==='whatsapp'?'badge-green':'badge-gray'}">${r.source==='online'?`<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>`:r.source==='whatsapp'?`<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>`:`<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`} ${r.source}</span></td>
-      <td><span class="badge ${STATUS_LABELS[r.status].class}">● ${STATUS_LABELS[r.status].label}</span></td>
+      <td><span class="badge ${r.source==='online'?'badge-blue':r.source==='whatsapp'?'badge-green':'badge-gray'}">${r.source==='online'?`<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>`:r.source==='whatsapp'?`<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>`:`<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>`} ${({ online: 'Site web', whatsapp: 'WhatsApp' })[r.source] || esc(r.source || 'Agence')}</span></td>
+      <td><span class="badge ${(STATUS_LABELS[r.status] || STATUS_LABELS.pending).class}">● ${(STATUS_LABELS[r.status] || STATUS_LABELS.pending).label}</span>${r.paypal && r.paypal.captureId ? '<div style="margin-top:4px;"><span class="badge badge-green" title="Acompte payé en ligne">PayPal ✓ ' + Math.round(Number(r.paid) || 0) + ' MAD</span></div>' : (r.source === 'online' && (r.payment === 'delivery' || r.paymentMethod === 'delivery') ? '<div style="margin-top:4px;"><span class="badge badge-gray" title="Sans acompte : véhicule non bloqué">Espèces à l\'arrivée</span></div>' : '')}</td>
       <td style="white-space:nowrap;">
         <button class="btn-sm ghost" onclick="viewRes('${r.id}')" title="Voir la fiche"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>
         <button class="btn-sm ghost" onclick="cancelRes('${r.id}')" style="color:var(--text3);" title="Annuler la réservation"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>

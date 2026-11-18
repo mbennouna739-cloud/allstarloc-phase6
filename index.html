@@ -34,10 +34,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
   <meta name="theme-color" content="#12151B">
 <title>ALL STAR LOC — Location de Voiture à Marrakech | Depuis 2009</title>
 <meta name="description" content="Location de voiture à Marrakech. Livraison aéroport gratuite, service 24h/7j, flotte moderne. Réservez en ligne en 2 minutes.">
-<link rel="canonical" href="https://allstarloc.ma/">
+<link rel="canonical" href="https://allstarloc.com/">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://allstarloc.ma/">
-<meta property="og:image" content="https://allstarloc.ma/assets/logo-asl.png">
+<meta property="og:url" content="https://allstarloc.com/">
+<meta property="og:image" content="https://allstarloc.com/assets/logo-asl.png">
 <meta property="og:site_name" content="ALL STAR LOC">
 <meta property="og:locale" content="fr_FR">
 <meta name="twitter:card" content="summary_large_image">
@@ -1187,9 +1187,9 @@ body.scrolled .fade-in { animation: none !important; opacity: 1 !important; tran
   "@type": "AutoRental",
   "name": "ALL STAR LOC",
   "description": "Agence de location de voiture à Marrakech : citadines, berlines et SUV récents, assurance tous risques incluse et livraison gratuite à l'aéroport Ménara.",
-  "url": "https://allstarloc.ma/",
-  "logo": "https://allstarloc.ma/assets/favicons/android-chrome-512x512.png",
-  "image": "https://allstarloc.ma/assets/favicons/android-chrome-512x512.png",
+  "url": "https://allstarloc.com/",
+  "logo": "https://allstarloc.com/assets/favicons/android-chrome-512x512.png",
+  "image": "https://allstarloc.com/assets/favicons/android-chrome-512x512.png",
   "telephone": "+212675312453",
   "priceRange": "MAD",
   "address": {
@@ -2643,6 +2643,7 @@ async function submitBookingWithDocs() {
 }
 
 function prevStep() {
+  if (state.step >= 6) { closeDrawer(); return; }   // réservation envoyée : pas de retour au paiement (évite un doublon)
   if (state.step > 1) { state.step--; renderStep(); }
   else closeDrawer();
 }
@@ -2664,6 +2665,8 @@ function renderStep() {
   document.getElementById('drawer-title').textContent = labels[state.step];
   const footer = document.getElementById('drawer-footer');
   footer.style.display = state.step === 6 ? 'none' : 'block';
+  const backBtn = document.querySelector('#booking-drawer .drawer-back');
+  if (backBtn) backBtn.style.visibility = state.step === 6 ? 'hidden' : '';
   // Étape Paiement : le bouton devient « Confirmer la réservation »,
   // désactivé tant que la case CGV n'est pas cochée.
   const nextSpan = document.querySelector('#btn-next span');
@@ -3233,21 +3236,10 @@ function renderConfirmation() {
   };
   // Message destiné à l'agence : toujours en français, avec toutes les informations utiles
   const _depositVal = (state.car && state.car.deposit) ? (state.car.deposit + ' MAD') : '';
-  const waMsg = encodeURIComponent(
-    `Bonjour ALL STAR LOC,\nJe confirme ma demande de réservation ${ref} :\n` +
-    `• Client : ${(c.firstname||'')} ${(c.lastname||'')}\n` +
-    `• Téléphone : ${(c.prefix||'')} ${(c.phone||'')}\n` +
-    `• Véhicule : ${state.car?.name || ''}\n` +
-    `• Dates : du ${state.startDate||'...'} au ${state.endDate||'...'} (${state.days} jour${state.days>1?'s':''})\n` +
-    `• Prise en charge : ${state.pickupLoc || 'Aéroport Marrakech (RAK)'}\n` +
-    `• Retour : ${state.returnLoc || 'Aéroport Marrakech (RAK)'}\n` +
-    `• Montant estimé : ${Math.round(calcTotal())} MAD\n` +
-    (_depositVal ? `• Caution : ${_depositVal}\n` : '') +
-    `• Assurance : ${state.protection === 'premium' ? 'Premium (rachat franchise, 110 MAD/j)' : 'Tous risques gratuite (franchise 5%)'}\n` +
-    `• Documents : permis ${(state.docRefs && state.docRefs.permis.length) || 0} photo(s), ${state.docRefs && state.docRefs.identiteType === 'cin' ? 'CIN' : 'passeport'} ${(state.docRefs && state.docRefs.identite.length) || 0} photo(s) — dans le back-office\n` +
-    `• Paiement : ${payLabelFR[state.payment] || payLabelFR.delivery}${(state.payment === 'delivery' && ppOn()) ? ' (sans acompte : véhicule non bloqué)' : ''}\n` +
-    ((c.notes && c.notes.trim()) ? `• Détails : ${c.notes.trim()}\n` : '') +
-    `Merci de me confirmer la disponibilité.`);
+  /* Message pré-rempli (si le WhatsApp automatique n'est pas actif) : court, professionnel, dans la langue du client.
+     Tous les détails (téléphone, documents, options) sont déjà dans le back-office et dans l'alerte de l'agence. */
+  const _fd = v => { const m = String(v || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? m[3] + '/' + m[2] + '/' + m[1] : (v || ''); };
+  const waMsg = encodeURIComponent(t('cf.waMsgConfirm', { ref: ref, car: state.car?.name || '', start: _fd(state.startDate), end: _fd(state.endDate) }));
   const payKey = { agency:'pay.agency', delivery:'pay.delivery', advance:'pay.advance', transfer:'pay.transfer', whatsapp:'pay.wa' };
   return `
     <div class="confirmation">
@@ -3262,15 +3254,16 @@ function renderConfirmation() {
         <div style="font-size:13px;font-weight:700;margin-bottom:10px;">${t('cf.recap')}</div>
         <div style="font-size:13px;color:var(--text2);display:grid;gap:6px;">
           <div><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></svg> <strong>${state.car?.name}</strong></div>
-          <div><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg> ${state.days} ${t(state.days>1?'u.days':'u.day')}</div>
+          <div><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/></svg> ${confDates(state.startDate, state.startTime, state.endDate, state.endTime)} · ${state.days} ${t(state.days>1?'u.days':'u.day')}</div>
           <div><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg> ${state.pickupLoc || 'Aéroport RAK'} → ${state.returnLoc || 'Aéroport RAK'}</div>
           ${(()=>{ const _r = dailyRate(state.car, state.days); const _b = activeBracket(state.days); const _tl = normalizeTiers(state.car&&state.car.tiers).length && _b ? ` · ${tierLabel(_b)}` : ""; return `<div style="color:var(--red);font-weight:700;font-size:13.5px;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg> ${t("cf.total")} : <strong>${price(calcTotal())}</strong> <span style="font-size:11px;font-weight:600;opacity:.75;">(${price(_r)}/j${_tl})</span></div>`; })()} 
           <div><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg> ${t(payKey[state.payment] || 'pay.agency')}</div>
           <div style="color:#b45309;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3 2 6"/><path d="m22 6-3-3"/></svg> ${t('cf.statusLabel')} : <strong>${(state.payment === 'delivery' && ppOn()) ? t('cf.cashStatus') : t('pay.awaiting')}</strong></div>
         </div>
       </div>
+      ${mailSentHTML()}
       ${(state.payment === 'delivery' && ASL_PP.cfg && ASL_PP.cfg.waClient) ? `<div style="font-size:13px;color:var(--text2);margin-bottom:10px;">${t('cf.waAutoCash')}</div>` : ''}
-      <a href="https://wa.me/212675312453?text=${waMsg}" target="_blank" class="btn-wa-confirm">
+      <a href="https://wa.me/212675312453${(state.payment === 'delivery' && ASL_PP.cfg && ASL_PP.cfg.waClient) ? '' : '?text=' + waMsg}" target="_blank" class="btn-wa-confirm">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
         ${(state.payment === 'delivery' && ASL_PP.cfg && ASL_PP.cfg.waClient) ? t('cf.ppWaBtn') : t('cf.waBtn')}
       </a>
@@ -3288,6 +3281,7 @@ const ASL_PP = { cfg: null, share: 'deposit', sdk: null, item: null, result: nul
 (function () {
   try {
     fetch('/api/paypal/config', { cache: 'no-store' }).then(r => r.json()).then(c => {
+      ASL_PP.flags = (c && c.ok) ? c : {};
       if (c && c.ok && c.enabled && c.clientId) {
         ASL_PP.cfg = c;
         if (typeof state !== 'undefined' && state.step === 5) ppRerender();
@@ -3296,6 +3290,18 @@ const ASL_PP = { cfg: null, share: 'deposit', sdk: null, item: null, result: nul
   } catch (e) {}
 })();
 function ppOn() { return !!ASL_PP.cfg; }
+/* « 05/12/2026 10:00 → 08/12/2026 10:00 » pour l'écran de confirmation. */
+function confDates(sd, st, ed, et) {
+  const f = v => { const m = String(v || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? m[3] + '/' + m[2] + '/' + m[1] : ''; };
+  const a = f(sd), b = f(ed);
+  return a && b ? `${a}${st ? ' ' + st : ''} → ${b}${et ? ' ' + et : ''}` : '';
+}
+/* « Un e-mail de confirmation vous a été envoyé à … » (si l'e-mail automatique est actif et que le client a donné son adresse). */
+function mailSentHTML() {
+  const em = String((state.customer && state.customer.email) || '').trim();
+  if (!(ASL_PP.flags && ASL_PP.flags.mailClient) || !/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(em)) return '';
+  return `<div style="font-size:13px;color:var(--text2);margin-bottom:10px;">📧 ${t('cf.mailSent', { email: em.replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]) })}</div>`;
+}
 function ppPct() { return (ASL_PP.cfg && ASL_PP.cfg.depositPct) || 30; }
 function ppRate() { return (ASL_PP.cfg && ASL_PP.cfg.rate) || 10.8; }
 function ppAmounts() {
@@ -3394,6 +3400,8 @@ function ppMountButtons() {
         // Même dossier ajouté localement (le serveur l'a déjà enregistré : pas de doublon, même id).
         try { ASLDB.addReservation(Object.assign({}, d.item)); } catch (e) {}
         try { window.ASLConv && window.ASLConv.track('reservation', { value: Number(d.item.amount) || 0, currency: 'MAD', transaction_id: d.item.id, item: d.item.car || '', method: 'paypal' }); } catch (e) {}
+        /* ★ Paiement réellement encaissé → « purchase » (GA4) / « Purchase » (Meta), valeur = acompte payé en MAD. */
+        try { if (d.completed) window.ASLConv && window.ASLConv.track('payment', { value: Number(d.item.paid) || 0, currency: 'MAD', transaction_id: d.item.id, item: d.item.car || '', method: 'paypal' }); } catch (e) {}
         state.reservationRef = d.item.id;
         ASL_PP.result = d;
         state.step = 6;
@@ -3441,11 +3449,8 @@ function ppConfirmHTML() {
   const total = Number(it.amount) || 0, paid = Number(it.paid) || 0;
   const name = ((state.customer && state.customer.firstname) || '').trim();
   const ok = !!d.completed;
-  const waMsg = encodeURIComponent(
-    `Bonjour ALL STAR LOC,\nJ'ai une question concernant ma réservation confirmée ${it.id} (acompte payé par PayPal) :\n` +
-    `• Client : ${it.client || ''}\n• Véhicule : ${it.car || ''}\n• Dates : du ${it.startDate || ''} au ${it.endDate || ''}\n` +
-    `• Payé : ${pp.amountEUR || ''} € (${pp.share === 'full' ? 'totalité' : 'acompte'}) — transaction ${pp.captureId || pp.orderId || ''}\n` +
-    `• Reste à régler : ${Math.max(0, total - paid)} MAD\nMerci !`);
+  const _fd = v => { const m = String(v || '').match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? m[3] + '/' + m[2] + '/' + m[1] : (v || ''); };
+  const waMsg = encodeURIComponent(t(ok ? 'cf.waMsgQuestion' : 'cf.waMsgConfirm', { ref: it.id || '', car: it.car || '', start: _fd(it.startDate), end: _fd(it.endDate) }));
   return `
     <div class="confirmation">
       <div class="confirm-icon"><svg viewBox="0 0 24 24" width="34" height="34" fill="none" stroke="${ok ? '#22c55e' : '#f59e0b'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg></div>
@@ -3454,6 +3459,7 @@ function ppConfirmHTML() {
       <div class="confirm-ref"><div class="confirm-ref-label">${t('cf.refLabel')}</div><div class="confirm-ref-num">${it.id || ''}</div></div>
       <div style="background:var(--gray);border-radius:12px;padding:16px;margin-bottom:14px;text-align:start;font-size:13px;display:grid;gap:8px;">
         <div><strong>${it.car || ''}</strong> · ${state.days} ${t(state.days > 1 ? 'u.days' : 'u.day')}</div>
+        <div style="color:var(--text2);">${confDates(it.startDate, it.startTime, it.endDate, it.endTime)}</div>
         <div style="display:flex;justify-content:space-between;gap:10px;"><span>${t('cf.total')}</span><b>${price(total)}</b></div>
         ${ok ? `<div style="display:flex;justify-content:space-between;gap:10px;color:#047857;"><span>✓ ${t('cf.ppPaid')}</span><b>${ppEur(pp.amountEUR || 0)}</b></div>
         <div style="display:flex;justify-content:space-between;gap:10px;"><span>${t('cf.ppRest')}</span><b>${price(Math.max(0, total - paid))}</b></div>` : ''}
@@ -3461,8 +3467,9 @@ function ppConfirmHTML() {
         <div style="color:${ok ? '#047857' : '#b45309'};font-weight:700;">● ${t('cf.statusLabel')} : ${ok ? t('cf.ppStatus') : t('pay.awaiting')}</div>
       </div>
       ${ok ? `<div style="font-size:12px;color:#6b7280;margin-bottom:14px;">${t('cf.ppMail')}${ASL_PP.cfg && ASL_PP.cfg.waClient ? '<br>' + t('cf.waAutoPaid') : ''}</div>` : ''}
+      ${ok ? mailSentHTML() : ''}
       ${ok ? `<div style="font-size:13px;color:var(--text2);margin-bottom:10px;">${t('cf.ppWaText')}</div>` : ''}
-      <a href="https://wa.me/212675312453?text=${waMsg}" target="_blank" rel="noopener" class="btn-wa-confirm">${ok ? t('cf.ppWaBtn') : t('cf.waBtn')}</a>
+      <a href="https://wa.me/212675312453${(ok && ASL_PP.cfg && ASL_PP.cfg.waClient) ? '' : '?text=' + waMsg}" target="_blank" rel="noopener" class="btn-wa-confirm">${ok ? t('cf.ppWaBtn') : t('cf.waBtn')}</a>
     </div>`;
 }
 

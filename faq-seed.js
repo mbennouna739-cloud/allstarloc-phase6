@@ -128,23 +128,23 @@ window._ASL_FAQ_SEED = [
   "i18n": {
    "fr": {
     "question": "Puis-je annuler ma réservation ?",
-    "answer": "Oui, l'annulation est gratuite si vous nous prévenez au moins 24 h avant la prise en charge. Sans prévenir, ou à moins de 24 h, un montant peut être retenu (par exemple l'avance versée). Réservation payée par PayPal : remboursement intégral si vous annulez au moins 24 h avant ; à moins de 24 h, l'acompte de 30 % est conservé."
+    "answer": "Oui, l'annulation est gratuite si vous nous prévenez au moins 24 h avant la prise en charge. Sans prévenir, ou à moins de 24 h, un montant peut être retenu (par exemple l'avance versée). Réservation payée par PayPal : remboursement intégral si vous annulez au moins 24 h avant ; à moins de 24 h, l'acompte de 30 % est conservé. Changement de dates gratuit jusqu'à 24 h avant la prise en charge, selon disponibilité."
    },
    "en": {
     "question": "Can I cancel my booking?",
-    "answer": "Yes, cancellation is free if you let us know at least 24 hours before pick-up. Without notice, or less than 24 hours before, an amount may be retained (for example the advance paid). Booking paid by PayPal: full refund if you cancel at least 24 hours before; less than 24 hours before, the 30% deposit is kept."
+    "answer": "Yes, cancellation is free if you let us know at least 24 hours before pick-up. Without notice, or less than 24 hours before, an amount may be retained (for example the advance paid). Booking paid by PayPal: full refund if you cancel at least 24 hours before; less than 24 hours before, the 30% deposit is kept. Free date change up to 24 hours before pick-up, subject to availability."
    },
    "es": {
     "question": "¿Puedo cancelar mi reserva?",
-    "answer": "Sí, la cancelación es gratuita si nos avisa al menos 24 h antes de la recogida. Sin aviso, o con menos de 24 h, puede retenerse un importe (por ejemplo, el anticipo abonado). Reserva pagada con PayPal: reembolso íntegro si cancela al menos 24 h antes; con menos de 24 h, se conserva el anticipo del 30 %."
+    "answer": "Sí, la cancelación es gratuita si nos avisa al menos 24 h antes de la recogida. Sin aviso, o con menos de 24 h, puede retenerse un importe (por ejemplo, el anticipo abonado). Reserva pagada con PayPal: reembolso íntegro si cancela al menos 24 h antes; con menos de 24 h, se conserva el anticipo del 30 %. Cambio de fechas gratuito hasta 24 h antes de la recogida, según disponibilidad."
    },
    "ar": {
     "question": "هل يمكنني إلغاء حجزي؟",
-    "answer": "نعم، الإلغاء مجاني إذا أخبرتمونا قبل 24 ساعة على الأقل من الاستلام. بدون إشعار، أو قبل أقل من 24 ساعة، يمكن الاحتفاظ بمبلغ (مثلاً التسبيق المدفوع). حجز مدفوع عبر PayPal: استرجاع كامل المبلغ إذا ألغيتم قبل 24 ساعة على الأقل؛ وقبل أقل من 24 ساعة يُحتفظ بتسبيق 30٪."
+    "answer": "نعم، الإلغاء مجاني إذا أخبرتمونا قبل 24 ساعة على الأقل من الاستلام. بدون إشعار، أو قبل أقل من 24 ساعة، يمكن الاحتفاظ بمبلغ (مثلاً التسبيق المدفوع). حجز مدفوع عبر PayPal: استرجاع كامل المبلغ إذا ألغيتم قبل 24 ساعة على الأقل؛ وقبل أقل من 24 ساعة يُحتفظ بتسبيق 30٪. تغيير التواريخ مجاني إلى غاية 24 ساعة قبل الاستلام، حسب التوفر."
    }
   },
   "question": "Puis-je annuler ma réservation ?",
-  "answer": "Oui, l'annulation est gratuite si vous nous prévenez au moins 24 h avant la prise en charge. Sans prévenir, ou à moins de 24 h, un montant peut être retenu (par exemple l'avance versée). Réservation payée par PayPal : remboursement intégral si vous annulez au moins 24 h avant ; à moins de 24 h, l'acompte de 30 % est conservé."
+  "answer": "Oui, l'annulation est gratuite si vous nous prévenez au moins 24 h avant la prise en charge. Sans prévenir, ou à moins de 24 h, un montant peut être retenu (par exemple l'avance versée). Réservation payée par PayPal : remboursement intégral si vous annulez au moins 24 h avant ; à moins de 24 h, l'acompte de 30 % est conservé. Changement de dates gratuit jusqu'à 24 h avant la prise en charge, selon disponibilité."
  },
  {
   "id": "seed-faq-7",

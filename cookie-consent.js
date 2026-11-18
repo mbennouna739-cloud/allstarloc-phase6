@@ -312,8 +312,8 @@
      - Meta : Lead / Contact, uniquement si le Pixel est chargé (consentement
        « Marketing » donné).
      ================================================================ */
-  var GA_EVENT = { reservation: 'generate_lead', whatsapp: 'whatsapp_click', call: 'phone_click' };
-  var META_EVENT = { reservation: 'Lead', whatsapp: 'Contact', call: 'Contact' };
+  var GA_EVENT = { reservation: 'generate_lead', payment: 'purchase', whatsapp: 'whatsapp_click', call: 'phone_click' };
+  var META_EVENT = { reservation: 'Lead', payment: 'Purchase', whatsapp: 'Contact', call: 'Contact' };
   var _lastConv = {};
   function trackConversion(type, info) {
     try {
