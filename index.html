@@ -1714,11 +1714,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     var from = window.scrollY || 0, to = Math.max(0, target.getBoundingClientRect().top + from - 12);
     if (to - from < 30) return;
     var html = document.documentElement, prevSB = html.style.scrollBehavior; html.style.scrollBehavior = 'auto';   // l'animation est faite ici, pas par le navigateur
-    var stop = false, dur = 1100, t0 = null;
+    var stop = false, dur = 500, t0 = null;
     function cancel() { stop = true; html.style.scrollBehavior = prevSB; }
     window.addEventListener('touchstart', cancel, { passive: true, once: true });
     window.addEventListener('wheel', cancel, { passive: true, once: true });
-    function ease(x) { return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; }
+    function ease(x) { return 1 - Math.pow(1 - x, 3); }   // part vite, se pose en douceur
     function step(ts) {
       if (stop) return;
       if (t0 === null) t0 = ts;
@@ -1728,7 +1728,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
     requestAnimationFrame(step);
   }
-  function start() { setTimeout(go, 800); }
+  function start() { setTimeout(go, 300); }
   if (document.readyState !== 'loading') start(); else document.addEventListener('DOMContentLoaded', start, { once: true });
 })();
 </script>
