@@ -247,6 +247,33 @@ nav a:hover { color: white; background: rgba(255,255,255,0.08); }
 .pick-banner.unav { background: rgba(37,99,235,0.07); border-color: rgba(37,99,235,0.25); }
 .pick-banner.unav .pb-s { color: #1d4ed8; font-weight: 600; }
 .pick-banner .pb-x { flex-shrink: 0; width: 30px; height: 30px; border: 0; border-radius: 50%; background: rgba(0,0,0,0.06); color: #444; cursor: pointer; font-size: 17px; line-height: 30px; padding: 0; }
+.pick-unav { margin-top: 14px; padding: 18px; border-radius: 14px; background: #fff; border: 1px solid rgba(10,10,10,0.08);
+  box-shadow: 0 10px 30px rgba(10,10,10,0.07); font-family: var(--font2); animation: puIn .28s ease both; }
+@keyframes puIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.pick-unav .pu-head { display: flex; gap: 10px; align-items: flex-start; }
+.pick-unav .pu-ico { flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; background: rgba(196,30,58,0.09); color: var(--red); display: flex; align-items: center; justify-content: center; }
+.pick-unav .pu-t { font-family: var(--font); font-size: 15px; font-weight: 800; color: var(--dark, #111); line-height: 1.3; }
+.pick-unav .pu-s { font-size: 13px; color: var(--gray3, #666); margin-top: 3px; line-height: 1.4; }
+.pick-unav .pu-sec { margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(10,10,10,0.07); }
+.pick-unav .pu-k { font-size: 11px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--gray3, #8a8a8a); margin-bottom: 9px; }
+.pick-unav .pu-shift { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border-radius: 12px;
+  border: 0; background: var(--red); color: #fff; cursor: pointer; font-family: var(--font); text-align: start; transition: filter .2s, transform .2s; }
+.pick-unav .pu-shift:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.pick-unav .pu-shift b { display: block; font-size: 14.5px; font-weight: 800; }
+.pick-unav .pu-shift span { display: block; font-size: 12.5px; opacity: .9; margin-top: 2px; }
+.pick-unav .pu-alt { display: flex; align-items: center; gap: 12px; padding: 9px 10px; border-radius: 12px; border: 1px solid rgba(10,10,10,0.08); margin-top: 8px; cursor: pointer; transition: border-color .2s, box-shadow .2s; }
+.pick-unav .pu-alt:hover { border-color: rgba(196,30,58,0.45); box-shadow: 0 6px 18px rgba(10,10,10,0.06); }
+.pick-unav .pu-alt img { width: 64px; height: 44px; object-fit: contain; flex-shrink: 0; background: #f4f4f4; border-radius: 8px; }
+.pick-unav .pu-alt .pu-an { flex: 1; min-width: 0; }
+.pick-unav .pu-alt .pu-an b { display: block; font-family: var(--font); font-size: 14px; font-weight: 700; color: var(--dark, #111); line-height: 1.25; overflow-wrap: anywhere; }
+.pick-unav .pu-alt .pu-an span { font-size: 12.5px; color: var(--gray3, #666); }
+.pick-unav .pu-alt .pu-an span strong { color: var(--red); font-weight: 800; }
+.pick-unav .pu-alt .pu-go { flex-shrink: 0; padding: 8px 12px; border-radius: 9px; background: rgba(196,30,58,0.09); color: var(--red); font-size: 13px; font-weight: 700; font-family: var(--font); border: 0; cursor: pointer; }
+.pick-unav .pu-none { font-size: 13px; color: var(--gray3, #666); }
+.pick-unav .pu-links { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.pick-unav .pu-links a { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 700; color: var(--red); text-decoration: none; cursor: pointer; }
+.pick-unav .pu-links a.pu-wa { color: #128C4A; }
+[dir="rtl"] .pick-unav .pu-arrow { transform: scaleX(-1); }
 .car-card.picked { box-shadow: 0 0 0 3px rgba(196,30,58,0.55), 0 18px 50px rgba(10,10,10,0.10); }
 .booking-card.attention { box-shadow: 0 0 0 3px rgba(196,30,58,0.35), 0 24px 70px rgba(10,10,10,0.12); }
 
@@ -1474,13 +1501,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </div>
         <button class="btn-search" onclick="startSearch()">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-          <span data-i18n="bk.find">Trouver une voiture</span>
+          <span data-i18n="bk.find" id="bk-find-label">Trouver une voiture</span>
         </button>
       </div>
       <div class="bk-days">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
         <span id="days-count">—</span>
       </div>
+      <div class="pick-unav" id="pick-unav" style="display:none;" aria-live="polite"></div>
       <!-- Calendrier (un seul, repositionné sous le champ actif) -->
       <div class="asl-cal-backdrop" id="cal-backdrop" onclick="closeCal()"></div>
       <div class="asl-cal" id="asl-cal" role="dialog" aria-label="Calendrier de réservation" data-i18n-aria="cal.aria">
@@ -2192,7 +2220,12 @@ function startSearch() {
   renderCars();
   // ★ Véhicule choisi depuis « Nos véhicules » : s'il est libre, on ouvre directement sa réservation
   const _pk = pickedCar();
-  if (_pk && carAvailability(_pk, state.startDate, state.endDate).available) { selectCar(_pk.id); return; }
+  if (_pk) {
+    if (carAvailability(_pk, state.startDate, state.endDate).available) { selectCar(_pk.id); return; }
+    // Indisponible : solutions affichées juste sous le bouton (dates décalées, voitures similaires)
+    const _pu = document.getElementById('pick-unav');
+    if (_pu && _pu.style.display !== 'none') { _pu.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+  }
   const _fleet = document.getElementById('fleet');
   if (_fleet) _fleet.scrollIntoView({ behavior: 'smooth' });
 }
@@ -2213,15 +2246,104 @@ function renderPickBanner() {
   const el = document.getElementById('pick-banner');
   if (!el) return;
   const car = pickedCar();
-  if (!car) { el.style.display = 'none'; el.innerHTML = ''; return; }
+  const lbl = document.getElementById('bk-find-label');
+  if (lbl) {
+    if (car) { lbl.removeAttribute('data-i18n'); lbl.textContent = t('bk.checkCar'); }
+    else { lbl.setAttribute('data-i18n', 'bk.find'); lbl.textContent = t('bk.find'); }
+  }
+  if (!car) { el.style.display = 'none'; el.innerHTML = ''; renderPickUnav(null); return; }
   const esc = v => String(v == null ? '' : v).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
   const unav = !!(state.searched && state.startDate && state.endDate && !carAvailability(car, state.startDate, state.endDate).available);
-  el.className = 'pick-banner' + (unav ? ' unav' : '');
-  el.innerHTML = (car.img ? `<img src="${esc(car.img)}" alt="" loading="lazy" onerror="this.style.display='none'">` : '') +
+  el.className = 'pick-banner';   // l'indisponibilité est expliquée dans le bloc de solutions ci-dessous
+  el.innerHTML = `<img src="${esc(car.img || 'assets/hero-car.svg')}" alt="" loading="lazy" onerror="this.onerror=null;this.src='assets/hero-car.svg'">` +
     `<div class="pb-txt"><div class="pb-t">${esc(t('bk.picked', { car: car.name }))}</div>` +
-    `<div class="pb-s">${esc(unav ? t('bk.pickedUnav', { car: car.name }) : t('bk.pickedSub'))}</div></div>` +
+    `<div class="pb-s">${esc(t('bk.pickedSub'))}</div></div>` +
     `<button type="button" class="pb-x" onclick="clearPickedCar()" aria-label="${esc(t('bk.pickedClear'))}" title="${esc(t('bk.pickedClear'))}">×</button>`;
   el.style.display = 'flex';
+  renderPickUnav(unav ? car : null);
+}
+
+/* ★ Voiture choisie indisponible : 1) décaler les dates (même durée) au premier créneau libre,
+   2) voitures similaires libres aux dates du client, 3) liste complète / WhatsApp. */
+let _puShift = null;
+function puEsc(v) { return String(v == null ? '' : v).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch])); }
+function puShiftFor(car) {
+  const av = carAvailability(car, state.startDate, state.endDate);
+  if (av.available || !av.fromDateTime) return null;
+  const days = Math.max(1, state.days || 1);
+  const f = new Date(av.fromDateTime.getTime());
+  if (f.getMinutes() > 0) { f.setHours(f.getHours() + 1, 0, 0, 0); }   // heure pleine suivante
+  let h = f.getHours();
+  if (h < 8) h = 8;                                                    // pas de départ en pleine nuit
+  if (f.getHours() > 21) { f.setDate(f.getDate() + 1); h = 9; }
+  // Créneau proposé, puis repli le lendemain à 10:00 — chacun vérifié par le moteur de disponibilité
+  const cands = [[new Date(f.getFullYear(), f.getMonth(), f.getDate()), h], [new Date(f.getFullYear(), f.getMonth(), f.getDate() + 1), Math.max(h, 10)]];
+  for (const [start, hr] of cands) {
+    const end = new Date(start.getFullYear(), start.getMonth(), start.getDate() + days);
+    const hh = (hr < 10 ? '0' : '') + hr + ':00';
+    const ok = (typeof ASLDB === 'undefined' || !ASLDB.checkAvailability) ? true
+      : ASLDB.checkAvailability(car, dToISO(start), dToISO(end), hh, hh).available;
+    if (ok) return { start, end, time: hh, from: av.fromDateTime };
+  }
+  return null;
+}
+function puAlternatives(car) {
+  const days = Math.max(1, state.days || 1);
+  const ref = dailyRate(car, days);
+  const cat = String(car.category || '').toLowerCase();
+  const free = (CARS || []).filter(c => c !== car && carAvailability(c, state.startDate, state.endDate).available);
+  const score = c => (String(c.category || '').toLowerCase() === cat ? 0 : 100000) + Math.abs(dailyRate(c, days) - ref);
+  return free.sort((a, b) => score(a) - score(b)).slice(0, 3);
+}
+function renderPickUnav(car) {
+  const box = document.getElementById('pick-unav');
+  if (!box) return;
+  if (!car) { box.style.display = 'none'; box.innerHTML = ''; _puShift = null; return; }
+  const loc = langLocale();
+  const fD = d => d.toLocaleDateString(loc, { day: 'numeric', month: 'short' });
+  const days = Math.max(1, state.days || 1);
+  const av = carAvailability(car, state.startDate, state.endDate);
+  _puShift = puShiftFor(car);
+  const alts = puAlternatives(car);
+  const arrow = '<svg class="pu-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
+  let fromTxt = '';
+  if (av.fromDateTime) fromTxt = t('pu.from', { d: av.fromDateTime.toLocaleDateString(loc, { day: 'numeric', month: 'long' }), h: av.fromDateTime.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' }) });
+  const sD = new Date(state.startDate + 'T00:00:00'), eD = new Date(state.endDate + 'T00:00:00');
+  const waTxt = t('pu.waMsg', { car: car.name, a: fD(sD), b: fD(eD) });
+  let html = `<div class="pu-head"><div class="pu-ico"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>` +
+    `<div><div class="pu-t">${puEsc(t('pu.title', { car: car.name }))}</div>${fromTxt ? `<div class="pu-s">${puEsc(fromTxt)}</div>` : ''}</div></div>`;
+  if (_puShift) {
+    html += `<div class="pu-sec"><div class="pu-k">${puEsc(t('pu.keepCar'))}</div>` +
+      `<button type="button" class="pu-shift" onclick="puApplyShift()"><div><b>${puEsc(t('pu.shift'))}</b>` +
+      `<span>${puEsc(t('pu.shiftTo', { a: fD(_puShift.start) + ' · ' + _puShift.time, b: fD(_puShift.end) + ' · ' + _puShift.time }))} · ${puEsc(t('bk.dur', { n: days, d: t(days > 1 ? 'u.days' : 'u.day') }))}</span></div>${arrow}</button></div>`;
+  }
+  html += `<div class="pu-sec"><div class="pu-k">${puEsc(t('pu.altTitle'))}</div>`;
+  if (alts.length) {
+    html += alts.map(c => `<div class="pu-alt" role="button" tabindex="0" onclick="selectCar(${JSON.stringify(c.id).replace(/"/g, '&quot;')})">` +
+      `<img src="${puEsc(c.img || 'assets/hero-car.svg')}" alt="" loading="lazy" onerror="this.onerror=null;this.src='assets/hero-car.svg'">` +
+      `<div class="pu-an"><b>${puEsc(c.name)}</b><span><strong>${puEsc(price(dailyRate(c, days)))}</strong> ${puEsc(t('u.perDayLong'))}</span></div>` +
+      `<span class="pu-go">${puEsc(t('pu.book'))}</span></div>`).join('');
+  } else {
+    html += `<div class="pu-none">${puEsc(t('pu.altNone'))}</div>`;
+  }
+  html += `</div><div class="pu-sec pu-links">` +
+    `<a onclick="puShowAll()">${puEsc(t('pu.all'))} ${arrow}</a>` +
+    `<a class="pu-wa" href="https://wa.me/212675312453?text=${encodeURIComponent(waTxt)}" target="_blank" rel="noopener">` +
+    `<svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.2c-.2.6-1.3 1.2-1.8 1.3-.5.1-1 .1-1.7-.1-.4-.1-.9-.3-1.6-.6-2.8-1.2-4.6-4-4.8-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2.1 1-2.4c.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.3.5-.4.4c-.1.1-.3.3-.1.6.2.3.7 1.2 1.6 1.9 1.1 1 2 1.3 2.3 1.4.3.1.5.1.6-.1l.9-1.1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.1.1.7-.1 1.4z"/></svg>${puEsc(t('pu.wa'))}</a></div>`;
+  box.innerHTML = html;
+  box.style.display = 'block';
+}
+function puApplyShift() {
+  const sh = _puShift;
+  if (!sh) return;
+  CAL.start = sh.start; CAL.end = sh.end; CAL.picked = true;
+  aslTimePick('start', sh.time); aslTimePick('end', sh.time);
+  syncDates();
+  startSearch();
+}
+function puShowAll() {
+  const f = document.getElementById('fleet');
+  if (f) f.scrollIntoView({ behavior: 'smooth' });
 }
 
 // Message clair + défilement automatique vers le calendrier
