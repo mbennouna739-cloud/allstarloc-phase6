@@ -922,6 +922,12 @@ html:has(#booking-drawer.open) { overflow: hidden; }
 .doc-chip{border:1.5px solid #e5e7eb;background:#fff;border-radius:20px;padding:6px 12px;font-size:12.5px;font-weight:700;color:#374151;font-family:inherit;cursor:pointer}
 .doc-chip.on{border-color:var(--red);color:var(--red);background:rgba(196,30,58,.05)}
 .doc-thumbs{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.doc-slots{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.doc-slots.one{grid-template-columns:1fr}
+.doc-slot{border:1.5px dashed #d1d5db;border-radius:10px;padding:8px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.doc-slot.ok{border-style:solid;border-color:#10B981}
+.doc-slot-lbl{font-size:12.5px;font-weight:700;color:#374151}
+.doc-slot .doc-btn{height:38px;font-size:12.5px;padding:0 8px}
+.doc-slot .doc-thumb{width:100%;height:84px}
 .doc-thumb{position:relative;width:92px;height:64px;border-radius:9px;overflow:hidden;border:1px solid #e5e7eb;background:#f3f4f6;flex:none}
 .doc-thumb img{width:100%;height:100%;object-fit:cover;display:block}
 .doc-x{position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;border:0;background:rgba(17,17,17,.75);color:#fff;font-size:15px;line-height:20px;padding:0;cursor:pointer}
@@ -1017,6 +1023,36 @@ html:has(#booking-drawer.open) { overflow: hidden; }
   text-decoration: none;
 }
 
+
+/* ==================== ★ MES RÉSERVATIONS (sans compte) ==================== */
+.mb-btn{display:none;position:relative;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:transparent;color:#fff;cursor:pointer;margin-inline-end:8px}
+.mb-btn.has{display:flex}.mb-btn svg{width:19px;height:19px}
+.mb-badge{position:absolute;top:-5px;inset-inline-end:-5px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--red,#C41E3A);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.mb-ov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2000;display:none;align-items:center;justify-content:center;padding:16px}
+.mb-ov.open{display:flex}
+.mb-sheet{background:#fff;color:#111;width:100%;max-width:520px;max-height:88vh;overflow:auto;border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.35)}
+.mb-hd{position:sticky;top:0;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid #eee;z-index:1}
+.mb-hd b{font-size:18px}.mb-x{width:38px;height:38px;border-radius:10px;border:0;background:#f3f4f6;font-size:20px;cursor:pointer}
+.mb-body{padding:16px 18px 22px}
+.mb-card{border:1.5px solid #e5e7eb;border-radius:14px;padding:14px;margin-bottom:12px}
+.mb-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
+.mb-ref{font-weight:800;font-size:15px}.mb-chip{font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:999px;background:#f3f4f6;color:#374151;white-space:nowrap}
+.mb-chip.confirmed,.mb-chip.active{background:#ecfdf5;color:#047857}.mb-chip.pending{background:#fffbeb;color:#b45309}.mb-chip.cancelled{background:#fef2f2;color:#b91c1c}
+.mb-line{font-size:13.5px;color:#374151;margin:3px 0;line-height:1.45}.mb-line b{color:#111}
+.mb-money{display:grid;grid-template-columns:1fr auto;gap:2px 10px;font-size:13px;margin:10px 0;background:#f9fafb;border-radius:10px;padding:10px 12px}
+.mb-pol{font-size:12.5px;color:#4b5563;margin:8px 0 10px;line-height:1.5}
+.mb-acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mb-a{height:42px;border-radius:10px;border:1.5px solid #d1d5db;background:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;color:#111;text-decoration:none;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 8px}
+.mb-a.red{border-color:#fecaca;color:#b91c1c}
+.mb-rm{background:none;border:0;color:#6b7280;font-size:12px;text-decoration:underline;cursor:pointer;margin-top:8px;font-family:inherit}
+.mb-note{font-size:12px;color:#6b7280;margin-top:6px}
+.mb-find{border-top:1px solid #eee;margin-top:6px;padding-top:14px}
+.mb-find h4{font-size:14px;margin:0 0 10px}
+.mb-in{width:100%;height:46px;border:1.5px solid #e5e7eb;border-radius:10px;padding:0 12px;font-size:16px;margin-bottom:8px;font-family:inherit;box-sizing:border-box}
+.mb-go{width:100%;height:46px;border:0;border-radius:10px;background:var(--red,#C41E3A);color:#fff;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit}
+.mb-err{color:#b91c1c;font-size:13px;margin-top:8px;min-height:1em}
+.mb-empty{font-size:14px;color:#6b7280;margin:4px 0 14px}
+@media(max-width:768px){.mb-ov{align-items:flex-end;padding:0}.mb-sheet{max-width:none;border-radius:18px 18px 0 0;max-height:92vh;padding-bottom:env(safe-area-inset-bottom)}}
 /* ==================== WHATSAPP FLOAT ==================== */
 .wa-float {
   position: fixed; bottom: 28px; right: 28px; z-index: 800;
@@ -1035,10 +1071,18 @@ html:has(#booking-drawer.open) { overflow: hidden; }
   padding: 8px 16px; border-radius: 10px; white-space: nowrap;
   box-shadow: var(--shadow);
 }
-/* Page d'accueil : le bouton WhatsApp flottant est masqué (mobile ET ordinateur)
-   pour ne pas gêner la réservation. Il reste présent sur les AUTRES pages
-   (Contact, À propos, Blog…) qui ont leur propre bouton. */
-.wa-float { display: none !important; }
+/* ★ Bouton WhatsApp flottant : invisible en haut de page, il apparaît quand on fait défiler.
+   Il disparaît pendant une action : réservation ouverte, saisie dans un champ, menu mobile
+   ou bandeau cookies affiché. Il ne gêne donc jamais le parcours client. */
+.wa-float { opacity: 0; transform: translateY(18px) scale(.9); pointer-events: none;
+  transition: opacity .25s ease, transform .25s ease; }
+.wa-float.show { opacity: 1; transform: none; pointer-events: auto; }
+.wa-float.show .wa-float-btn { pointer-events: auto; }
+@media (max-width: 768px) {
+  .wa-float { right: 16px; bottom: calc(18px + env(safe-area-inset-bottom)); }
+  .wa-float-btn { width: 52px; height: 52px; }
+  .wa-float-tooltip { display: none; }
+}
 
 /* ==================== RESPONSIVE ==================== */
 @media(max-width:1024px){
@@ -1257,6 +1301,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
         WhatsApp
       </a>
+      <button type="button" class="mb-btn" id="mb-btn" onclick="mbOpen()" aria-label="Mes réservations" data-i18n-aria="mb.nav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="m9 16 2 2 4-4"/></svg><span class="mb-badge" id="mb-badge"></span></button>
       <a href="#booking-section" class="btn-reserve" data-i18n="nav.book" onclick="event.preventDefault();var el=document.getElementById('booking-section');if(el)el.scrollIntoView({behavior:'smooth'});">Réserver</a>
       <button class="menu-toggle" onclick="toggleMobileMenu()" aria-label="Menu"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/></svg></button>
     </div>
@@ -1266,6 +1311,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <a href="pages/nos-vehicules.html" onclick="toggleMobileMenu()" data-i18n="nav.fleet">Nos Véhicules</a>
     <a href="pages/about.html" data-i18n="nav.about">À propos</a>
     <a href="pages/contact.html" data-i18n="nav.contact">Contact</a>
+    <a href="#" onclick="event.preventDefault();toggleMobileMenu();mbOpen();" data-i18n="mb.nav">Mes réservations</a>
     <a href="https://wa.me/212675312453" target="_blank" style="color:#25D366;" data-i18n="nav.wa247">WhatsApp 24h/7j</a>
     <div class="mm-prefs">
       <div class="mm-group">
@@ -1601,12 +1647,158 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </footer>
 
 <!-- WHATSAPP FLOAT -->
-<div class="wa-float" onclick="window._ASL_track&&window._ASL_track('wa')">
+<div class="wa-float" id="wa-float" onclick="window._ASL_track&&window._ASL_track('wa')">
   <div class="wa-float-tooltip" data-i18n="wa.tooltip">Besoin d'aide ?</div>
-  <a href="https://wa.me/212675312453?text=Bonjour,%20je%20souhaite%20louer%20une%20voiture%20à%20Marrakech" target="_blank" class="wa-float-btn">
+  <a href="https://wa.me/212675312453?text=Bonjour,%20je%20souhaite%20louer%20une%20voiture%20à%20Marrakech" target="_blank" rel="noopener" class="wa-float-btn" aria-label="WhatsApp — Besoin d'aide ?">
     <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
   </a>
 </div>
+
+<script>
+/* ★ Affichage intelligent du bouton WhatsApp flottant (voir le style .wa-float). */
+(function () {
+  var el = document.getElementById('wa-float'); if (!el) return;
+  var typing = false, raf = 0;
+  function busy() {
+    var dr = document.getElementById('booking-drawer');
+    var mm = document.getElementById('mobile-menu');
+    return (dr && dr.classList.contains('open')) || (mm && mm.classList.contains('open')) ||
+      !!document.getElementById('asl-cookie-banner') || typing;
+  }
+  function update() { raf = 0; el.classList.toggle('show', (window.scrollY || 0) > 420 && !busy()); }
+  function req() { if (!raf) raf = requestAnimationFrame(update); }
+  window.addEventListener('scroll', req, { passive: true });
+  window.addEventListener('resize', req);
+  document.addEventListener('focusin', function (e) { var t = e.target; if (t && /^(INPUT|SELECT|TEXTAREA)$/.test(t.tagName)) { typing = true; req(); } });
+  document.addEventListener('focusout', function () { typing = false; setTimeout(req, 150); });
+  try { new MutationObserver(req).observe(document.body, { attributes: true, subtree: true, childList: true, attributeFilter: ['class'] }); } catch (e) {}
+  req();
+})();
+</script>
+
+<script>
+/* ★ Mobile : défilement guidé, doux et court, vers le formulaire de réservation (dates).
+   Une seule fois par visite, ~0,9 s après l'affichage ; annulé dès que le visiteur touche
+   l'écran, s'il a déjà défilé, s'il reprend une réservation ou s'il préfère moins d'animations. */
+(function () {
+  try {
+    if (window.innerWidth > 768 || location.hash) return;
+    if (navigator.webdriver || /bot|crawl|spider|lighthouse|headless/i.test(navigator.userAgent || '')) return;   // robots / outils de mesure : pas d'animation
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (sessionStorage.getItem('asl_guided_scroll')) return;
+    if (localStorage.getItem('asl_booking_resume_v1')) return;
+  } catch (e) { return; }
+  var stop = false;
+  function cancel() { stop = true; }
+  ['touchstart', 'wheel', 'keydown', 'mousedown'].forEach(function (ev) { window.addEventListener(ev, cancel, { passive: true, once: true }); });
+  setTimeout(function () {
+    try { sessionStorage.setItem('asl_guided_scroll', '1'); } catch (e) {}
+    var target = document.getElementById('booking-section'), dr = document.getElementById('booking-drawer');
+    if (stop || !target || (window.scrollY || 0) > 40 || (dr && dr.classList.contains('open'))) return;
+    var hd = document.querySelector('header, .header, nav'); var off = (hd ? hd.getBoundingClientRect().height : 64) + 10;
+    var from = window.scrollY || 0, to = Math.max(0, target.getBoundingClientRect().top + from - off);
+    if (to - from < 30) return;
+    var dur = 1100, t0 = null;
+    function ease(x) { return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; }
+    function step(ts) {
+      if (stop) return;
+      if (t0 === null) t0 = ts;
+      var k = Math.min(1, (ts - t0) / dur);
+      window.scrollTo(0, from + (to - from) * ease(k));
+      if (k < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }, 900);
+})();
+</script>
+
+<!-- ★ MES RÉSERVATIONS -->
+<div class="mb-ov" id="mb-ov" onclick="if(event.target===this)mbClose()" role="dialog" aria-modal="true">
+  <div class="mb-sheet"><div class="mb-hd"><b data-i18n="mb.title">Mes réservations</b><button type="button" class="mb-x" onclick="mbClose()" aria-label="Fermer">×</button></div>
+  <div class="mb-body" id="mb-body"></div></div>
+</div>
+<script>
+/* ★ « Mes réservations » sans compte : les réservations faites sur cet appareil sont
+   gardées en mémoire (numéro + contact) ; l'état réel est relu sur le serveur.
+   Depuis un autre appareil : numéro de réservation + téléphone ou e-mail.
+   Modifier / annuler = une demande envoyée à l'agence sur WhatsApp (jamais automatique). */
+var MB_KEY = 'asl_my_bookings_v1';
+function mbList() { try { var a = JSON.parse(localStorage.getItem(MB_KEY) || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
+function mbSaveList(a) { try { localStorage.setItem(MB_KEY, JSON.stringify(a.slice(0, 10))); } catch (e) {} mbBadge(); }
+function mbAdd(ref, contact) {
+  ref = String(ref || '').toUpperCase(); if (!ref || !contact) return;
+  var a = mbList().filter(function (x) { return x.ref !== ref; }); a.unshift({ ref: ref, contact: String(contact), at: Date.now() }); mbSaveList(a);
+}
+function mbBadge() {
+  var n = mbList().length, b = document.getElementById('mb-btn'), g = document.getElementById('mb-badge');
+  if (b) b.classList.toggle('has', n > 0); if (g) g.textContent = n > 0 ? String(n) : '';
+}
+function mbEsc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function mbD(v) { var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(v || '')); return m ? m[3] + '/' + m[2] + '/' + m[1] : ''; }
+var _mbCache = {};
+function mbOpen() { document.getElementById('mb-ov').classList.add('open'); document.body.style.overflow = 'hidden'; mbRender(true); }
+function mbClose() { document.getElementById('mb-ov').classList.remove('open'); if (!document.getElementById('booking-drawer').classList.contains('open')) document.body.style.overflow = ''; }
+async function mbFetch(ref, contact) {
+  var r = await fetch('/api/booking/lookup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ref: ref, contact: contact }) });
+  var d = await r.json().catch(function () { return {}; });
+  if (r.ok && d.ok) return d.booking;
+  var e = new Error(r.status === 404 ? 'notfound' : 'offline'); throw e;
+}
+function mbCard(x, bk) {
+  if (!bk) return '<div class="mb-card"><div class="mb-top"><span class="mb-ref">' + mbEsc(x.ref) + '</span></div><div class="mb-line">' + (x.err === 'notfound' ? t('mb.notFound') : x.err ? t('mb.offline') : t('mb.loading')) + '</div>' +
+    (x.err ? '<button class="mb-rm" onclick="mbRemove(\'' + mbEsc(x.ref) + '\')">' + t('mb.remove') + '</button>' : '') + '</div>';
+  var lang = (typeof getLang === 'function') ? getLang() : 'fr';
+  var rest = Math.max(0, (bk.amount || 0) - (bk.paid || 0));
+  var dl = bk.cancelUntil ? new Date(bk.cancelUntil) : null, open = bk.status !== 'cancelled' && bk.status !== 'completed' && bk.status !== 'active';
+  var pol = !open ? '' : (dl && dl.getTime() > Date.now() ? t('mb.cancelUntil', { deadline: aslFmtDeadline(dl, lang) }) : t('mb.cancelPast'));
+  var v = { ref: bk.id, car: bk.car, start: mbD(bk.startDate), end: mbD(bk.endDate) };
+  var wa = function (k) { return 'https://wa.me/212675312453?text=' + encodeURIComponent(t(k, v)); };
+  return '<div class="mb-card">' +
+    '<div class="mb-top"><span class="mb-ref">' + mbEsc(bk.id) + '</span><span class="mb-chip ' + mbEsc(bk.status) + '">' + t('mb.st.' + bk.status) + '</span></div>' +
+    '<div class="mb-line"><b>' + mbEsc(bk.car) + '</b></div>' +
+    '<div class="mb-line">' + mbD(bk.startDate) + (bk.startTime ? ' ' + mbEsc(bk.startTime) : '') + ' → ' + mbD(bk.endDate) + (bk.endTime ? ' ' + mbEsc(bk.endTime) : '') + '</div>' +
+    (bk.pickup ? '<div class="mb-line">' + mbEsc(bk.pickup) + '</div>' : '') +
+    '<div class="mb-money"><span>' + t('mb.total') + '</span><b>' + (bk.amount || 0) + ' MAD</b>' +
+      (bk.paid ? '<span>' + t('mb.paid') + '</span><b>' + bk.paid + ' MAD</b>' : '') +
+      '<span>' + t('mb.rest') + '</span><b>' + rest + ' MAD</b></div>' +
+    (pol ? '<div class="mb-pol">' + pol + '</div>' : '') +
+    (open ? '<div class="mb-acts"><a class="mb-a" target="_blank" rel="noopener" href="' + wa('mb.waChange') + '">' + t('mb.change') + '</a><a class="mb-a red" target="_blank" rel="noopener" href="' + wa('mb.waCancel') + '">' + t('mb.cancel') + '</a></div><div class="mb-note">' + t('mb.note') + '</div>' : '') +
+    '<button class="mb-rm" onclick="mbRemove(\'' + mbEsc(bk.id) + '\')">' + t('mb.remove') + '</button></div>';
+}
+function mbRender(refresh) {
+  var body = document.getElementById('mb-body'); if (!body) return;
+  var list = mbList();
+  var cards = list.length ? list.map(function (x) { return mbCard(x, _mbCache[x.ref]); }).join('') : '<div class="mb-empty">' + t('mb.empty') + '</div>';
+  body.innerHTML = cards +
+    '<div class="mb-find"><h4>' + t('mb.findTitle') + '</h4>' +
+    '<input class="mb-in" id="mb-ref" placeholder="' + mbEsc(t('mb.ref')) + '" autocapitalize="characters" autocomplete="off">' +
+    '<input class="mb-in" id="mb-contact" placeholder="' + mbEsc(t('mb.contact')) + '" autocomplete="tel">' +
+    '<button class="mb-go" onclick="mbFind()">' + t('mb.find') + '</button><div class="mb-err" id="mb-err"></div></div>';
+  if (refresh) list.forEach(function (x) {
+    mbFetch(x.ref, x.contact).then(function (bk) { _mbCache[x.ref] = bk; x.err = ''; mbRender(false); })
+      .catch(function (e) { x.err = e.message; mbRender(false); });
+  });
+}
+async function mbFind() {
+  var ref = (document.getElementById('mb-ref').value || '').trim().toUpperCase(), c = (document.getElementById('mb-contact').value || '').trim();
+  var err = document.getElementById('mb-err'); err.textContent = t('mb.loading');
+  try { var bk = await mbFetch(ref, c); _mbCache[bk.id] = bk; mbAdd(bk.id, c); mbRender(false); }
+  catch (e) { err.textContent = e.message === 'notfound' ? t('mb.notFound') : t('mb.offline'); }
+}
+function mbRemove(ref) { mbSaveList(mbList().filter(function (x) { return x.ref !== ref; })); delete _mbCache[ref]; mbRender(false); }
+/* Enregistre la réservation sur cet appareil dès l'écran de confirmation. */
+function mbRememberCurrent() {
+  try {
+    var it = (typeof ASL_PP !== 'undefined' && ASL_PP.result && ASL_PP.result.item) || null;
+    var ref = (it && it.id) || state.reservationRef; if (!ref) return;
+    var c = state.customer || {};
+    var contact = (c.phone ? String((c.prefix || '') + c.phone) : '') || c.email || (it && (it.phone || it.email)) || '';
+    if (contact) mbAdd(ref, contact);
+  } catch (e) {}
+}
+document.addEventListener('DOMContentLoaded', mbBadge); mbBadge();
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') mbClose(); });
+</script>
 
 <!-- DRAWER OVERLAY -->
 <div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
@@ -2667,6 +2859,7 @@ function renderStep() {
   footer.style.display = state.step === 6 ? 'none' : 'block';
   const backBtn = document.querySelector('#booking-drawer .drawer-back');
   if (backBtn) backBtn.style.visibility = state.step === 6 ? 'hidden' : '';
+  if (state.step === 6 && typeof mbRememberCurrent === 'function') mbRememberCurrent();
   // Étape Paiement : le bouton devient « Confirmer la réservation »,
   // désactivé tant que la case CGV n'est pas cochée.
   const nextSpan = document.querySelector('#btn-next span');
@@ -2921,25 +3114,41 @@ function renderCustomerForm() {
   `;
 }
 
-/* ==================== DOCUMENTS DU CLIENT (photos) ==================== */
+/* ==================== DOCUMENTS DU CLIENT (photos) ====================
+   ★ Recto / verso : permis = recto + verso ; CIN = recto + verso ; passeport = page photo.
+   Chaque document est une liste à positions fixes : [0] = recto (ou page photo), [1] = verso. */
 const DOCS_MAX = 2;
 function docState() {
   if (!state.docs) state.docs = { permis: [], identite: [], idType: 'passport' };
   return state.docs;
 }
+function docSlots(type) { const d = docState(); return type === 'permis' ? 2 : (d.idType === 'cin' ? 2 : 1); }
+function docSlotLabel(type, i) { return (type === 'identite' && docState().idType !== 'cin') ? t('doc.photoPage') : t(i === 0 ? 'doc.recto' : 'doc.verso'); }
+function docFilled(type) { const d = docState(), n = docSlots(type); let k = 0; for (let i = 0; i < n; i++) if (d[type][i]) k++; return k; }
+function docComplete(type) { return docFilled(type) >= docSlots(type); }
 function renderDocZone() {
   const d = docState();
-  const thumbs = type => d[type].map((x, i) => `<div class="doc-thumb"><img src="${x.dataUrl}" alt=""><button type="button" class="doc-x" aria-label="${t('doc.remove')}" onclick="docRemove('${type}',${i})">×</button></div>`).join('');
-  const block = (type, title, sub, extra) => `
-    <div class="doc-block ${d[type].length ? 'ok' : ''}" data-doc="${type}" onclick="docState().target='${type}'">
-      <div class="doc-head"><div><b>${title} <span class="req">*</span></b>${sub ? `<small>${sub}</small>` : ''}</div>${d[type].length ? `<span class="doc-ok">✓ ${t('doc.added')}</span>` : ''}</div>
-      ${extra || ''}
-      ${d[type].length ? `<div class="doc-thumbs">${thumbs(type)}</div>` : ''}
-      ${d[type].length < DOCS_MAX ? `<div class="doc-actions">
-        <label class="doc-btn"><input type="file" accept="image/*" multiple onchange="docPick('${type}', this)"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>${t('doc.pick')}</label>
-        <button type="button" class="doc-btn ghost" onclick="docPaste('${type}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>${t('doc.paste')}</button>
-      </div>` : ''}
+  const camIco = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>';
+  const pasteIco = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>';
+  const slot = (type, i) => {
+    const x = d[type][i];
+    return `<div class="doc-slot ${x ? 'ok' : ''}" onclick="docState().target='${type}';docState().slot=${i}">
+      <div class="doc-slot-lbl">${docSlotLabel(type, i)} <span class="req">*</span>${x ? ' <span class="doc-ok">✓</span>' : ''}</div>
+      ${x ? `<div class="doc-thumb"><img src="${x.dataUrl}" alt=""><button type="button" class="doc-x" aria-label="${t('doc.remove')}" onclick="event.stopPropagation();docRemove('${type}',${i})">×</button></div>`
+          : `<label class="doc-btn"><input type="file" accept="image/*" onchange="docPick('${type}', this, ${i})">${camIco}${t('doc.pick')}</label>
+             <button type="button" class="doc-btn ghost" onclick="docPaste('${type}', ${i})">${pasteIco}${t('doc.paste')}</button>`}
     </div>`;
+  };
+  const block = (type, title, sub, extra) => {
+    const n = docSlots(type), done = docComplete(type);
+    let slots = ''; for (let i = 0; i < n; i++) slots += slot(type, i);
+    return `
+    <div class="doc-block ${done ? 'ok' : ''}" data-doc="${type}" onclick="docState().target='${type}'">
+      <div class="doc-head"><div><b>${title} <span class="req">*</span></b>${sub ? `<small>${sub}</small>` : ''}</div>${done ? `<span class="doc-ok">✓ ${t('doc.added')}</span>` : ''}</div>
+      ${extra || ''}
+      <div class="doc-slots${n === 1 ? ' one' : ''}">${slots}</div>
+    </div>`;
+  };
   const idChips = `<div class="doc-chips">${['passport', 'cin'].map(k => `<button type="button" class="doc-chip ${d.idType === k ? 'on' : ''}" onclick="event.stopPropagation();docSetIdType('${k}')">${t(k === 'passport' ? 'doc.passport' : 'doc.cin')}</button>`).join('')}</div>`;
   return `
     <div class="step-section-title" style="margin-bottom:4px;">${t('doc.title')}</div>
@@ -2954,7 +3163,7 @@ function docRefresh() {
   bookingSave();
 }
 function docSetIdType(k) { docState().idType = k; docRefresh(); }
-function docRemove(type, i) { const d = docState(); d[type].splice(i, 1); docRefresh(); }
+function docRemove(type, i) { const d = docState(); d[type][i] = null; docRefresh(); }
 /* Compression : max 1600 px, JPEG ~0,82 → photo légère et lisible. */
 function docCompress(blob) {
   return new Promise((resolve, reject) => {
@@ -2975,23 +3184,27 @@ function docCompress(blob) {
     img.src = url;
   });
 }
-async function docAddBlobs(type, blobs) {
-  const d = docState();
+/* Ajoute les photos dans l'emplacement demandé (recto/verso), sinon dans le premier emplacement vide. */
+async function docAddBlobs(type, blobs, slot) {
+  const d = docState(), n = docSlots(type);
   let bad = false, full = false;
   for (const b of blobs) {
-    if (d[type].length >= DOCS_MAX) { full = true; break; }
-    try { d[type].push({ dataUrl: await docCompress(b), ref: '' }); } catch (e) { bad = true; }
+    let k = (typeof slot === 'number' && slot < n && !d[type][slot]) ? slot : -1;
+    if (k < 0) for (let i = 0; i < n; i++) if (!d[type][i]) { k = i; break; }
+    if (k < 0) { full = true; break; }
+    try { d[type][k] = { dataUrl: await docCompress(b), ref: '' }; } catch (e) { bad = true; }
+    slot = undefined;
   }
   docRefresh();
   if (bad) alert(t('doc.badFile')); else if (full) alert(t('doc.max'));
 }
-function docPick(type, input) {
+function docPick(type, input, slot) {
   const files = Array.from((input && input.files) || []);
   if (input) input.value = '';
-  if (files.length) docAddBlobs(type, files);
+  if (files.length) docAddBlobs(type, files, slot);
 }
-async function docPaste(type) {
-  docState().target = type;
+async function docPaste(type, slot) {
+  docState().target = type; docState().slot = slot;
   try {
     if (navigator.clipboard && navigator.clipboard.read) {
       const items = await navigator.clipboard.read();
@@ -3000,7 +3213,7 @@ async function docPaste(type) {
         const ty = (it.types || []).find(x => /^image\//.test(x));
         if (ty) blobs.push(await it.getType(ty));
       }
-      if (blobs.length) { docAddBlobs(type, blobs); return; }
+      if (blobs.length) { docAddBlobs(type, blobs, slot); return; }
     }
   } catch (e) {}
   alert(t('doc.pasteFail'));
@@ -3014,8 +3227,8 @@ document.addEventListener('paste', ev => {
     if (!files.length) return;
     ev.preventDefault();
     const d = docState();
-    const type = d.target || (!d.permis.length ? 'permis' : 'identite');
-    docAddBlobs(type, files);
+    const type = d.target || (!docComplete('permis') ? 'permis' : 'identite');
+    docAddBlobs(type, files, d.target === type ? d.slot : undefined);
   } catch (e) {}
 });
 /* Envoi sécurisé des photos (une seule fois chacune) au moment de valider. */
@@ -3031,8 +3244,8 @@ async function docsUpload() {
     return x.ref;
   };
   const permis = [], identite = [];
-  for (const x of d.permis) permis.push(await one(x));
-  for (const x of d.identite) identite.push(await one(x));
+  for (let i = 0; i < docSlots('permis'); i++) if (d.permis[i]) permis.push(await one(d.permis[i]));      // [recto, verso]
+  for (let i = 0; i < docSlots('identite'); i++) if (d.identite[i]) identite.push(await one(d.identite[i]));  // CIN [recto, verso] / passeport [page photo]
   return { permis: permis, identite: identite, identiteType: d.idType === 'cin' ? 'cin' : 'passeport' };
 }
 
@@ -3068,8 +3281,8 @@ function validateCustomer() {
     return false;
   }
   const d = docState();
-  const missing = !d.permis.length ? 'permis' : (!d.identite.length ? 'identite' : '');
-  document.querySelectorAll('.doc-block').forEach(b => b.classList.toggle('missing', b.dataset.doc === 'permis' ? !d.permis.length : !d.identite.length));
+  const missing = !docComplete('permis') ? 'permis' : (!docComplete('identite') ? 'identite' : '');
+  document.querySelectorAll('.doc-block').forEach(b => b.classList.toggle('missing', !docComplete(b.dataset.doc)));
   if (missing) {
     alert(t('doc.missing'));
     const b = document.querySelector('.doc-block[data-doc="' + missing + '"]');
@@ -3262,6 +3475,7 @@ function renderConfirmation() {
         </div>
       </div>
       ${mailSentHTML()}
+      <div style="font-size:12.5px;color:var(--text2);margin-bottom:10px;">📅 ${t('mb.saved')} <a href="#" onclick="event.preventDefault();mbOpen()" style="color:var(--red);font-weight:700;">${t('mb.nav')}</a></div>
       ${(state.payment === 'delivery' && ASL_PP.cfg && ASL_PP.cfg.waClient) ? `<div style="font-size:13px;color:var(--text2);margin-bottom:10px;">${t('cf.waAutoCash')}</div>` : ''}
       <a href="https://wa.me/212675312453${(state.payment === 'delivery' && ASL_PP.cfg && ASL_PP.cfg.waClient) ? '' : '?text=' + waMsg}" target="_blank" class="btn-wa-confirm">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
@@ -3289,6 +3503,47 @@ const ASL_PP = { cfg: null, share: 'deposit', sdk: null, item: null, result: nul
     }).catch(() => {});
   } catch (e) {}
 })();
+/* ★ RÈGLE D'ANNULATION GRATUITE (selon le délai entre la réservation et la prise en charge)
+   ≥ 30 jours  → jusqu'à 72 h avant la prise en charge
+   4 à 29 jours → jusqu'à 48 h avant
+   1 à 3 jours  → jusqu'à 23 h 59 le jour de la réservation
+   < 24 h       → dans les 2 heures qui suivent la réservation
+   Toutes les heures sont celles de Marrakech (Africa/Casablanca). */
+function aslMaOffsetMin(d) {
+  try {
+    const p = {}; new Intl.DateTimeFormat('en-US', { timeZone: 'Africa/Casablanca', hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })
+      .formatToParts(d).forEach(function (x) { p[x.type] = x.value; });
+    const asUTC = Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour % 24, +p.minute, +p.second);
+    return Math.round((asUTC - Math.floor(d.getTime() / 1000) * 1000) / 60000);
+  } catch (e) { return 60; }
+}
+function aslMaToDate(dateStr, timeStr) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(dateStr || '')); if (!m) return null;
+  const t = /^(\d{1,2}):(\d{2})/.exec(String(timeStr || '10:00')) || [0, 10, 0];
+  const guess = Date.UTC(+m[1], +m[2] - 1, +m[3], +t[1], +t[2]);
+  return new Date(guess - aslMaOffsetMin(new Date(guess)) * 60000);
+}
+function aslMaParts(d) {
+  const x = new Date(d.getTime() + aslMaOffsetMin(d) * 60000), z = n => String(n).padStart(2, '0');
+  return { date: x.getUTCFullYear() + '-' + z(x.getUTCMonth() + 1) + '-' + z(x.getUTCDate()), time: z(x.getUTCHours()) + ':' + z(x.getUTCMinutes()) };
+}
+function aslCancelDeadline(createdAt, startDate, startTime) {
+  const created = createdAt ? new Date(createdAt) : new Date();
+  const pickup = aslMaToDate(startDate, startTime);
+  if (!pickup || isNaN(created.getTime())) return null;
+  const H = 3600000, lead = pickup.getTime() - created.getTime();
+  if (lead >= 30 * 24 * H) return new Date(pickup.getTime() - 72 * H);
+  if (lead >= 4 * 24 * H) return new Date(pickup.getTime() - 48 * H);
+  if (lead >= 24 * H) return aslMaToDate(aslMaParts(created).date, '23:59');
+  return new Date(Math.min(created.getTime() + 2 * H, pickup.getTime()));
+}
+function aslFmtDeadline(d, lang) {
+  if (!d) return '';
+  const p = aslMaParts(d), dt = p.date.split('-').reverse().join('/');
+  const at = { fr: ' à ', en: ' at ', es: ' a las ', ar: ' على الساعة ' }[lang] || ' à ';
+  return dt + at + p.time;
+}
+
 function ppOn() { return !!ASL_PP.cfg; }
 /* « 05/12/2026 10:00 → 08/12/2026 10:00 » pour l'écran de confirmation. */
 function confDates(sd, st, ed, et) {
@@ -3330,7 +3585,7 @@ function ppPayBlockHTML() {
     <div id="pp-buttons" style="margin-top:12px;min-height:50px;"><div class="pp-note" style="text-align:center;padding:12px 0;">${t('pp.loading')}</div></div>
     <div id="pp-busy" class="pp-busy" style="display:none;">${t('pp.processing')}</div>
     <div class="pp-sec"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex:none;margin-top:1px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span>${t('pp.secure')}</span></div>
-    <div class="pp-cancel">${t('pp.cancel', { p: ppPct() })}</div></div>`;
+    <div class="pp-cancel">${t('pp.cancel', { p: ppPct(), deadline: aslFmtDeadline(aslCancelDeadline(new Date().toISOString(), state.startDate, state.startTime), (typeof getLang === 'function' ? getLang() : 'fr')) })}</div></div>`;
 }
 function ppRerender() {
   if (state.step !== 5) return;
@@ -3468,6 +3723,8 @@ function ppConfirmHTML() {
       </div>
       ${ok ? `<div style="font-size:12px;color:#6b7280;margin-bottom:14px;">${t('cf.ppMail')}${ASL_PP.cfg && ASL_PP.cfg.waClient ? '<br>' + t('cf.waAutoPaid') : ''}</div>` : ''}
       ${ok ? mailSentHTML() : ''}
+      ${ok ? `<div style="font-size:12.5px;color:var(--text2);margin-bottom:10px;">📅 ${t('mb.saved')} <a href="#" onclick="event.preventDefault();mbOpen()" style="color:var(--red);font-weight:700;">${t('mb.nav')}</a></div>` : ''}
+      ${ok ? `<div style="font-size:12.5px;color:var(--text2);margin-bottom:10px;line-height:1.5;">${t('pp.cancel', { p: ppPct(), deadline: aslFmtDeadline(aslCancelDeadline(it.createdAt, it.startDate, it.startTime), (typeof getLang === 'function' ? getLang() : 'fr')) })}</div>` : ''}
       ${ok ? `<div style="font-size:13px;color:var(--text2);margin-bottom:10px;">${t('cf.ppWaText')}</div>` : ''}
       <a href="https://wa.me/212675312453${(ok && ASL_PP.cfg && ASL_PP.cfg.waClient) ? '' : '?text=' + waMsg}" target="_blank" rel="noopener" class="btn-wa-confirm">${ok ? t('cf.ppWaBtn') : t('cf.waBtn')}</a>
     </div>`;

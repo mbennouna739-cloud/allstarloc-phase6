@@ -381,7 +381,7 @@ const MAIL_T = {
     total: 'Total de la location', paid: 'Acompte payé (PayPal)', rest: 'Reste à régler à la remise des clés', dueCash: 'À payer en espèces à l\'arrivée', status: 'Statut',
     stPaid: 'Confirmée', stPending: 'Paiement en vérification', stCash: 'Demande reçue',
     bring: 'À présenter à la remise du véhicule : votre <b>permis de conduire</b> et votre <b>passeport ou CIN</b> (originaux).',
-    policy: 'Annulation gratuite jusqu\'à 24 h avant la prise en charge (remboursement intégral). À moins de 24 h, l\'acompte est conservé. Changement de dates gratuit jusqu\'à 24 h avant, selon disponibilité.',
+    policy: 'Annulation gratuite jusqu\'au {deadline} (heure de Marrakech) : remboursement intégral. Après cette date, l\'acompte est conservé. Changement de dates gratuit jusqu\'à la même date, selon disponibilité. Pour annuler ou modifier : répondez à cet e-mail ou écrivez-nous sur WhatsApp avec votre numéro de réservation.',
     help: 'Une question ? Répondez simplement à cet e-mail ou écrivez-nous sur WhatsApp.', btn: 'Nous contacter sur WhatsApp', thanks: 'Merci de votre confiance,<br>L\'équipe ALL STAR LOC',
   },
   en: {
@@ -396,7 +396,7 @@ const MAIL_T = {
     total: 'Rental total', paid: 'Deposit paid (PayPal)', rest: 'Balance due at key handover', dueCash: 'To pay in cash on arrival', status: 'Status',
     stPaid: 'Confirmed', stPending: 'Payment being verified', stCash: 'Request received',
     bring: 'Please bring at vehicle handover: your <b>driving licence</b> and your <b>passport or ID card</b> (originals).',
-    policy: 'Free cancellation up to 24 hours before pick-up (full refund). Less than 24 hours before, the deposit is kept. Free date change up to 24 hours before, subject to availability.',
+    policy: 'Free cancellation until {deadline} (Marrakech time): full refund. After that, the deposit is kept. Free date change until the same date, subject to availability. To cancel or change: reply to this email or message us on WhatsApp with your booking number.',
     help: 'Any question? Simply reply to this email or message us on WhatsApp.', btn: 'Contact us on WhatsApp', thanks: 'Thank you for your trust,<br>The ALL STAR LOC team',
   },
   es: {
@@ -411,7 +411,7 @@ const MAIL_T = {
     total: 'Total del alquiler', paid: 'Anticipo pagado (PayPal)', rest: 'Resto a pagar en la entrega de llaves', dueCash: 'A pagar en efectivo a la llegada', status: 'Estado',
     stPaid: 'Confirmada', stPending: 'Pago en verificación', stCash: 'Solicitud recibida',
     bring: 'Presente en la entrega del vehículo: su <b>permiso de conducir</b> y su <b>pasaporte o DNI</b> (originales).',
-    policy: 'Cancelación gratuita hasta 24 h antes de la recogida (reembolso íntegro). A menos de 24 h, se conserva el anticipo. Cambio de fechas gratuito hasta 24 h antes, según disponibilidad.',
+    policy: 'Cancelación gratuita hasta el {deadline} (hora de Marrakech): reembolso íntegro. Después, se conserva el anticipo. Cambio de fechas gratuito hasta la misma fecha, según disponibilidad. Para cancelar o modificar: responda a este correo o escríbanos por WhatsApp con su número de reserva.',
     help: '¿Alguna pregunta? Responda a este correo o escríbanos por WhatsApp.', btn: 'Contactar por WhatsApp', thanks: 'Gracias por su confianza,<br>El equipo de ALL STAR LOC',
   },
   ar: {
@@ -426,10 +426,51 @@ const MAIL_T = {
     total: 'مجموع الكراء', paid: 'التسبيق المدفوع (PayPal)', rest: 'الباقي عند تسليم المفاتيح', dueCash: 'المبلغ نقداً عند الوصول', status: 'الحالة',
     stPaid: 'مؤكد', stPending: 'الدفع قيد التحقق', stCash: 'تم استلام الطلب',
     bring: 'يرجى الإدلاء عند تسليم السيارة بـ: <b>رخصة السياقة</b> و<b>جواز السفر أو البطاقة الوطنية</b> (الأصل).',
-    policy: 'إلغاء مجاني حتى 24 ساعة قبل الاستلام (استرجاع كامل). أقل من 24 ساعة، يُحتفظ بالتسبيق. تغيير التواريخ مجاني حتى 24 ساعة قبل الاستلام، حسب التوفر.',
+    policy: 'إلغاء مجاني حتى {deadline} (بتوقيت مراكش) مع استرجاع كامل المبلغ. بعد ذلك، يُحتفظ بالتسبيق. تغيير التواريخ مجاني حتى نفس التاريخ، حسب التوفر. للإلغاء أو التعديل: أجيبوا على هذا البريد أو راسلونا عبر واتساب مع رقم الحجز.',
     help: 'لديكم سؤال؟ أجيبوا ببساطة على هذا البريد أو راسلونا عبر واتساب.', btn: 'تواصلوا معنا عبر واتساب', thanks: 'شكراً على ثقتكم،<br>فريق ALL STAR LOC',
   },
 };
+/* ★ RÈGLE D'ANNULATION GRATUITE (selon le délai entre la réservation et la prise en charge)
+   ≥ 30 jours  → jusqu'à 72 h avant la prise en charge
+   4 à 29 jours → jusqu'à 48 h avant
+   1 à 3 jours  → jusqu'à 23 h 59 le jour de la réservation
+   < 24 h       → dans les 2 heures qui suivent la réservation
+   Toutes les heures sont celles de Marrakech (Africa/Casablanca). */
+function aslMaOffsetMin(d) {
+  try {
+    const p = {}; new Intl.DateTimeFormat('en-US', { timeZone: 'Africa/Casablanca', hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })
+      .formatToParts(d).forEach(function (x) { p[x.type] = x.value; });
+    const asUTC = Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour % 24, +p.minute, +p.second);
+    return Math.round((asUTC - Math.floor(d.getTime() / 1000) * 1000) / 60000);
+  } catch (e) { return 60; }
+}
+function aslMaToDate(dateStr, timeStr) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(dateStr || '')); if (!m) return null;
+  const t = /^(\d{1,2}):(\d{2})/.exec(String(timeStr || '10:00')) || [0, 10, 0];
+  const guess = Date.UTC(+m[1], +m[2] - 1, +m[3], +t[1], +t[2]);
+  return new Date(guess - aslMaOffsetMin(new Date(guess)) * 60000);
+}
+function aslMaParts(d) {
+  const x = new Date(d.getTime() + aslMaOffsetMin(d) * 60000), z = n => String(n).padStart(2, '0');
+  return { date: x.getUTCFullYear() + '-' + z(x.getUTCMonth() + 1) + '-' + z(x.getUTCDate()), time: z(x.getUTCHours()) + ':' + z(x.getUTCMinutes()) };
+}
+function aslCancelDeadline(createdAt, startDate, startTime) {
+  const created = createdAt ? new Date(createdAt) : new Date();
+  const pickup = aslMaToDate(startDate, startTime);
+  if (!pickup || isNaN(created.getTime())) return null;
+  const H = 3600000, lead = pickup.getTime() - created.getTime();
+  if (lead >= 30 * 24 * H) return new Date(pickup.getTime() - 72 * H);
+  if (lead >= 4 * 24 * H) return new Date(pickup.getTime() - 48 * H);
+  if (lead >= 24 * H) return aslMaToDate(aslMaParts(created).date, '23:59');
+  return new Date(Math.min(created.getTime() + 2 * H, pickup.getTime()));
+}
+function aslFmtDeadline(d, lang) {
+  if (!d) return '';
+  const p = aslMaParts(d), dt = p.date.split('-').reverse().join('/');
+  const at = { fr: ' à ', en: ' at ', es: ' a las ', ar: ' على الساعة ' }[lang] || ' à ';
+  return dt + at + p.time;
+}
+
 function mailFill(tpl, vars) { return String(tpl).replace(/\{(\w+)\}/g, function (m, k) { return vars[k] != null ? vars[k] : m; }); }
 function mailBuildBooking(item, kind) {
   const lang = MAIL_T[item.lang] ? item.lang : 'fr', T = MAIL_T[lang], rtl = lang === 'ar';
@@ -448,6 +489,7 @@ function mailBuildBooking(item, kind) {
   if (kind === 'paid') { rows.push([T.paid, paid + ' MAD' + (pp.amountEUR ? ' (' + pp.amountEUR + ' €)' : '')]); rows.push([T.rest, rest + ' MAD']); }
   if (kind === 'cash') rows.push([T.dueCash, total + ' MAD']);
   rows.push([T.status, kind === 'paid' ? T.stPaid : kind === 'pending' ? T.stPending : T.stCash]);
+  const policy = mailFill(T.policy, { deadline: aslFmtDeadline(aslCancelDeadline(item.createdAt, item.startDate, item.startTime), lang) });
   const wa = 'https://wa.me/212675312453';
   const dir = rtl ? 'rtl' : 'ltr', al = rtl ? 'right' : 'left';
   const tr = rows.map(function (r, i) {
@@ -465,14 +507,14 @@ function mailBuildBooking(item, kind) {
     '<div style="font-size:13px;font-weight:700;color:' + color + ';margin:0 0 6px;">' + mailEsc(T.recap) + '</div>' +
     '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border:1px solid #eee;border-radius:10px;border-collapse:separate;">' + tr + '</table>' +
     '<p style="margin:16px 0 0;font-size:13px;line-height:1.55;">' + T.bring + '</p>' +
-    (kind !== 'cash' ? '<p style="margin:10px 0 0;font-size:12px;color:#6b7280;line-height:1.5;">' + mailEsc(T.policy) + '</p>' : '') +
+    (kind !== 'cash' ? '<p style="margin:10px 0 0;font-size:12px;color:#6b7280;line-height:1.5;">' + mailEsc(policy) + '</p>' : '') +
     '<p style="margin:18px 0 10px;font-size:14px;">' + mailEsc(T.help) + '</p>' +
     '<a href="' + wa + '" style="display:inline-block;background:#25D366;color:#fff;text-decoration:none;font-weight:700;font-size:14px;padding:11px 18px;border-radius:10px;">' + mailEsc(T.btn) + '</a>' +
     '<p style="margin:22px 0 0;font-size:14px;line-height:1.5;">' + T.thanks + '</p></div>' +
     '<div style="text-align:center;font-size:11px;color:#9ca3af;margin-top:14px;line-height:1.6;">ALL STAR LOC · 29 Rue Yougoslavie, Guéliz, Marrakech<br>+212 6 75 31 24 53 · <a href="https://allstarloc.com" style="color:#9ca3af;">allstarloc.com</a></div>' +
     '</div></body></html>';
   const text = mailFill(T.hello, { name: first }) + '\n\n' + intro.replace(/<[^>]+>/g, '') + '\n' + (kind === 'cash' ? T.cashNote + '\n' : '') + '\n' +
-    rows.map(function (r) { return r[0] + ' : ' + r[1]; }).join('\n') + '\n\n' + T.bring.replace(/<[^>]+>/g, '') + '\n' + (kind !== 'cash' ? T.policy + '\n' : '') +
+    rows.map(function (r) { return r[0] + ' : ' + r[1]; }).join('\n') + '\n\n' + T.bring.replace(/<[^>]+>/g, '') + '\n' + (kind !== 'cash' ? policy + '\n' : '') +
     '\n' + T.help + '\nWhatsApp : ' + wa + '\n\n' + T.thanks.replace(/<br>/g, '\n') + '\n\nALL STAR LOC · 29 Rue Yougoslavie, Guéliz, Marrakech · +212 6 75 31 24 53 · allstarloc.com';
   return { subject: subj, html: html, text: text };
 }
@@ -497,7 +539,8 @@ async function mailDocAttachments(env, item) {
         const ext = type === 'image/png' ? 'png' : type === 'image/webp' ? 'webp' : type === 'application/pdf' ? 'pdf' : 'jpg';
         size += got.value.byteLength; if (size > 15 * 1024 * 1024) break;
         n++;
-        out.push({ filename: String(item.id || 'ASL') + '_' + g[0] + '_' + n + '.' + ext, content: bytesToB64(got.value) });
+        const side = g[0] === 'passeport' ? (n === 1 ? 'page_photo' : String(n)) : (n === 1 ? 'recto' : n === 2 ? 'verso' : String(n));
+        out.push({ filename: String(item.id || 'ASL') + '_' + g[0] + '_' + side + '.' + ext, content: bytesToB64(got.value) });
       } catch (e) {}
     }
   }
@@ -525,6 +568,7 @@ async function mailAgencyBooking(env, item, kind) {
     ['Durée', (item.days || '?') + ' jour(s)'], ['Vol', item.flight], ['Assurance', item.protection === 'premium' ? 'Premium (rachat de franchise)' : (item.protection ? 'Tous risques incluse' : '')],
     ['Options', opts], ['Total', total + ' MAD'], ['Payé', paid + ' MAD' + (pp.amountEUR ? ' (' + pp.amountEUR + ' € PayPal)' : '')], ['Reste à encaisser', rest + ' MAD'],
     ['Transaction PayPal', pp.captureId || pp.orderId || ''],
+    ['Annulation gratuite jusqu\'au', aslFmtDeadline(aslCancelDeadline(item.createdAt, item.startDate, item.startTime), 'fr') + ' (heure de Marrakech)'],
     ['Documents', 'Permis : ' + nP + ' photo(s) · ' + (docs.identiteType === 'cin' ? 'CIN' : 'Passeport') + ' : ' + nI + ' photo(s)' + (atts.length ? ' — en pièces jointes' : '')],
   ].filter(function (r) { return r[1] != null && String(r[1]).trim() !== ''; });
   const tr = rows.map(function (r, i) { return '<tr><td style="padding:8px 12px;color:#6b7280;font-size:13px;white-space:nowrap;border-top:' + (i ? '1px solid #eee' : '0') + ';vertical-align:top;">' + mailEsc(r[0]) + '</td><td style="padding:8px 12px;font-size:14px;font-weight:600;border-top:' + (i ? '1px solid #eee' : '0') + ';">' + mailEsc(r[1]) + '</td></tr>'; }).join('');
@@ -592,6 +636,36 @@ export async function onRequest(context) {
       } catch (e) { /* garde le repli FR */ }
     }
     return json({ ok: true, translations: out });
+  }
+
+  /* ★ « Mes réservations » (sans compte) : un client retrouve SA réservation avec
+     son numéro (ASL…) + son téléphone (ou son e-mail). Seules des informations
+     non sensibles sont renvoyées ; 30 essais max par adresse IP et par heure. */
+  if (path === 'booking/lookup' && request.method === 'POST') {
+    let b; try { b = await request.json(); } catch (e) { return err(400, 'JSON invalide'); }
+    const ip = request.headers.get('CF-Connecting-IP') || 'x';
+    const rk = 'lk:' + ip + ':' + new Date().toISOString().slice(0, 13);
+    const tries = Number(await env.ASL_DB.get(rk)) || 0;
+    if (tries >= 30) return err(429, 'Trop de tentatives. Réessayez plus tard.');
+    await env.ASL_DB.put(rk, String(tries + 1), { expirationTtl: 3700 });
+    const ref = String(b.ref || '').trim().toUpperCase().replace(/\s+/g, '');
+    const contact = String(b.contact || '').trim().toLowerCase();
+    const digits = contact.replace(/\D/g, '');
+    if (!/^ASL[0-9A-Z-]{3,20}$/.test(ref) || (!mailValid(contact) && digits.length < 6)) return err(400, 'Numéro de réservation ou contact invalide');
+    const doc = (await readDoc(env, 'reservations')) || { items: [] };
+    const r = (doc.items || []).find(function (x) { return x && String(x.id || '').toUpperCase() === ref; });
+    const tail = function (v) { return String(v || '').replace(/\D/g, '').slice(-8); };
+    const match = r && (mailValid(contact)
+      ? String(r.email || '').trim().toLowerCase() === contact
+      : (tail(digits).length >= 6 && (tail(r.phone) === tail(digits) || tail(r.whatsapp) === tail(digits))));
+    if (!match) return err(404, 'Réservation introuvable');
+    const st = String(r.status || 'pending');
+    const status = st === 'cancelled' ? 'cancelled' : (st === 'completed' || st === 'returned' || st === 'done') ? 'completed' : st === 'active' ? 'active' : (st === 'confirmed' || st === 'reserved' || (r.paypal && r.paypal.captureId)) ? 'confirmed' : 'pending';
+    const dl = aslCancelDeadline(r.createdAt, r.startDate, r.startTime);
+    return json({ ok: true, booking: {
+      id: r.id, car: r.car || '', startDate: r.startDate || '', startTime: r.startTime || '', endDate: r.endDate || '', endTime: r.endTime || '',
+      pickup: r.pickup || '', dropoff: r.dropoff || '', days: r.days || 0, amount: Math.round(Number(r.amount) || 0), paid: Math.round(Number(r.paid) || 0),
+      payment: (r.paypal && r.paypal.captureId) ? 'paypal' : 'cash', status: status, createdAt: r.createdAt || '', cancelUntil: dl ? dl.toISOString() : '' } });
   }
 
   /* Réglages du paiement en ligne : GET public (pourcentage de l'acompte), POST admin. */

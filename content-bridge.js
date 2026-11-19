@@ -623,7 +623,11 @@
       try {
         var years = '2009–' + new Date().getFullYear();
         document.querySelectorAll('.footer-copy[data-i18n="ft.copy"]').forEach(function (el) {
-          el.textContent = (typeof t === 'function') ? t('ft.copy', { years: years }) : el.textContent;
+          var txt = (typeof t === 'function') ? t('ft.copy', { years: years }) : el.textContent;
+          // Texte modifié dans le back-office sans l'année : on l'ajoute toujours devant (« © 2009–AAAA … »).
+          txt = String(txt || '').replace(/\{years\}/g, years);
+          if (!/(19|20)\d{2}/.test(txt)) txt = '© ' + years + ' ' + txt.replace(/^\s*©\s*/, '');
+          el.textContent = txt;
         });
       } catch (e) {}
     };

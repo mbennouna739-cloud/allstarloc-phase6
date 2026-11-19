@@ -128,23 +128,23 @@ window._ASL_FAQ_SEED = [
   "i18n": {
    "fr": {
     "question": "Puis-je annuler ma réservation ?",
-    "answer": "Oui, l'annulation est gratuite si vous nous prévenez au moins 24 h avant la prise en charge. Sans prévenir, ou à moins de 24 h, un montant peut être retenu (par exemple l'avance versée). Réservation payée par PayPal : remboursement intégral si vous annulez au moins 24 h avant ; à moins de 24 h, l'acompte de 20 % est conservé. Changement de dates gratuit jusqu'à 24 h avant la prise en charge, selon disponibilité."
+    "answer": "Oui. Le délai d'annulation gratuite dépend du moment où vous réservez : jusqu'à 72 h avant la prise en charge si vous réservez 30 jours ou plus à l'avance ; 48 h avant si vous réservez 4 à 29 jours à l'avance ; jusqu'à 23 h 59 le jour de la réservation si vous réservez 1 à 3 jours à l'avance ; dans les 2 heures suivant la réservation si vous réservez moins de 24 h à l'avance. La date limite exacte est indiquée au paiement et dans l'e-mail de confirmation. Avant cette date : remboursement intégral ; après : l'acompte de 20 % est conservé. Changement de dates gratuit jusqu'à la même date limite, selon disponibilité."
    },
    "en": {
     "question": "Can I cancel my booking?",
-    "answer": "Yes, cancellation is free if you let us know at least 24 hours before pick-up. Without notice, or less than 24 hours before, an amount may be retained (for example the advance paid). Booking paid by PayPal: full refund if you cancel at least 24 hours before; less than 24 hours before, the 20% deposit is kept. Free date change up to 24 hours before pick-up, subject to availability."
+    "answer": "Yes. The free cancellation deadline depends on when you book: up to 72 hours before pick-up if you book 30 days or more in advance; 48 hours before if you book 4 to 29 days in advance; until 11:59 pm on the day of booking if you book 1 to 3 days in advance; within 2 hours of booking if you book less than 24 hours in advance. The exact deadline is shown at payment and in the confirmation email. Before it: full refund; after it: the 20% deposit is kept. Free date change until the same deadline, subject to availability."
    },
    "es": {
     "question": "¿Puedo cancelar mi reserva?",
-    "answer": "Sí, la cancelación es gratuita si nos avisa al menos 24 h antes de la recogida. Sin aviso, o con menos de 24 h, puede retenerse un importe (por ejemplo, el anticipo abonado). Reserva pagada con PayPal: reembolso íntegro si cancela al menos 24 h antes; con menos de 24 h, se conserva el anticipo del 20 %. Cambio de fechas gratuito hasta 24 h antes de la recogida, según disponibilidad."
+    "answer": "Sí. El plazo de cancelación gratuita depende de cuándo reserve: hasta 72 h antes de la recogida si reserva con 30 días o más de antelación; 48 h antes si reserva con 4 a 29 días; hasta las 23:59 del día de la reserva si reserva con 1 a 3 días; en las 2 horas siguientes a la reserva si reserva con menos de 24 h. La fecha límite exacta se indica al pagar y en el correo de confirmación. Antes: reembolso íntegro; después: se conserva el anticipo del 20 %. Cambio de fechas gratuito hasta la misma fecha límite, según disponibilidad."
    },
    "ar": {
     "question": "هل يمكنني إلغاء حجزي؟",
-    "answer": "نعم، الإلغاء مجاني إذا أخبرتمونا قبل 24 ساعة على الأقل من الاستلام. بدون إشعار، أو قبل أقل من 24 ساعة، يمكن الاحتفاظ بمبلغ (مثلاً التسبيق المدفوع). حجز مدفوع عبر PayPal: استرجاع كامل المبلغ إذا ألغيتم قبل 24 ساعة على الأقل؛ وقبل أقل من 24 ساعة يُحتفظ بتسبيق 20٪. تغيير التواريخ مجاني إلى غاية 24 ساعة قبل الاستلام، حسب التوفر."
+    "answer": "نعم. تتوقف مهلة الإلغاء المجاني على وقت الحجز: حتى 72 ساعة قبل الاستلام إذا حجزتم قبل 30 يوماً أو أكثر؛ 48 ساعة قبل الاستلام إذا حجزتم قبل 4 إلى 29 يوماً؛ حتى الساعة 23:59 من يوم الحجز إذا حجزتم قبل 1 إلى 3 أيام؛ خلال ساعتين بعد الحجز إذا حجزتم قبل أقل من 24 ساعة. يُذكر الموعد النهائي بالضبط عند الأداء وفي بريد التأكيد. قبله: استرجاع كامل المبلغ؛ بعده: يُحتفظ بتسبيق 20٪. تغيير التواريخ مجاني حتى نفس الموعد النهائي، حسب التوفر."
    }
   },
   "question": "Puis-je annuler ma réservation ?",
-  "answer": "Oui, l'annulation est gratuite si vous nous prévenez au moins 24 h avant la prise en charge. Sans prévenir, ou à moins de 24 h, un montant peut être retenu (par exemple l'avance versée). Réservation payée par PayPal : remboursement intégral si vous annulez au moins 24 h avant ; à moins de 24 h, l'acompte de 20 % est conservé. Changement de dates gratuit jusqu'à 24 h avant la prise en charge, selon disponibilité."
+  "answer": "Oui. Le délai d'annulation gratuite dépend du moment où vous réservez : jusqu'à 72 h avant la prise en charge si vous réservez 30 jours ou plus à l'avance ; 48 h avant si vous réservez 4 à 29 jours à l'avance ; jusqu'à 23 h 59 le jour de la réservation si vous réservez 1 à 3 jours à l'avance ; dans les 2 heures suivant la réservation si vous réservez moins de 24 h à l'avance. La date limite exacte est indiquée au paiement et dans l'e-mail de confirmation. Avant cette date : remboursement intégral ; après : l'acompte de 20 % est conservé. Changement de dates gratuit jusqu'à la même date limite, selon disponibilité."
  },
  {
   "id": "seed-faq-7",
