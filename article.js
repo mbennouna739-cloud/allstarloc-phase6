@@ -10,7 +10,10 @@
 
   function getParam(name) {
     var m = new RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
-    return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : '';
+    if (m) return decodeURIComponent(m[1].replace(/\+/g, ' '));
+    // Adresse propre « /article-<slug> » (référencement) → le slug vient du chemin
+    if (name === 'slug') { var p = /\/article-([a-z0-9-]+)\/?$/i.exec(window.location.pathname); if (p) return p[1]; }
+    return '';
   }
 
   function activeLang() {
@@ -129,6 +132,17 @@
     setMeta('property', 'og:title', metaTitle);
     setMeta('property', 'og:description', excerpt || '');
     if (img) setMeta('property', 'og:image', img);
+
+    // Adresse canonique propre et unique par article : https://allstarloc.com/article-<slug>
+    try {
+      var cslug = (a && a.slug) || slug;
+      if (cslug) {
+        var cl = document.querySelector('link[rel="canonical"]');
+        if (!cl) { cl = document.createElement('link'); cl.rel = 'canonical'; document.head.appendChild(cl); }
+        cl.href = 'https://allstarloc.com/article-' + cslug;
+        setMeta('property', 'og:url', cl.href);
+      }
+    } catch (e) {}
 
     // Schema.org Article
     injectArticleSchema(a, lang, title, excerpt, img);

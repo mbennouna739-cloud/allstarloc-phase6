@@ -681,6 +681,9 @@
      Retourne le code à 2 lettres si compatible, sinon null. */
   function detectBrowserLang() {
     try {
+      // ★ Robots des moteurs de recherche (Googlebot, Bingbot…) : toujours la version française,
+      //   celle des titres, descriptions et adresses déclarées à Google.
+      if (/bot|crawl|spider|slurp|lighthouse|bingpreview|facebookexternalhit/i.test(navigator.userAgent || '')) return 'fr';
       var list = [];
       if (navigator.languages && navigator.languages.length) list = navigator.languages.slice();
       else if (navigator.language) list = [navigator.language];

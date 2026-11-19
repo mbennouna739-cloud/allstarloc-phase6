@@ -19,7 +19,24 @@ export default {
     if (url.pathname === "/api" || url.pathname.startsWith("/api/")) {
       return onRequest({ request, env, ctx, params: {} });
     }
-    // Chemin non-API inconnu → on laisse la gestion des assets répondre (404 propre)
-    return env.ASSETS.fetch(request);
+    const res = await env.ASSETS.fetch(request);
+    if (res.status !== 404 || request.method !== "GET" && request.method !== "HEAD") return res;
+
+    /* ★ Adresses propres pour Google : /about, /contact, /faq, /cgv, /nos-vehicules…
+       (et /article-<slug>) servent les pages rangées dans /pages/, sans redirection.
+       Ce sont les adresses déclarées dans le sitemap et les balises « canonical ». */
+    const m = /^\/([a-z0-9-]+)(\.html|\/)?$/i.exec(url.pathname);
+    const n = /^\/([a-z0-9-]+\.(?:css|js))$/i.exec(url.pathname);
+    let target = null;
+    if (m) target = /^article-[a-z0-9-]+$/i.test(m[1]) && m[2] !== ".html" ? "/pages/article" : "/pages/" + m[1];
+    else if (n) target = "/pages/" + n[1];
+    if (target) {
+      for (const t of [target, target + ".html"]) {
+        const u = new URL(t + url.search, url);
+        const r = await env.ASSETS.fetch(new Request(u.toString(), { method: request.method, headers: request.headers }));
+        if (r.status === 200) return r;
+      }
+    }
+    return res;
   },
 };
