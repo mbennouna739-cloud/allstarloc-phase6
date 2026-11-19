@@ -2306,7 +2306,7 @@ function renderPickUnav(car) {
   _puShift = puShiftFor(car);
   const alts = puAlternatives(car);
   const arrow = '<svg class="pu-arrow" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
-  let fromTxt = '';
+  let fromTxt = av.late ? t('pu.lateSub') : '';
   if (av.fromDateTime) fromTxt = t('pu.from', { d: av.fromDateTime.toLocaleDateString(loc, { day: 'numeric', month: 'long' }), h: av.fromDateTime.toLocaleTimeString(loc, { hour: '2-digit', minute: '2-digit' }) });
   const sD = new Date(state.startDate + 'T00:00:00'), eD = new Date(state.endDate + 'T00:00:00');
   const waTxt = t('pu.waMsg', { car: car.name, a: fD(sD), b: fD(eD) });
@@ -2457,6 +2457,13 @@ function carAvailability(car, startISO, endISO) {
      (active, confirmed, pending, prolongation…). */
   if (typeof ASLDB !== 'undefined' && ASLDB.checkAvailability) {
     var chk = ASLDB.checkAvailability(car, startISO, endISO, state.startTime, state.endTime);
+    /* ★ Location EN RETARD (retour prévu dépassé, non clôturée) : on ne sait pas quand
+       la voiture rentrera → l'unité concernée est considérée occupée sans date de fin,
+       jusqu'à ce que l'agence prolonge (nouvelle date) ou clôture la location. */
+    var lateN = aslLateCount(car);
+    if (lateN && ((chk.conflicts || []).length + lateN) >= aslRentableStock(car)) {
+      return { available: false, from: null, late: true };
+    }
     if (chk.available) return { available: true };
     // Indisponible : nextFrom (Date) → affichage date + heure précise
     if (chk.nextFrom) {
@@ -2489,6 +2496,26 @@ function carAvailability(car, startISO, endISO) {
     cand = new Date(new Date(latest.endDate + 'T00:00:00').getTime() + 86400000);
   }
   return { available: false, from: null };
+}
+
+/* Nombre de locations EN RETARD pour ce modèle (même périmètre que le moteur central). */
+function aslLateCount(car) {
+  try {
+    if (typeof ASLDB === 'undefined' || !ASLDB.getReservations || !ASLDB.computePhase || !car) return 0;
+    const ids = car.unitIds || [car.id];
+    const now = new Date();
+    return ASLDB.getReservations().filter(r => r && r.startDate && r.endDate &&
+      r.status !== 'cancelled' && r.status !== 'completed' &&
+      (r.car === car.name || ids.indexOf(r.carId) >= 0) &&
+      ASLDB.computePhase(r, now) === 'late').length;
+  } catch (e) { return 0; }
+}
+/* Unités réellement louables (même règle que ASLDB.checkAvailability). */
+function aslRentableStock(car) {
+  if (Array.isArray(car.units) && car.units.length) {
+    return car.units.filter(u => { const s = (u && u.status) || 'available'; return s !== 'maintenance' && s !== 'offroad' && s !== 'lld'; }).length;
+  }
+  return Math.max(1, car.stock || (car.unitIds ? car.unitIds.length : 1) || 1);
 }
 
 /* Marge de sécurité (heures) ajoutée après le retour prévu pour le contrôle
@@ -3592,6 +3619,12 @@ function attachPaymentEvents() {
 /* ★ VÉRIFICATION FINALE DE DISPONIBILITÉ (évite qu'un véhicule soit
    attribué à deux clients) — partagée par la confirmation classique et PayPal. */
 function bookingStillAvailable() {
+  // ★ Voiture en retard (retour non confirmé) : réservation impossible tant que l'agence n'a pas agi
+  if (state.car && carAvailability(state.car, state.startDate, state.endDate).late) {
+    alert(t('book.conflict') || 'Ce véhicule n\'est pas disponible sur cette période.');
+    scrollToDates();
+    return false;
+  }
   if (typeof ASLDB !== 'undefined' && ASLDB.checkAvailability && state.car) {
     const chk = ASLDB.checkAvailability(state.car, state.startDate, state.endDate, state.startTime, state.endTime);
     if (!chk.available) {
