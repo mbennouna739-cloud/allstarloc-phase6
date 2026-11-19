@@ -378,7 +378,7 @@ const MAIL_T = {
     introCash: 'Nous avons bien reçu votre demande de réservation. Le paiement se fait en espèces à votre arrivée.',
     cashNote: 'Sans acompte, le véhicule n\'est pas bloqué : un véhicule vous est garanti, mais pas forcément ce modèle. Pour bloquer ce modèle, vous pouvez réserver avec un acompte en ligne.',
     recap: 'Récapitulatif', ref: 'Réservation', car: 'Véhicule', start: 'Prise en charge', end: 'Restitution', dur: 'Durée', days: 'jour(s)',
-    total: 'Total de la location', paid: 'Acompte payé (PayPal)', rest: 'Reste à régler à la remise des clés', dueCash: 'À payer en espèces à l\'arrivée', status: 'Statut',
+    total: 'Total de la location', paid: 'Acompte payé (PayPal)', rest: 'Reste à payer à la prise du véhicule', dueCash: 'À payer en espèces à l\'arrivée', status: 'Statut',
     stPaid: 'Confirmée', stPending: 'Paiement en vérification', stCash: 'Demande reçue',
     bring: 'À présenter à la remise du véhicule : votre <b>permis de conduire</b> et votre <b>passeport ou CIN</b> (originaux).',
     policy: 'Annulation gratuite jusqu\'au {deadline} (heure de Marrakech) : remboursement intégral. Après cette date, l\'acompte est conservé. Changement de dates gratuit jusqu\'à la même date, selon disponibilité. Pour annuler ou modifier : répondez à cet e-mail ou écrivez-nous sur WhatsApp avec votre numéro de réservation.',
@@ -393,7 +393,7 @@ const MAIL_T = {
     introCash: 'We have received your booking request. Payment is made in cash on arrival.',
     cashNote: 'Without a deposit, the car is not reserved: a car is guaranteed, but not necessarily this model. To secure this model, you can book with an online deposit.',
     recap: 'Summary', ref: 'Booking', car: 'Car', start: 'Pick-up', end: 'Return', dur: 'Duration', days: 'day(s)',
-    total: 'Rental total', paid: 'Deposit paid (PayPal)', rest: 'Balance due at key handover', dueCash: 'To pay in cash on arrival', status: 'Status',
+    total: 'Rental total', paid: 'Deposit paid (PayPal)', rest: 'Balance due at vehicle pick-up', dueCash: 'To pay in cash on arrival', status: 'Status',
     stPaid: 'Confirmed', stPending: 'Payment being verified', stCash: 'Request received',
     bring: 'Please bring at vehicle handover: your <b>driving licence</b> and your <b>passport or ID card</b> (originals).',
     policy: 'Free cancellation until {deadline} (Marrakech time): full refund. After that, the deposit is kept. Free date change until the same date, subject to availability. To cancel or change: reply to this email or message us on WhatsApp with your booking number.',
@@ -408,7 +408,7 @@ const MAIL_T = {
     introCash: 'Hemos recibido su solicitud de reserva. El pago se realiza en efectivo a su llegada.',
     cashNote: 'Sin anticipo, el vehículo no queda bloqueado: le garantizamos un vehículo, pero no necesariamente este modelo. Para asegurar este modelo, puede reservar con un anticipo en línea.',
     recap: 'Resumen', ref: 'Reserva', car: 'Vehículo', start: 'Recogida', end: 'Devolución', dur: 'Duración', days: 'día(s)',
-    total: 'Total del alquiler', paid: 'Anticipo pagado (PayPal)', rest: 'Resto a pagar en la entrega de llaves', dueCash: 'A pagar en efectivo a la llegada', status: 'Estado',
+    total: 'Total del alquiler', paid: 'Anticipo pagado (PayPal)', rest: 'Resto a pagar en la recogida del vehículo', dueCash: 'A pagar en efectivo a la llegada', status: 'Estado',
     stPaid: 'Confirmada', stPending: 'Pago en verificación', stCash: 'Solicitud recibida',
     bring: 'Presente en la entrega del vehículo: su <b>permiso de conducir</b> y su <b>pasaporte o DNI</b> (originales).',
     policy: 'Cancelación gratuita hasta el {deadline} (hora de Marrakech): reembolso íntegro. Después, se conserva el anticipo. Cambio de fechas gratuito hasta la misma fecha, según disponibilidad. Para cancelar o modificar: responda a este correo o escríbanos por WhatsApp con su número de reserva.',
@@ -423,7 +423,7 @@ const MAIL_T = {
     introCash: 'توصلنا بطلب حجزكم. يتم الأداء نقداً عند الوصول.',
     cashNote: 'بدون تسبيق، لا يتم حجز السيارة: نضمن لكم سيارة، لكن ليس بالضرورة هذا الطراز. لضمان هذا الطراز، يمكنكم الحجز بتسبيق عبر الإنترنت.',
     recap: 'ملخص الحجز', ref: 'الحجز', car: 'السيارة', start: 'الاستلام', end: 'الإرجاع', dur: 'المدة', days: 'يوم/أيام',
-    total: 'مجموع الكراء', paid: 'التسبيق المدفوع (PayPal)', rest: 'الباقي عند تسليم المفاتيح', dueCash: 'المبلغ نقداً عند الوصول', status: 'الحالة',
+    total: 'مجموع الكراء', paid: 'التسبيق المدفوع (PayPal)', rest: 'الباقي يُؤدى عند استلام السيارة', dueCash: 'المبلغ نقداً عند الوصول', status: 'الحالة',
     stPaid: 'مؤكد', stPending: 'الدفع قيد التحقق', stCash: 'تم استلام الطلب',
     bring: 'يرجى الإدلاء عند تسليم السيارة بـ: <b>رخصة السياقة</b> و<b>جواز السفر أو البطاقة الوطنية</b> (الأصل).',
     policy: 'إلغاء مجاني حتى {deadline} (بتوقيت مراكش) مع استرجاع كامل المبلغ. بعد ذلك، يُحتفظ بالتسبيق. تغيير التواريخ مجاني حتى نفس التاريخ، حسب التوفر. للإلغاء أو التعديل: أجيبوا على هذا البريد أو راسلونا عبر واتساب مع رقم الحجز.',
@@ -663,7 +663,7 @@ export async function onRequest(context) {
     const status = st === 'cancelled' ? 'cancelled' : (st === 'completed' || st === 'returned' || st === 'done') ? 'completed' : st === 'active' ? 'active' : (st === 'confirmed' || st === 'reserved' || (r.paypal && r.paypal.captureId)) ? 'confirmed' : 'pending';
     const dl = aslCancelDeadline(r.createdAt, r.startDate, r.startTime);
     return json({ ok: true, booking: {
-      id: r.id, car: r.car || '', startDate: r.startDate || '', startTime: r.startTime || '', endDate: r.endDate || '', endTime: r.endTime || '',
+      id: r.id, car: r.car || '', carId: r.carId || '', startDate: r.startDate || '', startTime: r.startTime || '', endDate: r.endDate || '', endTime: r.endTime || '',
       pickup: r.pickup || '', dropoff: r.dropoff || '', days: r.days || 0, amount: Math.round(Number(r.amount) || 0), paid: Math.round(Number(r.paid) || 0),
       payment: (r.paypal && r.paypal.captureId) ? 'paypal' : 'cash', status: status, createdAt: r.createdAt || '', cancelUntil: dl ? dl.toISOString() : '' } });
   }

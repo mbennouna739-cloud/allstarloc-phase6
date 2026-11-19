@@ -1024,35 +1024,55 @@ html:has(#booking-drawer.open) { overflow: hidden; }
 }
 
 
-/* ==================== ★ MES RÉSERVATIONS (sans compte) ==================== */
+/* ==================== ★ MES RÉSERVATIONS (sans compte) ====================
+   Panneau au même style que la réservation : à droite sur ordinateur, plein écran sur mobile.
+   La page derrière est bloquée (aucun défilement parasite). */
 .mb-btn{display:none;position:relative;align-items:center;justify-content:center;width:40px;height:40px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:transparent;color:#fff;cursor:pointer;margin-inline-end:8px}
 .mb-btn.has{display:flex}.mb-btn svg{width:19px;height:19px}
 .mb-badge{position:absolute;top:-5px;inset-inline-end:-5px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--red,#C41E3A);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center}
-.mb-ov{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2000;display:none;align-items:center;justify-content:center;padding:16px}
-.mb-ov.open{display:flex}
-.mb-sheet{background:#fff;color:#111;width:100%;max-width:520px;max-height:88vh;overflow:auto;border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.35)}
-.mb-hd{position:sticky;top:0;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid #eee;z-index:1}
-.mb-hd b{font-size:18px}.mb-x{width:38px;height:38px;border-radius:10px;border:0;background:#f3f4f6;font-size:20px;cursor:pointer}
-.mb-body{padding:16px 18px 22px}
-.mb-card{border:1.5px solid #e5e7eb;border-radius:14px;padding:14px;margin-bottom:12px}
-.mb-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px}
-.mb-ref{font-weight:800;font-size:15px}.mb-chip{font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:999px;background:#f3f4f6;color:#374151;white-space:nowrap}
+.mb-ov{position:fixed;inset:0;background:rgba(10,10,10,.55);z-index:2000;opacity:0;pointer-events:none;transition:opacity .25s ease;overscroll-behavior:contain}
+.mb-ov.open{opacity:1;pointer-events:auto}
+.mb-panel{position:fixed;top:0;bottom:0;inset-inline-end:0;width:min(460px,100%);background:#f7f7f8;color:#111;z-index:2001;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s cubic-bezier(.2,.7,.2,1);box-shadow:-20px 0 60px rgba(0,0,0,.25)}
+[dir=rtl] .mb-panel{transform:translateX(-100%)}
+.mb-panel.open{transform:none}
+.mb-hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 20px;padding-top:calc(18px + env(safe-area-inset-top));background:#fff;border-bottom:1px solid #ececec;flex:none}
+.mb-kick{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--red,#C41E3A)}
+.mb-ttl{font-size:21px;font-weight:800;margin-top:2px}
+.mb-x{width:40px;height:40px;border-radius:12px;border:0;background:#f1f1f3;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none}
+.mb-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:18px 18px calc(26px + env(safe-area-inset-bottom))}
+.mb-card{background:#fff;border:1px solid #ececec;border-radius:16px;margin-bottom:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.04)}
+.mb-cardtop{display:flex;align-items:center;gap:12px;padding:14px 14px 12px}
+.mb-img{width:78px;height:52px;border-radius:10px;background:#f3f4f6;object-fit:cover;flex:none}
+.mb-carname{font-weight:800;font-size:15.5px;line-height:1.25}
+.mb-ref{font-size:12px;color:#6b7280;margin-top:2px;letter-spacing:.02em;white-space:nowrap}
+.mb-chip{margin-inline-start:auto;font-size:11.5px;font-weight:700;padding:5px 10px;border-radius:999px;background:#f3f4f6;color:#374151;white-space:nowrap;align-self:flex-start}
 .mb-chip.confirmed,.mb-chip.active{background:#ecfdf5;color:#047857}.mb-chip.pending{background:#fffbeb;color:#b45309}.mb-chip.cancelled{background:#fef2f2;color:#b91c1c}
-.mb-line{font-size:13.5px;color:#374151;margin:3px 0;line-height:1.45}.mb-line b{color:#111}
-.mb-money{display:grid;grid-template-columns:1fr auto;gap:2px 10px;font-size:13px;margin:10px 0;background:#f9fafb;border-radius:10px;padding:10px 12px}
-.mb-pol{font-size:12.5px;color:#4b5563;margin:8px 0 10px;line-height:1.5}
-.mb-acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.mb-a{height:42px;border-radius:10px;border:1.5px solid #d1d5db;background:#fff;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;color:#111;text-decoration:none;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 8px}
-.mb-a.red{border-color:#fecaca;color:#b91c1c}
-.mb-rm{background:none;border:0;color:#6b7280;font-size:12px;text-decoration:underline;cursor:pointer;margin-top:8px;font-family:inherit}
-.mb-note{font-size:12px;color:#6b7280;margin-top:6px}
-.mb-find{border-top:1px solid #eee;margin-top:6px;padding-top:14px}
-.mb-find h4{font-size:14px;margin:0 0 10px}
-.mb-in{width:100%;height:46px;border:1.5px solid #e5e7eb;border-radius:10px;padding:0 12px;font-size:16px;margin-bottom:8px;font-family:inherit;box-sizing:border-box}
-.mb-go{width:100%;height:46px;border:0;border-radius:10px;background:var(--red,#C41E3A);color:#fff;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit}
+.mb-trip{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #f0f0f0;border-bottom:1px solid #f0f0f0}
+.mb-trip>div{padding:11px 14px}.mb-trip>div+div{border-inline-start:1px solid #f0f0f0}
+.mb-lbl{font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em}
+.mb-val{font-size:14px;font-weight:700;margin-top:3px}.mb-sub{font-size:12px;color:#6b7280;margin-top:2px;line-height:1.35}
+.mb-money{padding:12px 14px;display:grid;grid-template-columns:1fr auto;gap:6px 12px;font-size:13.5px;color:#374151}
+.mb-money b{color:#111;text-align:end}.mb-money .tot{font-weight:800;color:#111}
+.mb-pol{margin:0 14px 12px;border-radius:12px;padding:11px 12px;background:#f9fafb;border:1px solid #eef0f2}
+.mb-pol.ok{background:#f0fdf4;border-color:#d1fae5}.mb-pol.late{background:#fafafa}
+.mb-pol-t{font-size:12.5px;font-weight:800;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.mb-pol p{font-size:12.5px;color:#4b5563;line-height:1.5;margin:0}.mb-pol p+p{margin-top:5px}.mb-pol.ok p.hl{color:#047857;font-weight:700}
+.mb-acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 14px 14px}
+.mb-a{height:44px;border-radius:12px;border:1.5px solid #e5e7eb;background:#fff;font-weight:700;font-size:13.5px;cursor:pointer;font-family:inherit;color:#111;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:7px;text-align:center;padding:0 8px}
+.mb-a.red{color:#b91c1c;border-color:#fde2e2}
+.mb-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid #f3f3f3;background:#fcfcfc}
+.mb-note{font-size:11.5px;color:#6b7280;line-height:1.4}
+.mb-rm{background:none;border:0;color:#9ca3af;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;text-decoration:underline}
+.mb-sk{height:150px;border-radius:16px;background:linear-gradient(90deg,#f1f1f3 25%,#e9e9ec 37%,#f1f1f3 63%);background-size:400% 100%;animation:mbSk 1.2s ease infinite;margin-bottom:14px}
+@keyframes mbSk{0%{background-position:100% 50%}100%{background-position:0 50%}}
+.mb-empty{background:#fff;border:1px dashed #e0e0e3;border-radius:16px;padding:22px 16px;text-align:center;color:#6b7280;font-size:14px;margin-bottom:14px}
+.mb-find{background:#fff;border:1px solid #ececec;border-radius:16px;padding:16px}
+.mb-find h4{font-size:15px;margin:0 0 4px;font-weight:800}.mb-find .h{font-size:12.5px;color:#6b7280;margin-bottom:12px;line-height:1.45}
+.mb-in{width:100%;height:48px;border:1.5px solid #e5e7eb;border-radius:12px;padding:0 14px;font-size:16px;margin-bottom:10px;font-family:inherit;box-sizing:border-box;background:#fff}
+.mb-in:focus{outline:none;border-color:var(--red,#C41E3A)}
+.mb-go{width:100%;height:48px;border:0;border-radius:12px;background:var(--red,#C41E3A);color:#fff;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit}
 .mb-err{color:#b91c1c;font-size:13px;margin-top:8px;min-height:1em}
-.mb-empty{font-size:14px;color:#6b7280;margin:4px 0 14px}
-@media(max-width:768px){.mb-ov{align-items:flex-end;padding:0}.mb-sheet{max-width:none;border-radius:18px 18px 0 0;max-height:92vh;padding-bottom:env(safe-area-inset-bottom)}}
+html.mb-lock,html.mb-lock body{overflow:hidden!important}
 /* ==================== WHATSAPP FLOAT ==================== */
 .wa-float {
   position: fixed; bottom: 28px; right: 28px; z-index: 800;
@@ -1677,46 +1697,49 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 </script>
 
 <script>
-/* ★ Mobile : défilement guidé, doux et court, vers le formulaire de réservation (dates).
-   Une seule fois par visite, ~0,9 s après l'affichage ; annulé dès que le visiteur touche
-   l'écran, s'il a déjà défilé, s'il reprend une réservation ou s'il préfère moins d'animations. */
+/* ★ Mobile : défilement guidé, doux et court, vers « Choisissez vos dates » à chaque arrivée
+   sur l'accueil (en haut de page). Ne se fait pas si le visiteur a déjà défilé, s'il arrive
+   sur une ancre, si une réservation est ouverte, ou s'il préfère moins d'animations.
+   S'il touche l'écran PENDANT le défilement, l'animation s'arrête (il garde la main). */
 (function () {
   try {
     if (window.innerWidth > 768 || location.hash) return;
-    if (navigator.webdriver || /bot|crawl|spider|lighthouse|headless/i.test(navigator.userAgent || '')) return;   // robots / outils de mesure : pas d'animation
+    if (navigator.webdriver || /bot|crawl|spider|lighthouse|headless/i.test(navigator.userAgent || '')) return;   // robots / outils de mesure
     if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    if (sessionStorage.getItem('asl_guided_scroll')) return;
-    if (localStorage.getItem('asl_booking_resume_v1')) return;
   } catch (e) { return; }
-  var stop = false;
-  function cancel() { stop = true; }
-  ['touchstart', 'wheel', 'keydown', 'mousedown'].forEach(function (ev) { window.addEventListener(ev, cancel, { passive: true, once: true }); });
-  setTimeout(function () {
-    try { sessionStorage.setItem('asl_guided_scroll', '1'); } catch (e) {}
-    var target = document.getElementById('booking-section'), dr = document.getElementById('booking-drawer');
-    if (stop || !target || (window.scrollY || 0) > 40 || (dr && dr.classList.contains('open'))) return;
-    var hd = document.querySelector('header, .header, nav'); var off = (hd ? hd.getBoundingClientRect().height : 64) + 10;
-    var from = window.scrollY || 0, to = Math.max(0, target.getBoundingClientRect().top + from - off);
+  function go() {
+    var target = document.getElementById('booking-section'), dr = document.getElementById('booking-drawer'), mb = document.getElementById('mb-panel');
+    if (!target || (window.scrollY || 0) > 60) return;
+    if ((dr && dr.classList.contains('open')) || (mb && mb.classList.contains('open'))) return;
+    var from = window.scrollY || 0, to = Math.max(0, target.getBoundingClientRect().top + from - 12);
     if (to - from < 30) return;
-    var dur = 1100, t0 = null;
+    var html = document.documentElement, prevSB = html.style.scrollBehavior; html.style.scrollBehavior = 'auto';   // l'animation est faite ici, pas par le navigateur
+    var stop = false, dur = 1100, t0 = null;
+    function cancel() { stop = true; html.style.scrollBehavior = prevSB; }
+    window.addEventListener('touchstart', cancel, { passive: true, once: true });
+    window.addEventListener('wheel', cancel, { passive: true, once: true });
     function ease(x) { return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; }
     function step(ts) {
       if (stop) return;
       if (t0 === null) t0 = ts;
       var k = Math.min(1, (ts - t0) / dur);
-      window.scrollTo(0, from + (to - from) * ease(k));
-      if (k < 1) requestAnimationFrame(step);
+      window.scrollTo(0, Math.round(from + (to - from) * ease(k)));
+      if (k < 1) requestAnimationFrame(step); else { html.style.scrollBehavior = prevSB; window.removeEventListener('touchstart', cancel); window.removeEventListener('wheel', cancel); }
     }
     requestAnimationFrame(step);
-  }, 900);
+  }
+  function start() { setTimeout(go, 800); }
+  if (document.readyState !== 'loading') start(); else document.addEventListener('DOMContentLoaded', start, { once: true });
 })();
 </script>
 
 <!-- ★ MES RÉSERVATIONS -->
-<div class="mb-ov" id="mb-ov" onclick="if(event.target===this)mbClose()" role="dialog" aria-modal="true">
-  <div class="mb-sheet"><div class="mb-hd"><b data-i18n="mb.title">Mes réservations</b><button type="button" class="mb-x" onclick="mbClose()" aria-label="Fermer">×</button></div>
-  <div class="mb-body" id="mb-body"></div></div>
-</div>
+<div class="mb-ov" id="mb-ov" onclick="mbClose()"></div>
+<aside class="mb-panel" id="mb-panel" role="dialog" aria-modal="true" aria-labelledby="mb-ttl">
+  <div class="mb-hd"><div><div class="mb-kick" data-i18n="mb.kicker">Espace client</div><div class="mb-ttl" id="mb-ttl" data-i18n="mb.title">Mes réservations</div></div>
+    <button type="button" class="mb-x" onclick="mbClose()" aria-label="Fermer" data-i18n-aria="mb.close"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <div class="mb-body" id="mb-body"></div>
+</aside>
 <script>
 /* ★ « Mes réservations » sans compte : les réservations faites sur cet appareil sont
    gardées en mémoire (numéro + contact) ; l'état réel est relu sur le serveur.
@@ -1735,57 +1758,88 @@ function mbBadge() {
 }
 function mbEsc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 function mbD(v) { var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(v || '')); return m ? m[3] + '/' + m[2] + '/' + m[1] : ''; }
-var _mbCache = {};
-function mbOpen() { document.getElementById('mb-ov').classList.add('open'); document.body.style.overflow = 'hidden'; mbRender(true); }
-function mbClose() { document.getElementById('mb-ov').classList.remove('open'); if (!document.getElementById('booking-drawer').classList.contains('open')) document.body.style.overflow = ''; }
+var _mbCache = {}, _mbErr = {}, _mbY = 0;
+/* Blocage de la page derrière le panneau (fiable aussi sur iPhone). */
+function mbLock(on) {
+  var b = document.body;
+  if (on) { _mbY = window.scrollY || 0; document.documentElement.classList.add('mb-lock'); b.style.position = 'fixed'; b.style.top = (-_mbY) + 'px'; b.style.left = '0'; b.style.right = '0'; b.style.width = '100%'; }
+  else { document.documentElement.classList.remove('mb-lock'); b.style.position = ''; b.style.top = ''; b.style.left = ''; b.style.right = ''; b.style.width = '';
+    var h = document.documentElement, sb = h.style.scrollBehavior; h.style.scrollBehavior = 'auto'; window.scrollTo(0, _mbY); h.style.scrollBehavior = sb; }
+}
+function mbOpen() {
+  var dr = document.getElementById('booking-drawer'); if (dr && dr.classList.contains('open') && typeof closeDrawer === 'function') closeDrawer();
+  mbLock(true); document.getElementById('mb-ov').classList.add('open'); document.getElementById('mb-panel').classList.add('open'); mbRender(true);
+}
+function mbClose() {
+  var p = document.getElementById('mb-panel'); if (!p.classList.contains('open')) return;
+  p.classList.remove('open'); document.getElementById('mb-ov').classList.remove('open'); mbLock(false);
+}
 async function mbFetch(ref, contact) {
   var r = await fetch('/api/booking/lookup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ref: ref, contact: contact }) });
   var d = await r.json().catch(function () { return {}; });
   if (r.ok && d.ok) return d.booking;
-  var e = new Error(r.status === 404 ? 'notfound' : 'offline'); throw e;
+  throw new Error(r.status === 404 ? 'notfound' : 'offline');
 }
-function mbCard(x, bk) {
-  if (!bk) return '<div class="mb-card"><div class="mb-top"><span class="mb-ref">' + mbEsc(x.ref) + '</span></div><div class="mb-line">' + (x.err === 'notfound' ? t('mb.notFound') : x.err ? t('mb.offline') : t('mb.loading')) + '</div>' +
-    (x.err ? '<button class="mb-rm" onclick="mbRemove(\'' + mbEsc(x.ref) + '\')">' + t('mb.remove') + '</button>' : '') + '</div>';
+/* Photo de la voiture, prise dans la flotte du site (même source que le back-office) :
+   d'abord par identifiant du véhicule, sinon par son nom. */
+function mbCarImg(name, id) {
+  try {
+    var list = (typeof CARS !== 'undefined' && Array.isArray(CARS)) ? CARS : [];
+    var c = (id && list.find(function (x) { return x && String(x.id) === String(id); })) || list.find(function (x) { return x && x.name === name; });
+    return (c && c.img) || 'assets/hero-car.svg';
+  } catch (e) { return 'assets/hero-car.svg'; }
+}
+function mbCard(x) {
+  var bk = _mbCache[x.ref];
+  if (!bk) {
+    if (!_mbErr[x.ref]) return '<div class="mb-sk"></div>';
+    return '<div class="mb-card"><div class="mb-cardtop"><div><div class="mb-carname">' + mbEsc(x.ref) + '</div><div class="mb-ref">' + (_mbErr[x.ref] === 'notfound' ? t('mb.notFound') : t('mb.offline')) + '</div></div></div>' +
+      '<div class="mb-foot"><span></span><button class="mb-rm" onclick="mbRemove(\'' + mbEsc(x.ref) + '\')">' + t('mb.remove') + '</button></div></div>';
+  }
   var lang = (typeof getLang === 'function') ? getLang() : 'fr';
   var rest = Math.max(0, (bk.amount || 0) - (bk.paid || 0));
-  var dl = bk.cancelUntil ? new Date(bk.cancelUntil) : null, open = bk.status !== 'cancelled' && bk.status !== 'completed' && bk.status !== 'active';
-  var pol = !open ? '' : (dl && dl.getTime() > Date.now() ? t('mb.cancelUntil', { deadline: aslFmtDeadline(dl, lang) }) : t('mb.cancelPast'));
+  var open = bk.status !== 'cancelled' && bk.status !== 'completed' && bk.status !== 'active';
+  var dl = bk.cancelUntil ? new Date(bk.cancelUntil) : aslCancelDeadline(bk.createdAt, bk.startDate, bk.startTime);
+  var tier = aslPolicyTier(bk.createdAt, bk.startDate, bk.startTime), fmt = aslFmtDeadline(dl, lang), ok = dl && dl.getTime() > Date.now();
+  var pol = !open || !tier ? '' :
+    '<div class="mb-pol ' + (ok ? 'ok' : 'late') + '"><div class="mb-pol-t">' + (ok ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>' : '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>') + t('mb.policyTitle') + '</div>' +
+    '<p>' + t('mb.tier' + tier) + '</p>' +
+    '<p class="hl">' + (ok ? t('mb.okUntil', { deadline: fmt }) : t((bk.paid > 0 ? 'mb.passedPaid' : 'mb.passedCash'), { deadline: fmt })) + '</p></div>';
   var v = { ref: bk.id, car: bk.car, start: mbD(bk.startDate), end: mbD(bk.endDate) };
   var wa = function (k) { return 'https://wa.me/212675312453?text=' + encodeURIComponent(t(k, v)); };
+  var waIco = '<svg width="15" height="15" viewBox="0 0 24 24" fill="#25D366"><path d="M12.05 2a9.9 9.9 0 0 0-8.5 15l-1.5 5.3 5.5-1.4A9.9 9.9 0 1 0 12.05 2Zm5.8 13.9c-.25.7-1.45 1.33-2 1.4-.52.08-1.17.11-1.87-.12-.43-.13-.98-.32-1.69-.62-2.98-1.29-4.93-4.29-5.08-4.49-.15-.2-1.21-1.61-1.21-3.07 0-1.46.77-2.18 1.04-2.48.27-.3.6-.37.8-.37h.57c.18 0 .43-.07.67.51.25.6.84 2.06.92 2.21.07.15.12.32.02.52-.1.2-.15.32-.3.5-.15.17-.31.39-.45.52-.15.15-.3.31-.13.61.17.3.77 1.27 1.65 2.06 1.14 1.01 2.09 1.33 2.39 1.48.3.15.47.12.65-.07.17-.2.74-.87.94-1.17.2-.3.4-.25.67-.15.27.1 1.73.82 2.03.97.3.15.5.22.57.35.07.12.07.72-.18 1.42Z"/></svg>';
   return '<div class="mb-card">' +
-    '<div class="mb-top"><span class="mb-ref">' + mbEsc(bk.id) + '</span><span class="mb-chip ' + mbEsc(bk.status) + '">' + t('mb.st.' + bk.status) + '</span></div>' +
-    '<div class="mb-line"><b>' + mbEsc(bk.car) + '</b></div>' +
-    '<div class="mb-line">' + mbD(bk.startDate) + (bk.startTime ? ' ' + mbEsc(bk.startTime) : '') + ' → ' + mbD(bk.endDate) + (bk.endTime ? ' ' + mbEsc(bk.endTime) : '') + '</div>' +
-    (bk.pickup ? '<div class="mb-line">' + mbEsc(bk.pickup) + '</div>' : '') +
-    '<div class="mb-money"><span>' + t('mb.total') + '</span><b>' + (bk.amount || 0) + ' MAD</b>' +
-      (bk.paid ? '<span>' + t('mb.paid') + '</span><b>' + bk.paid + ' MAD</b>' : '') +
+    '<div class="mb-cardtop"><img class="mb-img" src="' + mbEsc(mbCarImg(bk.car, bk.carId)) + '" alt="" onerror="this.src=\'assets/hero-car.svg\'"><div style="min-width:0"><div class="mb-carname">' + mbEsc(bk.car) + '</div><div class="mb-ref">N° ' + mbEsc(bk.id) + '</div></div><span class="mb-chip ' + mbEsc(bk.status) + '">' + t('mb.st.' + bk.status) + '</span></div>' +
+    '<div class="mb-trip"><div><div class="mb-lbl">' + t('mb.depart') + '</div><div class="mb-val">' + mbD(bk.startDate) + (bk.startTime ? ' · ' + mbEsc(bk.startTime) : '') + '</div>' + (bk.pickup ? '<div class="mb-sub">' + mbEsc(bk.pickup) + '</div>' : '') + '</div>' +
+      '<div><div class="mb-lbl">' + t('mb.retour') + '</div><div class="mb-val">' + mbD(bk.endDate) + (bk.endTime ? ' · ' + mbEsc(bk.endTime) : '') + '</div>' + ((bk.dropoff || bk.pickup) ? '<div class="mb-sub">' + mbEsc(bk.dropoff || bk.pickup) + '</div>' : '') + '</div></div>' +
+    '<div class="mb-money"><span class="tot">' + t('mb.total') + '</span><b class="tot">' + (bk.amount || 0) + ' MAD</b>' +
+      '<span>' + (bk.paid > 0 ? t('mb.payPaypal') : t('mb.payCash')) + '</span><b>' + (bk.paid > 0 ? bk.paid + ' MAD' : '—') + '</b>' +
       '<span>' + t('mb.rest') + '</span><b>' + rest + ' MAD</b></div>' +
-    (pol ? '<div class="mb-pol">' + pol + '</div>' : '') +
-    (open ? '<div class="mb-acts"><a class="mb-a" target="_blank" rel="noopener" href="' + wa('mb.waChange') + '">' + t('mb.change') + '</a><a class="mb-a red" target="_blank" rel="noopener" href="' + wa('mb.waCancel') + '">' + t('mb.cancel') + '</a></div><div class="mb-note">' + t('mb.note') + '</div>' : '') +
-    '<button class="mb-rm" onclick="mbRemove(\'' + mbEsc(bk.id) + '\')">' + t('mb.remove') + '</button></div>';
+    pol +
+    (open ? '<div class="mb-acts"><a class="mb-a" target="_blank" rel="noopener" href="' + wa('mb.waChange') + '">' + waIco + t('mb.change') + '</a><a class="mb-a red" target="_blank" rel="noopener" href="' + wa('mb.waCancel') + '">' + waIco + t('mb.cancel') + '</a></div>' : '') +
+    '<div class="mb-foot"><span class="mb-note">' + (open ? t('mb.note') : '') + '</span><button class="mb-rm" onclick="mbRemove(\'' + mbEsc(bk.id) + '\')">' + t('mb.remove') + '</button></div></div>';
 }
 function mbRender(refresh) {
   var body = document.getElementById('mb-body'); if (!body) return;
   var list = mbList();
-  var cards = list.length ? list.map(function (x) { return mbCard(x, _mbCache[x.ref]); }).join('') : '<div class="mb-empty">' + t('mb.empty') + '</div>';
-  body.innerHTML = cards +
-    '<div class="mb-find"><h4>' + t('mb.findTitle') + '</h4>' +
-    '<input class="mb-in" id="mb-ref" placeholder="' + mbEsc(t('mb.ref')) + '" autocapitalize="characters" autocomplete="off">' +
-    '<input class="mb-in" id="mb-contact" placeholder="' + mbEsc(t('mb.contact')) + '" autocomplete="tel">' +
+  var refv = (document.getElementById('mb-ref') || {}).value || '', cv = (document.getElementById('mb-contact') || {}).value || '';
+  body.innerHTML = (list.length ? list.map(mbCard).join('') : '<div class="mb-empty">' + t('mb.empty') + '</div>') +
+    '<div class="mb-find"><h4>' + t('mb.findTitle') + '</h4><div class="h">' + t('mb.findHint') + '</div>' +
+    '<input class="mb-in" id="mb-ref" placeholder="' + mbEsc(t('mb.ref')) + '" autocapitalize="characters" autocomplete="off" value="' + mbEsc(refv) + '">' +
+    '<input class="mb-in" id="mb-contact" placeholder="' + mbEsc(t('mb.contact')) + '" autocomplete="tel" value="' + mbEsc(cv) + '" onkeydown="if(event.key===\'Enter\')mbFind()">' +
     '<button class="mb-go" onclick="mbFind()">' + t('mb.find') + '</button><div class="mb-err" id="mb-err"></div></div>';
   if (refresh) list.forEach(function (x) {
-    mbFetch(x.ref, x.contact).then(function (bk) { _mbCache[x.ref] = bk; x.err = ''; mbRender(false); })
-      .catch(function (e) { x.err = e.message; mbRender(false); });
+    mbFetch(x.ref, x.contact).then(function (bk) { _mbCache[x.ref] = bk; delete _mbErr[x.ref]; mbRender(false); })
+      .catch(function (e) { _mbErr[x.ref] = e.message; mbRender(false); });
   });
 }
 async function mbFind() {
   var ref = (document.getElementById('mb-ref').value || '').trim().toUpperCase(), c = (document.getElementById('mb-contact').value || '').trim();
   var err = document.getElementById('mb-err'); err.textContent = t('mb.loading');
-  try { var bk = await mbFetch(ref, c); _mbCache[bk.id] = bk; mbAdd(bk.id, c); mbRender(false); }
+  try { var bk = await mbFetch(ref, c); _mbCache[bk.id] = bk; delete _mbErr[bk.id]; mbAdd(bk.id, c); document.getElementById('mb-ref').value = ''; document.getElementById('mb-contact').value = ''; mbRender(false); }
   catch (e) { err.textContent = e.message === 'notfound' ? t('mb.notFound') : t('mb.offline'); }
 }
-function mbRemove(ref) { mbSaveList(mbList().filter(function (x) { return x.ref !== ref; })); delete _mbCache[ref]; mbRender(false); }
+function mbRemove(ref) { mbSaveList(mbList().filter(function (x) { return x.ref !== ref; })); delete _mbCache[ref]; delete _mbErr[ref]; mbRender(false); }
 /* Enregistre la réservation sur cet appareil dès l'écran de confirmation. */
 function mbRememberCurrent() {
   try {
@@ -3536,6 +3590,12 @@ function aslCancelDeadline(createdAt, startDate, startTime) {
   if (lead >= 4 * 24 * H) return new Date(pickup.getTime() - 48 * H);
   if (lead >= 24 * H) return aslMaToDate(aslMaParts(created).date, '23:59');
   return new Date(Math.min(created.getTime() + 2 * H, pickup.getTime()));
+}
+function aslPolicyTier(createdAt, startDate, startTime) {
+  const created = createdAt ? new Date(createdAt) : new Date(), pickup = aslMaToDate(startDate, startTime);
+  if (!pickup || isNaN(created.getTime())) return '';
+  const H = 3600000, lead = pickup.getTime() - created.getTime();
+  return lead >= 30 * 24 * H ? '72' : lead >= 4 * 24 * H ? '48' : lead >= 24 * H ? 'Day' : '2h';
 }
 function aslFmtDeadline(d, lang) {
   if (!d) return '';
