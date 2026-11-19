@@ -638,6 +638,8 @@
     var patch = {
       name: name, category: e.category,
       priceMAD: pm > 0 ? pm : c.priceMAD, priceEUR: pm > 0 ? Math.round(pm / ((ASLDB && ASLDB.RATE_MAD) || 10.8)) : c.priceEUR,
+      // ★ Même règle que le back-office ordinateur : le prix saisi est celui affiché sur le site
+      price: pm > 0 ? pm : c.priceMAD, tiers: [],
       plate: (units[0] && units[0].plate) ? units[0].plate : (c.plate || ''), units: units, stock: units.length || 1,
       transmission: e.transmission, fuel: e.fuel, seats: Number(e.seats) || 5, doors: Number(e.doors) || null,
       trunk: String(e.trunk || ''), consumption: String(e.consumption || ''), deposit: parseInt(e.deposit, 10) || null, extras: String(e.extras || ''),

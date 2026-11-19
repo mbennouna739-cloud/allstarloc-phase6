@@ -274,9 +274,20 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   function priceLabel(car) {
     // Affiche le prix de base (MAD) ; la tarification dégressive complète
     // s'applique dans le tunnel de réservation de la page d'accueil.
+    // ★ Même calcul que l'accueil (source unique ASLDB.dailyRate, 1 jour, sans date)
+    try { if (window.ASLDB && ASLDB.dailyRate) { var r = ASLDB.dailyRate(car, 1); if (r > 0) return r; } } catch (e) {}
     var p = (car.priceMAD != null) ? car.priceMAD
           : Math.round((car.priceEUR || 0) * ((window.ASLDB && ASLDB.RATE_MAD) || 10.8));
     return p;
+  }
+
+  // ★ Prix dans la devise choisie par le visiteur (MAD, €, $, £) — même conversion que l'accueil
+  function priceInCur(mad) {
+    try {
+      var C = window.ASL_CUR, cur = C && C.get ? C.get() : 'MAD';
+      if (C && C.RATES && C.RATES[cur]) return Math.round(mad * C.RATES[cur]) + ' <span>' + C.SYMBOLS[cur];
+    } catch (e) {}
+    return mad + ' <span>MAD';
   }
 
   // ★ Description courte (catalogue) : langue courante → repli français →
@@ -387,7 +398,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           '</div>' +
           '<div class="vp-row-price-col">' +
             '<div class="vp-row-from" data-i18n="vp.from">À partir de</div>' +
-            '<div class="vp-row-price">' + priceLabel(car) + ' <span>MAD / ' + (T('u.day')||'jour') + '</span></div>' +
+            '<div class="vp-row-price">' + priceInCur(priceLabel(car)) + ' / ' + (T('u.day')||'jour') + '</span></div>' +
+            (car.id != null ? '<a class="vp-book-btn" href="../index.html?car=' + encodeURIComponent(car.id) + '#booking-section">' + (T('vp.bookCar')||'Réserver ce véhicule') +
+              ' <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-0.125em;flex-shrink:0;"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a>' : '') +
           '</div>' +
         '</article>';
     }).join('');
@@ -444,6 +457,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     ASLDB.onChange(render);
     // Ré-affiche quand la langue change
     window.addEventListener('asl-lang-change', render);
+    // Ré-affiche quand la devise change
+    var _setCur = window.setCurrency;
+    if (typeof _setCur === 'function') window.setCurrency = function (c) { _setCur(c); render(); };
   }
   document.addEventListener('DOMContentLoaded', start);
 })();

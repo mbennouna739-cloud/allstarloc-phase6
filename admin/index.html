@@ -2299,6 +2299,8 @@ function editCar(id) {
     ASLDB.updateVehicle(id, {
       name: document.getElementById('edit-name').value,
       priceMAD: parseInt(document.getElementById('edit-price-mad').value) || car.priceMAD,
+      // ★ Ancien champ « price » (prioritaire côté site) : aligné sur le prix saisi, sinon il masquait la modification
+      price: parseInt(document.getElementById('edit-price-mad').value) || car.priceMAD,
       priceEUR: parseInt(document.getElementById('edit-price-eur').value) || car.priceEUR,
       plate: _firstPlate,
       units: _units,
@@ -2313,7 +2315,9 @@ function editCar(id) {
       features: { ac: fc('edit-feat-ac'), bluetooth: fc('edit-feat-bt'), gps: fc('edit-feat-gps'),
                   camera: fc('edit-feat-cam'), insurance: fc('edit-feat-ins'), airport: fc('edit-feat-air') },
       customFeatures: (typeof collectCustomFeats === 'function') ? collectCustomFeats('edit') : {},
-      tiers: Array.isArray(car.tiers) ? car.tiers : [],
+      // ★ Anciennes tranches par durée (plus modifiables dans le back-office) : effacées à l'enregistrement,
+      //   pour que le « Prix/jour » saisi ici soit bien le prix affiché sur le site. Tarifs saisonniers conservés.
+      tiers: [],
       seasonalTiers: Array.isArray(car.seasonalTiers) ? car.seasonalTiers : [],
       img: document.getElementById('edit-img').value || car.img,
       imgAlt: document.getElementById('edit-imgalt')?.value || car.imgAlt || '',
@@ -2412,16 +2416,19 @@ function wireImageUpload(prefix) {
 // ==================== AVAILABILITY ====================
 function renderAvailability() {
   const counts = fleetUnitStats().counts;
-  document.getElementById('avail-count').textContent = counts.available||0;
-  document.getElementById('reserved-count').textContent = counts.reserved||0;
-  document.getElementById('maint-count').textContent = counts.maintenance||0;
-  document.getElementById('offroad-count').textContent = counts.offroad||0;
+  // ★ Compteurs facultatifs : absents de la page → on ne bloque plus l'enregistrement d'un véhicule
+  const _setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  _setTxt('avail-count', counts.available||0);
+  _setTxt('reserved-count', counts.reserved||0);
+  _setTxt('maint-count', counts.maintenance||0);
+  _setTxt('offroad-count', counts.offroad||0);
 
   const labelOf = (st) => AVAIL_LABELS[st]
     || (st==='rented'||st==='active' ? { label:'Loué', class:'badge-blue', emoji:'<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3b82f6;flex-shrink:0;"></span>' }
        : { label:(st||'Indéfini'), class:'badge-gray', emoji:'<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#9ca3af;flex-shrink:0;"></span>' });
 
   const tbody = document.getElementById('availability-table');
+  if (!tbody) return;
   tbody.innerHTML = FLEET.map(c => {
     try {
       const units = (typeof ASLDB!=='undefined' && ASLDB.normalizeUnits) ? ASLDB.normalizeUnits(c) : [{plate:c.plate,color:'',status:c.status||'available'}];

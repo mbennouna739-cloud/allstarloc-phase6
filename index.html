@@ -237,6 +237,17 @@ nav a:hover { color: white; background: rgba(255,255,255,0.08); }
   color: #1d4ed8; font-size: 14px; font-weight: 600; font-family: var(--font2);
 }
 .dates-notice.show { display: block; }
+/* ★ Véhicule choisi depuis « Nos véhicules » */
+.pick-banner { display: flex; align-items: center; gap: 12px; margin: 0 0 14px; padding: 10px 12px; border-radius: 12px;
+  background: rgba(196,30,58,0.06); border: 1px solid rgba(196,30,58,0.22); font-family: var(--font2); }
+.pick-banner img { width: 64px; height: 44px; object-fit: contain; flex-shrink: 0; background: #fff; border-radius: 8px; }
+.pick-banner .pb-txt { flex: 1; min-width: 0; line-height: 1.35; }
+.pick-banner .pb-t { font-size: 14px; font-weight: 700; color: var(--dark, #111); }
+.pick-banner .pb-s { font-size: 12.5px; color: var(--gray3, #666); }
+.pick-banner.unav { background: rgba(37,99,235,0.07); border-color: rgba(37,99,235,0.25); }
+.pick-banner.unav .pb-s { color: #1d4ed8; font-weight: 600; }
+.pick-banner .pb-x { flex-shrink: 0; width: 30px; height: 30px; border: 0; border-radius: 50%; background: rgba(0,0,0,0.06); color: #444; cursor: pointer; font-size: 17px; line-height: 30px; padding: 0; }
+.car-card.picked { box-shadow: 0 0 0 3px rgba(196,30,58,0.55), 0 18px 50px rgba(10,10,10,0.10); }
 .booking-card.attention { box-shadow: 0 0 0 3px rgba(196,30,58,0.35), 0 24px 70px rgba(10,10,10,0.12); }
 
 /* Véhicules indisponibles : information claire au lieu d'un simple masquage */
@@ -1405,6 +1416,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div class="booking-card fade-in stagger-2" id="booking-section">
       <div class="booking-step-hint" data-i18n="bk.stepHint">1. Choisissez vos dates &nbsp;·&nbsp; 2. Trouvez votre voiture</div>
       <div class="booking-title" data-i18n="bk.title">Réservez votre voiture</div>
+      <div class="pick-banner" id="pick-banner" style="display:none;"></div>
       <div class="booking-grid">
         <div class="bk-field">
           <label class="bk-label" for="pickup-loc" data-i18n="bk.pickup">Lieu de prise en charge</label>
@@ -2072,10 +2084,13 @@ function renderCars(filter) {
   if (!grid) return;
   const useFilter = currentFilter;
   // Comparaison insensible à la casse + véhicules sans catégorie toujours visibles dans 'all'
-  const filtered = useFilter === 'all'
+  let filtered = useFilter === 'all'
     ? CARS
     : CARS.filter(c => (c.category||'').toLowerCase() === useFilter.toLowerCase());
   const searchActive = !!(state.startDate && state.endDate);
+  const _pk = pickedCar();
+  renderPickBanner();
+  if (_pk) filtered = filtered.filter(c => c === _pk).concat(filtered.filter(c => c !== _pk));   // véhicule choisi en premier
   // Avant recherche : prix de base (1 jour). Après : durée réelle choisie.
   const rateDays = searchActive ? Math.max(1, state.days || 1) : 1;
   if (!filtered.length) {
@@ -2104,7 +2119,7 @@ function renderCars(filter) {
       (car.depositShow && car.deposit) ? t('sp.deposit', { v: car.deposit + ' MAD' }) : '',
     ].filter(Boolean);
     return `
-    <div class="car-card ${av.available ? '' : 'unavailable'}" onclick="${av.available ? `selectCar(${car.id})` : 'scrollToDates()'}">
+    <div class="car-card ${av.available ? '' : 'unavailable'}${(_pk && car === _pk) ? ' picked' : ''}" onclick="${av.available ? `selectCar(${car.id})` : 'scrollToDates()'}">
       <div class="car-card-img">
         ${av.available ? '' : `<div class="unavail-badge">${t('fleet.unavail')}</div>`}
         <img src="${car.img}" alt="${(function(){var L=(localStorage.getItem('asl_lang')||'fr');var t=(car.imgAltI18n&&car.imgAltI18n[L])||car.imgAlt||(car.name+' location Marrakech ALL STAR LOC');return String(t).replace(/"/g,'&quot;');})()}" loading="lazy">
@@ -2175,8 +2190,38 @@ function startSearch() {
   CAL.picked = true;
   state.searched = true;
   renderCars();
+  // ★ Véhicule choisi depuis « Nos véhicules » : s'il est libre, on ouvre directement sa réservation
+  const _pk = pickedCar();
+  if (_pk && carAvailability(_pk, state.startDate, state.endDate).available) { selectCar(_pk.id); return; }
   const _fleet = document.getElementById('fleet');
   if (_fleet) _fleet.scrollIntoView({ behavior: 'smooth' });
+}
+
+/* ★ Véhicule choisi depuis la page « Nos véhicules » (lien ?car=ID#booking-section) */
+let PICK_CAR = null;
+try { const _q = new URLSearchParams(location.search).get('car'); if (_q) PICK_CAR = String(_q).slice(0, 40); } catch (e) {}
+function pickedCar() {
+  if (!PICK_CAR || typeof CARS === 'undefined' || !CARS) return null;
+  return CARS.find(c => String(c.id) === PICK_CAR) || null;
+}
+function clearPickedCar() {
+  PICK_CAR = null;
+  try { history.replaceState(history.state, '', location.pathname + location.hash); } catch (e) {}
+  renderCars();
+}
+function renderPickBanner() {
+  const el = document.getElementById('pick-banner');
+  if (!el) return;
+  const car = pickedCar();
+  if (!car) { el.style.display = 'none'; el.innerHTML = ''; return; }
+  const esc = v => String(v == null ? '' : v).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+  const unav = !!(state.searched && state.startDate && state.endDate && !carAvailability(car, state.startDate, state.endDate).available);
+  el.className = 'pick-banner' + (unav ? ' unav' : '');
+  el.innerHTML = (car.img ? `<img src="${esc(car.img)}" alt="" loading="lazy" onerror="this.style.display='none'">` : '') +
+    `<div class="pb-txt"><div class="pb-t">${esc(t('bk.picked', { car: car.name }))}</div>` +
+    `<div class="pb-s">${esc(unav ? t('bk.pickedUnav', { car: car.name }) : t('bk.pickedSub'))}</div></div>` +
+    `<button type="button" class="pb-x" onclick="clearPickedCar()" aria-label="${esc(t('bk.pickedClear'))}" title="${esc(t('bk.pickedClear'))}">×</button>`;
+  el.style.display = 'flex';
 }
 
 // Message clair + défilement automatique vers le calendrier
@@ -2192,7 +2237,7 @@ function showReturnDateNotice() {
     card.insertBefore(n, card.firstChild);
   }
   if (n) {
-    n.textContent = 'Veuillez choisir une date de retour pour continuer.';
+    n.textContent = t('bk.needReturn');
     n.classList.add('show');
     setTimeout(() => { if (n) n.classList.remove('show'); }, 6000);
   }
@@ -2256,7 +2301,7 @@ function showDatesNotice() {
     card.insertBefore(n, card.firstChild);
   }
   if (n) {
-    n.textContent = 'Veuillez sélectionner vos dates de réservation pour vérifier la disponibilité du véhicule.';
+    n.textContent = t('bk.needDates');
     n.classList.add('show');
     setTimeout(() => { if (n) n.classList.remove('show'); }, 6000);
   }
